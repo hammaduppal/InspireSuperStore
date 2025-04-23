@@ -1,8 +1,67 @@
+using Market.Models.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddRazorOptions(options =>
+    {
+        options.AreaViewLocationFormats.Add("/Areas/{2}/Views/{1}/{0}.cshtml");
+        options.AreaViewLocationFormats.Add("/Areas/{2}/Views/Shared/{0}.cshtml");
+        options.ViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
+    }).AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
+builder.Services.AddDbContext<InspireDb>(option =>
+{
+    option.UseSqlServer(builder.Configuration.GetConnectionString("MarketDB"))
+    ;
+});
+var cookieScheme = CookieAuthenticationDefaults.AuthenticationScheme + builder.Configuration.GetValue<string>("SystemSettings:CookieName");
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = builder.Configuration.GetValue<string>("SystemSettings:CookieName");
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+builder.Services.AddAuthentication(cookieScheme).AddCookie(cookieScheme, options =>
+{
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.LoginPath = new PathString("/Account/Login");
 
+    options.AccessDeniedPath = new PathString("/Account/Failure");
+
+    options.ReturnUrlParameter = "ReturnUrl";
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.Name = cookieScheme;
+    options.Events.OnValidatePrincipal = context =>
+    {
+        if (context.Principal == null || !context.Principal.Identity.IsAuthenticated)
+        {
+            context.RejectPrincipal();
+            context.HttpContext.Response.Cookies.Delete(cookieScheme);
+        }
+        return Task.CompletedTask;
+    };
+    options.Events.OnSigningOut = context =>
+    {
+        context.HttpContext.Response.Cookies.Delete(cookieScheme);
+        return Task.CompletedTask;
+    };
+});
+
+
+builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -16,10 +75,20 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+
 app.UseRouting();
 
-app.UseAuthorization();
 
+app.UseAuthorization();
+app.UseSession();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllerRoute(
+      name: "areas",
+      pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
+    );
+});
 app.MapControllerRoute(
 	name: "default",
 	pattern: "{controller=Home}/{action=Index}/{id?}");

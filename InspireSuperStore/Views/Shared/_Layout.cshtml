@@ -1,10 +1,17 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>General Setup| Inspire Nation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     @await Html.PartialAsync("~/Views/Shared/_PartialHead.cshtml")
 </head>
-<body>
-    <div class="navbar navbar-expand-md navbar-dark bg-indigo navbar-static">
+<body class="navbar-top">
+    <partial name="/Views/Shared/_BsModal.cshtml" />
+
+    <div class="navbar navbar-expand-md navbar-dark bg-blue  navbar-static fixed-top">
         @await Html.PartialAsync("~/Views/Shared/_PartialMainNavBar.cshtml")
 
     </div>
@@ -13,47 +20,51 @@
             @await Html.PartialAsync("~/Views/Shared/_PartialSideBar.cshtml")
 
         </div>
-		<div class="content-wrapper">
-			<div class="page-header page-header-light">
-				@await Html.PartialAsync("~/Views/Shared/_PartialBreadCrumb.cshtml")
+        <div class="content-wrapper">
 
-				</div>
-		
+
             @RenderBody()
-		<!-- Footer -->
-		<div class="navbar navbar-expand-lg navbar-light">
-			<div class="text-center d-lg-none w-100">
-				<button type="button" class="navbar-toggler dropdown-toggle" data-toggle="collapse" data-target="#navbar-footer">
-					<i class="icon-unfold mr-2"></i>
-					Footer
-				</button>
-			</div>
 
-			<div class="navbar-collapse collapse" id="navbar-footer">
-				<span class="navbar-text">
-					&copy; 2015 - 2018. <a href="#">Limitless Web App Kit</a> by <a href="http://themeforest.net/user/Kopyov" target="_blank">Eugene Kopyov</a>
-				</span>
-
-				<ul class="navbar-nav ml-lg-auto">
-					<li class="nav-item"><a href="https://kopyov.ticksy.com/" class="navbar-nav-link" target="_blank"><i class="icon-lifebuoy mr-2"></i> Support</a></li>
-					<li class="nav-item"><a href="http://demo.interface.club/limitless/docs/" class="navbar-nav-link" target="_blank"><i class="icon-file-text2 mr-2"></i> Docs</a></li>
-					<li class="nav-item"><a href="https://themeforest.net/item/limitless-responsive-web-application-kit/13080328?ref=kopyov" class="navbar-nav-link font-weight-semibold"><span class="text-pink-400"><i class="icon-cart2 mr-2"></i> Purchase</span></a></li>
-				</ul>
-			</div>
-
-		</div>
-		<!-- /footer -->
-		</div>
-      </div>
+            <!-- Footer -->
+            <partial name="/Views/Shared/_PartialFooter.cshtml" />
+            <!-- /footer -->
+        </div>
+    </div>
 
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2024 - InspireSuperStore - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        //         $(document).ready(function () {
+        //     $('.sidebar .nav-link').each(function () {
+        //         var linkUrl = $(this).attr('href');
+
+        //         if (window.location.pathname === linkUrl) {
+        //             $(this).addClass('active');
+        //             $(this).closest('.nav-item').addClass('active');
+        //             $(this).closest('.nav-group-sub').css('display','block');
+
+        //         }
+        //     });
+        //     $('.sidebar-main-toggle').click(function(e){
+        //         UnActiveSideBar();
+        //     });
+        //     function UnActiveSideBar(){
+        //               $('.sidebar .nav-link').each(function () {
+        //         var linkUrl = $(this).attr('href');
+
+        //         if (window.location.pathname === linkUrl) {
+        //             $(this).removeClass('active');
+        //             $(this).closest('.nav-item').removeClass('active');
+        //             $(this).closest('.nav-group-sub').css('display','block');
+
+        //         }
+        //     });
+        //     }
+        // });
+
+    </script>
 </body>
 </html>
