@@ -1,5 +1,5 @@
-﻿using Market.Models.DTOModels;
-using Market.Models.Util;
+﻿using MainModels.DTOModels;
+using MainModels.Util;
 using MarketBAL.Repository.Account;
 using Microsoft.AspNetCore.Mvc;
 

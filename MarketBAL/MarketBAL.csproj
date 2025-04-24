@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\AdminApplications\Market.Models\Market.Models.csproj" />
+    <ProjectReference Include="..\..\..\AdminApplications\MainModels\MainModels\MainModels.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
-﻿using Market.Models;
-using Market.Models.DTOModels;
-using Market.Models.Util;
+﻿using MainModels;
+using MainModels.DTOModels;
+using MainModels.Util;
+using Microsoft.Data.SqlClient;
 
 namespace MarketBAL.Repository.Products
 {

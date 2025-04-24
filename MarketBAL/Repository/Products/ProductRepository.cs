@@ -1,6 +1,6 @@
-﻿using Market.Models;
-using Market.Models.DTOModels;
-using Market.Models.Util;
+﻿using MainModels;
+using MainModels.DTOModels;
+using MainModels.Util;
 
 namespace MarketBAL.Repository.Products
 {

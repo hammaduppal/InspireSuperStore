@@ -1,5 +1,4 @@
-﻿using System.Configuration;
-using Market.Models.DTOModels;
+﻿using MainModels.DTOModels;
 using MarketBAL.Repository.Products;
 using Microsoft.AspNetCore.Mvc;
 

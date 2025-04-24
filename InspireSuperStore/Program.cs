@@ -1,4 +1,4 @@
-using Market.Models.Models;
+using MainModels.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +13,7 @@ builder.Services.AddControllersWithViews()
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
     });
-builder.Services.AddDbContext<InspireDb>(option =>
+builder.Services.AddDbContext<OneDb>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("MarketDB"))
     ;

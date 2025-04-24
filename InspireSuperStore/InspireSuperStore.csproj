@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\AdminApplications\Market.Models\Market.Models.csproj" />
+    <ProjectReference Include="..\..\..\AdminApplications\MainModels\MainModels\MainModels.csproj" />
     <ProjectReference Include="..\MarketBAL\MarketBAL.csproj" />
   </ItemGroup>
 
