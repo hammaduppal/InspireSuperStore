@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
-using Market.Models.DTOModels;
-using MarketBAL.Repository.Utility;
+using MainModels;
+using MainModels.DTOModels;
+using MainModels.Util;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 

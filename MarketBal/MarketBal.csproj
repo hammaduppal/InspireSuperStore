@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Repositories\MainModels\MainModels\MainModels.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -19,4 +19,9 @@
     <Folder Include="Areas\Product\Models\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Repositories\MainModels\MainModels\MainModels.csproj" />
+    <ProjectReference Include="..\MarketBal\MarketBal.csproj" />
+  </ItemGroup>
+
 </Project>

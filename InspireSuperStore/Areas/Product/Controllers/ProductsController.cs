@@ -1,5 +1,5 @@
 ﻿using MainModels.Util;
-using MarketBAL.Repository.Products;
+using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InspireSuperStore.Areas.Product.Controllers
