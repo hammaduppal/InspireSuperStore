@@ -13,10 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\AdminApplications\MainModels\MainModels\MainModels.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Areas\Account\Data\" />
     <Folder Include="Areas\Account\Models\" />
     <Folder Include="Areas\Product\Data\" />
