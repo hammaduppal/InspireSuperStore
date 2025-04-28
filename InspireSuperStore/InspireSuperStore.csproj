@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\AdminApplications\MainModels\MainModels\MainModels.csproj" />
-    <ProjectReference Include="..\MarketBAL\MarketBAL.csproj" />
   </ItemGroup>
 
   <ItemGroup>
