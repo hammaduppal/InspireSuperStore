@@ -25,7 +25,7 @@
             console.error('Form not found:', formSelector);
             return false; // Return false if the form is not found
         }
-        debugger
+        
 
         // Validate inputs on input event (real-time feedback)
         form.querySelectorAll('input, select, textarea').forEach(input => {
@@ -71,81 +71,13 @@
             return allValid;
         };
     },
-  SpinnerMessage: function(brothel, message) {
-    debugger;
-    const targetElement = document.getElementById(brothel);
+    SpinnerMessage: function (brothel, message) {
+        ;
+        const targetElement = document.getElementById(brothel);
 
-    if (targetElement) {
-        // Ensure the target element is relatively positioned for overlay
-        targetElement.style.position = 'relative';
-
-        // Create the overlay container
-        const overlay = document.createElement('div');
-        overlay.style.position = 'absolute';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.4)'; // Dark gray with 40% transparency
-        overlay.style.display = 'flex';
-        overlay.style.flexDirection = 'column'; // Arrange spinner and message vertically
-        overlay.style.alignItems = 'center';
-        overlay.style.justifyContent = 'center';
-        overlay.style.zIndex = '9999'; // Ensure it overlays on top
-
-        // Create the spinner element
-        const spinner = document.createElement('i');
-        spinner.className = 'icon-spinner6 spinner'; // Add spinner classes
-        spinner.style.fontSize = '24px'; // Optional: Adjust spinner size
-
-        // Create the message element
-        const messageElement = document.createElement('div');
-        messageElement.textContent = message || 'Loading...'; // Use custom message or default
-        messageElement.style.marginTop = '10px'; // Space between spinner and message
-        messageElement.style.color = '#fff'; // White text for visibility
-        messageElement.style.fontSize = '16px'; // Optional: Adjust text size
-
-        // Append spinner and message to the overlay
-        overlay.appendChild(spinner);
-        overlay.appendChild(messageElement);
-
-        // Append the overlay to the target element
-        targetElement.appendChild(overlay);
-    } else {
-        console.error(`Element with ID "${brothel}" not found.`);
-    }
-},
-StopSpinnerMessage: function(brothel) {
-    debugger;
-    const targetElement = document.getElementById(brothel);
-
-    if (targetElement) {
-        // Find the overlay within the target element
-        const overlay = targetElement.querySelector('div[style*="position: absolute"]');
-
-        if (overlay) {
-            // Remove the overlay
-            targetElement.removeChild(overlay);
-        } else {
-            console.error('No overlay found to remove.');
-        }
-    } else {
-        console.error(`Element with ID "${brothel}" not found.`);
-    }
-}
-,
-
-SpinnerMessageParent: function(brothel, message) {
-    debugger;
-    const targetElement = document.getElementById(brothel);
-
-    if (targetElement) {
-        // Find the closest parent with class 'card'
-        const parentCard = targetElement.closest('.card');
-
-        if (parentCard) {
-            // Ensure the parent element is relatively positioned for overlay
-            parentCard.style.position = 'relative';
+        if (targetElement) {
+            // Ensure the target element is relatively positioned for overlay
+            targetElement.style.position = 'relative';
 
             // Create the overlay container
             const overlay = document.createElement('div');
@@ -177,40 +109,108 @@ SpinnerMessageParent: function(brothel, message) {
             overlay.appendChild(spinner);
             overlay.appendChild(messageElement);
 
-            // Append the overlay to the parent card
-            parentCard.appendChild(overlay);
+            // Append the overlay to the target element
+            targetElement.appendChild(overlay);
         } else {
-            console.error(`Parent element with class "card" not found for ID "${brothel}".`);
+            console.error(`Element with ID "${brothel}" not found.`);
         }
-    } else {
-        console.error(`Element with ID "${brothel}" not found.`);
-    }
-},
-StopSpinnerMessageParent: function(brothel) {
-    debugger;
-    const targetElement = document.getElementById(brothel);
+    },
+    StopSpinnerMessage: function (brothel) {
+        ;
+        const targetElement = document.getElementById(brothel);
 
-    if (targetElement) {
-        // Find the closest parent with class 'card'
-        const parentCard = targetElement.closest('.card');
-
-        if (parentCard) {
-            // Find the overlay within the parent card
-            const overlay = parentCard.querySelector('div[style*="position: absolute"]');
+        if (targetElement) {
+            // Find the overlay within the target element
+            const overlay = targetElement.querySelector('div[style*="position: absolute"]');
 
             if (overlay) {
                 // Remove the overlay
-                parentCard.removeChild(overlay);
+                targetElement.removeChild(overlay);
             } else {
                 console.error('No overlay found to remove.');
             }
         } else {
-            console.error(`Parent element with class "card" not found for ID "${brothel}".`);
+            console.error(`Element with ID "${brothel}" not found.`);
         }
-    } else {
-        console.error(`Element with ID "${brothel}" not found.`);
     }
-},
+    ,
+
+    SpinnerMessageParent: function (brothel, message) {
+        ;
+        const targetElement = document.getElementById(brothel);
+
+        if (targetElement) {
+            // Find the closest parent with class 'card'
+            const parentCard = targetElement.closest('.card');
+
+            if (parentCard) {
+                // Ensure the parent element is relatively positioned for overlay
+                parentCard.style.position = 'relative';
+
+                // Create the overlay container
+                const overlay = document.createElement('div');
+                overlay.style.position = 'absolute';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.4)'; // Dark gray with 40% transparency
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column'; // Arrange spinner and message vertically
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.zIndex = '9999'; // Ensure it overlays on top
+
+                // Create the spinner element
+                const spinner = document.createElement('i');
+                spinner.className = 'icon-spinner6 spinner'; // Add spinner classes
+                spinner.style.fontSize = '24px'; // Optional: Adjust spinner size
+
+                // Create the message element
+                const messageElement = document.createElement('div');
+                messageElement.textContent = message || 'Loading...'; // Use custom message or default
+                messageElement.style.marginTop = '10px'; // Space between spinner and message
+                messageElement.style.color = '#fff'; // White text for visibility
+                messageElement.style.fontSize = '16px'; // Optional: Adjust text size
+
+                // Append spinner and message to the overlay
+                overlay.appendChild(spinner);
+                overlay.appendChild(messageElement);
+
+                // Append the overlay to the parent card
+                parentCard.appendChild(overlay);
+            } else {
+                console.error(`Parent element with class "card" not found for ID "${brothel}".`);
+            }
+        } else {
+            console.error(`Element with ID "${brothel}" not found.`);
+        }
+    },
+    StopSpinnerMessageParent: function (brothel) {
+        ;
+        const targetElement = document.getElementById(brothel);
+
+        if (targetElement) {
+            // Find the closest parent with class 'card'
+            const parentCard = targetElement.closest('.card');
+
+            if (parentCard) {
+                // Find the overlay within the parent card
+                const overlay = parentCard.querySelector('div[style*="position: absolute"]');
+
+                if (overlay) {
+                    // Remove the overlay
+                    parentCard.removeChild(overlay);
+                } else {
+                    console.error('No overlay found to remove.');
+                }
+            } else {
+                console.error(`Parent element with class "card" not found for ID "${brothel}".`);
+            }
+        } else {
+            console.error(`Element with ID "${brothel}" not found.`);
+        }
+    },
 
 
     /**
@@ -244,26 +244,23 @@ StopSpinnerMessageParent: function(brothel) {
             closeWith: ['button']
         }).show();
     },
-   
+
     validateNumericValue: function validateFloatInput(input, decimalPlaces) {
-        let value = input.value.trim(); // Get the input value and trim whitespace
         debugger
-        // Remove non-numeric characters except for `-` and `.`
+        let value = input.value.trim(); 
+        
         value = value.replace(/[^0-9.-]/g, '');
 
-        // Parse the value to a float
         let floatValue = parseFloat(value);
 
         if (!isNaN(floatValue)) {
-            // Format the value based on the decimalPlaces parameter
             if (decimalPlaces >= 0) {
                 input.value = floatValue.toFixed(decimalPlaces);
             } else {
-                input.value = floatValue.toString(); // Default behavior if decimalPlaces is not provided
+                input.value = floatValue.toString(); 
             }
         } else {
-            // If the value is not a valid float, clear the input
-            input.value = '';
+            input.value = 0.00;
         }
     },
     validateAlphaNumeric: function validateAlphaNumericInput(input) {
@@ -289,5 +286,33 @@ StopSpinnerMessageParent: function(brothel) {
     stopSpinner: function stopSpinner(element) {
         var block = $(element); // Get the target element
         $(block).unblock(); // Unblock the element
+    },
+    RequestDataAjax: async function (data) {
+        try {
+            
+            const response = await $.ajax({
+                url: data.url,
+                data: data.data,
+                type: 'POST'
+            });
+            return response;
+        } catch (error) {
+            
+            console.error("AJAX error:", error);
+            return null;
+        }
+    },
+    RequestAjax: async function (url) {
+        try {
+            const response = await $.ajax({
+                url: url,
+                type: 'POST'
+            });
+            return response;
+        } catch (error) {
+            console.error("AJAX error:", error);
+            return null;
+        }
     }
+
 };

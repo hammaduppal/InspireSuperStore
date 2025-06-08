@@ -1,0 +1,373 @@
+﻿@using MainModels.DTOModels
+@using static MainModels.DTOModels.AppConstants
+@model PagesViewModel
+
+<div class="row">
+	<div class="container>">
+		<div class="row">
+
+		
+		<div class="col-md-11">
+
+		</div>
+		<div class="col-md-1">
+				<button class="btn btn-success" id="addVariant">Show Form </button>
+		</div>
+		</div>
+	</div>
+	<form id="formVariant" style="display:none" action="#">
+		<div class="row">
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>Product SubUOM</label>
+					<select id="subUom" name="subUom" class="form-control">
+						@if (Model.SubUOMs != null)
+						{
+							@foreach (var item in Model.SubUOMs)
+							{
+								<option value="@item.SubUomId">@item.SubUOMName</option>
+							}
+						}
+					</select>
+				</div>
+			</div>
+
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>Product Size</label>
+					<select id="size" name="size" class="form-control">
+						@if (Model.Sizes != null)
+						{
+							@foreach (var item in Model.Sizes)
+							{
+								<option value="@item.SizeId">@item.SizeName</option>
+							}
+						}
+					</select>
+				</div>
+			</div>
+
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>Product Color</label>
+					<select id="color" name="color" class="form-control">
+						@foreach (var item in Model.Colors)
+						{
+							<option value="@item.ColorId">@item.ColorName</option>
+						}
+					</select>
+				</div>
+			</div>
+
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>Product Material</label>
+					<select id="material" name="material" class="form-control">
+						@foreach (var item in Model.Materials)
+						{
+							<option value="@item.MaterialId">@item.MaterialName</option>
+						}
+					</select>
+				</div>
+			</div>
+
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>Qty Per Unit</label>
+					<input type="text" id="qtyPerUnit" name="qtyPerUnit" class="form-control" placeholder="Qty Per Unit" />
+				</div>
+			</div>
+
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>BarCode</label>
+					<input type="text" id="barCode" name="barCode" class="form-control" placeholder="BarCode" />
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>Cost</label>
+					<input type="text" id="cost" name="cost" class="form-control" placeholder="Cost" />
+				</div>
+			</div>
+
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>Retail Price</label>
+					<input type="text" id="retailPrice" name="retailPrice" class="form-control" placeholder="Retail Price" />
+				</div>
+			</div>
+
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>Sale Price</label>
+					<input type="text" id="salePrice" name="salePrice" class="form-control" placeholder="Sale Price" />
+				</div>
+			</div>
+
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>Promotion Price</label>
+					<input type="text" id="promotionPrice" name="promotionPrice" class="form-control" placeholder="Promotion Price" />
+				</div>
+			</div>
+
+
+			<div class="col-md-1">
+				<label>Is Serial</label>
+				<label class="switch">
+					<input type="checkbox" id="isSerial">
+					<span class="slider"></span>
+				</label>
+
+			</div>
+
+			<div class="col-md-1">
+				<div class="form-group">
+					<label>Min</label>
+					<input type="text" id="min" name="min" class="form-control" placeholder="Min" />
+				</div>
+			</div>
+
+			<div class="col-md-1">
+				<div class="form-group">
+					<label>Max</label>
+					<input type="text" id="max" name="max" class="form-control" placeholder="Max" />
+				</div>
+			</div>
+		</div>
+
+		<div class="text-right">
+			<button type="submit" class="btn btn-primary">Submit <i class="icon-paperplane ml-2"></i></button>
+		</div>
+	</form>
+
+</div>
+
+
+<style>
+	.selectable-img {
+		border: 2px solid transparent;
+		cursor: pointer;
+		transition: border-color 0.3s;
+	}
+
+	.image-radio:checked + img.selectable-img {
+		border-color: #007bff;
+	}
+</style>
+
+<div class="row">
+	@foreach (var item in Model.ProductVariants)
+	{
+		<div class="col-lg-12">
+			<p class="font-weight-semibold">ProductName: @item.ProductName, Product Size: @item.SizeName, ProductColor: @item.ColorName, Product Material: @item.MaterialName, Product Price: @item.RetailPrice</p>
+			<div class="alert alert-primary">
+				<div class="row">
+					<div class="col-lg-6">
+						<div class="row">
+							<div class="col-md-2">
+								<div class="form-group">
+									<label>Cost</label>
+									<input type="text"
+										   name="cost"
+										   value="@item.Cost"
+										   class="form-control cost"
+										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)"431`
+										   placeholder="COST" />
+								</div>
+							</div>
+							<div class="col-md-2">
+								<div class="form-group">
+									<label>R-Price</label>
+									<input type="text" name="retail" value="@item.RetailPrice" class="form-control retailPrice" placeholder="Min" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+								</div>
+							</div>
+							
+							<div class="col-md-2">
+								<div class="form-group">
+									<label>S-Price</label>
+									<input type="text"  name="sale" value="@item.SalesPrice" class="form-control salePrice" placeholder="Sale Price" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+								</div>
+							</div>
+								<div class="col-md-2">
+								<div class="form-group">
+									<label>P-Price</label>
+									<input type="text" name="promo" value="@item.PromotionPrice" class="form-control promotionPrice" placeholder="Promotion Price" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+								</div>
+							</div>
+						
+								<div class="col-md-2">
+								<div class="form-group">
+									<label>Q/U</label>
+									<input type="text"  name="qpu" value="@item.QuantityPerUnit" class="form-control quantityperUnit" placeholder="Q/U" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+								</div>
+							</div>
+							<div class="col-md-1">
+								<div class="form-group">
+									<label>Min</label>
+									<input type="text"  name="min" value="@item.MinQty" class="form-control min" placeholder="Min" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+								</div>
+							</div>
+							<div class="col-md-1">
+								<div class="form-group">
+									<label>Max</label>
+									<input type="text"  name="min" value="@item.MaxQty" class="form-control max" placeholder="Max" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="col-lg-2">
+						@if (item.PriceFormat == (int)EnumPriceFormat.RetailPrice)
+						{
+							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.RetailPrice" name="setPrice-@item.VariantId" checked />Retail Price</label>
+						}
+						else
+						{
+							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.RetailPrice" name="setPrice-@item.VariantId" />Retail Price</label>
+						}
+
+						@if (item.PriceFormat == (int)EnumPriceFormat.SalesPrice)
+						{
+							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.SalesPrice" name="setPrice-@item.VariantId" checked />Sale Pricee</label>
+						}
+						else
+						{
+							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.SalesPrice" name="setPrice-@item.VariantId" />Sales Price</label>
+
+						}
+						@if (item.PriceFormat == (int)EnumPriceFormat.PromotionPrice)
+						{
+							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.PromotionPrice" name="setPrice-@item.VariantId" checked />Promotion Price</label>
+						}
+						else
+						{
+							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.PromotionPrice" name="setPrice-@item.VariantId" />Promotion Price</label>
+						}
+
+
+
+
+					</div>
+					<div class="col-lg-3">
+						@foreach (var img in Model.ProductImages)
+						{
+							var imageId = $"{item.VariantId}-{img.ProductImageId}";
+							var radioName = $"selectedImage_{item.VariantId}"; // Unique name per variant
+
+							<label>
+								<input type="radio"
+									   data-productImageId="@img.ProductImageId"
+									   data-variantId="@item.VariantId"
+									   name="@radioName"
+									   value="@img.ProductImageId"
+									   class="image-radio d-none"
+									   id="@imageId"
+								@(img.ProductImageId == item.VariantImageId ? "checked" : "") />
+								<img src="@PagesViewModel.SystemSettings.ContentAPIUrl/@img.ImageUrl"
+									 class="p-2 selectable-img"
+									 style="min-width:50px; max-width:50px;"
+									 width="50" height="50" />
+							</label>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+
+
+</div>
+
+<script>
+		$('.min, .max, .quantityperUnit, .promotionPrice, .salePrice, .retailPrice, .cost').on('focusout', function() {
+			var thisValue = $(this).val();
+		var variantId = $(this).attr('data-variantId');
+		var dataType =  $(this).attr('data-datatype');
+	});
+
+
+	$('.setPrice').click(async function(){
+		var priceType = $(this).attr('data-priceType');
+		var variantId = $(this).attr('data-variantId');
+		var formData={
+		 PriceFormat:priceType,
+		 VariantId:variantId
+		}
+		var objectData={
+			data:formData,
+			url:'/Products/SetPriceFormat'
+		}
+		const setPriceType = await Utility.RequestDataAjax(objectData);
+								Utility.successMessage('Record Updated');
+
+	});
+
+
+	$('.image-radio').click(async function(){
+		
+		var imgId = $(this).attr('data-productImageId');
+		var variantId = $(this).attr('data-variantId');
+		var formData= {
+			ProductImageId:imgId,
+			VariantId:variantId
+		}
+		var objectData={
+			data:formData,
+			url:'/Products/SetVariantImage'
+		}
+		const result= await Utility.RequestDataAjax(objectData);
+		if (result.statusCode==='200')
+		{
+								Utility.successMessage('Record Updated');
+
+		}
+	});
+
+	$('#formVariant').submit(async function(e){
+		e.preventDefault();
+		
+		 const serialNumberOption = $('#isSerial').is(':checked');
+		 var ProductId = $('#productId').val()
+		var formData={
+				SubUomid: $('#subUom').val(),
+				SizeId: $('#size').val(),
+				ColorId: $('#color').val(),
+				MaterialId: $('#material').val(),
+				QuantityPerUnit: $('#qtyPerUnit').val(),
+				BarCode: $('#barCode').val(),
+				Cost: $('#cost').val(),
+				RetailPrice: $('#retailPrice').val(),
+				SalesPrice: $('#salePrice').val(),
+				PromotionPrice: $('#promotionPrice').val(),
+				MinQty: $('#min').val(),
+				MaxQty: $('#max').val(),
+				IsSerial:serialNumberOption,
+				ProductId:ProductId
+		}
+		var objectData={
+			data:formData,
+			url:'/Products/AddProductVariant'
+		}
+		const result = await Utility.RequestDataAjax(objectData);
+		if(result.statusCode==='200')
+		{
+								Utility.successMessage('Record Updated');
+
+			LoadVariantTab();
+		}
+	});
+	$('#addVariant').click(function () {
+		$('#formVariant').toggle(); 
+
+		if ($('#formVariant').is(':visible')) {
+			$('#addVariant').text('Hide Form');
+		} else {
+			$('#addVariant').text('Show Form');
+		}
+	});
+</script>

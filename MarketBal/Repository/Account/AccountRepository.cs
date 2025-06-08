@@ -34,6 +34,12 @@ namespace MarketBal.Repository.Account
 
                 var person = await _db.ExecuteQuery<PersonVM>(query);
                 result.PersonVM = person;
+                query = $@"select * from Business.Branches where BranchId = '{person.BranchId}'";
+                var branch = await _db.ExecuteQuery<BranchVM>(query);
+                result.PersonVM.Branch = branch;
+                query = $@"select * from Business.Organizations where OrganizationId={result.PersonVM.Branch.OrganizationId}";
+                var organzation = await _db.ExecuteQuery<OrganizationVM>(query);
+                result.PersonVM.Branch.Organization = organzation;
             }
             return result;
         }

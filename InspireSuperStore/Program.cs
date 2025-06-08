@@ -1,4 +1,5 @@
 using MainModels.Models;
+using MarketBal.Repository.DCS;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
@@ -62,6 +63,7 @@ builder.Services.AddAuthentication(cookieScheme).AddCookie(cookieScheme, options
 
 
 builder.Services.AddHttpContextAccessor();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

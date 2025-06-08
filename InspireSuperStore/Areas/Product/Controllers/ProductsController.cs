@@ -1,6 +1,11 @@
-﻿using MainModels.Util;
+﻿using MainModels.DTOModels;
+using MainModels.Models;
+using MainModels.Util;
+using MarketBal.Repository.Account;
+using MarketBal.Repository.DCS;
 using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Mvc;
+using static MainModels.DTOModels.AppConstants;
 
 namespace InspireSuperStore.Areas.Product.Controllers
 {
@@ -10,12 +15,18 @@ namespace InspireSuperStore.Areas.Product.Controllers
     {
         private readonly ProductRepository _product;
         private readonly IConfiguration _config;
+        private readonly DCSRepository _dcs;
+        private readonly AttributeRepository _attrib;
+        private readonly FileRepository _file;
+        private readonly PagesViewModel vm = new PagesViewModel();
         public ProductsController(IConfiguration config)
         {
 
             _config = config;
             _product = new ProductRepository(_config);
-
+            _dcs = new DCSRepository(_config);
+            _attrib = new AttributeRepository(_config);
+            _file = new FileRepository();
         }
         public IActionResult Products()
         {
@@ -26,5 +37,122 @@ namespace InspireSuperStore.Areas.Product.Controllers
             var res = await _product.GetProducts(request);
             return Json(res);
         }
+        [HttpPost]
+        public async Task<IActionResult> ActiveUnactive(RequestModel model)
+        {
+            var res = await _product.ActiveUnActiveProduct(model.ProductId, model.IsActive ? 1 : 0);
+            if (res)
+            {
+                return Json(new { statusCode = "200" });
+            }
+            return Json(new { statusCode = "300" });
+
+        }
+        public async Task<IActionResult> _AddProductForm()
+        {
+            vm.Departments = await _attrib.GetDepartment();
+            vm.UOMs = await _attrib.GetUOM();
+            vm.Brands = await _attrib.GetBrands();
+            return PartialView(vm);
+        }
+        public async Task<IActionResult> AddProduct(ProductVM product)
+        {
+
+            var result = await _product.AddProduct(product);
+
+            return Json(new { statusCode = "200", ProductId = result });
+        }
+        [HttpGet]
+        public async Task<IActionResult> EditProduct(Guid productId)
+        {
+            var product = await _product.GetProduct(productId);
+
+            vm.Product = product;
+            return View(vm);
+        }
+        [HttpPost]
+        public async Task<IActionResult> _GetProductImages([FromForm]RequestModel model)
+        {
+            var res = await _product.GetProductImages(model.ProductId);
+            return PartialView(res);
+        }
+        [HttpPost]
+        public async Task<IActionResult> AddProductImages(UploadImage model)
+        {
+            var result = await FileRepository.ConvertToBase64Async(model.File);
+            var extension = Path.GetExtension(model.File.FileName);
+            var FileRequest = new APIImageContentRequest
+            {
+                Folder = "Products",  DataType="Products", Base64String=result, FileExtension=extension
+            };
+            var uploadResult = await _file.SaveFile(FileRequest);
+            if (uploadResult.StatusCode=="200")
+            {
+                var resu = await _product.SaveProductImage(Guid.Parse(model.Id), uploadResult.ImageUrl);
+
+            }
+                return Json(new { statusCode = uploadResult.StatusCode, ProductImageId = model.Id, ImageUrl = uploadResult.ImageUrl, Message=uploadResult.Message });
+
+            //var res = await _product.GetProductImages(Guid.Parse(model.Id));
+
+            //return PartialView("_GetProductImages", res);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ActivateProductDefaultImage(RequestModel model)
+        {
+
+            var resu = _product.SetProductDefaultImage(model.ProductImageId,model.ProductId);
+            return Json(new { });
+
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> _GetProductVariants(RequestModel model)
+        {
+            vm.SubUOMs = await _attrib.GetSubUOMs(model.UOMId);
+            vm.Sizes = await _attrib.GetSizes();
+            vm.Colors = await _attrib.GetColors();
+            vm.Materials = await _attrib.GetMaterials();
+            vm.ProductVariants = await _product.GetProductVariants(model.ProductId);
+            vm.ProductImages = await _product.GetProductImages(model.ProductId);
+
+            return PartialView(vm);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> AddProductVariant(ProductVariantVM model)
+
+        {
+            var result = await _product.AddProductVariant(model);
+            return Json(new {id=result,statusCode="200" });
+        }
+        [HttpPost]
+        public async Task<IActionResult> SetVariantImage(RequestModel model)
+        {
+            var result = await _product.SetVariantImage(model.ProductImageId, model.VariantId);
+            return Json(new { id = result, statusCode = "200" });
+
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SetPriceFormat(RequestModel model)
+        {
+            if (Enum.TryParse<EnumPriceFormat>(model.PriceFormat, out var enumValue))
+            {
+                int intValue = (int)enumValue;
+                var result = _product.SetPriceFormat(intValue, model.VariantId);
+                return Json(new { priceFormatInt = intValue });
+            }
+            else
+            {
+                return BadRequest("Invalid price format value.");
+            }
+        }
+
+
+
+
     }
 }

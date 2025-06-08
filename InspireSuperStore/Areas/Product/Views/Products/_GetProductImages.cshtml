@@ -1,0 +1,120 @@
+﻿@using MainModels.DTOModels
+@model List<ProductImageVM>
+<div class="row">
+	<style>
+
+
+	</style>
+
+
+	@if (Model != null)
+	{
+		@foreach (var item in Model)
+		{
+			<div class="col-xl-3 col-sm-6">
+				<div class="card">
+					<div class=" px-1 pt-1">
+						<img class="card-img fixed-image img-fluid" src="@PagesViewModel.SystemSettings.ContentAPIUrl/@item.ImageUrl" alt="@item.Caption">
+
+					</div>
+
+
+
+					<div class="card-body">
+						<div class="list-icons">
+							@if (item.IsDefault)
+							{
+								<input data-productImageId="@item.ProductImageId" checked data-productId="@item.ProductId" class="setDefaultImage" type="radio" name="setDefaultImage" />
+							}
+							else
+							{
+								<input data-productImageId="@item.ProductImageId" data-productId="@item.ProductId" class="setDefaultImage" type="radio" name="setDefaultImage" />
+							}
+							<a href="#" class="list-icons-item text-danger-600"><i class="icon-trash"></i></a>
+						</div>
+						<input type="text" value="@item.Caption" class="form-control" />
+					</div>
+				</div>
+			</div>
+
+		}
+
+
+	}
+
+
+
+	<div class="col-xl-3 col-sm-6">
+		<div class="card">
+			<div class="card-img-actions px-1 pt-1">
+				<img class="card-img fixed-image img-fluid" src="../../../../global_assets/images/placeholders/placeholder.jpg" alt="">
+				<div class="card-img-actions-overlay card-img">
+					<a id="addImageList" href="#" class="btn btn-outline bg-white text-white border-white border-2 btn-icon rounded-round">
+						<i class="icon-plus3"></i>
+					</a>
+					<input type="file" hidden id="uploadImage" />
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+</div>
+
+<script>
+	$('#addImageList').click(function(e){
+		e.preventDefault();
+		$('#uploadImage').click();
+	})
+	$('#uploadImage').change(function () {
+		var ProductId = $('#productId').val()
+		var formData = new FormData();
+		var file = this.files[0];
+		formData.append('File', file);
+		formData.append('Id', ProductId);
+		Utility.SpinnerMessageParent('uploadImage','Loading..');
+			$.ajax({
+			url: '/Products/AddProductImages', // Replace with your server-side endpoint
+			type: 'POST',
+			data: formData,
+			processData: false,
+			contentType: false,
+			success: function (response) {
+							Utility.StopSpinnerMessageParent('uploadImage');
+
+				 if(response.statusCode==='200'){
+					Utility.successMessage('Record Added');
+				LoadImageTab();
+
+			console.log(response);
+				}
+				else{
+					Utility.failMessage(response.Message);
+				}
+				$('#imagePill').click();
+
+
+			},
+			error: function () {
+				alert('Image upload failed');
+			}
+		});
+
+	});
+	$('.setDefaultImage').click(async function(e){
+		
+		var pId = $(this).attr('data-productId');
+		var pimgId = $(this).attr('data-productImageId');
+
+		var formData={
+			ProductImageId:pimgId,
+			ProductId:pId
+		}
+		var dataObject={
+			data:formData,
+			url:'/Products/ActivateProductDefaultImage'
+		}
+		const Result = await Utility.RequestDataAjax(dataObject);
+		LoadImageTab();
+	})
+</script>

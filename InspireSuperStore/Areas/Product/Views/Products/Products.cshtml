@@ -8,29 +8,14 @@
 <!-- Page header -->
 <div class="page-header page-header-light">
 	<div class="page-header-content header-elements-md-inline">
-		<div class="page-title d-flex">
-			<h4> <span class="font-weight-semibold">Products</span> </h4>
-		</div>
-
-		<div class="header-elements d-none">
-			<div class="d-flex justify-content-center">
-				<a href="#" class="btn btn-success addOrganization">Add Product</a>
-
-			</div>
-		</div>
-	</div>
-
-	<div class="breadcrumb-line breadcrumb-line-light header-elements-md-inline">
+		
 		<div class="d-flex">
 			<div class="breadcrumb">
 				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
 				<span class="breadcrumb-item active">Products</span>
 			</div>
-
 			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
 		</div>
-
-
 	</div>
 </div>
 <!-- /page header -->
@@ -42,8 +27,12 @@
 		<div class="card-header header-elements-inline">
 			<h5 class="card-title">Products</h5>
 			<div class="header-elements">
-				<div class="list-icons">
-					<a class="list-icons-item" data-action="collapse"></a>
+				
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<a href="#" class="btn btn-success addProduct">Add Product</a>
+
+					</div>
 				</div>
 			</div>
 		</div>
@@ -53,36 +42,17 @@
 			<table id="ProductTable" class="table  table-bordered table-striped table-hover  ">
 				<thead>
 					<tr>
+						<th class="text-center">Id</th>
 						<th class="text-center">Product Name</th>
-						<th class="text-center">Category</th>
-						<th class="text-center">Qty</th>
-						<th class="text-center">Created On</th>
+						<th class="text-center">Product Description</th>
+						<th class="text-center">QOH</th>
 						<th class="text-center">Status</th>
 
 						<th class="text-center" style="width: 30px;"><i class="icon-menu-open2"></i></th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr>
-						<td>Marth</td>
-						<td><a href="#">Enright</a></td>
-						<td>Traffic Court Referee</td>
-						<td>22 Jun 1972</td>
-						<td>
-							<input type="checkbox" class="form-input-styled" checked data-fouc />
-
-
-						</td>
-						<td class="text-center">
-							<div class="list-icons">
-								<a href="#" class="list-icons-item text-teal-600"><i class="icon-search4"></i></a>
-
-								<a href="#" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a>
-								<a href="#" class="list-icons-item text-danger-600"><i class="icon-trash"></i></a>
-							</div>
-						</td>
-					</tr>
-
+				
 				</tbody>
 			</table>
 		</div>
@@ -110,7 +80,7 @@
 		{ data: 'ProductDescription',
 		  className: 'text-center'
 		},
-		{ data: 'Qoh',
+		{ data: 'CreatedOn',
 				  className: 'text-center',
 		 render: function(data, type, row, meta) {
 		return new Date(data).toLocaleDateString();
@@ -130,10 +100,10 @@
 		<a href="#" class="view list-icons-item text-teal-600" data-value="${row.ProductId}">
 			<i class="icon-search4"></i>
 		</a>
-		<a href="#" class="list-icons-item text-primary-600 edit" data-value="${row.ProductId}">
+		<a href="/Products/EditProduct?productId=${row.ProductId}" class="list-icons-item text-primary-600 edit" data-value="${row.ProductId}">
 			<i class="icon-pencil7"></i>
 		</a>
-		<a href="#" class="list-icons-item text-danger-600 remove" data-value="${row.ProductId}">
+		<a href="" class="list-icons-item text-danger-600 remove" data-value="${row.ProductId}">
 			<i class="icon-trash"></i>
 		</a>
 	`;
@@ -156,18 +126,21 @@
 </script>
 <script>
 	$(document).ready(function(){
-		$('.addOrganization').click(function(e){
+		$('.addProduct').click(function(e){
 
 			e.preventDefault();
 			$.ajax({
-				url:'/Business/AddOrganizationView',
+				url:'/Products/_AddProductForm',
 				method:'POST',
 				success:function(e){
-					console.log(e);
-					debugger
-					$('.vertical-modal-title').html('Add Organization');
-					$('.vertical-modal-body').html(e);
-					$('#vertical-modal').modal('show');
+					$('.full-modal-title').html('Add Product');
+					$('.full-modal-body').html(e);
+					$('#modal_full').modal(
+					{
+					 backdrop: 'static',
+						keyboard: false
+					}
+					);
 				}
 			})
 		});
@@ -176,14 +149,13 @@
 				e.preventDefault();
 				var Id = $(this).attr('data-value');
 				var formData={
-				OrganizationId:Id
+				ProductId:Id
 				}
 				$.ajax({
-					url:'/Business/GetOrganization',
+					url:'/Business/GetOrganization/'+Id,
 					method:'POST',
 					data:formData,
 					success:function(e){
-						console.log(e);
 						debugger
 						$('.large-modal-title').html('View Organization');
 						$('.large-modal-body').html(e);
@@ -191,26 +163,27 @@
 					}
 				})
 			});
-				$(document).on('click', '.edit', function (e) {
-				e.preventDefault();
-				var Id = $(this).attr('data-value');
-				var formData={
-				OrganizationId:Id
-				}
-				$.ajax({
-					url:'/Business/EditOrganization',
-					method:'POST',
-					data:formData,
-					success:function(e){
-						console.log(e);
-						debugger
-						$('.large-modal-title').html('Edit Organization');
-						$('.large-modal-body').html(e);
-						$('#modal_large').modal('show');
-					}
-				})
-			});
-				$(document).on('click', '.remove', function (e) {
+			// 	$(document).on('click', '.edit', function (e) {
+			// 	e.preventDefault();
+			// 	var Id = $(this).attr('data-value');
+			// 	var formData={
+			// 	ProductId:Id
+			// 	}
+			// 	$.ajax({
+			// 		url:'/Products/EditProduct',
+			// 		method:'POST',
+			// 		data:formData,
+			// 		success:function(e){
+			// 			console.log(e);
+			// 			debugger
+			// 			$('.large-modal-title').html('Edit Organization');
+			// 			$('.large-modal-body').html(e);
+			// 			$('#modal_large').modal('show');
+			// 		}
+			// 	})
+			// });
+				
+$(document).on('click', '.remove', function (e) {
 				e.preventDefault();
 				var Id = $(this).attr('data-value');
 				var formData={
@@ -231,11 +204,11 @@
 				debugger
 				var Id = $(this).attr('data-value');
 				var formData={
-				OrganizationId:Id,
+				ProductId:Id,
 					IsActive: $(this).is(':checked')
 					}
 				$.ajax({
-					url:'/Business/ActiveUnactive',
+					url:'/Products/ActiveUnactive',
 					method:'POST',
 					data:formData,
 					success:function(result){

@@ -1,0 +1,93 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+
+
+<div class="card shadow">
+	<div class="card-header header-elements-inline">
+		<h5 class="card-title">Category</h5>
+		<div class="header-elements">
+			<div class="list-icons">
+				<a class="list-icons-item" data-action="collapse"></a>
+			</div>
+		</div>
+	</div>
+
+	<div class="card-body">
+		<form id="addcatForm" action="#">
+			<div class="form-group row">
+				<label class="col-lg-3 col-form-label">Department:</label>
+				<div class="col-lg-9">
+					<select id="depforCat" class="form-control select">
+						<option>Select Department</option>
+						@foreach (var item in Model.Departments)
+						{
+							<option value="@item.DepartmentId">@item.DepartmentName</option>
+
+						}
+					</select>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-lg-3 col-form-label">Category:</label>
+				<div class="col-lg-9">
+					<input id="CategoryName" type="text" class="form-control" placeholder="Category">
+				</div>
+			</div>
+
+
+
+
+
+			<div class="text-right">
+				<button id="catsubbtn" type="submit" class="btn btn-primary">Submit form <i class="icon-paperplane ml-2"></i></button>
+			</div>
+		</form>
+	</div>
+</div>
+<!-- /basic layout -->
+<script>
+	$(document).ready(function(){
+		$('#addcatForm').submit(function(e){
+			e.preventDefault();
+				if(!$('#depforCat').val()){
+					$('#MessageBox').html('<span style=\"color: red;\">Empty not Allowed</span>');
+									Utility.infoMessage('Empty Not Allowed');
+				}
+				else{
+					var formData={
+						CategoryName : $('#CategoryName').val(),
+						DepartmentId : $('#depforCat').val()
+					}
+					debugger
+					console.log(formData);
+					Utility.SpinnerMessageParent('catsubbtn','Loading..');
+					$.ajax({
+						url:'/AttributeManager/AddCategory',
+						type:'POST',
+						data:formData,
+						success:function(result){
+							if(result.statusCode==='200'){
+								Utility.successMessage('Record Added');
+								$('#addcatForm')[0].reset();
+							$('#MessageBox').html('');
+
+							}else if(result.statusCode==='300'){
+									Utility.infoMessage('Record Already Exist');
+							$('#MessageBox').html('<span style=\"color: red;\">This value already exists. Duplicate entries are not allowed.</span>');
+
+							}
+							else{
+								Utility.failMessage('Please Try Again Later');
+							$('#MessageBox').html('<span style=\"color: red;\">Some Error</span>');
+							}
+								setTimeout(function(){
+									Utility.StopSpinnerMessageParent('catsubbtn');
+								},500);
+						}
+					});
+				}
+		});
+
+	});
+
+</script>

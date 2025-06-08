@@ -407,7 +407,7 @@ var App = function () {
             }
         });
     };
-   
+
     // Card fullscreen mode
     var _cardActionFullscreen = function() {
         $('.card [data-action=fullscreen]').on('click', function (e) {
