@@ -1,0 +1,96 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+	ViewData["Title"] = "EditProduct";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">Login Users</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+
+	<div class="card shadow">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Login Users</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<a href="/AdminPanel/AddUser" class="btn btn-success addProduct">Add User</a>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="table-responsive">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>UserId</th>
+						<th>Branchid</th>
+
+						<th>CreatedOn</th>
+						<th>Status</th>
+						<th>Manage</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var item in Model.LoginUsers)
+					{
+						<tr>
+							<td>@item.UserName</td>
+							<td><a href="#">@item.BranchId</a></td>
+							<td>@item.CreatedOn</td>
+							<td>
+								@if (item.IsActive)
+								{
+									<span class="badge badge-success">Active</span>
+
+
+								}
+								else
+								{
+									<span class="badge badge-secondary">UnActive</span>
+
+								}
+							</td>
+							<td class="text-center">
+								<div class="list-icons">
+									<a href="/AdminPanel/EditUser/@item.Id" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a>
+									<a href="#" class="list-icons-item text-danger-600"><i class="icon-trash"></i></a>
+									<a href="#" class="list-icons-item text-teal-600"><i class="icon-cog6"></i></a>
+								</div>
+							</td>
+						</tr>
+
+					}
+				</tbody>
+			</table>
+
+		</div>
+	</div>
+	
+
+</div>
+
+
+<!-- /content area -->

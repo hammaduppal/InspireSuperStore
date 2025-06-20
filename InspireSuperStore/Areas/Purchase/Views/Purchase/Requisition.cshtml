@@ -1,0 +1,108 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Requisition";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">Purchase Requisition</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+	<!-- Invoice archive -->
+	<div class="card">
+
+		<form id="formVariant" style="display:block" action="#">
+			<div class="row">
+			
+				<div class="col-md-2">
+					<div class="form-group">
+						<label>BarCode</label>
+						<input type="text" id="barCode" name="barCode" class="form-control" placeholder="BarCode" />
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="form-group">
+						<label>Search</label>
+						<input type="text" id="search" name="search" class="form-control" placeholder="Search.." />
+					</div>
+				</div>
+				<div class="col-md-2">
+					<div class="form-group">
+						<label>Qty</label>
+						<input type="text" id="qty" name="qty" class="form-control" placeholder="Qty" />
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+			
+
+				
+
+				<div class="col-md-2">
+					<div class="form-group">
+						<label>Sale Price</label>
+						<input type="text" id="salePrice" name="salePrice" class="form-control" placeholder="Sale Price" />
+					</div>
+				</div>
+
+				<div class="col-md-2">
+					<div class="form-group">
+						<label>Promotion Price</label>
+						<input type="text" id="promotionPrice" name="promotionPrice" class="form-control" placeholder="Promotion Price" />
+					</div>
+				</div>
+
+
+				<div class="col-md-1">
+					<label>Is Serial</label>
+					<label class="switch">
+						<input type="checkbox" id="isSerial">
+						<span class="slider"></span>
+					</label>
+
+				</div>
+
+				<div class="col-md-1">
+					<div class="form-group">
+						<label>Min</label>
+						<input type="text" id="min" name="min" class="form-control" placeholder="Min" />
+					</div>
+				</div>
+
+				<div class="col-md-1">
+					<div class="form-group">
+						<label>Max</label>
+						<input type="text" id="max" name="max" class="form-control" placeholder="Max" />
+					</div>
+				</div>
+			</div>
+
+			<div class="text-right">
+				<button type="submit" class="btn btn-primary">Submit <i class="icon-paperplane ml-2"></i></button>
+			</div>
+		</form>
+
+
+	</div>
+	<!-- /invoice archive -->
+
+</div>
+<!-- /content area -->

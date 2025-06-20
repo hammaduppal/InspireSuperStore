@@ -238,7 +238,7 @@ var EchartsCandlesticksOthers = function() {
                 // Add title
                 title: {
                     text: 'Server resources usage',
-                    subtext: 'Random demo data',
+                    subtext: 'Server Data',
                     left: 'center',
                     textStyle: {
                         fontSize: 17,
@@ -341,7 +341,7 @@ var EchartsCandlesticksOthers = function() {
                 // Add title
                 title: {
                     text: 'Server resources usage',
-                    subtext: 'Random demo data',
+                    subtext: 'CPU Load',
                     left: 'center',
                     textStyle: {
                         fontSize: 17,
@@ -365,7 +365,7 @@ var EchartsCandlesticksOthers = function() {
                 // Add series
                 series: [
                     {
-                        name: 'Memory usage',
+                        name: 'CPU Usage',
                         type: 'gauge',
                         center: ['50%', '57.5%'],
                         radius: '80%',
@@ -418,7 +418,7 @@ var EchartsCandlesticksOthers = function() {
                                 fontWeight: 500
                             }
                         },
-                        data: [{value: 50, name: 'Memory usage'}]
+                        data: [{value: 50, name: 'CPU Usage'}]
                     }
                 ]
             };

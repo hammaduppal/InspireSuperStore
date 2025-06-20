@@ -131,20 +131,20 @@
 
 
 			$('#form-login').submit(function (e) {
-				debugger
+				
 				e.preventDefault();
 				const validate = Utility.validateFormAndInputs('#form-login');
 				const isFormValid = validate();
 					let isChecked = $('#login-Remember').is(':checked');
 				if (isFormValid) {
-					Utility.startSpinner(this,'I am Messsage');
+					Utility.SpinnerMessageParent('signinBtn','Loading..');
 					e.preventDefault();
 					var formData = {
 						UserName: $('#login-Email').val(),
 						Passwords: $('#login-Password').val(),
 						Remember:isChecked
 					}
-					debugger
+					
 
 					$.ajax({
 						url: "/Account/ValidateLogin/",
@@ -152,10 +152,9 @@
 						data: formData,
 						success: function (result) {
 							// Decrypt server response
-							Utility.stopSpinner(this, 'Stopping');
+								Utility.StopSpinnerMessageParent('signinBtn');
 							if(result.statusCode==='200'){
-								debugger
-									console.log(result.returnUrl);
+								
 									
 					window.location.href = result.returnUrl ? result.returnUrl : "/";
 							}

@@ -1,6 +1,7 @@
 using InspireSuperStore.Models;
 using MainModels;
 using MainModels.DTOModels;
+using MarketBal.Repository.DashBoard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -14,11 +15,13 @@ namespace InspireSuperStore.Controllers
 		private readonly ILogger<HomeController> _logger;
 		private readonly IConfiguration _config;
 		private readonly ApiMethods _apiMethod;
+		private readonly DashBoardRepository _dashboard;
 		public HomeController(ILogger<HomeController> logger,IConfiguration config)
 		{
 			_config = config;
 			_logger = logger;
 			_apiMethod = new ApiMethods();
+			_dashboard = new DashBoardRepository(_config);
 			var systemSettings = _config.GetSection("SystemSettings").Get<SystemSettings>();
 			PagesViewModel.SystemSettings = systemSettings;
 			if (PagesViewModel.ThemeSettings==null)
@@ -27,6 +30,10 @@ namespace InspireSuperStore.Controllers
 				settings.ToggleSideBar = "";
 				settings.TemplateColor = "";
 				PagesViewModel.ThemeSettings=settings;
+			}
+			if (PagesViewModel.DashBoardSetting==null)
+			{
+				PagesViewModel.DashBoardSetting  =  _dashboard.Settings().GetAwaiter().GetResult();
 			}
 		}
 

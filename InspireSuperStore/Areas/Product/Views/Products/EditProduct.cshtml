@@ -1,4 +1,5 @@
 ﻿@using MainModels.DTOModels
+@using MainModels.Util
 @model PagesViewModel
 @{
 	ViewData["Title"] = "EditProduct";
@@ -10,7 +11,9 @@
 
 		<div class="d-flex">
 			<div class="breadcrumb">
-				<a href="/Products" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Products</a>
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<a href="/Products/Products" class="breadcrumb-item"><i class="icon-database mr-2"></i> Products</a>
 				<span class="breadcrumb-item active">Edit Product</span>
 			</div>
 
@@ -31,95 +34,146 @@
 
 		<div class="col-md-12">
 			<div class="card shadow-5">
-			
+
 
 				<div class="card-body">
 					<ul class="nav nav-pills nav-justified">
-						<li class="nav-item"><a href="#justified-badge-pill1" class="nav-link active" data-toggle="tab">ProductDetails  </a></li>
+						<li id="productDescTab" class="nav-item"><a href="#productPill" class="nav-link active" data-toggle="tab">ProductDetails  </a></li>
+						@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin,UserRolesConstants.Product,UserRolesConstants.PowerUser,UserRolesConstants.Purchase))
+						{
 						<li id="imageTab" class="nav-item"><a href="#imagePill" data-value="@Model.Product.ProductId" class="nav-link" data-toggle="tab">Images </a></li>
 						<li data-uomId="@Model.Product.UOMId" id="variantsTab" class="nav-item"><a href="#variantPill" class="nav-link" data-toggle="tab">Variants </a></li>
 
-						<li class="nav-item dropdown">
-							<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Other Settings</a>
-							<div class="dropdown-menu dropdown-menu-right">
-								<a href="#justified-badge-pill4" class="dropdown-item" data-toggle="tab">Dropdown pill</a>
-								<a href="#justified-badge-pill5" class="dropdown-item" data-toggle="tab">Another pill</a>
-							</div>
-						</li>
+						}
 					</ul>
 
 					<div class="tab-content">
-						<div class="tab-pane fade show active" id="justified-badge-pill1">
+						<div class="tab-pane fade show active" id="productPill">
 							<div class="row">
 								<div class="col-lg-8">
 									<div class="row">
 										<div class="col-md-12">
-											<fieldset>
-												<legend class="font-weight-semibold"><i class="icon-home "></i> Product details</legend>
 
-												<div class="form-group">
-													<label>Product Name</label>
-													<input id="productName" type="text" class="form-control" value="@Model.Product.ProductName" placeholder="Enter Product Name" required />
-												</div>
+											<form id="descForm">
 
-												<div class="form-group">
-													<label>Product Description</label>
-													<textarea id="description" class="form-control" placeholder="Product Description" required> @Model.Product.ProductDescription</textarea>
-												</div>
-												<div class="row">
-													<div class="col-md-6">
-														<div class="form-group">
-															<label>Department Name</label>
-															<input id="dep" type="text" class="form-control" value="@Model.Product.DepartmentName" readonly placeholder="Enter Product Name" required />
+												<fieldset>
 
-														</div>
+													<div class="form-group">
+														<label>Product Name</label>
+														<input id="productName" type="text" class="form-control" value="@Model.Product.ProductName" placeholder="Enter Product Name" required />
 													</div>
 
-													<div class="col-md-6">
-														<div class="form-group">
-															<label>Category Name</label>
-															<input id="cat" type="text" class="form-control" value="@Model.Product.CategoryName" readonly placeholder="Enter Product Name" required />
+													<div class="form-group">
+														<label>Product Description</label>
+														<textarea id="description" class="form-control" placeholder="Product Description" required> @Model.Product.ProductDescription</textarea>
+													</div>
+													
+														<div class="row">
+															<div class="col-md-11">
+															</div>
+															<div class="col-md-1">
+																<a id="unlockbtn" href="/Unlock"> <i class="icon-file-locked"></i></a>
 
+															</div>
+														</div>
+													
+												
+													<div class="row">
+
+														
+
+														<div class="col-md-6">
+															<div class="form-group">
+																<label>Department Name</label>
+																<select disabled id="dep" data-placeholder="Enter 'as'" class="form-control select-minimum" data-fouc>
+																	<option>@Model.Product.DepartmentName</option>
+																	<optgroup label="Departments">
+																		@foreach (var item in Model.Departments)
+																		{
+																			<option value="@item.DepartmentId">@item.DepartmentName</option>
+
+																		}
+																	</optgroup>
+																</select>
+
+
+															</div>
+														</div>
+
+														<div class="col-md-6">
+															<div class="form-group">
+																<label>Category Name</label>
+																<select disabled id="cat" data-placeholder="Enter 'cat'" class="form-control select-minimum" data-fouc>
+																	<option>@Model.Product.CategoryName</option>
+																	<optgroup label="Categories">
+
+																	</optgroup>
+																</select>
+															</div>
 														</div>
 													</div>
+													<div class="row">
+														<div class="col-md-6">
+															<div class="form-group">
+																<label>SubCategory Name</label>
+																<select disabled id="subcat" data-placeholder="Enter 'sub cat'" class="form-control select-minimum" data-fouc>
+																	<option value="@Model.Product.SubCategoryId">@Model.Product.SubCategoryName</option>
+																	<optgroup label="SUB Categories">
+
+																	</optgroup>
+																</select>
+															</div>
+														</div>
+
+														<div class="col-md-6">
+															<div class="form-group">
+																<label>UOM Name</label>
+																<select disabled id="uom" data-placeholder="Enter 'cat'" class="form-control select-minimum" data-fouc>
+																	<option value="@Model.Product.UOMId">@Model.Product.UOMName</option>
+																	<optgroup label="UOM">
+
+																	</optgroup>
+																</select>
+															</div>
+														</div>
+														<div class="col-md-6">
+															<div class="form-group">
+																<label>Brand Name</label>
+																<select disabled id="brand" data-placeholder="Enter 'cat'" class="form-control select-minimum" data-fouc>
+																	<option value="@Model.Product.BrandId">@Model.Product.BrandName</option>
+																	<optgroup label="Brands">
+																		@foreach (var item in Model.Brands)
+																		{
+																			<option value="@item.BrandId">@item.BrandName</option>
+																		}
+																	</optgroup>
+																</select>
+															</div>
+														</div>
+													</div>
+												</fieldset>
+												<div>
+													<button id="descFormSubmitBtn" class="btn btn-success" type="submit">Update</button>
 												</div>
-												<div class="row">
-													<div class="col-md-6">
-														<div class="form-group">
-															<label>SubCategory Name</label>
-															<input id="subcat" type="text" class="form-control" value="@Model.Product.SubCategoryName" readonly placeholder="Enter Product Name" required />
+											</form>
 
-														</div>
-													</div>
 
-													<div class="col-md-6">
-														<div class="form-group">
-															<label>UOM Name</label>
-															<input id="uom" type="text" class="form-control" value="@Model.Product.UOMName" readonly placeholder="Enter Product Name" required />
 
-														</div>
-													</div>
-												</div>
-											
-
-											
-
-											</fieldset>
 										</div>
 
 
 									</div>
 								</div>
 								<div class="col-lg-4">
-									
-									
-											<div class="card-img-actions px-5 pt-1">
-										<img class="card-img fixed-image img-fluid" src="@PagesViewModel.SystemSettings.ContentAPIUrl/@Model?.Product?.ImageUrl" alt="">
-												
-											</div>
 
-									
-									
+
+									<div class="card-img-actions px-5 pt-1">
+										<img class="card-img fixed-image img-fluid" src="@PagesViewModel.SystemSettings.ContentAPIUrl/@Model?.Product?.ImageUrl" alt="">
+
+									</div>
+
+
+
 								</div>
 
 							</div>
@@ -128,19 +182,12 @@
 						</div>
 
 						<div class="tab-pane fade" id="imagePill">
-							Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid laeggin.
 						</div>
 
 						<div class="tab-pane fade" id="variantPill">
-							DIY synth PBR banksy irony. Leggings gentrify squid 8-bit cred pitchfork. Williamsburg whatever.
 						</div>
 
-						<div class="tab-pane fade" id="justified-badge-pill4">
-							Aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud organic, assumenda labore aesthet.
-						</div>
-						<div class="tab-pane fade" id="justified-badge-pill5">
-							Aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud organic, assumenda labore aesthet.
-						</div>
+
 					</div>
 				</div>
 			</div>
@@ -152,11 +199,119 @@
 </div>
 <!-- /content area -->
 <script>
+	$('#productDescTab').click(function(){
+		location.reload();
+	})
+	$('#unlockbtn').click(function(e){
+		e.preventDefault();
+		$('#modal-unlock').modal();
+		//alert('calling Unclock');
+	});
+
+	$('#unlockForm').submit(async function(e){
+		e.preventDefault();
+		debugger
+		var formData={
+			UnlockKey: encrypt($('#unlockPassword').val())
+		}
+		var objectData={
+			data:formData,
+			url:'/Account/DecryptSomeThing'
+		}
+		const result = await Utility.RequestDataAjax(objectData);
+		if(result.statusCode==='200'){
+			$('#dep, #cat, #subcat,#uom,#brand').removeAttr('disabled');
+			$('#modal-unlock').modal('hide');
+					 Utility.successMessage(result.Message);
+
+		}
+		else{
+				 Utility.failMessage(result.Message);
+		}
+		console.log(formData);
+		
+
+	});
 	$(document).ready(function(e){
 			var id= `@Model.Product.ProductId`;
+			$('#descForm').submit(async function(e){
+					e.preventDefault();
+					Utility.SpinnerMessageParent('descFormSubmitBtn','Loading..');
+					var formData = {
+					ProductName: $('#productName').val(),
+					ProductDescription: $('#description').val().trim(),
+					ProductId:id,
+					SubCategoryId: $('#subcat').val(),
+					UOMId: $('#uom').val(),
+					BrandId: $('#brand').val()
+				 };
+				 var objectData={
+					 data:formData,
+					 url:'/Products/UpdateDescriptionSection'
+				 }
+				 const result = await Utility.RequestDataAjax(objectData);
+				 Utility.StopSpinnerMessageParent('descFormSubmitBtn');
+				 if(result.statusCode==='200')
+				 {
+					 Utility.successMessage(result.Message);
+				 }
+				 else{
+					 Utility.failMessage(result.Message);
+				 }
+			   console.log(formData);
+			});
+				$('#dep').change(async function(e){
+					
+				debugger
+					var depId = $(this).val();
+						var formData={
+							DepartmentId :depId
+						}
+						var objectData={
+							data:formData,
+							url:'/AttributeManager/GetCategorybyDepartment'
+						}
+						const result = await Utility.RequestDataAjax(objectData);
+						debugger
+							$('#cat').empty();
+							$('#subcat').empty();
+							$('#cat').append(`<option>Select Category</option>`);
+								  result.forEach(function(cat) {
+										$('#cat').append(`<option value="${cat.CategoryId}">${cat.CategoryName}</option>`);
+								  });
+					
+				
+				
+				});
+					$('#cat').change(async function(e){
+
+				debugger
+					var catid = $(this).val();
+						var formData={
+							CategoryId :catid
+						}
+						var objectData={
+							data:formData,
+							url:'/AttributeManager/GetSubCategorybyCategory'
+						}
+						const result = await Utility.RequestDataAjax(objectData);
+						debugger
+							$('#subcat').empty();
+							$('#subcat').append(`<option>Select Sub Category</option>`);
+								  result.forEach(function(subcat) {
+										$('#subcat').append(`<option value="${subcat.SubCategoryId}">${subcat.SubCategoryName}</option>`);
+								  });
+
+
+
+				});
+
+
+
+				//CategoryId: $('#cat').val(),
 			$('#variantsTab').click(async function(){
 				var uomId = $(this).attr('data-uomid')
-				
+
 				var formData={
 					ProductId:id,
 					UOMId:uomId
@@ -170,7 +325,7 @@
 			});
 
 		$('#imageTab').click(function(){
-			
+
 		var formData={
 			ProductId:id
 		}
@@ -184,7 +339,7 @@
 		})
 		})
 
-		
+
 	})
 	 function LoadImageTab(){
 		 var id= `@Model.Product.ProductId`;

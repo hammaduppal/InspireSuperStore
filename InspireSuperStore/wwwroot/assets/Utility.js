@@ -1,4 +1,136 @@
-﻿const Utility = {
+﻿const encryptionKey = "9AB9>'q}i(3|7hQ0Z*Ph0r0PF>U1QU";
+
+// Generate a key using SHA-256
+function generateKey(key) {
+    const hash = CryptoJS.SHA256(key);
+    return CryptoJS.enc.Hex.parse(hash.toString()); // 32-byte key for AES-256
+}
+function hashPassword(password) {
+    return CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
+}
+// Encrypt a plaintext string
+
+
+function encryptwithHash(plainText) {
+    if (!plainText) {
+        return '';
+    }
+
+    const hashedPlainText = hashPassword(plainText);
+    const iv = CryptoJS.lib.WordArray.random(16);
+    const key = generateKey(encryptionKey);
+
+    const encrypted = CryptoJS.AES.encrypt(hashedPlainText, key, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+
+    const encryptedData = iv.concat(encrypted.ciphertext);
+
+    return CryptoJS.enc.Base64.stringify(encryptedData);
+
+}
+
+
+function encrypt(plainText) {
+    if (!plainText) {
+        return '';
+    }
+
+    // Generate a random 16-byte IV
+    const iv = CryptoJS.lib.WordArray.random(16);
+    const key = generateKey(encryptionKey);
+
+    // Encrypt the plaintext
+    const encrypted = CryptoJS.AES.encrypt(plainText, key, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+
+    // Combine IV and ciphertext (prepend IV to the ciphertext)
+    const encryptedData = iv.concat(encrypted.ciphertext);
+
+    // Return base64-encoded result
+    return CryptoJS.enc.Base64.stringify(encryptedData);
+}
+
+
+
+// Decrypt an encrypted string
+function decrypt(cipherText) {
+    if (!cipherText) {
+        return '';
+    }
+
+    // Decode the Base64 input
+    const cipherBytes = CryptoJS.enc.Base64.parse(cipherText);
+
+    // Extract the IV (first 16 bytes)
+    const iv = CryptoJS.lib.WordArray.create(cipherBytes.words.slice(0, 4), 16);
+
+    // Extract the ciphertext (remaining bytes)
+    const encryptedData = CryptoJS.lib.WordArray.create(cipherBytes.words.slice(4));
+
+    // Generate the key
+    const key = generateKey(encryptionKey);
+
+    // Decrypt the data
+    const decrypted = CryptoJS.AES.decrypt(
+        { ciphertext: encryptedData },
+        key,
+        {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+        }
+    );
+
+    // Convert decrypted data to a string
+    return decrypted.toString(CryptoJS.enc.Utf8);
+}
+
+
+var idleTime = 0;
+$(document).ready(function () {
+    $(document).on('mousemove keydown scroll', function () {
+        idleTime = 0;
+    });
+    var idleInterval = setInterval(async function () {
+        idleTime++;
+        if (idleTime >= 200) {
+            clearInterval(idleInterval);
+            $.get('/Account/LogOut', function (response) {
+            }).fail(function () {
+            });
+            await bootboxAlertAsync("Account Signed Out!", "Your application was found idle and was signed out automatically to prevent unauthorized access.<br/><br/>Please login again to continue.");
+            var pathQuery = window.location.pathname + window.location.search;
+            clearInterval(idleInterval);
+            window.location.href = '/Account/LogOut?returnUrl=' + encodeURIComponent(pathQuery);
+        }
+    }, 200);
+
+
+});
+
+
+function bootboxAlertAsync(title, message) {
+    return new Promise((resolve) => {
+        bootbox.alert({
+            title: title,
+            message: message,
+            callback: function () {
+                resolve();
+            }
+        });
+    });
+}
+
+
+
+
+const Utility = {
 
 
 
@@ -72,9 +204,9 @@
         };
     },
     SpinnerMessage: function (brothel, message) {
-        ;
+        
         const targetElement = document.getElementById(brothel);
-
+        debugger
         if (targetElement) {
             // Ensure the target element is relatively positioned for overlay
             targetElement.style.position = 'relative';
@@ -115,6 +247,7 @@
             console.error(`Element with ID "${brothel}" not found.`);
         }
     },
+
     StopSpinnerMessage: function (brothel) {
         ;
         const targetElement = document.getElementById(brothel);

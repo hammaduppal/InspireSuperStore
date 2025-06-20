@@ -1,0 +1,3 @@
+﻿Note:
+change card border in bootstraplimitless.css
+on .card property

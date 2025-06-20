@@ -17,8 +17,8 @@ namespace MarketBal.Repository.Products
         public async Task<int> AddDepartment(DepartmentVM model)
         {
             string DepartmentSlug = HelperClass.CreateSlug(model.DepartmentName);
-            //string query = $"INSERT INTO INV.Departments (DepartmentId, DepartmentName, IsDeleted, BranchId, IsActive, CreatedBy, CreatedOn, ModifiedOn) " +
-            //      $"VALUES (NEWID(), @DepartmentName, @IsDeleted, @BranchId, @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn)";
+            //string query = $"INSERT INTO INV.Departments (DepartmentId, DepartmentName, IsDeleted, IsActive, CreatedBy, CreatedOn, ModifiedOn) " +
+            //      $"VALUES (NEWID(), @DepartmentName, @IsDeleted, @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn)";
             string query = @"
                         DECLARE @Exists INT;
                         SET @Exists = (SELECT COUNT(1) FROM INV.Departments WHERE DepartmentName = @DepartmentName AND IsDeleted = 0);
@@ -29,8 +29,8 @@ namespace MarketBal.Repository.Products
                         END
                         ELSE
                         BEGIN
-                            INSERT INTO INV.Departments (DepartmentId, DepartmentName, IsDeleted, BranchId, IsActive, CreatedBy, CreatedOn, ModifiedOn,DepartmentSlug)
-                            VALUES (NEWID(), @DepartmentName, @IsDeleted, @BranchId, @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@DepartmentSlug);
+                            INSERT INTO INV.Departments (DepartmentId, DepartmentName, IsDeleted, IsActive, CreatedBy, CreatedOn, ModifiedOn,DepartmentSlug)
+                            VALUES (NEWID(), @DepartmentName, @IsDeleted, @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@DepartmentSlug);
     
                             SELECT 1 AS Result; -- Insert successful
                         END";
@@ -39,7 +39,7 @@ namespace MarketBal.Repository.Products
             {
                 model.DepartmentName,
                 commonParams.IsDeleted,
-                commonParams.BranchId,
+                
                 commonParams.IsActive,
                 commonParams.CreatedBy,
                 commonParams.CreatedOn,
@@ -67,11 +67,11 @@ namespace MarketBal.Repository.Products
                         BEGIN
                             INSERT INTO INV.Categories (
                                 CategoryId, CategoryName, DepartmentId, IsDeleted, 
-                                BranchId, IsActive, CreatedBy, CreatedOn, ModifiedOn,CategorySlug
+                                IsActive, CreatedBy, CreatedOn, ModifiedOn,CategorySlug
                             )
                             VALUES (
                                 NEWID(), @CategoryName, @DepartmentId, @IsDeleted, 
-                                @BranchId, @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@CategorySlug
+                                @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@CategorySlug
                             );
 
                             SELECT 1 AS Result; -- Insert successful
@@ -83,7 +83,7 @@ namespace MarketBal.Repository.Products
                 model.CategoryName,
                 model.DepartmentId,
                 commonParams.IsDeleted,
-                commonParams.BranchId,
+                
                 commonParams.IsActive,
                 commonParams.CreatedBy,
                 commonParams.CreatedOn,
@@ -112,11 +112,11 @@ namespace MarketBal.Repository.Products
                         BEGIN
                             INSERT INTO INV.SubCategory (
                                 SubCategoryId, SubCategoryName, CategoryId, IsDeleted, 
-                                BranchId, IsActive, CreatedBy, CreatedOn, ModifiedOn,SubCategorySlug
+                                IsActive, CreatedBy, CreatedOn, ModifiedOn,SubCategorySlug
                             )
                             VALUES (
                                 NEWID(), @SubCategoryName, @CategoryId, @IsDeleted, 
-                                @BranchId, @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@SubCategorySlug
+                                @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@SubCategorySlug
                             );
 
                             SELECT 1 AS Result;
@@ -128,7 +128,7 @@ namespace MarketBal.Repository.Products
                 model.SubCategoryName,
                 model.CategoryId,
                 commonParams.IsDeleted,
-                commonParams.BranchId,
+                
                 commonParams.IsActive,
                 commonParams.CreatedBy,
                 commonParams.CreatedOn,
@@ -156,11 +156,11 @@ namespace MarketBal.Repository.Products
                         BEGIN
                             INSERT INTO INV.Colors (
                                 ColorId, ColorName, IsDeleted, 
-                                BranchId, IsActive, CreatedBy, CreatedOn, ModifiedOn,ColorSlug
+                                IsActive, CreatedBy, CreatedOn, ModifiedOn,ColorSlug
                             )
                             VALUES (
                                 NEWID(), @ColorName,  @IsDeleted, 
-                                @BranchId, @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@ColorSlug
+                                @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@ColorSlug
                             );
 
                             SELECT 1 AS Result;
@@ -171,7 +171,7 @@ namespace MarketBal.Repository.Products
             {
                 model.ColorName,
                 commonParams.IsDeleted,
-                commonParams.BranchId,
+                
                 commonParams.IsActive,
                 commonParams.CreatedBy,
                 commonParams.CreatedOn,
@@ -215,7 +215,7 @@ namespace MarketBal.Repository.Products
             {
                 model.SizeName,
                 commonParams.IsDeleted,
-                commonParams.BranchId,
+                
                 commonParams.IsActive,
                 commonParams.CreatedBy,
                 commonParams.CreatedOn,
@@ -258,7 +258,7 @@ namespace MarketBal.Repository.Products
             {
                 model.UOMName,
                 commonParams.IsDeleted,
-                commonParams.BranchId,
+                
                 commonParams.IsActive,
                 commonParams.CreatedBy,
                 commonParams.CreatedOn,
@@ -302,7 +302,7 @@ namespace MarketBal.Repository.Products
                 model.UOMId,
                 model.ConversionFactor,
                 commonParams.IsDeleted,
-                commonParams.BranchId,
+                
                 commonParams.IsActive,
                 commonParams.CreatedBy,
                 commonParams.CreatedOn,
@@ -344,7 +344,7 @@ namespace MarketBal.Repository.Products
             {
                 model.MaterialName,
                 commonParams.IsDeleted,
-                commonParams.BranchId,
+                
                 commonParams.IsActive,
                 commonParams.CreatedBy,
                 commonParams.CreatedOn,
@@ -372,11 +372,11 @@ namespace MarketBal.Repository.Products
                         ELSE
                         BEGIN
                             INSERT INTO INV.Brands (
-                                BrandId, BrandName, IsDeleted, BranchId,
+                                BrandId, BrandName, IsDeleted,
                                  IsActive, CreatedBy, CreatedOn, ModifiedOn,BrandSlug
                             )
                             VALUES (
-                                NEWID(), @BrandName,  @IsDeleted, @BranchId,
+                                NEWID(), @BrandName,  @IsDeleted,
                                  @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@BrandSlug
                             );
 
@@ -388,7 +388,7 @@ namespace MarketBal.Repository.Products
             {
                 model.BrandName,
                 commonParams.IsDeleted,
-                commonParams.BranchId,
+                
                 commonParams.IsActive,
                 commonParams.CreatedBy,
                 commonParams.CreatedOn,

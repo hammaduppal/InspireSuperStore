@@ -1,7 +1,13 @@
-﻿using MainModels;
+﻿using Azure.Core;
+using Dapper;
+using MainModels;
 using MainModels.DTOModels;
+using MainModels.Models;
 using MainModels.Util;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using static Azure.Core.HttpHeader;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace MarketBal.Repository.Products
 {
@@ -22,24 +28,86 @@ namespace MarketBal.Repository.Products
             memoryStream = new MemoryStream();
         }
 
+        //public async Task<object> GetProducts(DataTableRequest request)
+        //{
+
+        //    string tableName = "INV.Products";
+        //    var columnMap = new List<string>
+        //        {
+        //            "ProductId", "ProductName", "ProductDescription", "QOH","SubCategoryId", "BusinessStoreId", "CreatedOn", "CreatedBy","ModifiedOn", "IsActive", "IsDeleted"
+        //        };
+
+        //    var queries = ParamQueries.BuildDataTableQuery(tableName, "ProductName", request, columnMap);
+        //    int totalRecords = await _db.ExecuteQuery<int>(queries.TotalRecordsQuery);
+        //    int filteredRecords = await _db.ExecuteQuery<int>(queries.FilteredRecordsQuery);
+        //    var data = await _db.ExecuteQueryList<ProductVM>(queries.DataQuery);
+        //    return new
+        //    {
+        //        draw = request.Draw,
+        //        recordsTotal = totalRecords,
+        //        recordsFiltered = filteredRecords,
+        //        data = data.ToList()
+        //    };
+        //}
         public async Task<object> GetProducts(DataTableRequest request)
         {
 
-            string tableName = "INV.Products";
             var columnMap = new List<string>
                 {
                     "ProductId", "ProductName", "ProductDescription", "QOH","SubCategoryId", "BusinessStoreId", "CreatedOn", "CreatedBy","ModifiedOn", "IsActive", "IsDeleted"
                 };
+            string sortColumn = columnMap[request.Order[0].Column];
+            string sortDirection = request.Order[0].Dir.Equals("desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
 
-            var queries = ParamQueries.BuildDataTableQuery(tableName, "ProductName", request, columnMap);
-            int totalRecords = await _db.ExecuteQuery<int>(queries.TotalRecordsQuery);
-            int filteredRecords = await _db.ExecuteQuery<int>(queries.FilteredRecordsQuery);
-            var data = await _db.ExecuteQueryList<ProductVM>(queries.DataQuery);
+            int skip = request.Start;
+            int pageSize = request.Length;
+            string searchValue = request.Search?.Value;
+
+            // Base WHERE clause
+            var whereClauses = new List<string>
+    {
+        "(IsDeleted = 0 OR IsDeleted IS NULL)",
+        "OrganizationId = @OrganizationId"
+    };
+
+            var parameters = new DynamicParameters();
+            parameters.Add("OrganizationId", AppDataUtility.SessionUser.PersonVM.Branch.Organization.OrganizationId);
+
+            // Optional Search filter
+            if (!string.IsNullOrWhiteSpace(searchValue))
+            {
+                whereClauses.Add(@"(ProductName LIKE @Search OR ProductDescription LIKE @Search)");
+                parameters.Add("Search", $"%{searchValue}%");
+            }
+
+            string whereSql = "WHERE " + string.Join(" AND ", whereClauses);
+
+            string countQuery = $@"
+        SELECT COUNT(*) 
+        FROM INV.Products
+        {whereSql};
+    ";
+
+            string dataQuery = $@"
+        SELECT * 
+        FROM INV.Products
+        {whereSql}
+        ORDER BY {sortColumn} {sortDirection}
+        OFFSET @Skip ROWS FETCH NEXT @PageSize ROWS ONLY;
+    
+            ";
+
+            parameters.Add("Skip", skip);
+            parameters.Add("PageSize", pageSize);
+
+            int totalRecords = await _db.ExecuteQuery<int>(countQuery, parameters);
+            var data = await _db.GetDataListWithQueryAndParam<ProductVM>(dataQuery, parameters);
+
             return new
             {
-                draw = request.Draw,
-                recordsTotal = totalRecords,
-                recordsFiltered = filteredRecords,
+                Draw = request.Draw,
+                RecordsTotal = totalRecords,
+                RecordsFiltered = totalRecords, // same as total unless advanced filtering
                 data = data.ToList()
             };
         }
@@ -73,7 +141,7 @@ namespace MarketBal.Repository.Products
             var commonParams = CommonParamHelper.GetCommonParams();
             ProductSlug = $"{ProductSlug}&{commonParams.BranchId.ToString()}";
 
-            var param = new 
+            var param = new
             {
                 product.ProductName,
                 product.ProductDescription,
@@ -87,16 +155,19 @@ namespace MarketBal.Repository.Products
                 product.BrandId
             };
             var data = await _db.ExecuteQuery<Guid>(query, param);
-            
+
             return data;
         }
 
         public async Task<ProductVM> GetProduct(Guid ProductId)
         {
-            string query = $@"select p.ProductId,p.ProductName,uom.UOMName,p.UOMId,p.ProductDescription, sc.SubCategoryId,sc.SubCategoryName,c.CategoryName, d.DepartmentName,p.ProductSlug, ppimg.ImageUrl from Inv.Products p 
+            string query = $@"select p.ProductId,p.ProductName,uom.UOMName,p.UOMId,p.ProductDescription, sc.SubCategoryId,sc.SubCategoryName,c.CategoryName, d.DepartmentName,p.ProductSlug, ppimg.ImageUrl 
+    ,b.BrandId,b.BrandName
+from Inv.Products p 
 JOIN INV.SubCategory sc on p.SubCategoryId = sc.SubCategoryId 
 JOIN INV.Categories c on sc.CategoryId =c.CategoryId 
 JOIN Inv.Departments d on c.DepartmentId=d.DepartmentId 
+Left JOIN INV.Brands b on p.BrandId = b.BrandId
  JOIN INV.UOM uom on p.UOMId = uom.UOMId
 LEFT JOIN Inv.ProductImages ppimg on p.Productid = ppimg.ProductId and ppimg.IsDefault = 1
                 where P.ProductId = @ProductId";
@@ -104,11 +175,43 @@ LEFT JOIN Inv.ProductImages ppimg on p.Productid = ppimg.ProductId and ppimg.IsD
             {
                 ProductId
             };
-            var result = await _db.GetSingleItemDatatWithQueryAndParam<ProductVM>(query,param);
+            var result = await _db.GetSingleItemDatatWithQueryAndParam<ProductVM>(query, param);
             return result;
 
         }
+        public async Task<int> UpdateDescriptionSection(ProductVM vm)
+        {
+            if (vm.BrandId == null || vm.SubCategoryId==null||vm.BrandId==null)
+            {
+                return -1;
+            }
+            string query = @"
+                Update Inv.Products Set
+                ProductName =@ProductName, 
+                ProductDescription = @ProductDescription ,
+                SubCategoryId = @SubCategoryId ,
+                BrandId=@BrandId,
+                UOMId=@UOMId
+                where ProductId=@ProductId
+            select 1
+                "
+            ;
 
+            var param = new
+            {
+               
+               vm.ProductName,
+               vm.ProductDescription,
+               vm.SubCategoryId,
+                vm.BrandId,
+                vm.UOMId,
+                vm.ProductId,
+            };
+
+
+            var result = await _db.ExecuteQuery<int>(query, param);
+            return result;
+        }
         public async Task<List<ProductImageVM>> GetProductImages(Guid ProductId)
         {
             string query = $@"select * from INV.ProductImages
@@ -173,14 +276,14 @@ update Inv.ProductImages set IsDefault = 1 where ProductImageId = @ProductImageI
 
         public async Task<List<ProductVariantVM>> GetProductVariants(Guid ProductId)
         {
-            string query = $@"select p.ProductId,p.ProductName,p.ProductDescription,p.ProductSlug,c.ColorName,m.MaterialName,s.SizeName,uom.UOMName,uoms.SubUOMName,pv.QuantityPerUnit,pv.VariantImageId,b.BrandName  from inv.ProductVariants pv 
+            string query = $@"select p.ProductId,p.ProductName,p.ProductDescription,p.ProductSlug,c.ColorName,m.MaterialName,s.SizeName,uom.UOMName,uoms.SubUOMName,pv.QuantityPerUnit,pv.VariantImageId,b.BrandName, *  from inv.ProductVariants pv 
             JOIN Inv.Products p on pv.productId = p.productid
             JOIN INv.Colors c on pv.colorid = c.ColorId
             JOIN INV.Material m on pv.MaterialId = m.MaterialId
             JOIN INV.Sizes s on pv.SizeId = s.SizeId
             JOIN INV.UOM uom on p.UOMId = uom.UOMId
             JOIN INV.UOMSub uoms on pv.SubUOMId = uoms.SubUOMId
-JOIN INV Brands b on p.BrandId = b.BrandId
+JOIN INV.Brands b on p.BrandId = b.BrandId
             where pv.ProductId= @ProductId and pv.IsActive =1 and pv.IsDeleted =0";
             var param = new
             {
@@ -192,14 +295,40 @@ JOIN INV Brands b on p.BrandId = b.BrandId
 
 
 
-        public async Task<Guid> AddProductVariant(ProductVariantVM model)
+        public async Task<int> AddProductVariant(ProductVariantVM model)
         {
-            string query = $@"
-Declare @VariantId uniqueidentifier = NewId()
-                    INSERT INTO Inv.ProductVariants (VariantId,MaterialId,ColorId,SizeId,ProductId,Cost,BarCode,SalesPrice,PromotionPrice,RetailPrice,UOMId,SubUOMId,QuantityPerUnit,IsSerial,MinQty,MaxQty,CreatedOn,Createdby,ModifiedOn,IsActive,IsDeleted,BranchId) 
-                                        VALUES (@VariantId,@MaterialId,@ColorId,@SizeId,@ProductId,@Cost,@BarCode,@SalesPrice,@PromotionPrice,@RetailPrice,@UOMId,@SubUOMId,@QuantityPerUnit,@IsSerial,@MinQty,@MaxQty,@CreatedOn,@CreatedBy,@ModifiedOn,@IsActive,@IsDeleted,@BranchId);
-select @VariantId
-                            ";
+            //            string query = $@"
+            //Declare @VariantId uniqueidentifier = NewId()
+            //                    INSERT INTO Inv.ProductVariants (VariantId,MaterialId,ColorId,SizeId,ProductId,Cost,BarCode,SalesPrice,PromotionPrice,RetailPrice,UOMId,SubUOMId,QuantityPerUnit,IsSerial,MinQty,MaxQty,CreatedOn,Createdby,ModifiedOn,IsActive,IsDeleted,BranchId) 
+            //                                        VALUES (@VariantId,@MaterialId,@ColorId,@SizeId,@ProductId,@Cost,@BarCode,@SalesPrice,@PromotionPrice,@RetailPrice,@UOMId,@SubUOMId,@QuantityPerUnit,@IsSerial,@MinQty,@MaxQty,@CreatedOn,@CreatedBy,@ModifiedOn,@IsActive,@IsDeleted,@BranchId);
+            //select @VariantId
+            //                            ";
+            string query = $@"DECLARE @VariantId UNIQUEIDENTIFIER = NEWID();
+
+                    IF EXISTS (
+                        SELECT 1 FROM Inv.ProductVariants WHERE BarCode = @BarCode AND IsDeleted = 0
+                    )
+                    BEGIN
+                        SELECT -1 AS Result;
+                    END
+                    ELSE
+                    BEGIN
+                        INSERT INTO Inv.ProductVariants (
+                            VariantId, MaterialId, ColorId, SizeId, ProductId,
+                            Cost, BarCode, SalesPrice, PromotionPrice, RetailPrice,
+                            UOMId, SubUOMId, QuantityPerUnit, IsSerial, MinQty,
+                            MaxQty, CreatedOn, CreatedBy, ModifiedOn, IsActive, IsDeleted, BranchId
+                        )
+                        VALUES (
+                            @VariantId, @MaterialId, @ColorId, @SizeId, @ProductId,
+                            @Cost, @BarCode, @SalesPrice, @PromotionPrice, @RetailPrice,
+                            @UOMId, @SubUOMId, @QuantityPerUnit, @IsSerial, @MinQty,
+                            @MaxQty, @CreatedOn, @CreatedBy, @ModifiedOn, @IsActive, @IsDeleted, @BranchId
+                        );
+
+                        SELECT 300 AS Result;
+                    END
+";
             var commonParams = CommonParamHelper.GetCommonParams();
 
             var param = new
@@ -227,7 +356,7 @@ select @VariantId
                 commonParams.BranchId
             };
 
-            var result = await _db.ExecuteQuery<Guid>(query, param);
+            var result = await _db.ExecuteQuery<int>(query, param);
             return result;
         }
 
@@ -269,6 +398,52 @@ Update INV.ProductVariants set VariantImageId = @VariantImageId where VariantId 
             var result = await _db.ExecuteQuery<Guid>(query, param);
             return result;
 
+        }
+        
+        public async Task<int> UpdateVariant(UpdateVariantModel model)
+        {
+            string query = "";
+            if (model.DataType=="BarCode")
+            {
+                query = @"
+                        IF EXISTS (
+                            SELECT 1 FROM INV.ProductVariants 
+                            WHERE BarCode = @Value AND VariantId = @VariantId
+                        )
+                        BEGIN
+                            SELECT -1
+                        END
+                        ELSE
+                        BEGIN
+                            UPDATE INV.ProductVariants 
+                            SET BarCode = @Value 
+                            WHERE VariantId = @VariantId
+                            SELECT 1
+                        END";
+
+                var param = new
+                {
+                    model.Value,
+                    VariantId = model.VariantId
+                };
+
+
+                var result = await _db.ExecuteQuery<int>(query,param);
+                return result;
+
+            }
+            else
+            {
+                query = $@"
+                    UPDATE INV.ProductVariants set {model.DataType} = {model.Value} where VariantId = '{model.VariantId}'";
+                var allResult = await _db.ExecuteQueryModify(query);
+                return allResult;
+            }
+          
+
+            
+
+           
         }
     }
 }

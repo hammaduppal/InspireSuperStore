@@ -1,0 +1,508 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+	ViewData["Title"] = "EditUser";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+				<a href="/AdminPanel/LoginUser" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Users</a>
+				<span class="breadcrumb-item active">Edit User</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+<div class="content">
+	<!-- Form validation -->
+	<div class="card">
+		<div class="card-header">
+			<div class="form-group row">
+				<div class="col-lg-3">
+					<div class="form-check">
+						@if (Model.LoginUser.IsActive)
+						{
+							<label class="switch">
+								<input type="checkbox" checked id="isActive">
+								<span class="slider"></span>
+							</label>
+						}
+						else
+						{
+							<label class="switch">
+								<input type="checkbox" id="isActive">
+								<span class="slider"></span>
+							</label>
+						}
+						User Status
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card-body">
+
+			<form id="updateLoginForm" class="form-validate-jquery" action="#">
+				<input type="hidden" id="Id" value="@Model.LoginUser.Id" />
+				<input type="hidden" id="PersonId" value="@Model.LoginUser.PersonVM.Id" />
+
+				<fieldset class="mb-3">
+					<legend class="text-uppercase font-size-sm font-weight-bold">Edit Users</legend>
+
+					<div class="row">
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="UserName" class="col-form-label col-lg-3">User Name <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<input type="email" id="UserName" name="UserName" class="form-control" required placeholder="User Name" value="@Model.LoginUser.UserName" />
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="Password" class="col-form-label col-lg-3">Password <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<div class="form-group-feedback form-group-feedback-right">
+										<input type="password" id="Password" name="Passwords" class="form-control" required placeholder="Password" value="@Model.LoginUser.Passwords" />
+										<div class="form-control-feedback">
+											<a id="viewPassword" href="#"><i class="icon-eye-blocked"></i></a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="FirstName" class="col-form-label col-lg-3">First Name <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<input type="text" id="FirstName" name="FirstName" class="form-control" required placeholder="First Name" value="@Model.LoginUser.PersonVM.FirstName" />
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="LastName" class="col-form-label col-lg-3">Last Name <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<div class="form-group-feedback form-group-feedback-right">
+										<input type="text" id="LastName" name="LastName" class="form-control" required placeholder="Last Name" value="@Model.LoginUser.PersonVM.LastName" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="Email" class="col-form-label col-lg-3">User Email <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<input type="email" id="Email" name="Email" class="form-control" required placeholder="User Email" value="@Model.LoginUser.PersonVM.Email" />
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="Mobile" class="col-form-label col-lg-3">Mobile <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<div class="form-group-feedback form-group-feedback-right">
+										<input type="text" id="Mobile" name="MobileNumber" class="form-control" required placeholder="Mobile" value="@Model.LoginUser.PersonVM.MobileNumber" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="Cnic" class="col-form-label col-lg-3">User CNIC <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<input type="text" id="Cnic" name="Cnic" class="form-control" required placeholder="User CNIC" value="@Model.LoginUser.PersonVM.Cnic" />
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="SocialSecurity" class="col-form-label col-lg-3">Social Security <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<div class="form-group-feedback form-group-feedback-right">
+										<input type="text" id="SocialSecurity" name="SocialSecurity" class="form-control" required placeholder="Social Security" value="@Model.LoginUser.PersonVM.SocialSecurity" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+
+				</fieldset>
+
+
+				<div class="d-flex justify-content-end align-items-center">
+					<button type="reset" class="btn btn-light" id="reset">Reset <i class="icon-reload-alt ml-2"></i></button>
+					<button type="submit" class="btn btn-primary ml-3">Submit <i class="icon-paperplane ml-2"></i></button>
+				</div>
+			</form>
+		</div>
+	</div>
+	<!-- /form validation -->
+	<div class="row">
+		@foreach (var item in Model.LoginUser.PersonVM.LaneAddress)
+		{
+			<div class="col-md-6">
+				<div class="card">
+					<div class="card-header header-elements-inline">
+						<h6 class="card-title">@item.AddressType Address Type:</h6>
+					</div>
+					<input type="hidden" id="id-@item.AddressType" value="@item.AddressId" />
+
+					<div class="card-body">
+						<form id="form-@item.AddressType" action="#">
+							<div class="form-group">
+								<label>Lane Address One:</label>
+								<input id="addressOne-@item.AddressType" type="text" class="form-control" placeholder="Lane Address One" value="@item.LaneAddressOne" />
+							</div>
+							<div class="form-group">
+								<label>Lane Address Two:</label>
+								<input id="addressTwo-@item.AddressType" type="text" class="form-control" placeholder="Lane Address Two" value="@item.LaneAddressTwo" />
+							</div>
+							<div class="row">
+								<div class="col-lg-6">
+									<div class="form-group">
+										<label>Near Famous Place:</label>
+										<input id="famousPlace-@item.AddressType" type="text" class="form-control" placeholder="Near Famous Place" value="@item.FamousPlace" />
+									</div>
+								</div>
+								<div class="col-lg-6">
+									<div class="form-group">
+										<label>Area:</label>
+										<input id="area-@item.AddressType" type="text" class="form-control" placeholder="Area" value="@item.Area" />
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-lg-6">
+									<div class="form-group">
+										<label>Address Type:</label>
+										<input disabled type="text" class="form-control" placeholder="Address Type" value="@item.AddressType" />
+									</div>
+								</div>
+								<div class="col-lg-6">
+									<div class="form-group">
+										<label>Country:</label>
+										<select id="country-@item.AddressType" data-placeholder="Enter 'Country'" class="form-control select-minimum" data-fouc>
+											<option value="@item.City.StateProvince.Country.CountryId">@item.City.StateProvince.Country.CountryName</option>
+											<optgroup label="Country">
+												@foreach (var country in Model.Countries)
+												{
+													<option value="@country.CountryId">@country.CountryName</option>
+												}
+											</optgroup>
+										</select>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-lg-6">
+									<div class="form-group">
+										<label>State Province:</label>
+										<select id="province-@item.AddressType" data-placeholder="Enter 'State'" class="form-control select-minimum" data-fouc>
+											<option value="@item.City.StateProvince.StateProvinceId">@item.City.StateProvince.StateProvinceName</option>
+											<optgroup label="State">
+
+											</optgroup>
+										</select>
+									</div>
+								</div>
+								<div class="col-lg-6">
+									<div class="form-group">
+										<label>City:</label>
+										<select id="city-@item.AddressType" data-placeholder="Enter 'cat'" class="form-control select-minimum" data-fouc>
+											<option value="@item.City.CityId">@item.City.CityName</option>
+											<optgroup label="City">
+
+											</optgroup>
+										</select>
+									</div>
+								</div>
+							</div>
+							<div class="d-flex justify-content-end align-items-center">
+								<button type="submit" class="btn btn-light">Preview</button>
+								<button type="submit" class="btn bg-blue ml-3">Submit <i class="icon-paperplane ml-2"></i></button>
+							</div>
+						</form>
+					</div>
+				</div>
+				<!-- /right aligned buttons -->
+			</div>
+		}
+	</div>
+
+	<!-- Basic example -->
+	<div class="card">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Roles</h5>
+		</div>
+
+		<div class="card-body">
+
+			<select id="rolesListBox" multiple="multiple" class="form-control listbox" data-fouc>
+				@foreach (var item in Model.Roles)
+				{
+					bool isSelected = Model.LoginUser.Roles.Any(x => x.Id == item.Id);
+					<option value="@item.Id" @(isSelected ? "selected" : "")>@item.Name</option>
+					@* var result = Model.LoginUser.Roles.Where(x => x.Id == item.Id).FirstOrDefault();
+					if (result != null)
+					{
+						<option value="@item.Id" selected>@item.Name</option>
+					}
+					else
+					{
+						<option value="@item.Id">@item.Name</option>
+					} *@
+				}
+
+			</select>
+		</div>
+	</div>
+	<!-- /basic example -->
+
+
+</div>
+
+<script>
+	$(document).ready(function(){
+			$('#isActive').on('change', async function () {
+		var isActive = $(this).is(':checked');
+		var formData={
+			IsActive:isActive,
+			Id:$('#Id').val()
+		}
+		var objectData={
+			data:formData,
+			url:'/AdminPanel/ActiveUnActiveUser'
+		}
+		const result = await Utility.RequestDataAjax(objectData);
+			if(result.statusCode==='200'){
+				Utility.successMessage(result.Message);
+			}
+			else{
+				Utility.failMessage(result.Message);
+			}
+	});	
+
+		$('#country-Shipping').change(async function(){
+			var CountryId=$(this).val();
+		var states = await GetStates(CountryId);
+		
+
+							$('#province-Shipping').empty();
+							$('#city-Shipping').empty();
+
+
+								  states.forEach(function(province) {
+										$('#province-Shipping').append(`<option value="${province.StateProvinceId}">${province.StateProvinceName}</option>`);
+								  });
+								  var firstState = states[0];
+								  var cities = await GetCities(firstState.StateProvinceId);
+									cities.forEach(function(city) {
+										$('#city-Shipping').append(`<option value="${city.CityId}">${city.CityName}</option>`);
+								  });
+		})
+		$('#province-Shipping').change(async function(){
+			
+			var StateId=$(this).val();
+			var formData={
+				StateProvinceId:StateId
+			}
+			var objectData={
+				data:formData,
+				url:'/AdminPanel/GetCityByStateId/'
+			}
+			const result = await Utility.RequestDataAjax(objectData);
+							$('#city-Shipping').empty();
+								  result.forEach(function(province) {
+										$('#city-Shipping').append(`<option value="${province.CityId}">${province.CityName}</option>`);
+								  });
+		})
+		$('#country-Billing').change(async function(){
+			var CountryId=$(this).val();
+		var states = await GetStates(CountryId);
+		
+
+							$('#province-Billing').empty();
+							$('#city-Billing').empty();
+
+
+								  states.forEach(function(province) {
+										$('#province-Billing').append(`<option value="${province.StateProvinceId}">${province.StateProvinceName}</option>`);
+								  });
+								  var firstState = states[0];
+								  var cities = await GetCities(firstState.StateProvinceId);
+									cities.forEach(function(city) {
+										$('#city-Billing').append(`<option value="${city.CityId}">${city.CityName}</option>`);
+								  });
+		})
+		$('#province-Billing').change(async function(){
+			
+			var StateId=$(this).val();
+			var formData={
+				StateProvinceId:StateId
+			}
+			var objectData={
+				data:formData,
+				url:'/AdminPanel/GetCityByStateId/'
+			}
+			const result = await Utility.RequestDataAjax(objectData);
+							$('#city-Billing').empty();
+								  result.forEach(function(province) {
+										$('#city-Billing').append(`<option value="${province.CityId}">${province.CityName}</option>`);
+								  });
+		})
+
+
+	})
+	async function GetCities(Id){
+		
+			var formData={
+				StateProvinceId:Id
+			}
+			var objectData={
+				data:formData,
+				url:'/AdminPanel/GetCityByStateId/'
+			}
+			const result = await Utility.RequestDataAjax(objectData);
+			return result
+	}
+	async function GetStates(Id){
+		
+			var formData={
+				CountryId:Id
+			}
+			var objectData={
+				data:formData,
+				url:'/AdminPanel/GetStatesByCountryId/'
+			}
+			const result = await Utility.RequestDataAjax(objectData);
+			return result
+	}
+	$('#form-Shipping').submit(async function(e){
+		e.preventDefault();
+			var formData = {
+				AddressId:$('#id-Shipping').val(),
+				LaneAddressOne: $('#addressOne-Shipping').val(),
+				LaneAddressTwo: $('#addressTwo-Shipping').val(),
+				FamousPlace: $('#famousPlace-Shipping').val(),
+				Area: $('#area-Shipping').val(),
+				AddressType: "Shipping",
+				CityId: $('#city-Shipping').val(),
+				StateProvinceId: $('#province-Shipping').val(),
+				CountryId: $('#country-Shipping').val(),
+			};
+			var objectData={
+				data:formData,
+				url:'/AdminPanel/UpdateAddress/'
+			}
+			const result = await Utility.RequestDataAjax(objectData);
+		if(result.statusCode==='200'){
+				Utility.successMessage(result.Message);
+			}
+			else{
+				Utility.failMessage(result.Message);
+			}
+
+	});
+	$('#form-Billing').submit(async function(e){
+		e.preventDefault();
+				var formDataBilling = {
+					AddressId:$('#id-Billing').val(),
+					LaneAddressOne: $('#addressOne-Billing').val(),
+					LaneAddressTwo: $('#addressTwo-Billing').val(),
+					FamousPlace: $('#famousPlace-Billing').val(),
+					Area: $('#area-Billing').val(),
+					AddressType: "Billing",
+
+					CityId: $('#city-Billing').val(),
+					StateProvinceId: $('#province-Billing').val(),
+					CountryId: $('#country-Billing').val(),
+
+
+		};
+
+			var objectData={
+				data:formDataBilling,
+				url:'/AdminPanel/UpdateAddress/'
+			}
+			const result = await Utility.RequestDataAjax(objectData);
+			if(result.statusCode==='200'){
+				Utility.successMessage(result.Message);
+			}
+			else{
+				Utility.failMessage(result.Message);
+			}
+
+
+	});
+
+	$('#updateLoginForm').submit(async function(e){
+		e.preventDefault();
+			var formData = {
+				Id:$('#Id').val(),
+				UserName: $('#UserName').val(),
+				Passwords: $('#Password').val(),
+				PersonVM:{
+					Id:$('#PersonId').val(),
+				FirstName: $('#FirstName').val(),
+				LastName: $('#LastName').val(),
+				Email: $('#Email').val(),
+				MobileNumber: $('#Mobile').val(),
+				Cnic: $('#Cnic').val(),
+				SocialSecurity: $('#SocialSecurity').val()
+				}
+			};
+			var objectData={
+				data:formData,
+				url:'/AdminPanel/UpdateLoginUser'
+			}
+			const result = await Utility.RequestDataAjax(objectData);
+			if(result.statusCode==='200'){
+				Utility.successMessage(result.Message);
+			}
+			else{
+				Utility.failMessage(result.Message);
+			}
+	})
+	$(document).ready(function () {
+		$('#rolesListBox').on('change', async function () {
+			var selectedValues = $(this).val();
+			var id = $('#Id').val();
+			var formData={
+				RoleIds:selectedValues,
+				Id:id
+			}
+			var objectData={
+				data:formData,
+				url:'/AdminPanel/AssignUserRoles'
+			}
+			
+			const result = await Utility.RequestDataAjax(objectData);
+			if(result.statusCode==='200')
+			{
+				Utility.successMessage(result.Message);
+			}
+			else{
+				Utility.failMessage(result.Message);
+			}
+		});
+	});
+</script>

@@ -4,11 +4,14 @@ using MainModels.Util;
 using MarketBal.Repository.Account;
 using MarketBal.Repository.DCS;
 using MarketBal.Repository.Products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis;
 using static MainModels.DTOModels.AppConstants;
 
 namespace InspireSuperStore.Areas.Product.Controllers
 {
+    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry)]
     [Area("Product")]
     [Route("[controller]/[action]")]
     public class ProductsController : Controller
@@ -30,7 +33,10 @@ namespace InspireSuperStore.Areas.Product.Controllers
         }
         public IActionResult Products()
         {
-            return View();
+            vm.Permission = PermissionHelper.Permissions().Where(x => x.URL == "/Product/Products" && x.Module == ModuleList.Product.ToString() && x.Role == "Admin").FirstOrDefault(); ;
+
+
+            return View(vm);
         }
         public async Task<IActionResult> GetProducts(DataTableRequest request)
         {
@@ -66,12 +72,49 @@ namespace InspireSuperStore.Areas.Product.Controllers
         public async Task<IActionResult> EditProduct(Guid productId)
         {
             var product = await _product.GetProduct(productId);
-
+            vm.Departments = await _attrib.GetDepartment();
+            vm.Brands = await _attrib.GetBrands();
             vm.Product = product;
+            vm.Permission = PermissionHelper.Permissions().Where(x => x.URL == "/Product/Products" && x.Module == ModuleList.Product.ToString() && x.Feature == ModuleList.Category.ToString() && x.UserId == 2).FirstOrDefault(); ;
+
+
             return View(vm);
         }
         [HttpPost]
-        public async Task<IActionResult> _GetProductImages([FromForm]RequestModel model)
+        public async Task<IActionResult> UpdateDescriptionSection(ProductVM product)
+        {
+            try
+            {
+                var result = await _product.UpdateDescriptionSection(product);
+                if (result == 1)
+                {
+                    return Json(new { statusCode = "200", Message = "Record Updated Successful" });
+
+                }
+                else
+                {
+                    return Json(new { statusCode = "300", Message = "Unable to Update Record Null or Empty Values are not Allowed" });
+
+                }
+            }
+            catch (Exception e)
+            {
+
+                return Json(new { statusCode = "300", Message = e.Message });
+            }
+
+        }
+        //[HttpPost]
+        //public async Task<IActionResult> _ProductDescriptionPage(RequestModel model)
+        //{
+        //    var product = await _product.GetProduct(model.ProductId);
+        //    vm.Departments = await _attrib.GetDepartment();
+        //    vm.Brands = await _attrib.GetBrands();
+        //    vm.Product = product;
+        //    return PartialView(vm);
+        //}
+        [HttpPost]
+        public async Task<IActionResult> _GetProductImages([FromForm] RequestModel model)
         {
             var res = await _product.GetProductImages(model.ProductId);
             return PartialView(res);
@@ -83,15 +126,18 @@ namespace InspireSuperStore.Areas.Product.Controllers
             var extension = Path.GetExtension(model.File.FileName);
             var FileRequest = new APIImageContentRequest
             {
-                Folder = "Products",  DataType="Products", Base64String=result, FileExtension=extension
+                Folder = "Products",
+                DataType = "Products",
+                Base64String = result,
+                FileExtension = extension
             };
             var uploadResult = await _file.SaveFile(FileRequest);
-            if (uploadResult.StatusCode=="200")
+            if (uploadResult.StatusCode == "200")
             {
                 var resu = await _product.SaveProductImage(Guid.Parse(model.Id), uploadResult.ImageUrl);
 
             }
-                return Json(new { statusCode = uploadResult.StatusCode, ProductImageId = model.Id, ImageUrl = uploadResult.ImageUrl, Message=uploadResult.Message });
+            return Json(new { statusCode = uploadResult.StatusCode, ProductImageId = model.Id, ImageUrl = uploadResult.ImageUrl, Message = uploadResult.Message });
 
             //var res = await _product.GetProductImages(Guid.Parse(model.Id));
 
@@ -102,7 +148,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
         public async Task<IActionResult> ActivateProductDefaultImage(RequestModel model)
         {
 
-            var resu = _product.SetProductDefaultImage(model.ProductImageId,model.ProductId);
+            var resu = _product.SetProductDefaultImage(model.ProductImageId, model.ProductId);
             return Json(new { });
 
         }
@@ -126,7 +172,16 @@ namespace InspireSuperStore.Areas.Product.Controllers
 
         {
             var result = await _product.AddProductVariant(model);
-            return Json(new {id=result,statusCode="200" });
+            if (result == -1)
+            {
+                return Json(new { id = result, statusCode = "300" });
+
+            }
+            else
+            {
+                return Json(new { id = result, statusCode = "200" });
+
+            }
         }
         [HttpPost]
         public async Task<IActionResult> SetVariantImage(RequestModel model)
@@ -142,7 +197,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             if (Enum.TryParse<EnumPriceFormat>(model.PriceFormat, out var enumValue))
             {
                 int intValue = (int)enumValue;
-                var result = _product.SetPriceFormat(intValue, model.VariantId);
+                var result = await _product.SetPriceFormat(intValue, model.VariantId);
                 return Json(new { priceFormatInt = intValue });
             }
             else
@@ -151,6 +206,23 @@ namespace InspireSuperStore.Areas.Product.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> UpdateVariant(UpdateVariantModel model)
+        {
+
+            var status = await _product.UpdateVariant(model);
+            if (status == 1)
+            {
+                return Json(new { Message = $"Data Updated for {model.DataType} is Updated", statusCode = "200" });
+
+            }
+            else
+            {
+                return Json(new { Message = $"Unable to Update Data for {model.DataType}", statusCode = "300" });
+
+            }
+
+        }
 
 
 

@@ -1,12 +1,14 @@
 ﻿using MainModels.DTOModels;
 using MarketBal.Repository.DCS;
 using MarketBal.Repository.Products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InspireSuperStore.Areas.Product.Controllers
 {
     [Area("Product")]
     [Route("[controller]/[action]")]
+    
     public class AttributeManagerController : Controller
     {
         private readonly IConfiguration _config;

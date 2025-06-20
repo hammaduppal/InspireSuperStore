@@ -11,10 +11,12 @@ namespace InspireSuperStore.Areas.Account.Controllers
     {
         private readonly IConfiguration _config;
         private readonly AccountRepository _login;
+        private readonly AESEncryption _aes;
         public AccountController(IConfiguration config)
         {
             _config = config;
             _login = new AccountRepository(_config);
+            _aes = new AESEncryption();
         }
         public IActionResult Login(string? ReturnUrl = null)
         {
@@ -33,6 +35,11 @@ namespace InspireSuperStore.Areas.Account.Controllers
                     await _login.SigninAsync(res, HttpContext);
                     res.Passwords = "";
                     AppDataUtility.SessionUser = res;
+                    //if (res.RoleName=="SuperAdmin")
+                    //{
+                    //    url = "/adminPanel";
+
+                    //}
                     return Json(new { statusCode = "200", Message = "LoginSuccessfull", returnUrl = url });
                 }
                 else
@@ -54,6 +61,21 @@ namespace InspireSuperStore.Areas.Account.Controllers
         public IActionResult Failure()
         {
             return View();
+        }
+
+        public IActionResult DecryptSomeThing(SecretLock model)
+        {
+            string aesresult = _aes.Decrypt(model.UnlockKey);
+            if (aesresult=="ERP")
+            {
+                return Json(new { statusCode = "200",Message="Special Feature Unlocked" });
+
+            }
+            else
+            {
+                return Json(new { statusCode = "300",Message="Wrong Password" });
+
+            }
         }
     }
 }

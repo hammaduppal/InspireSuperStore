@@ -1,4 +1,6 @@
-﻿	<!-- Sidebar mobile toggler -->
+﻿	@using MainModels.DTOModels
+@using MainModels.Util
+	@model PagesViewModel
 
 <div class="sidebar-content">
 
@@ -15,24 +17,51 @@
 					</span>
 				</a>
 			</li>
-			<li class="nav-item nav-item-submenu">
-				<a href="#" class="nav-link "><i class="icon-copy"></i> <span>Products</span></a>
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin,UserRolesConstants.DataEntry,UserRolesConstants.Product,UserRolesConstants.PowerUser))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-copy"></i> <span>Products</span></a>
 
-				<ul class="nav nav-group-sub" data-submenu-title="Products">
-					<li class="nav-item"><a href="/Products/Products" class="nav-link">Products</a></li>
-				</ul>
-			</li>
-			<li class="nav-item nav-item-submenu">
-				<a href="#" class="nav-link "><i class="icon-copy"></i> <span>Attribute Manager</span></a>
+					<ul class="nav nav-group-sub" data-submenu-title="Products">
+						<li class="nav-item"><a href="/Products/Products" class="nav-link">Products</a></li>
+					</ul>
+				</li>
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-copy"></i> <span>Attribute Manager</span></a>
 
-				<ul class="nav nav-group-sub" data-submenu-title="AttributeManager">
-					<li class="nav-item"><a href="/AttributeManager/DCSManager" class="nav-link">DCS Manager</a></li>
-					<li class="nav-item"><a href="/AttributeManager/Roles" class="nav-link">Businesses</a></li>
-					<li class="nav-item"><a href="/AttributeManager/BusinessUsers" class="nav-link">BusinessUsers</a></li>
+					<ul class="nav nav-group-sub" data-submenu-title="AttributeManager">
+						<li class="nav-item"><a href="/AttributeManager/DCSManager" class="nav-link">DCS Manager</a></li>
+					</ul>
+				</li>
+			}
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Product, UserRolesConstants.Purchase))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-cart-add2"></i> <span>Purchase Orders</span></a>
 
-				</ul>
-			</li>
+					<ul class="nav nav-group-sub" data-submenu-title="Purchase Section">
+						<li class="nav-item"><a href="/Purchase/Requisition" class="nav-link">Purchase Requisition</a></li>
+						<li class="nav-item"><a href="/Purchase/PurchaseOrder" class="nav-link">Purchase PurchaseOrder</a></li>
+						<li class="nav-item"><a href="/Purchase/GoodReceivedNote" class="nav-link">GRN</a></li>
+					</ul>
+				</li>
+			}
 
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.SuperAdmin))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-cart-add2"></i> <span>System Setup</span></a>
+					<ul class="nav nav-group-sub" data-submenu-title="System Section">
+						<li class="nav-item"><a href="/AdminPanel/LoginUser" class="nav-link">Loginusers</a></li>
+						@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin))
+						{
+							<li class="nav-item"><a href="/AdminPanel/AddUser" class="nav-link">Add User</a></li>
+							<li class="nav-item"><a href="/AdminPanel/UserRoles" class="nav-link">User Roles</a></li>
+						}
+
+					</ul>
+				</li>
+			}
 		</ul>
 	</div>
 	<!-- /main navigation -->

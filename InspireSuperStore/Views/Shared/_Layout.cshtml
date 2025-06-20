@@ -48,7 +48,23 @@
                 }
             })
         })
-        
+                document.addEventListener('DOMContentLoaded', () => {
+                    
+          const currentPath = window.location.pathname.toLowerCase();
+
+          document.querySelectorAll('.nav-sidebar .nav-link').forEach(link => {
+            if (link.getAttribute('href').toLowerCase() === currentPath) {
+              link.classList.add('active');
+
+              let li = link.closest('.nav-item-submenu');
+              while (li) {
+                li.classList.add('nav-item-expanded', 'nav-item-open');
+                li = li.parentElement.closest('.nav-item-submenu');
+              }
+            }
+          });
+        });
+
      
         //         $(document).ready(function () {
         //     $('.sidebar .nav-link').each(function () {
@@ -77,7 +93,19 @@
         //     });
         //     }
         // });
+                $('#viewPassword').on('click', function (e) {
+            e.preventDefault();
+            var $passwordInput = $('#Password');
+            var inputType = $passwordInput.attr('type');
 
+            if (inputType === 'password') {
+                $passwordInput.attr('type', 'text');
+                $(this).find('i').removeClass('icon-eye-blocked').addClass('icon-eye');
+            } else {
+                $passwordInput.attr('type', 'password');
+                $(this).find('i').removeClass('icon-eye').addClass('icon-eye-blocked');
+            }
+        });
     </script>
 </body>
 </html>

@@ -21,7 +21,7 @@ namespace MarketBal.Repository.Account
         {
             string encodedPass = EncryptionPasses.Encrypt(model.Passwords, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
 
-            var query = $"select * from HRM.LoginUsers  u left JOIN HRM.UserAssignedBranches ab on u.Id=ab.LoginUserId   where u.UserName='{model.UserName}' and u.Passwords='{encodedPass}' and ab.IsActive=1";
+            var query = $"select * from HRM.LoginUsers  u left JOIN HRM.UserAssignedBranches ab on u.Id=ab.LoginUserId   where u.UserName='{model.UserName}' and u.Passwords='{encodedPass}' and u.IsActive = 1 and ab.IsActive=1";
             var result = await _db.ExecuteQuery<LoginUserVM>(query);
 
             if (result != null)
@@ -30,11 +30,21 @@ namespace MarketBal.Repository.Account
                 var roles = await _db.ExecuteQueryList<RolesVM>(query);
                 result.Roles = roles.ToList();
 
+                if (result.Roles!=null)
+                {
+                    var singleRole = result.Roles.FirstOrDefault();
+                    result.RoleName = singleRole.Name;
+                    if (singleRole.Name=="SuperAdmin")
+                    {
+                        return result;
+
+                    }
+                }
                 query = $"SELECT * FROM HRM.Persons WHERE Id={result.PersonId}";
 
                 var person = await _db.ExecuteQuery<PersonVM>(query);
                 result.PersonVM = person;
-                query = $@"select * from Business.Branches where BranchId = '{person.BranchId}'";
+                query = $@"select * from Business.Branches where BranchId = '{result.BranchId}'";
                 var branch = await _db.ExecuteQuery<BranchVM>(query);
                 result.PersonVM.Branch = branch;
                 query = $@"select * from Business.Organizations where OrganizationId={result.PersonVM.Branch.OrganizationId}";
@@ -48,7 +58,7 @@ namespace MarketBal.Repository.Account
         {
             List<Claim> Claims = new List<Claim> {
                 new Claim("UserId",u.Id.ToString()??""),
-                new Claim("UserName",u.PersonVM.FirstName??""),
+                //new Claim("UserName",u.PersonVM.FirstName??""),
                 new Claim("UserEmail", u.UserName??""),
                 new Claim("ThemeStyle", "1"),
                 new Claim(ClaimTypes.NameIdentifier,u.UserName??""),

@@ -15,9 +15,12 @@
   <ItemGroup>
     <Folder Include="Areas\Account\Data\" />
     <Folder Include="Areas\Account\Models\" />
+    <Folder Include="Areas\AdminArea\Data\" />
+    <Folder Include="Areas\AdminArea\Models\" />
     <Folder Include="Areas\Product\Data\" />
     <Folder Include="Areas\Product\Models\" />
-    <Folder Include="wwwroot\assets\custom\" />
+    <Folder Include="Areas\Purchase\Data\" />
+    <Folder Include="Areas\Purchase\Models\" />
   </ItemGroup>
 
   <ItemGroup>

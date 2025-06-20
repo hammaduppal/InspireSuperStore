@@ -6,13 +6,12 @@
 	<div class="container>">
 		<div class="row">
 
-		
-		<div class="col-md-11">
 
-		</div>
-		<div class="col-md-1">
+			<div class="col-md-11">
+			</div>
+			<div class="col-md-1">
 				<button class="btn btn-success" id="addVariant">Show Form </button>
-		</div>
+			</div>
 		</div>
 	</div>
 	<form id="formVariant" style="display:none" action="#">
@@ -161,10 +160,20 @@
 </style>
 
 <div class="row">
+	@{
+		int i = 1;
+	}
 	@foreach (var item in Model.ProductVariants)
 	{
+		i++;
 		<div class="col-lg-12">
-			<p class="font-weight-semibold">ProductName: @item.ProductName, Product Size: @item.SizeName, ProductColor: @item.ColorName, Product Material: @item.MaterialName, Product Price: @item.RetailPrice</p>
+			<p class="">ProductName: <span class="font-weight-semibold">@item.ProductName,</span>
+				Product Size:  <span class="font-weight-semibold">@item.SizeName,</span>
+
+				ProductColor: <span class="font-weight-semibold">@item.ColorName,</span> 
+				Product Material: <span class="font-weight-semibold">@item.MaterialName,</span>  
+				
+			</p>
 			<div class="alert alert-primary">
 				<div class="row">
 					<div class="col-lg-6">
@@ -173,80 +182,132 @@
 								<div class="form-group">
 									<label>Cost</label>
 									<input type="text"
+										   id="cost-@i"
 										   name="cost"
 										   value="@item.Cost"
+										   data-variantId="@item.VariantId"
 										   class="form-control cost"
-										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)"431`
+										   data-datatype="Cost"
+										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" 431`
 										   placeholder="COST" />
 								</div>
 							</div>
 							<div class="col-md-2">
 								<div class="form-group">
 									<label>R-Price</label>
-									<input type="text" name="retail" value="@item.RetailPrice" class="form-control retailPrice" placeholder="Min" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+									<input type="text" name="retail"
+										   id="rPrice-@i"
+										value="@item.RetailPrice" class="form-control retailPrice" placeholder="Min"
+										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)"
+										   data-datatype="RetailPrice"
+										   data-variantId="@item.VariantId" />
 								</div>
 							</div>
-							
+
 							<div class="col-md-2">
 								<div class="form-group">
 									<label>S-Price</label>
-									<input type="text"  name="sale" value="@item.SalesPrice" class="form-control salePrice" placeholder="Sale Price" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+									<input type="text" name="sale"
+										   id="sPrice-@i"
+										value="@item.SalesPrice" class="form-control salePrice" placeholder="Sale Price"
+										   data-variantId="@item.VariantId"
+										   data-datatype="SalesPrice"
+										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
 								</div>
 							</div>
-								<div class="col-md-2">
+							<div class="col-md-2">
 								<div class="form-group">
 									<label>P-Price</label>
-									<input type="text" name="promo" value="@item.PromotionPrice" class="form-control promotionPrice" placeholder="Promotion Price" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+									<input type="text" name="promo"
+										   id="pPrice-@i"
+										value="@item.PromotionPrice" class="form-control promotionPrice" placeholder="Promotion Price"
+										   data-variantId="@item.VariantId"
+										   data-datatype="PromotionPrice"
+										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
 								</div>
 							</div>
-						
-								<div class="col-md-2">
+
+							<div class="col-md-3">
+								<div class="form-group">
+									<label>BarCode</label>
+									<input type="text" name="qpu"
+										   id="barCode-@i"
+										value="@item.BarCode" class="form-control barcode" placeholder="BarCode"
+										   data-variantId="@item.VariantId"
+										   data-datatype="BarCode" />
+								</div>
+							</div>
+
+							<div class="col-md-1">
 								<div class="form-group">
 									<label>Q/U</label>
-									<input type="text"  name="qpu" value="@item.QuantityPerUnit" class="form-control quantityperUnit" placeholder="Q/U" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+									<input type="text" name="qpu"
+										   id="qpu-@i"
+										value="@item.QuantityPerUnit" class="form-control quantityperUnit" placeholder="Q/U"
+										   data-variantId="@item.VariantId"
+										   data-datatype="QuantityPerUnit"
+										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
 								</div>
 							</div>
-							<div class="col-md-1">
+
+
+
+						</div>
+					</div>
+					<div class="col-lg-1">
+						<div class="row">
+							<div class="col-md-6">
 								<div class="form-group">
 									<label>Min</label>
-									<input type="text"  name="min" value="@item.MinQty" class="form-control min" placeholder="Min" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+									<input type="text" name="min" value="@item.MinQty" class="form-control min" placeholder="Min"
+										   id="min-@i"
+										   data-variantId="@item.VariantId"
+										   data-datatype="MinQty"
+										   onchange="Utility.validateNumericValue(this, 0)" />
 								</div>
 							</div>
-							<div class="col-md-1">
+
+							<div class="col-md-6">
 								<div class="form-group">
 									<label>Max</label>
-									<input type="text"  name="min" value="@item.MaxQty" class="form-control max" placeholder="Max" onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
+									<input type="text" name="min"
+										   id="max-@i"
+										value="@item.MaxQty" class="form-control max" placeholder="Max"
+										   data-variantId="@item.VariantId"
+										   data-datatype="MaxQty"
+										   onchange="Utility.validateNumericValue(this, 0)" />
 								</div>
 							</div>
 						</div>
+
+
 					</div>
-					
 					<div class="col-lg-2">
 						@if (item.PriceFormat == (int)EnumPriceFormat.RetailPrice)
 						{
-							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.RetailPrice" name="setPrice-@item.VariantId" checked />Retail Price</label>
+							<label><input id="setPrice-@item.VariantId" type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.RetailPrice" name="setPrice-@item.VariantId" checked />Retail Price</label>
 						}
 						else
 						{
-							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.RetailPrice" name="setPrice-@item.VariantId" />Retail Price</label>
+							<label><input id="setPrice-@item.VariantId" type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.RetailPrice" name="setPrice-@item.VariantId" />Retail Price</label>
 						}
 
 						@if (item.PriceFormat == (int)EnumPriceFormat.SalesPrice)
 						{
-							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.SalesPrice" name="setPrice-@item.VariantId" checked />Sale Pricee</label>
+							<label><input id="setPrice-@item.VariantId" type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.SalesPrice" name="setPrice-@item.VariantId" checked />Sale Pricee</label>
 						}
 						else
 						{
-							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.SalesPrice" name="setPrice-@item.VariantId" />Sales Price</label>
+							<label><input id="setPrice-@item.VariantId" type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.SalesPrice" name="setPrice-@item.VariantId" />Sales Price</label>
 
 						}
 						@if (item.PriceFormat == (int)EnumPriceFormat.PromotionPrice)
 						{
-							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.PromotionPrice" name="setPrice-@item.VariantId" checked />Promotion Price</label>
+							<label><input id="setPrice-@item.VariantId" type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.PromotionPrice" name="setPrice-@item.VariantId" checked />Promotion Price</label>
 						}
 						else
 						{
-							<label><input type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.PromotionPrice" name="setPrice-@item.VariantId" />Promotion Price</label>
+							<label><input id="setPrice-@item.VariantId" type="radio" class="setPrice" data-variantId="@item.VariantId" data-priceType="@EnumPriceFormat.PromotionPrice" name="setPrice-@item.VariantId" />Promotion Price</label>
 						}
 
 
@@ -278,20 +339,48 @@
 				</div>
 			</div>
 		</div>
+		
 	}
 
 
 </div>
 
 <script>
-		$('.min, .max, .quantityperUnit, .promotionPrice, .salePrice, .retailPrice, .cost').on('focusout', function() {
+		$('.min, .max, .quantityperUnit, .promotionPrice, .salePrice, .retailPrice, .cost,.barcode').on('focusout', async function() {
+			debugger
+			var id=$(this).attr('id');
+		Utility.SpinnerMessageParent(id,'Loading..');
+
 			var thisValue = $(this).val();
 		var variantId = $(this).attr('data-variantId');
 		var dataType =  $(this).attr('data-datatype');
+		console.log(dataType);
+		console.log(variantId);
+		var formData={
+			Value:thisValue,
+			VariantId:variantId,
+			DataType:dataType
+		}
+		var ObjectData={
+			data:formData,
+			url:'/Products/UpdateVariant'
+		}
+		const updateStatus = await Utility.RequestDataAjax(ObjectData);
+					Utility.StopSpinnerMessageParent(id);
+					debugger
+		if(updateStatus.statusCode==="200"){
+								Utility.successMessage(updateStatus.Message);
+		}
+		else{
+				Utility.failMessage(updateStatus.Message);
+
+		}
 	});
 
 
 	$('.setPrice').click(async function(){
+		var id = $(this).attr('id');
+		Utility.SpinnerMessageParent(id,'Loading..');
 		var priceType = $(this).attr('data-priceType');
 		var variantId = $(this).attr('data-variantId');
 		var formData={
@@ -303,13 +392,17 @@
 			url:'/Products/SetPriceFormat'
 		}
 		const setPriceType = await Utility.RequestDataAjax(objectData);
+		Utility.StopSpinnerMessageParent(id);
 								Utility.successMessage('Record Updated');
 
 	});
 
 
 	$('.image-radio').click(async function(){
-		
+		var id = $(this).attr('id');
+
+		Utility.SpinnerMessageParent(id,'Loading..');
+
 		var imgId = $(this).attr('data-productImageId');
 		var variantId = $(this).attr('data-variantId');
 		var formData= {
@@ -323,6 +416,8 @@
 		const result= await Utility.RequestDataAjax(objectData);
 		if (result.statusCode==='200')
 		{
+		Utility.StopSpinnerMessageParent(id);
+
 								Utility.successMessage('Record Updated');
 
 		}
@@ -330,7 +425,7 @@
 
 	$('#formVariant').submit(async function(e){
 		e.preventDefault();
-		
+
 		 const serialNumberOption = $('#isSerial').is(':checked');
 		 var ProductId = $('#productId').val()
 		var formData={
@@ -360,9 +455,14 @@
 
 			LoadVariantTab();
 		}
+		else{
+				Utility.failMessage('Record not added');
+
+			LoadVariantTab();
+		}
 	});
 	$('#addVariant').click(function () {
-		$('#formVariant').toggle(); 
+		$('#formVariant').toggle();
 
 		if ($('#formVariant').is(':visible')) {
 			$('#addVariant').text('Hide Form');

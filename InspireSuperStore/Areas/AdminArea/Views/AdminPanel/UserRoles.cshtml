@@ -1,0 +1,128 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+	ViewData["Title"] = "EditProduct";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">User Roles</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+
+	<div class="card shadow">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">User Roles</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<button id="addRole" class="btn btn-success addProduct">Add Role</button>
+
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="formRole" style="display:none">
+			<form>
+				<div class="form-group">
+					<div class="row">
+						<div class="col-lg-6">
+							<input id="roleName" type="text" class="form-control" />
+						</div>
+						<div class="col-lg-6">
+							<button class="btn btn-success" type="submit">Add Role</button>
+						</div>
+					</div>
+				</div>
+			</form>
+
+		</div>
+
+		<div class="table-responsive">
+			<table class="table">
+				<thead>
+					<tr>
+						<th class="text-center">Role ID</th>
+						<th class="text-center">Role Name</th>
+
+
+						<th class="text-center">Manage</th>
+					</tr>
+				</thead>
+				<tbody>
+					@{
+						int i = 1;
+					}
+					@foreach (var item in Model.Roles)
+					{
+						<tr>
+							<td class="text-center">@i</td>
+							<td class="text-center"><a href="#">@item.Name</a></td>
+
+							<td class="text-center">
+								<div class="list-icons">
+									<a href="/AdminPanel/EditUser/@item.Id" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a>
+									<a href="#" class="list-icons-item text-danger-600"><i class="icon-trash"></i></a>
+									<a href="#" class="list-icons-item text-teal-600"><i class="icon-cog6"></i></a>
+								</div>
+							</td>
+						</tr>
+						i++;
+					}
+				</tbody>
+			</table>
+
+		</div>
+	</div>
+	<script>
+				$('#addRole').click(function () {
+			$('#formRole').toggle();
+
+			if ($('#formRole').is(':visible')) {
+				$('#addRole').text('Hide Form');
+			} else {
+				$('#addRole').text('Add Role');
+			}
+		});
+		$('#formRole').submit(async function(e){
+			e.preventDefault();
+			var formData={
+				Name : $('#roleName').val()
+			}
+			var objectData={
+				data: formData,
+				url:'/AdminPanel/AddUserRoles'
+			}
+			const result = await Utility.RequestDataAjax(objectData);
+			 if(result.statusCode==='200')
+				 {
+					 Utility.successMessage(result.Message);
+					 location.reload();
+				 }
+				 else{
+					 Utility.failMessage(result.Message);
+				 }
+		})
+	</script>
+
+</div>
+
+
+<!-- /content area -->
