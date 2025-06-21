@@ -353,7 +353,15 @@ namespace MarketBal.Repository
             return await _onedb.SaveChangesAsync();
         }
 
-
+        public async Task<List<SupplierVM>> GetSuppliers()
+        {
+           return await _onedb.Suppliers.Select(x => new SupplierVM
+            {
+                 SupplierId=x.SupplierId,
+                 Ntn=x.Ntn,
+                 SupplierCode=x.SupplierCode
+            }).ToListAsync();
+        }
 
 
 

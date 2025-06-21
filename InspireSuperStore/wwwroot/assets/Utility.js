@@ -99,7 +99,7 @@ $(document).ready(function () {
     });
     var idleInterval = setInterval(async function () {
         idleTime++;
-        if (idleTime >= 200) {
+        if (idleTime >= 4500) {
             clearInterval(idleInterval);
             $.get('/Account/LogOut', function (response) {
             }).fail(function () {

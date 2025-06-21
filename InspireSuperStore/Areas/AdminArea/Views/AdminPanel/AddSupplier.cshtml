@@ -1,7 +1,7 @@
 ﻿@using MainModels.DTOModels
 @model PagesViewModel
 @{
-	ViewData["Title"] = "AddUser";
+	ViewData["Title"] = "Add Supplier";
 	Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -12,7 +12,7 @@
 			<div class="breadcrumb">
 				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
 
-				<span class="breadcrumb-item active">Add User</span>
+				<span class="breadcrumb-item active">Add Supplier</span>
 			</div>
 
 			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
@@ -39,35 +39,15 @@
 
 
 				<fieldset class="mb-3 ">
-					<legend class="text-uppercase font-size-sm font-weight-bold">Add User</legend>
-					<div class="row mb-3">
+					<legend class="text-uppercase font-size-sm font-weight-bold">Add Supplier</legend>
+				
 
-						<div class="col-lg-6">
-							<select id="organization" class="form-control">
-								<option>Select Organization</option>
-								@foreach (var item in Model.Organizations)
-								{
-									<option value="@item.OrganizationId">
-										@item.OrganizationName
-									</option>
-								}
-							</select>
-						</div>
-						<div class="col-lg-6">
-							<select id="branch" class="form-control">
-								<option>Select Branch</option>
-								
-							</select>
-						</div>
-					</div>
-
-					
 					<div class="row">
 						<div class="col-lg-6">
 							<div class="form-group row">
 								<label for="UserName" class="col-form-label col-lg-3">User Name <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
-									<input type="email" id="UserName" name="UserName" class="form-control" autocomplete="off" required placeholder="User Name" />
+									<input type="email" id="businessName" name="UserName" class="form-control" autocomplete="off" required placeholder="User Name" />
 								</div>
 							</div>
 						</div>
@@ -178,7 +158,7 @@
 
 
 				<div class="d-flex justify-content-end align-items-center">
-					<button type="reset"  class="btn btn-light" id="reset">Reset <i class="icon-reload-alt ml-2"></i></button>
+					<button type="reset" class="btn btn-light" id="reset">Reset <i class="icon-reload-alt ml-2"></i></button>
 					<button id="newuseraddBtn" type="submit" class="btn btn-primary ml-3">Submit <i class="icon-paperplane ml-2"></i></button>
 				</div>
 			</form>
@@ -232,10 +212,10 @@
 							CityId: $('#city').val(),
 						}]
 					}
-						
+
 				}
-			
-				
+
+
 				var objectData={
 				data:formData,
 				url:'/AdminPanel/AddNewUser'
@@ -257,6 +237,6 @@
 					Utility.failMessage(result.Message);
 				}
 			})
-		
+
 	})
 </script>

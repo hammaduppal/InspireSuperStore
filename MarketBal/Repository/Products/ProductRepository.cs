@@ -292,6 +292,25 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
             var result = await _db.GetDataListWithQueryAndParam<ProductVariantVM>(query,param);
             return result.ToList();
         }
+        public async Task<ProductVariantVM> GetProductVariant(string BarCode)
+        {
+            string query = $@"select p.ProductId,p.ProductName,p.ProductDescription,p.ProductSlug,c.ColorName,m.MaterialName,s.SizeName,uom.UOMName,uoms.SubUOMName,pv.QuantityPerUnit,pv.VariantImageId,b.BrandName, *  from inv.ProductVariants pv 
+            JOIN Inv.Products p on pv.productId = p.productid
+            JOIN INv.Colors c on pv.colorid = c.ColorId
+            JOIN INV.Material m on pv.MaterialId = m.MaterialId
+            JOIN INV.Sizes s on pv.SizeId = s.SizeId
+            JOIN INV.UOM uom on p.UOMId = uom.UOMId
+            JOIN INV.UOMSub uoms on pv.SubUOMId = uoms.SubUOMId
+            JOIN INV.Brands b on p.BrandId = b.BrandId
+            where pv.BarCode=@BarCode and pv.IsActive =1 and pv.IsDeleted =0";
+            var param = new
+            {
+                BarCode
+            };
+            var result = await _db.GetSingleItemDatatWithQueryAndParam<ProductVariantVM>(query, param);
+            return result;
+        }
+
 
 
 

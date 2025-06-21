@@ -165,8 +165,17 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             }
         }
 
+        public async Task<IActionResult> Suppliers()
+        {
+            vm.Suppliers = await _adminPanel.GetSuppliers();
+            return View(vm);
+        }
 
-
+        public async Task<IActionResult> AddSupplier()
+        {
+            vm.Suppliers = await _adminPanel.GetSuppliers();
+            return View(vm);
+        }
 
 
 

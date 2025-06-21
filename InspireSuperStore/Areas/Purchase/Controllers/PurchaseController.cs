@@ -1,4 +1,5 @@
 ﻿using MainModels.DTOModels;
+using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InspireSuperStore.Areas.Purchases.Controllers
@@ -8,9 +9,14 @@ namespace InspireSuperStore.Areas.Purchases.Controllers
     public class PurchaseController : Controller
     {
         private readonly PagesViewModel vm;
-        public PurchaseController()
+        private readonly ProductRepository _product;
+        private readonly IConfiguration _config;
+        public PurchaseController(IConfiguration config)
         {
+
             vm = new PagesViewModel();
+            _config = config;
+            _product = new ProductRepository(_config);
         }
         public IActionResult Requisition()
         {
@@ -23,6 +29,11 @@ namespace InspireSuperStore.Areas.Purchases.Controllers
         public IActionResult GoodReceivedNote()
         {
             return View();
+        }
+        public async Task<IActionResult> GetVariantbyBarCode(ProductVariantVM model)
+        {
+            var result = await _product.GetProductVariant(model.BarCode);
+            return Json(result);
         }
     }
 }

@@ -1,0 +1,88 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Suppliers";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">Suppliers/span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+
+	<div class="card shadow">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Login Users</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<a href="/AdminPanel/AddSupplier" class="btn btn-success addProduct">Add Supplier</a>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="table-responsive">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>SupplierId</th>
+						<th>Supplier NTN</th>
+
+						<th>Supplier Code</th>
+						<th>Status</th>
+						<th>Manage</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var item in Model.Suppliers)
+					{
+						<tr>
+							<td><a href="#">@item.SupplierId</a></td>
+							<td>@item.CreatedOn</td>
+							<td>
+							@item.Ntn
+							</td>
+							<td>
+								@item.SupplierCode
+							</td>
+							<td class="text-center">
+								<div class="list-icons">
+									<a href="/AdminPanel/EditUser/@item.SupplierId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a>
+									<a href="#" class="list-icons-item text-danger-600"><i class="icon-trash"></i></a>
+									<a href="#" class="list-icons-item text-teal-600"><i class="icon-cog6"></i></a>
+								</div>
+							</td>
+						</tr>
+
+					}
+				</tbody>
+			</table>
+
+		</div>
+	</div>
+
+
+</div>
+
+
+<!-- /content area -->
