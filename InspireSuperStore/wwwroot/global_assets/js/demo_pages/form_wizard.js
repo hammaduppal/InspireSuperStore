@@ -1,23 +1,5 @@
-/* ------------------------------------------------------------------------------
- *
- *  # Steps wizard
- *
- *  Demo JS code for form_wizard.html page
- *
- * ---------------------------------------------------------------------------- */
-
-
-// Setup module
-// ------------------------------
 
 var FormWizard = function() {
-
-
-    //
-    // Setup module components
-    //
-
-    // Wizard
     var _componentWizard = function() {
         if (!$().steps) {
             console.warn('Warning - steps.min.js is not loaded.');
@@ -145,7 +127,8 @@ var FormWizard = function() {
             transitionEffect: 'fade',
             autoFocus: true,
             onStepChanging: function (event, currentIndex, newIndex) {
-
+                
+            
                 // Allways allow previous action even if the current form is not valid!
                 if (currentIndex > newIndex) {
                     return true;
@@ -167,14 +150,14 @@ var FormWizard = function() {
                 return form.valid();
             },
             onFinished: function (event, currentIndex) {
-                alert('Submitted!');
+//                alert('Submitted!');
             }
         });
 
 
         // Initialize validation
         $('.steps-validation').validate({
-            ignore: 'input[type=hidden], .select2-search__field', // ignore hidden fields
+            ignore: 'input[type=hidden], .select2-search__field',
             errorClass: 'validation-invalid-label',
             highlight: function(element, errorClass) {
                 $(element).removeClass(errorClass);
@@ -210,6 +193,12 @@ var FormWizard = function() {
                 email: {
                     email: true
                 }
+            },
+            businessCategory: {
+                required: true
+            },
+            businessEntity: {
+                required: true
             }
         });
     };

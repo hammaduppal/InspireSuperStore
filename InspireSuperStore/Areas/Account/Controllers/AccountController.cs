@@ -1,5 +1,7 @@
 ﻿using MainModels.DTOModels;
+using MainModels.Models;
 using MainModels.Util;
+using MarketBal.Repository;
 using MarketBal.Repository.Account;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,14 +14,23 @@ namespace InspireSuperStore.Areas.Account.Controllers
         private readonly IConfiguration _config;
         private readonly AccountRepository _login;
         private readonly AESEncryption _aes;
-        public AccountController(IConfiguration config)
+        private readonly AdminPanelRepository _admin;
+        private readonly OneDb _oneDb;
+        public AccountController(IConfiguration config,OneDb onedb)
         {
             _config = config;
+            _oneDb = onedb;
             _login = new AccountRepository(_config);
             _aes = new AESEncryption();
+            _admin = new AdminPanelRepository(_config,_oneDb);
         }
-        public IActionResult Login(string? ReturnUrl = null)
+        public async Task<IActionResult> Login(string? ReturnUrl = null)
         {
+            var result =await _admin.GetOrganizations();
+            if (result.Count==0)
+            {
+                return RedirectPermanent("/AdminPanel/StartupSettings");
+            }
             TempData["ReturnURL"] = ReturnUrl;
             return View();
         }

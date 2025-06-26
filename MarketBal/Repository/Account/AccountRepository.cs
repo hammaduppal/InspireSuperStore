@@ -21,7 +21,7 @@ namespace MarketBal.Repository.Account
         {
             string encodedPass = EncryptionPasses.Encrypt(model.Passwords, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
 
-            var query = $"select * from HRM.LoginUsers  u left JOIN HRM.UserAssignedBranches ab on u.Id=ab.LoginUserId   where u.UserName='{model.UserName}' and u.Passwords='{encodedPass}' and u.IsActive = 1 and ab.IsActive=1";
+            var query = $"select * from HRM.LoginUsers  u  where u.UserName='{model.UserName}' and u.Passwords='{encodedPass}' and u.IsActive = 1   ";
             var result = await _db.ExecuteQuery<LoginUserVM>(query);
 
             if (result != null)
@@ -44,7 +44,7 @@ namespace MarketBal.Repository.Account
 
                 var person = await _db.ExecuteQuery<PersonVM>(query);
                 result.PersonVM = person;
-                query = $@"select * from Business.Branches where BranchId = '{result.BranchId}'";
+                query = $@"select * from Business.Branches where BranchId = '{result.PersonVM.BranchId}'";
                 var branch = await _db.ExecuteQuery<BranchVM>(query);
                 result.PersonVM.Branch = branch;
                 query = $@"select * from Business.Organizations where OrganizationId={result.PersonVM.Branch.OrganizationId}";

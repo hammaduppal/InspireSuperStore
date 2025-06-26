@@ -152,6 +152,7 @@ const Utility = {
      * @param {string} formSelector - The CSS selector for the form to validate.
      */
     validateFormAndInputs: function (formSelector) {
+        
         const form = document.querySelector(formSelector);
         if (!form) {
             console.error('Form not found:', formSelector);
@@ -161,6 +162,7 @@ const Utility = {
 
         // Validate inputs on input event (real-time feedback)
         form.querySelectorAll('input, select, textarea').forEach(input => {
+            
             input.addEventListener('input', function () {
                 if (input.checkValidity()) {
                     input.classList.remove('is-invalid');
@@ -422,7 +424,7 @@ const Utility = {
     },
     RequestDataAjax: async function (data) {
         try {
-            
+            debugger
             const response = await $.ajax({
                 url: data.url,
                 data: data.data,

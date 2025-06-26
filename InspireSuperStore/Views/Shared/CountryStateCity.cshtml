@@ -46,64 +46,86 @@
 </div>
 
 <script>
-					$('#country').change(async function(){
-			var CountryId=$(this).val();
-		var states = await GetStates(CountryId);
-		debugger
 
-							$('#province').empty();
-							$('#city').empty();
+	$(document).ready(function () {
+		$('#country').change(async function () {
+			var CountryId = $(this).val();
+			var states = await GetStates(CountryId);
+			debugger;
 
+			$('#province').empty();
+			$('#city').empty();
 
-								  states.forEach(function(province) {
-										$('#province').append(`<option value="${province.StateProvinceId}">${province.StateProvinceName}</option>`);
-								  });
-								  var firstState = states[0];
-								  var cities = await GetCities(firstState.StateProvinceId);
-									cities.forEach(function(city) {
-										$('#city').append(`<option value="${city.CityId}">${city.CityName}</option>`);
-								  });
-								  console.log(firstState);
-		})
-		$('#province').change(async function(){
-			debugger
-			var StateId=$(this).val();
-			var formData={
-				StateProvinceId:StateId
-			}
-			var objectData={
-				data:formData,
-				url:'/AdminPanel/GetCityByStateId/'
-			}
+			states.forEach(function (province) {
+				$('#province').append(`<option value="${province.StateProvinceId}">${province.StateProvinceName}</option>`);
+			});
+
+			var firstState = states[0];
+			var cities = await GetCities(firstState.StateProvinceId);
+
+			cities.forEach(function (city) {
+				$('#city').append(`<option value="${city.CityId}">${city.CityName}</option>`);
+			});
+
+			console.log(firstState);
+		});
+
+		$('#province').change(async function () {
+			debugger;
+			var StateId = $(this).val();
+
+			var formData = {
+				StateProvinceId: StateId
+			};
+
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/GetCityByStateId/'
+			};
+
 			const result = await Utility.RequestDataAjax(objectData);
-							$('#city').empty();
-								  result.forEach(function(province) {
-										$('#city').append(`<option value="${province.CityId}">${province.CityName}</option>`);
-								  });
-		})
 
-				async function GetCities(Id){
-		debugger
-			var formData={
-				StateProvinceId:Id
-			}
-			var objectData={
-				data:formData,
-				url:'/AdminPanel/GetCityByStateId/'
-			}
+			$('#city').empty();
+
+			result.forEach(function (province) {
+				$('#city').append(`<option value="${province.CityId}">${province.CityName}</option>`);
+			});
+		});
+
+		async function GetCities(Id) {
+			debugger;
+
+			var formData = {
+				StateProvinceId: Id
+			};
+
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/GetCityByStateId/'
+			};
+
 			const result = await Utility.RequestDataAjax(objectData);
-			return result
-	}
-	async function GetStates(Id){
-		debugger
-			var formData={
-				CountryId:Id
-			}
-			var objectData={
-				data:formData,
-				url:'/AdminPanel/GetStatesByCountryId/'
-			}
+			return result;
+		}
+
+		async function GetStates(Id) {
+			debugger;
+
+			var formData = {
+				CountryId: Id
+			};
+
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/GetStatesByCountryId/'
+			};
+
 			const result = await Utility.RequestDataAjax(objectData);
-			return result
-	}
+			return result;
+		}
+	});
+
+		
+
+			
 </script>

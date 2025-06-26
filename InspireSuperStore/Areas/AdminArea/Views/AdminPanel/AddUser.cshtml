@@ -35,7 +35,7 @@
 
 		<div class="card-body">
 
-			<form id="addNewUser" class="form-validate-jquery" action="#">
+			<form id="addNewUser" class="form-validate-jquery " action="#">
 
 
 				<fieldset class="mb-3 ">
@@ -43,8 +43,8 @@
 					<div class="row mb-3">
 
 						<div class="col-lg-6">
-							<select id="organization" class="form-control">
-								<option>Select Organization</option>
+							<select id="organization" class="form-control" required>
+								<option value="">Select Organization</option>
 								@foreach (var item in Model.Organizations)
 								{
 									<option value="@item.OrganizationId">
@@ -54,20 +54,21 @@
 							</select>
 						</div>
 						<div class="col-lg-6">
-							<select id="branch" class="form-control">
-								<option>Select Branch</option>
-								
+							<select id="branch" class="form-control" required>
+								<option value="">Select Branch</option>
+
 							</select>
 						</div>
 					</div>
 
-					
+
 					<div class="row">
 						<div class="col-lg-6">
 							<div class="form-group row">
 								<label for="UserName" class="col-form-label col-lg-3">User Name <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
 									<input type="email" id="UserName" name="UserName" class="form-control" autocomplete="off" required placeholder="User Name" />
+									
 								</div>
 							</div>
 						</div>
@@ -108,14 +109,7 @@
 					</div>
 
 					<div class="row">
-						<div class="col-lg-6">
-							<div class="form-group row">
-								<label for="Email" class="col-form-label col-lg-3">User Email <span class="text-danger">*</span></label>
-								<div class="col-lg-9">
-									<input type="email" id="Email" name="Email" autocomplete="off" class="form-control" required placeholder="User Email" />
-								</div>
-							</div>
-						</div>
+
 						<div class="col-lg-6">
 							<div class="form-group row">
 								<label for="Mobile" class="col-form-label col-lg-3">Mobile <span class="text-danger">*</span></label>
@@ -178,7 +172,7 @@
 
 
 				<div class="d-flex justify-content-end align-items-center">
-					<button type="reset"  class="btn btn-light" id="reset">Reset <i class="icon-reload-alt ml-2"></i></button>
+					<button type="reset" class="btn btn-light" id="reset">Reset <i class="icon-reload-alt ml-2"></i></button>
 					<button id="newuseraddBtn" type="submit" class="btn btn-primary ml-3">Submit <i class="icon-paperplane ml-2"></i></button>
 				</div>
 			</form>
@@ -203,6 +197,7 @@
 		}
 		const result = await Utility.RequestDataAjax(objectData);
 		 result.forEach(function(branch) {
+			 $('#branch').empty();
 					$('#branch').append(`<option value="${branch.BranchId}">${branch.BranchName}</option>`);
 			  });
 	});
@@ -212,6 +207,9 @@
 	$(document).ready(function(){
 			$('#addNewUser').submit(async function(e){
 				e.preventDefault();
+				const validate = Utility.validateFormAndInputs('#addNewUser');
+				const isFormValid = validate();
+					if (isFormValid) {
 				Utility.SpinnerMessageParent('newuseraddBtn','Loading..');
 				var formData={
 						UserName: $('#UserName').val(),
@@ -219,7 +217,6 @@
 					PersonVM:{
 						FirstName: $('#FirstName').val(),
 						LastName: $('#LastName').val(),
-						Email: $('#Email').val(),
 						MobileNumber: $('#Mobile').val(),
 						Cnic: $('#Cnic').val(),
 						BranchId:$('#branch').val(),
@@ -232,10 +229,10 @@
 							CityId: $('#city').val(),
 						}]
 					}
-						
+
 				}
-			
-				
+
+
 				var objectData={
 				data:formData,
 				url:'/AdminPanel/AddNewUser'
@@ -256,7 +253,8 @@
 				else{
 					Utility.failMessage(result.Message);
 				}
+				}
 			})
-		
+
 	})
 </script>

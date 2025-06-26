@@ -39,6 +39,8 @@
 
 
 .mi-3d-rotation:before {content: "\e900";}
+
+
 .mi-ac-unit:before {content: "\e901";}
 .mi-alarm:before {content: "\e902";}
 .mi-access-alarms:before {content: "\e903";}

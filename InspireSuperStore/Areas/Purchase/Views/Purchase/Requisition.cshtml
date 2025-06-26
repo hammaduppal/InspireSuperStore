@@ -64,7 +64,10 @@
 						<select id="supplier" data-placeholder="Enter 'Supplier'" class="form-control select-minimum" data-fouc>
 							<option>Select Supplier</option>
 							<optgroup label="Supplier">
-
+							@foreach (var item in Model.Suppliers)
+								{
+									<option value="@item.SupplierId"> @item.SupplierBusinessName</option>
+								}
 							</optgroup>
 						</select>
 					</div>

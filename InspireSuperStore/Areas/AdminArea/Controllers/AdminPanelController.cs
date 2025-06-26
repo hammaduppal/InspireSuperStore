@@ -9,7 +9,7 @@ using Microsoft.SqlServer.Server;
 
 namespace InspireSuperStore.Areas.AdminArea.Controllers
 {
-    [Authorize(Roles = UserRolesConstants.SuperAdmin + "," +UserRolesConstants.Admin)]
+    [Authorize(Roles = UserRolesConstants.SuperAdmin+","+UserRolesConstants.Admin)]
     [Area("AdminArea")]
     [Route("[controller]/[action]")]
     public class AdminPanelController : Controller
@@ -18,13 +18,13 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         private readonly AdminPanelRepository _adminPanel;
         private readonly AccountRepository _account;
 
-        private readonly PagesViewModel vm=new PagesViewModel();
+        private readonly PagesViewModel vm = new PagesViewModel();
         private readonly OneDb _oneDb;
-        public AdminPanelController(IConfiguration config,OneDb oneDb)
+        public AdminPanelController(IConfiguration config, OneDb oneDb)
         {
             _oneDb = oneDb;
             _config = config;
-            _adminPanel = new AdminPanelRepository(_config,_oneDb);
+            _adminPanel = new AdminPanelRepository(_config, _oneDb);
             _account = new AccountRepository(_config);
         }
         public IActionResult AdminPanel()
@@ -33,7 +33,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         }
         public async Task<IActionResult> LoginUser()
         {
-           vm.LoginUsers = await _adminPanel.GetLoginUser();
+            vm.LoginUsers = await _adminPanel.GetLoginUser();
 
             return View(vm);
         }
@@ -48,10 +48,10 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         }
         public async Task<IActionResult> AssignUserRoles(AssignRolesVM formData)
         {
-           var  result = await _adminPanel.UpdateRoles(formData);
-            if (result==1)
+            var result = await _adminPanel.UpdateRoles(formData);
+            if (result == 1)
             {
-                return Json(new { statusCode = "200",Message="Roles Updated" });
+                return Json(new { statusCode = "200", Message = "Roles Updated" });
             }
             else
             {
@@ -75,7 +75,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         [HttpPost]
         public async Task<IActionResult> GetStatesByCountryId(StateProvinceVM vm)
         {
-           var result = await _adminPanel.GetStatesByCountryId(vm.CountryId);
+            var result = await _adminPanel.GetStatesByCountryId(vm.CountryId);
             return Json(result);
         }
         [HttpPost]
@@ -96,7 +96,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             {
                 return Json(new { statusCode = "300", Message = "Unable to Update Address" });
             }
-           
+
 
         }
         public async Task<IActionResult> AddUser()
@@ -113,12 +113,12 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             {
                 return Json(new { statusCode = "200", Message = "New User Added" });
             }
-            else if (result==-3)
+            else if (result == -3)
             {
                 return Json(new { statusCode = "201", Message = "User Already Exisits Email Already Taken" });
 
             }
-            else if (result==-4)
+            else if (result == -4)
             {
                 return Json(new { statusCode = "202", Message = "Person is Already Taken, CNIC / Mobile Already Saved" });
 
@@ -137,7 +137,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             {
                 return Json(new { statusCode = "200", Message = "User Updated" });
             }
-          
+
             else
             {
                 return Json(new { statusCode = "300", Message = "Unable to Update User" });
@@ -164,25 +164,55 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                 return Json(new { statusCode = "300", Message = "Unable to Add New Role" });
             }
         }
-
-        public async Task<IActionResult> Suppliers()
-        {
-            vm.Suppliers = await _adminPanel.GetSuppliers();
-            return View(vm);
-        }
-
-        public async Task<IActionResult> AddSupplier()
-        {
-            vm.Suppliers = await _adminPanel.GetSuppliers();
-            return View(vm);
-        }
-
+      
+       
 
 
         public async Task<IActionResult> GetBranchesByOrganizationId(OrganizationVM model)
         {
             var result = await _adminPanel.GetBranches(model.OrganizationId);
             return Json(result);
+        }
+        [AllowAnonymous]
+        public async Task<IActionResult> StartupSettings()
+        {
+            var result = await _adminPanel.GetOrganizations();
+            if (result.Count > 0)
+            {
+                return RedirectPermanent("/");
+            }
+            vm.BusinessCategories= await _adminPanel.BusinessCategories();
+            vm.BusinessEntities = await _adminPanel.BusinessEntityType();
+
+            return View(vm);
+        }
+        [AllowAnonymous]
+        public async Task<IActionResult> SeedData(OrganizationRegistrationDto model)
+        {
+            var result = await _adminPanel.SeedinData(model);
+            if (result)
+            {
+                return Json(new { statusCode = "200", Message = "New Record Updated" });
+            }
+
+            else
+            {
+                return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
+            }
+        }
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetData()
+        {
+            var result = await _adminPanel.removeData();
+            if (result>0)
+            {
+                return Json(new { statusCode = "200", Message = "New Record Updated" });
+            }
+
+            else
+            {
+                return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
+            }
         }
     }
 }

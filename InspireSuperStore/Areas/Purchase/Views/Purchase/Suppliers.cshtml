@@ -45,25 +45,35 @@
 			<table class="table">
 				<thead>
 					<tr>
-						<th>SupplierId</th>
-						<th>Supplier NTN</th>
+						<th class="text-center">SupplierId</th>
+						<th class="text-center">BusinessName</th>
 
-						<th>Supplier Code</th>
-						<th>Status</th>
-						<th>Manage</th>
+						<th class="text-center">Supplier Code</th>
+						<th class="text-center">Status</th>
+						<th class="text-center">Manage</th>
 					</tr>
 				</thead>
 				<tbody>
 					@foreach (var item in Model.Suppliers)
 					{
 						<tr>
-							<td><a href="#">@item.SupplierId</a></td>
-							<td>@item.CreatedOn</td>
-							<td>
-							@item.Ntn
+							<td class="text-center"><a href="#">@item.SupplierId</a></td>
+							<td class="text-center">@item.SupplierBusinessName</td>
+							<td class="text-center">
+							@item.SupplierCode
 							</td>
-							<td>
-								@item.SupplierCode
+							<td class="text-center">
+								@if (item.IsActive)
+								{
+									<span class="badge badge-success">Active</span>
+
+
+								}
+								else
+								{
+									<span class="badge badge-secondary">UnActive</span>
+
+								}
 							</td>
 							<td class="text-center">
 								<div class="list-icons">

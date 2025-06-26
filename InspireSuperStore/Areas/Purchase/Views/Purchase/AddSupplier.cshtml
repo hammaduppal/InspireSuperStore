@@ -35,7 +35,7 @@
 
 		<div class="card-body">
 
-			<form id="addNewUser" class="form-validate-jquery" action="#">
+			<form id="addNewSupplier" class="form-validate-jquery" action="#">
 
 
 				<fieldset class="mb-3 ">
@@ -43,27 +43,38 @@
 				
 
 					<div class="row">
-						<div class="col-lg-6">
+						<div class="col-lg-5">
 							<div class="form-group row">
-								<label for="UserName" class="col-form-label col-lg-3">User Name <span class="text-danger">*</span></label>
-								<div class="col-lg-9">
-									<input type="email" id="businessName" name="UserName" class="form-control" autocomplete="off" required placeholder="User Name" />
+								<label for="supplierBusinessName" class="col-form-label col-lg-4">Supplier Business<span class="text-danger">*</span></label>
+								<div class="col-lg-8">
+									<input type="text" id="supplierBusinessName" name="supplierBusinessName" class="form-control" autocomplete="off" required placeholder="supplier Business Name" />
 								</div>
 							</div>
 						</div>
-						<div class="col-lg-6">
+						<div class="col-lg-5">
 							<div class="form-group row">
-								<label for="Password" class="col-form-label col-lg-3">Password <span class="text-danger">*</span></label>
+								<label for="supplierCode" class="col-form-label col-lg-3">Supplier Code <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
 									<div class="form-group-feedback form-group-feedback-right">
-										<input type="password" id="Password" name="Passwords" class="form-control" autocomplete="off" required placeholder="Password" />
-										<div class="form-control-feedback">
-											<a id="viewPassword" href="#"><i class="icon-eye-blocked"></i></a>
-										</div>
+										<input type="text" id="supplierCode" name="supplierCode" class="form-control" autocomplete="off" required placeholder="supplier Code" />
 									</div>
 								</div>
 							</div>
 						</div>
+						<div class="col-lg-2">
+							<div class="form-group row">
+								<label for="ntn" class="col-form-label col-lg-3">Ntn <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<div class="form-group-feedback form-group-feedback-right">
+										<input type="text" id="ntn" name="ntn" class="form-control" autocomplete="off" required placeholder="Ntn" />
+									</div>
+								</div>
+							</div>
+						</div>
+
+
+
+
 					</div>
 
 					<div class="row">
@@ -159,44 +170,30 @@
 
 				<div class="d-flex justify-content-end align-items-center">
 					<button type="reset" class="btn btn-light" id="reset">Reset <i class="icon-reload-alt ml-2"></i></button>
-					<button id="newuseraddBtn" type="submit" class="btn btn-primary ml-3">Submit <i class="icon-paperplane ml-2"></i></button>
+					<button id="addnewSupplierBtn" type="submit" class="btn btn-primary ml-3">Submit <i class="icon-paperplane ml-2"></i></button>
 				</div>
 			</form>
 		</div>
 	</div>
 	<!-- /form validation -->
-	<div class="row">
-	</div>
+	
 
 
 
 </div>
-<script>
-	$('#organization').change(async function(){
-		var oId = $(this).val();
-		var formData= {
-			OrganizationId:oId
-		}
-		var objectData={
-			data:formData,
-			url:'/AdminPanel/GetBranchesByOrganizationId'
-		}
-		const result = await Utility.RequestDataAjax(objectData);
-		 result.forEach(function(branch) {
-					$('#branch').append(`<option value="${branch.BranchId}">${branch.BranchName}</option>`);
-			  });
-	});
-</script>
+
 
 <script>
 	$(document).ready(function(){
-			$('#addNewUser').submit(async function(e){
+			$('#addNewSupplier').submit(async function(e){
 				e.preventDefault();
 				Utility.SpinnerMessageParent('newuseraddBtn','Loading..');
 				var formData={
-						UserName: $('#UserName').val(),
-						Passwords: $('#Password').val(),
-					PersonVM:{
+						SupplierBusinessName: $('#supplierBusinessName').val(),
+						SupplierCode: $('#supplierCode').val(),
+						Ntn: $('#ntn').val(),
+
+					Person:{
 						FirstName: $('#FirstName').val(),
 						LastName: $('#LastName').val(),
 						Email: $('#Email').val(),
@@ -218,7 +215,7 @@
 
 				var objectData={
 				data:formData,
-				url:'/AdminPanel/AddNewUser'
+				url:'/AdminPanel/AddSupplierForm'
 				}
 				debugger
 				const result = await Utility.RequestDataAjax(objectData);

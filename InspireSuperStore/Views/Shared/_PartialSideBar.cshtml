@@ -20,62 +20,63 @@
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.DataEntry, UserRolesConstants.Product, UserRolesConstants.PowerUser))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-copy"></i> <span>Products</span></a>
+					<a href="#" class="nav-link "><i class="icon-stack2 "></i><span>Products</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="Products">
-						<li class="nav-item"><a href="/Products/Products" class="nav-link">Products</a></li>
+						<li class="nav-item"><a href="/Products/Products" class="nav-link"><i class="icon-grid5 "></i> Products</a></li>
 					</ul>
 				</li>
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-copy"></i> <span>Attribute Manager</span></a>
+					<a href="#" class="nav-link "> <span><i class="icon-stack3"></i> Attribute Manager</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="AttributeManager">
-						<li class="nav-item"><a href="/AttributeManager/DCSManager" class="nav-link">DCS Manager</a></li>
+						<li class="nav-item"><a href="/AttributeManager/DCSManager" class="nav-link"><i class="icon-folder4"></i> DCS Manager</a></li>
 					</ul>
 				</li>
 			}
-			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Product, UserRolesConstants.Purchase))
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin,UserRolesConstants.PowerUser, UserRolesConstants.Purchase))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-cart-add2"></i> <span>Purchase Orders</span></a>
+					<a href="#" class="nav-link "><i class="mi-money-off "></i> <span>Purchase Orders</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="Purchase Section">
-						<li class="nav-item"><a href="/Purchase/Requisition" class="nav-link">Purchase Requisition</a></li>
-						<li class="nav-item"><a href="/Purchase/PurchaseOrder" class="nav-link">Purchase PurchaseOrder</a></li>
-						<li class="nav-item"><a href="/Purchase/GoodReceivedNote" class="nav-link">GRN</a></li>
+						<li class="nav-item"><a href="/Purchase/Requisition" class="nav-link"><i class="mi-laptop-chromebook  "></i>Purchase Requisition</a></li>
+						<li class="nav-item"><a href="/Purchase/PurchaseOrder" class="nav-link"><i class="mi-laptop-mac"></i>Purchase PurchaseOrder</a></li>
+						<li class="nav-item"><a href="/Purchase/GoodReceivedNote" class="nav-link"><i class="mi-kitchen"></i>GRN</a></li>
 					</ul>
 				</li>
 			}
 
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.PowerUser, UserRolesConstants.Purchase))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-truck "></i> <span>Supplier Setup</span></a>
+					<ul class="nav nav-group-sub" data-submenu-title="Supplier">
+						<li class="nav-item"><a href="/AdminPanel/Suppliers" class="nav-link"><i class="icon-store"></i>Suppliers</a></li>
+						<li class="nav-item"><a href="/AdminPanel/AddSupplier" class="nav-link"><i class="icon-cart4"></i>Add Supplier</a></li>
+
+					</ul>
+				</li>
+			}
+			
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.SuperAdmin))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-cart-add2"></i> <span>System Setup</span></a>
+					<a href="#" class="nav-link "><i class="mi-settings"></i> <span>System Setup</span></a>
 					<ul class="nav nav-group-sub" data-submenu-title="System Section">
-						<li class="nav-item"><a href="/AdminPanel/LoginUser" class="nav-link">Loginusers</a></li>
+						<li class="nav-item"><a href="/AdminPanel/LoginUser" class="nav-link"><i class="mi-person"></i>Loginusers</a></li>
 						@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin))
 						{
-							<li class="nav-item"><a href="/AdminPanel/AddUser" class="nav-link">Add User</a></li>
-							<li class="nav-item"><a href="/AdminPanel/UserRoles" class="nav-link">User Roles</a></li>
-							<li class="nav-item"><a href="/AdminPanel/Suppliers" class="nav-link">Suppliers</a></li>
-
+							<li class="nav-item"><a href="/AdminPanel/AddUser" class="nav-link"><i class="mi-person-add"></i>Add User</a></li>
+							@* <li class="nav-item"><a href="/AdminPanel/UserRoles" class="nav-link"><i class="mi-security "></i>User Roles</a></li>
+ *@
 						}
 
 					</ul>
 				</li>
 			}
 
-			@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin	))
-			{
-				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-cart-add2"></i> <span>Supplier Setup</span></a>
-					<ul class="nav nav-group-sub" data-submenu-title="Supplier">
-						<li class="nav-item"><a href="/AdminPanel/Suppliers" class="nav-link">Suppliers</a></li>
-						<li class="nav-item"><a href="/AdminPanel/AddSupplier" class="nav-link">Add Supplier</a></li>
-
-					</ul>
-				</li>
-			}
+		
 
 
 		</ul>
