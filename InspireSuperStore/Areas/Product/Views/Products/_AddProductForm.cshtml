@@ -24,7 +24,7 @@
 						<div class="form-group">
 							<div class="input-group">
 								<select id="dep" class="form-control" required>
-									<option> Select Department</option>
+									<option value=""> Select Department</option>
 									@foreach (var item in Model.Departments)
 									{
 										<option value="@item.DepartmentId	">@item.DepartmentName </option>
@@ -43,7 +43,7 @@
 						<div class="form-group">
 							<div class="input-group">
 								<select id="cat" class="form-control" required>
-									<option> Select Category</option>
+									<option value=""> Select Category</option>
 
 								</select>
 
@@ -56,11 +56,11 @@
 								</div>
 							</div>
 						</div>
-					
+
 						<div class="form-group">
 							<div class="input-group">
 								<select id="subcat" class="form-control" required="required">
-									<option> Select SubCategory</option>
+									<option value=""> Select SubCategory</option>
 								</select>
 								<div class="input-group-append">
 									<a id="" href="/AttributeManager/_GetAddSubCategoryForm" class="btn btn-light adddcs"><i class="icon-database-add mr-1"></i></a>
@@ -73,7 +73,7 @@
 								<div class="form-group">
 									<div class="input-group">
 										<select id="uom" class="form-control" required>
-											<option> Select Uom</option>
+											<option value=""> Select Uom</option>
 											@foreach (var item in Model.UOMs)
 											{
 												<option value="@item.Uomid">@item.UOMName</option>
@@ -91,7 +91,7 @@
 								<div class="form-group">
 									<div class="input-group">
 										<select id="brand" class="form-control" required>
-											<option> Select Brand</option>
+											<option value=""> Select Brand</option>
 											@foreach (var item in Model.Brands)
 											{
 												<option value="@item.BrandId">@item.BrandName</option>
@@ -108,11 +108,11 @@
 
 
 						</div>
-									
+
 					</fieldset>
 				</div>
 
-			
+
 			</div>
 
 			<div class="text-right">
@@ -127,10 +127,10 @@
 	$(document).ready(function(){
 		$('#addProduct').submit(async function(e){
 			e.preventDefault();
-			
+
 			const validate = Utility.validateFormAndInputs('#addProduct');
 				const isFormValid = validate();
-				
+
 				if(isFormValid)
 				{
 					var formData={
@@ -150,8 +150,12 @@
 					const result = await Utility.RequestDataAjax(sendObject);
 					console.log(result);
 					if(result.statusCode==='200'){
-						
+
 						window.location.href='/Products/EditProduct?productId='+result.ProductId;
+					}
+					else{
+								Utility.failMessage('Please Try Again Later');
+
 					}
 				}
 		});
@@ -163,7 +167,7 @@
 				url:url,
 				type:'POST',
 				success:function(result){
-					
+
 						$('.mini-modal-title').html('Add Attribute');
 						$('.mini-modal-body').html(result);
 						$('#modal_mini').modal(
@@ -215,7 +219,7 @@
 
 		$('.refreshdcs').click(async function(e){
 			e.preventDefault();
-			
+
 			var url = $(this).attr('href');
 			var selectItem = $(this).attr('data-selectName');
 			if(selectItem==='cat'){
@@ -234,7 +238,7 @@
 				});
 			}
 			else if(selectItem === 'subcat'){
-				
+
 					var catId = $('#cat').val();
 				var formData={
 					CategoryId : catId

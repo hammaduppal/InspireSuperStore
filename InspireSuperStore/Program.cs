@@ -1,4 +1,6 @@
+using InspireSuperStore.Models;
 using MainModels.Models;
+using MainModels.Util;
 using MarketBal.Repository.DCS;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +22,8 @@ builder.Services.AddDbContext<OneDb>(option =>
     ;
 });
 var cookieScheme = CookieAuthenticationDefaults.AuthenticationScheme + builder.Configuration.GetValue<string>("SystemSettings:CookieName");
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddSession(options =>
 {
     options.Cookie.Name = builder.Configuration.GetValue<string>("SystemSettings:CookieName");
@@ -62,8 +66,6 @@ builder.Services.AddAuthentication(cookieScheme).AddCookie(cookieScheme, options
 });
 
 
-builder.Services.AddHttpContextAccessor();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -82,8 +84,9 @@ app.UseRouting();
 
 
 app.UseAuthorization();
+AppDataUtility.Configure(app.Services.GetRequiredService<IHttpContextAccessor>());
 app.UseSession();
-
+app.UseMiddleware<SessionCheckMiddleware>();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllerRoute(

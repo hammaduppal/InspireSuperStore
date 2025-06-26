@@ -64,6 +64,12 @@ namespace InspireSuperStore.Areas.Product.Controllers
         public async Task<IActionResult> AddProduct(ProductVM product)
         {
 
+            if (product.BrandId==null || product.SubCategoryId==null)
+            {
+                return Json(new { statusCode = "300" });
+
+            }
+
             var result = await _product.AddProduct(product);
 
             return Json(new { statusCode = "200", ProductId = result });
