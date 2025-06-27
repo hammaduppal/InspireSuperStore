@@ -29,7 +29,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
             var result =await _admin.GetOrganizations();
             if (result.Count==0)
             {
-                return RedirectPermanent("/AdminPanel/StartupSettings");
+                return Redirect("/AdminPanel/StartupSettings");
             }
             TempData["ReturnURL"] = ReturnUrl;
             return View();

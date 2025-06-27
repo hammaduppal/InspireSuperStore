@@ -129,11 +129,11 @@ namespace MarketBal.Repository.Products
 
         INSERT INTO INV.Products (
             ProductId, ProductName, ProductDescription, SubCategoryId, BranchId,
-            CreatedOn, Createdby, ModifiedOn, IsActive, IsDeleted, ProductSlug, UOMId,BrandId
+            CreatedOn, Createdby, ModifiedOn, IsActive, IsDeleted, ProductSlug, UOMId,BrandId,OrganizationId
         )
         VALUES (
             @NewProductId, @ProductName, @ProductDescription, @SubCategoryId, @BranchId,
-            @CreatedOn, @CreatedBy, @ModifiedOn, 1, 0, @ProductSlug, @UOMId,@BrandId
+            @CreatedOn, @CreatedBy, @ModifiedOn, 1, 0, @ProductSlug, @UOMId,@BrandId,@OrganizationId
         );
 
         SELECT @NewProductId;
@@ -152,7 +152,8 @@ namespace MarketBal.Repository.Products
                 commonParams.ModifiedOn,
                 ProductSlug,
                 product.UOMId,
-                product.BrandId
+                product.BrandId,
+                commonParams.OrganizationId
             };
             var data = await _db.ExecuteQuery<Guid>(query, param);
 
@@ -335,14 +336,14 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
                         INSERT INTO Inv.ProductVariants (
                             VariantId, MaterialId, ColorId, SizeId, ProductId,
                             Cost, BarCode, SalesPrice, PromotionPrice, RetailPrice,
-                            UOMId, SubUOMId, QuantityPerUnit, IsSerial, MinQty,
-                            MaxQty, CreatedOn, CreatedBy, ModifiedOn, IsActive, IsDeleted, BranchId
+                             SubUOMId, QuantityPerUnit, IsSerial, MinQty,
+                            MaxQty, CreatedOn, CreatedBy, ModifiedOn, IsActive, IsDeleted, BranchId,OrganizationId
                         )
                         VALUES (
                             @VariantId, @MaterialId, @ColorId, @SizeId, @ProductId,
                             @Cost, @BarCode, @SalesPrice, @PromotionPrice, @RetailPrice,
-                            @UOMId, @SubUOMId, @QuantityPerUnit, @IsSerial, @MinQty,
-                            @MaxQty, @CreatedOn, @CreatedBy, @ModifiedOn, @IsActive, @IsDeleted, @BranchId
+                             @SubUOMId, @QuantityPerUnit, @IsSerial, @MinQty,
+                            @MaxQty, @CreatedOn, @CreatedBy, @ModifiedOn, @IsActive, @IsDeleted, @BranchId,@OrganizationId
                         );
 
                         SELECT 300 AS Result;
@@ -361,7 +362,6 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
                 model.SalesPrice,
                 model.PromotionPrice,
                 model.RetailPrice,
-                model.Uomid,
                 model.SubUomid,
                 model.QuantityPerUnit,
                 model.IsSerial,
@@ -372,7 +372,8 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
                 commonParams.ModifiedOn,
                 commonParams.IsActive,
                 commonParams.IsDeleted,
-                commonParams.BranchId
+                commonParams.BranchId,
+                commonParams.OrganizationId
             };
 
             var result = await _db.ExecuteQuery<int>(query, param);

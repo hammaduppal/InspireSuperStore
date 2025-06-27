@@ -9,7 +9,7 @@ using Microsoft.SqlServer.Server;
 
 namespace InspireSuperStore.Areas.AdminArea.Controllers
 {
-    [Authorize(Roles = UserRolesConstants.SuperAdmin+","+UserRolesConstants.Admin)]
+    [Authorize(Roles = UserRolesConstants.SuperAdmin + "," + UserRolesConstants.Admin)]
     [Area("AdminArea")]
     [Route("[controller]/[action]")]
     public class AdminPanelController : Controller
@@ -164,8 +164,8 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                 return Json(new { statusCode = "300", Message = "Unable to Add New Role" });
             }
         }
-      
-       
+
+
 
 
         public async Task<IActionResult> GetBranchesByOrganizationId(OrganizationVM model)
@@ -179,14 +179,15 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             var result = await _adminPanel.GetOrganizations();
             if (result.Count > 0)
             {
-                return RedirectPermanent("/");
+                return Redirect("/");
             }
-            vm.BusinessCategories= await _adminPanel.BusinessCategories();
+            vm.BusinessCategories = await _adminPanel.BusinessCategories();
             vm.BusinessEntities = await _adminPanel.BusinessEntityType();
 
             return View(vm);
         }
         [AllowAnonymous]
+        [HttpPost]
         public async Task<IActionResult> SeedData(OrganizationRegistrationDto model)
         {
             var result = await _adminPanel.SeedinData(model);
@@ -204,7 +205,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         public async Task<IActionResult> ResetData()
         {
             var result = await _adminPanel.removeData();
-            if (result>0)
+            if (result > 0)
             {
                 return Json(new { statusCode = "200", Message = "New Record Updated" });
             }

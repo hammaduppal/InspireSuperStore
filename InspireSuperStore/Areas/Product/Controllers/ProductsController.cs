@@ -11,7 +11,7 @@ using static MainModels.DTOModels.AppConstants;
 
 namespace InspireSuperStore.Areas.Product.Controllers
 {
-    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry)]
+    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry+","+UserRolesConstants.Product)]
     [Area("Product")]
     [Route("[controller]/[action]")]
     public class ProductsController : Controller
