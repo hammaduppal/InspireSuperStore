@@ -208,7 +208,7 @@ const Utility = {
     SpinnerMessage: function (brothel, message) {
         
         const targetElement = document.getElementById(brothel);
-        debugger
+        
         if (targetElement) {
             // Ensure the target element is relatively positioned for overlay
             targetElement.style.position = 'relative';
@@ -381,7 +381,7 @@ const Utility = {
     },
 
     validateNumericValue: function validateFloatInput(input, decimalPlaces) {
-        debugger
+        
         let value = input.value.trim(); 
         
         value = value.replace(/[^0-9.-]/g, '');
@@ -424,7 +424,7 @@ const Utility = {
     },
     RequestDataAjax: async function (data) {
         try {
-            debugger
+            
             const response = await $.ajax({
                 url: data.url,
                 data: data.data,

@@ -1,0 +1,119 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using static MainModels.DTOModels.AppConstants
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Requisition";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">Purchase Requisitions</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+<!-- Content area -->
+<div class="content">
+
+	<!-- Invoice archive -->
+	<div class="card">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Purchase Requisition</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<a href="/Purchase/AddRequisitionForm" class="btn btn-success">Add Purchase Requisition</a>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<table class="table table-lg invoice-archive">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Issued to</th>
+					<th>Status</th>
+					<th>Issue date</th>
+					<th>Total	</th>
+					<th>Discount</th>
+					<th>Invoice Total</th>
+
+					<th class="text-center">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+			
+				@foreach (var item in Model.PurchaseMasters)
+				{
+						var selectedStatus = item?.Status ?? (int)PurchaseStatus.Draft;
+					<tr>
+						<td>@item?.PurchaseNumber</td>
+						<td>
+							<h6 class="mb-0">
+								Supplier Name
+							</h6>
+						</td>
+						<td>
+							<select name="status" class="form-control form-control-select2" data-placeholder="Select status">
+								@foreach (PurchaseStatus status in Enum.GetValues(typeof(PurchaseStatus)))
+								{
+									<option value="@((int)status)" @(selectedStatus == (int)status ? "selected" : "")>
+										@status
+									</option>
+								}
+							</select>
+							
+						</td>
+						<td>
+							@TimeHelper.GetFormattedTimeSpan(DateTime.Parse(item?.CreatedOn.ToString()))
+						</td>
+						<td>
+							<h6 class="mb-0 font-weight-bold">@item?.TotalAmount </h6>
+						</td>
+						<td>
+							<h6 class="mb-0 font-weight-bold">@item?.DiscountAmount </h6>
+						</td>
+						<td>
+							<h6 class="mb-0 font-weight-bold">@item?.GrandTotal </h6>
+						</td>
+						<td class="text-center">
+							<div class="list-icons list-icons-extended">
+								<a href="/Purchase/EditPurchaseOrder?Id=@item?.PurchaseMasterId" class="list-icons-item"><i class="icon-file-plus"></i></a>
+								<a href="#" class="list-icons-item" data-toggle="modal" data-target="#invoice"><i class="icon-file-eye"></i></a>
+
+								<div class="list-icons-item dropdown">
+									<a href="#" class="list-icons-item dropdown-toggle" data-toggle="dropdown"><i class="icon-file-text2"></i></a>
+									<div class="dropdown-menu dropdown-menu-right">
+										<a href="#" class="dropdown-item"><i class="icon-file-download"></i> Download</a>
+										<a href="#" class="dropdown-item"><i class="icon-printer"></i> Print</a>
+										<div class="dropdown-divider"></div>
+										<a href="#" class="dropdown-item"><i class="icon-cross2"></i> Remove</a>
+									</div>
+								</div>
+							</div>
+						</td>
+					</tr>
+
+				}
+			</tbody>
+		</table>
+	</div>
+	<!-- /invoice archive -->
+
+</div>
+<!-- /content area -->

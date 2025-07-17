@@ -11,10 +11,10 @@ using static MainModels.DTOModels.AppConstants;
 
 namespace InspireSuperStore.Areas.Product.Controllers
 {
-    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry+","+UserRolesConstants.Product)]
+    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry+","+UserRolesConstants.Product + "," + UserRolesConstants.Purchase)]
     [Area("Product")]
-    [Route("[controller]/[action]")]
-    public class ProductsController : Controller
+    [Route("Products/[action]")]
+    public partial class ProductsController : Controller
     {
         private readonly ProductRepository _product;
         private readonly IConfiguration _config;

@@ -2,6 +2,7 @@ using InspireSuperStore.Models;
 using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository.DCS;
+using MarketBal.Repository.PurchaseRP;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
@@ -64,7 +65,7 @@ builder.Services.AddAuthentication(cookieScheme).AddCookie(cookieScheme, options
         return Task.CompletedTask;
     };
 });
-
+builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
 
 var app = builder.Build();
 
