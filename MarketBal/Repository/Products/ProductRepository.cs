@@ -277,7 +277,10 @@ update Inv.ProductImages set IsDefault = 1 where ProductImageId = @ProductImageI
 
         public async Task<List<ProductVariantVM>> GetProductVariants(Guid ProductId)
         {
-            string query = $@"select p.ProductId,p.ProductName,p.ProductDescription,p.ProductSlug,c.ColorName,m.MaterialName,s.SizeName,uom.UOMName,uoms.SubUOMName,pv.QuantityPerUnit,pv.VariantImageId,b.BrandName, *  from inv.ProductVariants pv 
+            string query = $@"select p.ProductId, p.ProductName,p.ProductDescription,p.ProductSlug,c.ColorName,m.MaterialName,s.SizeName,uom.UOMName,uoms.SubUOMName,
+pv.Qoh,pv.retailPrice,pv.PromotionPrice,pv.SalesPrice,pv.BarCode,pv.MinQty,pv.MaxQty,pv.IsSerial,pv.PriceFormat,pv.Cost,pv.VariantId,
+pv.QuantityPerUnit,pv.VariantImageId,b.BrandName
+from inv.ProductVariants pv 
             JOIN Inv.Products p on pv.productId = p.productid
             JOIN INv.Colors c on pv.colorid = c.ColorId
             JOIN INV.Material m on pv.MaterialId = m.MaterialId

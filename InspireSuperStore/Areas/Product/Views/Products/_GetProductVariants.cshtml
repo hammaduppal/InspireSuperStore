@@ -203,7 +203,7 @@
 										   data-variantId="@item.VariantId" />
 								</div>
 							</div>
-
+						
 							<div class="col-md-2">
 								<div class="form-group">
 									<label>S-Price</label>
@@ -313,6 +313,14 @@
 
 
 
+					</div>
+					<div class="col-md-2">
+						<div class="form-group">
+							<label>Qty</label>
+							<input readonly type="text" name="retail"
+								   id="rPrice-@i"
+								   value="@item.QoH" class="form-control qty" placeholder="Qty" />
+						</div>
 					</div>
 					<div class="col-lg-3">
 						@foreach (var img in Model.ProductImages)
