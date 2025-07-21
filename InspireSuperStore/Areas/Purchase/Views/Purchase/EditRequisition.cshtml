@@ -13,9 +13,9 @@
 		<div class="d-flex">
 			<div class="breadcrumb">
 				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
-				<a href="/Purchase/PurchaseOrder" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Purchase Order</a>
+				<a href="/Purchase/Requisitions" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Purchase Requisition</a>
 
-				<span class="breadcrumb-item active">Edit PO</span>
+				<span class="breadcrumb-item active">Edit Requisitions</span>
 			</div>
 
 			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
@@ -62,7 +62,7 @@
 						@{
 							var selectedType = Model.PurchaseMaster.PurchaseType ?? (int)PurchaseType.Requisition;
 						}
-						@foreach (PurchaseType status in Enum.GetValues(typeof(PurchaseType)))
+						@foreach (PurchaseType status in Enum.GetValues(typeof(RequisitionTypes)))
 						{
 							<option value="@((int)status)" @(selectedType == (int)status ? "selected" : "")>
 								@status
@@ -99,7 +99,7 @@
 								<span class="text-muted">@item.ProductVariant.Product.Brand.BrandName</span>
 							</td>
 							<td>@item.ProductVariant.Color.ColorName</td>
-							<td>@item.Qty</td>
+							<td><input data-purchaseDetailId="@item.PurchaseDetailId" min="1" class="qty" type="number" value="@item.Qty" /></td>
 
 							<td class="unitPrice">@item.UnitPrice</td>
 							<td><span class="font-weight-semibold lineTotal">@item.LineTotal</span></td>
@@ -191,14 +191,16 @@
 											if (bootResult) {
 													const something =  await Utility.RequestDataAjax({
 														data:{
-																PurchaseType:3,
-																Status:2,
-															PurchaseMasterId:pmId},
+																PurchaseType:2,
+															PurchaseMasterId:pmId,
+														Status:1
+														},
+
 															url:'/Purchase/POChangeType'
 													});
-													if(something.statusCode==='200'){
-														Utility.successMessage(something.Message);
-														window.location.href='/Purchase/PurchaseOrder';
+													if(something){
+														Utility.successMessage('Done');
+														window.location.href='/Purchase/Requisitions';
 													}
 													else{
 
@@ -208,21 +210,6 @@
 											}
 
 									});
-							}
-							else if(id==3){
-									const changePostatus =  await Utility.RequestDataAjax({
-														data:{
-																PurchaseType:1,
-															PurchaseMasterId:pmId},
-															url:'/Purchase/POChangeType'
-													});
-													if(changePostatus){
-														Utility.successMessage('Done');
-														window.location.href='/Purchase/PurchaseOrder';
-													}
-													else{
-
-													}
 							}
 							await Utility.RequestDataAjax({
 								data:{
@@ -239,8 +226,9 @@
 
 							await Utility.RequestDataAjax({
 								data:{
-										PurchaseType:id,
-									PurchaseMasterId:pmId},
+									PurchaseType:id,
+									PurchaseMasterId:pmId,
+									Status:1},
 									url:'/Purchase/POChangeType'
 							});
 				});

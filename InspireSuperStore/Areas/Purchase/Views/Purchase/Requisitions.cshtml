@@ -57,27 +57,27 @@
 				</tr>
 			</thead>
 			<tbody>
-			
+
 				@foreach (var item in Model.PurchaseMasters)
 				{
-						var selectedStatus = item?.Status ?? (int)PurchaseStatus.Draft;
+					var selectedStatus = item?.Status ?? (int)PurchaseStatus.Draft;
 					<tr>
 						<td>@item?.PurchaseNumber</td>
 						<td>
 							<h6 class="mb-0">
-								Supplier Name
+								@item.SupplierBusinessName
 							</h6>
 						</td>
 						<td>
-							<select name="status" class="form-control form-control-select2" data-placeholder="Select status">
+							<select data-pmId="@item.PurchaseMasterId" name="status" class="form-control form-control-select2 status" data-placeholder="Select status">
 								@foreach (PurchaseStatus status in Enum.GetValues(typeof(PurchaseStatus)))
 								{
-									<option value="@((int)status)" @(selectedStatus == (int)status ? "selected" : "")>
+									<option  value="@((int)status)" @(selectedStatus == (int)status ? "selected" : "")>
 										@status
 									</option>
 								}
 							</select>
-							
+
 						</td>
 						<td>
 							@TimeHelper.GetFormattedTimeSpan(DateTime.Parse(item?.CreatedOn.ToString()))
@@ -93,9 +93,7 @@
 						</td>
 						<td class="text-center">
 							<div class="list-icons list-icons-extended">
-								<a href="/Purchase/EditPurchaseOrder?Id=@item?.PurchaseMasterId" class="list-icons-item"><i class="icon-file-plus"></i></a>
-								<a href="#" class="list-icons-item" data-toggle="modal" data-target="#invoice"><i class="icon-file-eye"></i></a>
-
+								<a href="/Purchase/EditRequisition?Id=@item?.PurchaseMasterId" class="list-icons-item"><i class="icon-file-plus"></i></a>
 								<div class="list-icons-item dropdown">
 									<a href="#" class="list-icons-item dropdown-toggle" data-toggle="dropdown"><i class="icon-file-text2"></i></a>
 									<div class="dropdown-menu dropdown-menu-right">
@@ -117,3 +115,47 @@
 
 </div>
 <!-- /content area -->
+<script>
+	$(document).ready(function(){
+		$(document).on('change','.status',async function(e){
+		debugger
+		var id = parseFloat($(this).val());
+		var pmId=$(this).attr('data-pmId');
+				$('#purchaseType').removeAttr('disabled');
+				if(id==2){
+						Utility.confirmBootBox('DO you want to Procced as Purchase Order').then(async function(bootResult){
+								if (bootResult) {
+									debugger
+										const typUpdateResult =  await Utility.RequestDataAjax({
+											data:{
+													PurchaseType:2,
+													Status:1,
+												PurchaseMasterId:pmId},
+												url:'/Purchase/POChangeType'
+										});
+										if(typUpdateResult){
+											debugger
+											Utility.successMessage(typUpdateResult.Message);
+											window.location.href='/Purchase/Requisitions';
+										}
+										else{
+
+										}
+									console.log("User clicked YES");
+									// proceed with logic
+								} else {
+									console.log("User clicked NO");
+									// cancel logic
+								}
+
+						});
+				}
+				await Utility.RequestDataAjax({
+					data:{
+						Status:id,
+						PurchaseMasterId:pmId},
+					url:'/Purchase/POChangeStatus'
+				});
+	});
+	});
+</script>

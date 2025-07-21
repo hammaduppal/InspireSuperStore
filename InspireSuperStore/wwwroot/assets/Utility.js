@@ -139,7 +139,29 @@ const Utility = {
 
 
 
-
+    confirmBootBox: function (message) {
+        debugger
+        return new Promise(function (resolve, reject) {
+            bootbox.confirm({
+                title: 'Confirm',
+                message: message,
+                buttons: {
+                    confirm: {
+                        label: 'Yes',
+                        className: 'btn-success'
+                    },
+                    cancel: {
+                        label: 'No',
+                        className: 'btn-danger'
+                    }
+                },
+                callback: function (result) {
+                    resolve(result);
+                }
+            });
+        });
+       
+    },
 
 
 

@@ -15,7 +15,7 @@
 			<div class="breadcrumb">
 				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
 
-				<span class="breadcrumb-item active">Purchase Orders</span>
+				<span class="breadcrumb-item active">Good Recieved Note</span>
 			</div>
 
 			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
@@ -30,7 +30,7 @@
 	<!-- Invoice archive -->
 	<div class="card">
 		<div class="card-header header-elements-inline">
-			<h5 class="card-title">Purchase Orders</h5>
+			<h5 class="card-title">GRN</h5>
 			<div class="header-elements">
 
 				<div class="header-elements d-none">
@@ -67,7 +67,7 @@
 							</h6>
 						</td>
 						<td>
-							<select data-pmId="@item.PurchaseMasterId" name="status" class="form-control form-control-select2 status" data-placeholder="Select status">
+							<select data-pmId="@item.PurchaseMasterId" name="status" class="form-control form-control-select2 status" data-placeholder="Select status" disabled>
 								@foreach (PurchaseStatus status in Enum.GetValues(typeof(PurchaseStatus)))
 								{
 									<option value="@((int)status)" @(selectedStatus == (int)status ? "selected" : "")>
@@ -91,7 +91,14 @@
 						</td>
 						<td class="text-center">
 							<div class="list-icons list-icons-extended">
-								<a href="/Purchase/EditPurchaseOrder?Id=@item?.PurchaseMasterId" class="list-icons-item"><i class="icon-file-plus"></i></a>
+								@if (item.Status==4)
+								{
+									<a class="list-icons-item"><i class="icon-file-plus"></i></a>
+								}else
+								{
+									<a href="/Purchase/EditGoodRecievedNote?Id=@item?.PurchaseMasterId" class="list-icons-item"><i class="icon-file-plus"></i></a>
+								}
+								
 								<a href="#" class="list-icons-item" data-toggle="modal" data-target="#invoice"><i class="icon-file-eye"></i></a>
 
 								<div class="list-icons-item dropdown">
@@ -123,12 +130,12 @@
 		var pmId=$(this).attr('data-pmId');
 				$('#purchaseType').removeAttr('disabled');
 				if(id==2){
-						Utility.confirmBootBox('DO you want to Procced as Good Recieved Note').then(async function(bootResult){
+						Utility.confirmBootBox('DO you want to Procced as Purchase Order').then(async function(bootResult){
 								if (bootResult) {
 										const changeTypeResult =  await Utility.RequestDataAjax({
 											data:{
 													PurchaseType:3,
-													Status:2,
+													Status:1,
 												PurchaseMasterId:pmId},
 												url:'/Purchase/POChangeType'
 										});

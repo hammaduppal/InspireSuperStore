@@ -5,7 +5,6 @@ namespace MarketBal.Repository.PurchaseRP
     public interface IPurchaseRepository
     {
         Task<int> SavePurchase(PurchaseDataDto model);
-        Task<List<PurchaseMasterVM>> GetPurchaseRequisition();
         
 
 

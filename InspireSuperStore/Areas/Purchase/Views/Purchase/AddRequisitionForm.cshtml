@@ -400,6 +400,7 @@
 			if(result.statusCode==='200')
 			{
 				Utility.successMessage('Record Added');
+				$('#formVariant')[0].reset();
 			}
 			else{
 				Utility.infoMessage('Record Already Exist');

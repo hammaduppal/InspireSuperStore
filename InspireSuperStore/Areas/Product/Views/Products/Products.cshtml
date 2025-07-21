@@ -46,6 +46,8 @@
 						<th class="text-center">Product Name</th>
 						<th class="text-center">Product Description</th>
 						<th class="text-center">QOH</th>
+						<th class="text-center">Created on</th>
+
 						<th class="text-center">Status</th>
 
 						<th class="text-center" style="width: 30px;"><i class="icon-menu-open2"></i></th>
@@ -73,46 +75,50 @@
 		dataSrc:'data'
 			},
 			order: [[0, 'asc']],
-			  columns: [
-		{ data: 'ProductId',visible:false
-		},
-		{ data: 'ProductName' },
-		{ data: 'ProductDescription',
-		  className: 'text-center'
-		},
-		{ data: 'CreatedOn',
-				  className: 'text-center',
-		 render: function(data, type, row, meta) {
-		return new Date(data).toLocaleDateString();
-		 }
-		},
-		{ data: 'IsActive' ,
-		className:'text-center',
-		 render: function(data, type, row, meta) {
-			return `<input type="checkbox" class="form-input-styled activeUnactive" ${data ? 'checked' : ''} data-value="${row.ProductId}" />`;
-		 }
+		 columns: [
+					{ data: 'ProductId',visible:false
+					},
+					{ data: 'ProductName' },
+					{ data: 'ProductDescription',
+					  className: 'text-center'
+					},
+					{ data: 'Qoh',
+							  className: 'text-center',
+		
+					},
+					{ data: 'CreatedOn',
+							  className: 'text-center',
+					 render: function(data, type, row, meta) {
+					return new Date(data).toLocaleDateString();
+					 }
+					},
+					{ data: 'IsActive' ,
+					className:'text-center',
+					 render: function(data, type, row, meta) {
+						return `<input type="checkbox" class="form-input-styled activeUnactive" ${data ? 'checked' : ''} data-value="${row.ProductId}" />`;
+					 }
 
-		},
-		{ data: 'Action',orderable: false,
-		render: function(data, type, row, meta) {
+					},
+					{ data: 'Action',orderable: false,
+					render: function(data, type, row, meta) {
 
-	return `
-		<a href="#" class="view list-icons-item text-teal-600" data-value="${row.ProductId}">
-			<i class="icon-search4"></i>
-		</a>
-		<a href="/Products/EditProduct?productId=${row.ProductId}" class="list-icons-item text-primary-600 edit" data-value="${row.ProductId}">
-			<i class="icon-pencil7"></i>
-		</a>
-		<a href="" class="list-icons-item text-danger-600 remove" data-value="${row.ProductId}">
-			<i class="icon-trash"></i>
-		</a>
-	`;
+				return `
+					<a href="#" class="view list-icons-item text-teal-600" data-value="${row.ProductId}">
+						<i class="icon-search4"></i>
+					</a>
+					<a href="/Products/EditProduct?productId=${row.ProductId}" class="list-icons-item text-primary-600 edit" data-value="${row.ProductId}">
+						<i class="icon-pencil7"></i>
+					</a>
+					<a href="" class="list-icons-item text-danger-600 remove" data-value="${row.ProductId}">
+						<i class="icon-trash"></i>
+					</a>
+				`;
 
-		}
+					}
 
 
 
-		},
+					},
 
 		],
 	error: function (xhr, error, code) {

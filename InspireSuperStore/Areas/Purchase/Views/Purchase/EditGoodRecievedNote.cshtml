@@ -13,9 +13,9 @@
 		<div class="d-flex">
 			<div class="breadcrumb">
 				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
-				<a href="/Purchase/PurchaseOrder" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Purchase Order</a>
+				<a href="/Purchase/Requisitions" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Purchase Requisition</a>
 
-				<span class="breadcrumb-item active">Edit PO</span>
+				<span class="breadcrumb-item active">Edit Requisitions</span>
 			</div>
 
 			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
@@ -39,7 +39,7 @@
 			<input type="hidden" id="purchaseMasterId" value="@Model.PurchaseMaster.PurchaseMasterId" />
 			<div class="row">
 				<div class="col-sm-3">
-					<select id="status" name="status" class="form-control form-control-select2" data-placeholder="Select status">
+					<select id="status" name="status" class="form-control form-control-select2" data-placeholder="Select status" disabled>
 						@{
 							var selectedStatus = Model.PurchaseMaster.Status ?? (int)PurchaseStatus.Draft;
 						}
@@ -62,7 +62,7 @@
 						@{
 							var selectedType = Model.PurchaseMaster.PurchaseType ?? (int)PurchaseType.Requisition;
 						}
-						@foreach (PurchaseType status in Enum.GetValues(typeof(PurchaseType)))
+						@foreach (PurchaseType status in Enum.GetValues(typeof(RequisitionTypes)))
 						{
 							<option value="@((int)status)" @(selectedType == (int)status ? "selected" : "")>
 								@status
@@ -75,7 +75,7 @@
 		</div>
 
 		<div class="table-responsive">
-			<table class="table table-lg">
+			<table id="table-product" class="table table-lg">
 				<thead>
 					<tr>
 						<th>BarCode</th>
@@ -99,9 +99,9 @@
 								<span class="text-muted">@item.ProductVariant.Product.Brand.BrandName</span>
 							</td>
 							<td>@item.ProductVariant.Color.ColorName</td>
-							<td>@item.Qty</td>
+							<td><input data-purchaseDetailId="@item.PurchaseDetailId" data-purchaseMasterId="@Model.PurchaseMaster.PurchaseMasterId" data-variantId="@item.VariantId" min="1" class="qty" type="number" value="@item.Qty" /></td>
 
-							<td class="unitPrice">@item.UnitPrice</td>
+							<td><input class="unitPrice" type="text" value="@item.UnitPrice" /> </td>
 							<td><span class="font-weight-semibold lineTotal">@item.LineTotal</span></td>
 							<td>
 								<div class="list-icons">
@@ -144,7 +144,7 @@
 								</tr>
 								<tr>
 									<th>Discount<span class="font-weight-normal"></span></th>
-									<td class="text-right">@Model.PurchaseMaster.DiscountAmount</td>
+									<td class="text-right"><input id="discount" type="text" value="@Model.PurchaseMaster.DiscountAmount" autocomplete="off" /></td>
 								</tr>
 								<tr>
 									<th>Total:</th>
@@ -155,7 +155,7 @@
 					</div>
 
 					<div class="text-right mt-3">
-						<button type="button" class="btn btn-primary btn-labeled btn-labeled-left"><b><i class="icon-paperplane"></i></b> Send invoice</button>
+						<button id="recievedData" type="button" class="btn btn-primary btn-labeled btn-labeled-left"><b><i class="icon-paperplane"></i></b> Send invoice</button>
 					</div>
 				</div>
 			</div>
@@ -169,6 +169,56 @@
 </div>
 <script>
 	$(document).ready(function(){
+		$('#recievedData').click(async function(e){
+			
+			Utility.SpinnerMessageParent('recievedData','Loading...');
+				var allRowsData = [];
+			 $('#table-product tbody tr').each(function () {
+				var $row = $(this);
+
+				var rowData = {
+					barCode: $row.find('td:eq(0)').text().trim(),
+					productName: $row.find('td:eq(1) h6').text().trim(),
+					brandName: $row.find('td:eq(1) span').text().trim(),
+					color: $row.find('td:eq(2)').text().trim(),
+					qty: parseFloat($row.find('.qty').val()) || 0,
+					unitPrice: parseFloat($row.find('.unitPrice').val()) || 0,
+					lineTotal: parseFloat($row.find('.lineTotal').text()) || 0,
+					purchaseDetailId: $row.find('.qty').data('purchasedetailid'),
+					purchaseMasterId: $row.find('.qty').data('purchasemasterid'),
+					VariantId: $row.find('.qty').data('variantid')
+
+				};
+				debugger
+				allRowsData.push(rowData);
+			});
+			var pmId=$('#purchaseMasterId').val()
+			var grnData={
+				PurchaseMasterId:pmId,
+				DiscountAmount:$('#discount').val(),
+				TotalAmount:parseFloat($('#totalAmount').text()),
+				GrandTotal: parseFloat($('#grandTotal').text()),
+
+				PurchaseDetails:allRowsData
+			}
+			debugger
+			console.log(grnData);
+			var formData={
+				data:grnData,
+				url:'/Purchase/RecieveGRN'
+			}
+			var submitResult = await Utility.RequestDataAjax(formData)
+			if(submitResult.statusCode==='200'){
+				Utility.successMessage('Item Added into Inventory Successfully');
+				window.location.href='/Purchase/GoodReceivedNote';
+			}
+			else{
+				Utility.failMessage('Unable to Add Invenvtory')
+			}
+			console.log(allRowsData);
+		});
+
+
 		var pstatusId=parseFloat($('#status').val());
 			var pmId=$('#purchaseMasterId').val();
 			enableDisableType(pstatusId);
@@ -191,14 +241,16 @@
 											if (bootResult) {
 													const something =  await Utility.RequestDataAjax({
 														data:{
-																PurchaseType:3,
-																Status:2,
-															PurchaseMasterId:pmId},
+																PurchaseType:2,
+															PurchaseMasterId:pmId,
+														Status:1
+														},
+
 															url:'/Purchase/POChangeType'
 													});
-													if(something.statusCode==='200'){
-														Utility.successMessage(something.Message);
-														window.location.href='/Purchase/PurchaseOrder';
+													if(something){
+														Utility.successMessage('Done');
+														window.location.href='/Purchase/Requisitions';
 													}
 													else{
 
@@ -208,21 +260,6 @@
 											}
 
 									});
-							}
-							else if(id==3){
-									const changePostatus =  await Utility.RequestDataAjax({
-														data:{
-																PurchaseType:1,
-															PurchaseMasterId:pmId},
-															url:'/Purchase/POChangeType'
-													});
-													if(changePostatus){
-														Utility.successMessage('Done');
-														window.location.href='/Purchase/PurchaseOrder';
-													}
-													else{
-
-													}
 							}
 							await Utility.RequestDataAjax({
 								data:{
@@ -239,43 +276,68 @@
 
 							await Utility.RequestDataAjax({
 								data:{
-										PurchaseType:id,
-									PurchaseMasterId:pmId},
+									PurchaseType:id,
+									PurchaseMasterId:pmId,
+									Status:1},
 									url:'/Purchase/POChangeType'
 							});
 				});
 
-				$(document).on('change','.qty', async function(e){
+				$(document).on('keyup','.qty', async function(e){
 					var newQty = $(this).val();
 					var pdId = $(this).attr('data-purchaseDetailId');
 					if(newQty==0){
 						$(this).val(1);
+						newQty=1;
 					}
-					const updateQtyResult= Utility.RequestDataAjax({
-					data:{Qty:newQty,
-						PurchaseMasterId:pmId,
-						PurchaseDetailId:pdId
-						},
-						url:'/Purchase/POChangeQty'
+					// const updateQtyResult= Utility.RequestDataAjax({
+					// data:{Qty:newQty,
+					// 	PurchaseMasterId:pmId,
+					// 	PurchaseDetailId:pdId
+					// 	},
+					// 	url:'/Purchase/POChangeQty'
 
-					});
-					Utility.successMessage('Result Updated');
-					debugger
+					// });
+					// Utility.successMessage('Result Updated');
+					
 					 let $row = $(this).closest('tr');
-					 let unitPrice = parseFloat($row.find('.unitPrice').text()) || 0;
+					 let unitPriceText = $row.find('.unitPrice').val().replace(/[^0-9.]/g, '');
+					 let unitPrice = parseFloat(unitPriceText) || 0;
 					 let lineTotal = newQty * unitPrice;
-					$row.find('.lineTotal').text(lineTotal.toFixed(2));
-					  let totalAmount = 0;
+					 $row.find('.lineTotal').text(lineTotal.toFixed(2));
+					 let totalAmount = 0;
 						$('.lineTotal').each(function () {
-							totalAmount += parseFloat($(this).text()) || 0;
-						});
+						totalAmount += parseFloat($(this).text()) || 0;
+					});
 						  $('#totalAmount').text(totalAmount.toFixed(2));
 						  $('#grandTotal').text(totalAmount.toFixed(2));
 
 				});
+					$(document).on('keyup','.unitPrice', async function(e){
+						
+						var newUnitPrice = $(this).val();
+						 let $row = $(this).closest('tr');
+						 let qtyText = $row.find('.qty').val().replace(/[^0-9.]/g, '');
+						 let qty = parseFloat(qtyText) || 0;
+						  let lineTotal = qty * newUnitPrice;
+						 console.log(`${qty} and UnitPrice ${newUnitPrice}`);
+						  $row.find('.lineTotal').text(lineTotal.toFixed(2));
+						 UpdateTotalAndGrandTotal();
+					});
+					$('#discount').keyup(function(){
+						UpdateTotalAndGrandTotal()
+					})
 
-
-
-
+					function UpdateTotalAndGrandTotal(){
+						 let totalAmount = 0;
+						$('.lineTotal').each(function () {
+						totalAmount += parseFloat($(this).text()) || 0;
+						});
+						
+						  $('#totalAmount').text(totalAmount.toFixed(2));
+						  var discount= parseFloat($('#discount').val());
+						  totalAmount = totalAmount-discount;
+						  $('#grandTotal').text(totalAmount.toFixed(2));
+					}
 	});
 </script>

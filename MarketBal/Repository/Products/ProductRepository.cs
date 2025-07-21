@@ -105,9 +105,9 @@ namespace MarketBal.Repository.Products
 
             return new
             {
-                Draw = request.Draw,
-                RecordsTotal = totalRecords,
-                RecordsFiltered = totalRecords, // same as total unless advanced filtering
+                draw = request.Draw,
+                recordsTotal = totalRecords,
+                recordsFiltered = totalRecords, // same as total unless advanced filtering
                 data = data.ToList()
             };
         }

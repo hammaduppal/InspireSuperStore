@@ -23,12 +23,14 @@ namespace MarketBal.Repository.PurchaseRP
             _onedb = oneDb;
             _dap = new DapperContext(_config);
         }
+
+     
+       //Save As Requisition
         public async Task<int> SavePurchase(PurchaseDataDto model)
         {
             int result = await AddPurchase(model);
             return await Task.FromResult(result);
         }
-
         private async Task<int> AddPurchase(PurchaseDataDto model)
         {
             var groupedItems = model.Items
@@ -93,41 +95,11 @@ namespace MarketBal.Repository.PurchaseRP
             }
             
         }
-        public async Task<List<PurchaseMasterVM>> GetPurchaseRequisition()
-        {
-            return await GetRequisitions();
-        }
-        private async Task<List<PurchaseMasterVM>> GetRequisitions()
-        {
-           return  await _onedb.PurchaseMasters.Where(x => x.PurchaseType == (int)AppConstants.PurchaseType.Requisition).Select(p=>new PurchaseMasterVM
-            {
-               PurchaseMasterId = p.PurchaseMasterId,
-               PurchaseNumber = p.PurchaseNumber,
-               PurchaseType = p.PurchaseType,
-               SupplierId = p.SupplierId,
-               PurchaseDate = p.PurchaseDate,
-               DiscountAmount = p.DiscountAmount,
-               TotalAmount = p.TotalAmount,
-               GrandTotal = p.GrandTotal,
-               Status = p.Status,
-               Remarks = p.Remarks,
-               UpdatedBy = p.UpdatedBy,
-               UpdatedDate = p.UpdatedDate,
-               IsActive = p.IsActive,
-               CreatedOn = p.CreatedOn,
-               Createdby = p.Createdby,
-               ModifiedOn = p.ModifiedOn,
-               BranchId = p.BranchId,
-           }).ToListAsync();
-        }
-        public async Task<PurchaseMasterVM> GetSingleRequisition(Guid Id)
-        {
-            return await GetRequisition(Id);
-        }
-        private async Task<PurchaseMasterVM> GetRequisition(Guid Id)
+       //Get Single Requisition
+       public async Task<PurchaseMasterVM> GetSingleRequisition(Guid Id,AppConstants.PurchaseType purchaseType)
         {
             var purchase = await _onedb.PurchaseMasters
-                .Where(pm => pm.PurchaseMasterId == Id)
+                .Where(pm => pm.PurchaseMasterId == Id&& pm.PurchaseType==(int)purchaseType)
                 .Select(pm => new PurchaseMasterVM
                 {
                     PurchaseMasterId = pm.PurchaseMasterId,
@@ -152,6 +124,7 @@ namespace MarketBal.Repository.PurchaseRP
                         UnitPrice = pd.UnitPrice,
                         TotalPrice = pd.TotalPrice,
                         LineTotal = pd.LineTotal,
+                        VariantId=pd.VariantId,
                         ProductVariant = new ProductVariantVM
                         {
                             VariantId = Guid.Parse(pd.VariantId.ToString()),
@@ -177,6 +150,132 @@ namespace MarketBal.Repository.PurchaseRP
                 .FirstOrDefaultAsync();
 
             return purchase;
+        }
+
+
+        //Get Purchases by Type
+        public async Task<List<PurchaseMasterVM>> GetPurchaseRequisition(AppConstants.PurchaseType purchaseType)
+        {
+            return await _onedb.PurchaseMasters.Where(x => x.PurchaseType == (int)purchaseType).Select(p => new PurchaseMasterVM
+            {
+                PurchaseMasterId = p.PurchaseMasterId,
+                PurchaseNumber = p.PurchaseNumber,
+                PurchaseType = p.PurchaseType,
+                SupplierId = p.SupplierId,
+                PurchaseDate = p.PurchaseDate,
+                DiscountAmount = p.DiscountAmount,
+                TotalAmount = p.TotalAmount,
+                GrandTotal = p.GrandTotal,
+                Status = p.Status,
+                Remarks = p.Remarks,
+                UpdatedBy = p.UpdatedBy,
+                UpdatedDate = p.UpdatedDate,
+                IsActive = p.IsActive,
+                CreatedOn = p.CreatedOn,
+                Createdby = p.Createdby,
+                ModifiedOn = p.ModifiedOn,
+                BranchId = p.BranchId,
+                SupplierBusinessName=p.Supplier.SupplierBusinessName
+            }).ToListAsync();
+        }
+
+
+
+
+
+
+
+
+
+        public async Task<int> UpdatePoQTY(PurchaseDetailVM model)
+        {
+            var result = await _onedb.PurchaseDetails.Where(x => x.PurchaseDetailId == model.PurchaseDetailId).FirstOrDefaultAsync();
+            result.Qty = model.Qty;
+            await _onedb.SaveChangesAsync();
+            var purchaseMaster = await _onedb.PurchaseMasters
+            .Include(x => x.PurchaseDetails) 
+            .FirstOrDefaultAsync(x => x.PurchaseMasterId == model.PurchaseMasterId);
+
+            if (purchaseMaster != null)
+            {
+                purchaseMaster.TotalAmount = purchaseMaster.PurchaseDetails
+                    .Sum(x => x.Qty * x.UnitPrice);
+                purchaseMaster.GrandTotal = purchaseMaster.TotalAmount;
+            }
+            return await _onedb.SaveChangesAsync();
+        }
+        public async Task<int> UpdatePOSTATUS(PurchaseMasterVM model)
+        {
+            var result =await _onedb.PurchaseMasters.Where(x => x.PurchaseMasterId == model.PurchaseMasterId).FirstOrDefaultAsync();
+            result.Status = model.Status;
+            return await _onedb.SaveChangesAsync();
+        }
+        public async Task<int> UpdatePOType(PurchaseMasterVM model)
+        {
+            var result = await _onedb.PurchaseMasters.Where(x => x.PurchaseMasterId == model.PurchaseMasterId).FirstOrDefaultAsync();
+            result.PurchaseType = model.PurchaseType;
+            result.Status = model.Status;
+            return await _onedb.SaveChangesAsync();
+        }
+        public async Task<int> CreateGRNNote(PurchaseMasterVM model)
+        {
+            // Load all variants involved
+            var variantIds = model.PurchaseDetails.Select(x => x.VariantId).ToList();
+            var variants = await _onedb.ProductVariants
+                .Where(x => variantIds.Contains(x.VariantId))
+                .ToListAsync();
+
+            // Fetch their corresponding products
+            var productIds = variants.Select(v => v.ProductId).Distinct().ToList();
+            var products = await _onedb.Products
+                .Where(p => productIds.Contains(p.ProductId))
+                .ToListAsync();
+
+            // 1. Update PurchaseDetail received quantity
+            foreach (var detail in model.PurchaseDetails)
+            {
+                var existingDetail = await _onedb.PurchaseDetails
+                    .FirstOrDefaultAsync(x => x.PurchaseDetailId == detail.PurchaseDetailId);
+
+                if (existingDetail != null)
+                {
+                    existingDetail.Qty = detail.Qty;
+                    existingDetail.UnitPrice = detail.UnitPrice;
+                    existingDetail.TotalPrice = detail.TotalPrice;
+                    existingDetail.ModifiedOn = DateTime.UtcNow;
+                }
+
+                // 2. Update Variant Quantity
+                var variant = variants.FirstOrDefault(x => x.VariantId == detail.VariantId);
+                if (variant != null)
+                {
+                    variant.QoH = (variant.QoH ?? 0) + (detail.Qty ?? 0); variant.ModifiedOn = DateTime.UtcNow;
+                }
+            }
+
+            // 3. Update Product Quantity (sum of its variants)
+            foreach (var product in products)
+            {
+                var productVariants = variants.Where(v => v.ProductId == product.ProductId).ToList();
+                product.Qoh = productVariants.Sum(v => v.QoH);
+                product.ModifiedOn = DateTime.UtcNow;
+            }
+
+            // 4. Update PurchaseMaster totals if needed
+            var master = await _onedb.PurchaseMasters
+                .FirstOrDefaultAsync(x => x.PurchaseMasterId == model.PurchaseMasterId);
+
+            if (master != null)
+            {
+                master.TotalAmount = model.TotalAmount;
+                master.DiscountAmount = model.DiscountAmount;
+                master.GrandTotal = model.GrandTotal;
+                master.Status = 4; // Mark as received
+                master.ModifiedOn = DateTime.UtcNow;
+            }
+
+            await _onedb.SaveChangesAsync();
+            return 1;
         }
 
         //    private async Task<PurchaseMasterVM> GetRequisition(Guid Id)
