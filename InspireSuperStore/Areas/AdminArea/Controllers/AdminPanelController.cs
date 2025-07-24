@@ -27,16 +27,14 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             _adminPanel = new AdminPanelRepository(_config, _oneDb);
             _account = new AccountRepository(_config);
         }
-        public IActionResult AdminPanel()
-        {
-            return View();
-        }
+       
         public async Task<IActionResult> LoginUser()
         {
             vm.LoginUsers = await _adminPanel.GetLoginUser();
 
             return View(vm);
         }
+        [AllowAnonymous]
         [HttpGet]
         [Route("/AdminPanel/EditUser/{Id}")]
         public async Task<IActionResult> EditUser(int Id)
@@ -73,12 +71,14 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             }
         }
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> GetStatesByCountryId(StateProvinceVM vm)
         {
             var result = await _adminPanel.GetStatesByCountryId(vm.CountryId);
             return Json(result);
         }
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> GetCityByStateId(CityVM vm)
         {
             var result = await _adminPanel.GetCityByStateId(vm.StateProvinceId);
@@ -201,19 +201,19 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                 return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
             }
         }
-        [AllowAnonymous]
-        public async Task<IActionResult> ResetData()
-        {
-            var result = await _adminPanel.removeData();
-            if (result > 0)
-            {
-                return Json(new { statusCode = "200", Message = "New Record Updated" });
-            }
+        //[AllowAnonymous]
+        //public async Task<IActionResult> ResetData()
+        //{
+        //    var result = await _adminPanel.removeData();
+        //    if (result > 0)
+        //    {
+        //        return Json(new { statusCode = "200", Message = "New Record Updated" });
+        //    }
 
-            else
-            {
-                return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
-            }
-        }
+        //    else
+        //    {
+        //        return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
+        //    }
+        //}
     }
 }

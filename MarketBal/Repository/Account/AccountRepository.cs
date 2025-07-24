@@ -61,6 +61,7 @@ namespace MarketBal.Repository.Account
                 //new Claim("UserName",u.PersonVM.FirstName??""),
                 new Claim("UserEmail", u.UserName??""),
                 new Claim("ThemeStyle", "1"),
+               
                 new Claim(ClaimTypes.NameIdentifier,u.UserName??""),
                 };
             foreach (var item in u.Roles)

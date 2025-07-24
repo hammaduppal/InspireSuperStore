@@ -1,4 +1,5 @@
-﻿using MainModels.DTOModels;
+﻿using InspireSuperStore.Areas.Notification.Data;
+using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository;
@@ -7,6 +8,7 @@ using MarketBal.Repository.PurchaseRP;
 using MarketBal.Repository.SuppliersRP;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using static MarketBal.Helper.AppHelper;
 
 namespace InspireSuperStore.Areas.Purchases.Controllers
@@ -18,7 +20,6 @@ namespace InspireSuperStore.Areas.Purchases.Controllers
 
     public class PurchaseController : Controller
     {
-        private readonly IPurchaseRepository _purchaseRepository;
         private readonly PagesViewModel vm;
         private readonly ProductRepository _product;
         private readonly IConfiguration _config;
@@ -26,15 +27,18 @@ namespace InspireSuperStore.Areas.Purchases.Controllers
         private readonly PurchaseRepository repository;
 
         private readonly OneDb _one;
-        public PurchaseController(IConfiguration config, OneDb one, IPurchaseRepository purchaseRepository)
+        private readonly NotificationService _notificationServices;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        public PurchaseController(IConfiguration config, OneDb one, NotificationService notificationService, IHubContext<NotificationHub> hubContext)
         {
             _one = one;
             vm = new PagesViewModel();
             _config = config;
             _product = new ProductRepository(_config);
             _supplier = new SupplierRepository(_config, _one);
-            _purchaseRepository = purchaseRepository;
             repository = new PurchaseRepository(_config, _one);
+            _notificationServices = notificationService;
+            _hubContext = hubContext;
         }
         #region Requisitions
 
@@ -45,16 +49,18 @@ namespace InspireSuperStore.Areas.Purchases.Controllers
         public async Task<IActionResult> AddRequisitionForm()
         {
             vm.Suppliers = await _supplier.GetSuppliers();
+           
             return View(vm);
         }
         public async Task<IActionResult> Requisitions()
         {
+            await _notificationServices.SendToRoleGroup("Purchase", "Purchase Login Done");
             vm.PurchaseMasters= await repository.GetPurchaseRequisition(AppConstants.PurchaseType.Requisition);
             return View(vm);
         }
         public async Task<IActionResult> AddPurchaseRequisation(PurchaseDataDto model)
         {
-            var result = await _purchaseRepository.SavePurchase(model);
+            var result = await repository.SavePurchase(model);
             return Json(new {statusCode="200" });
         }
        

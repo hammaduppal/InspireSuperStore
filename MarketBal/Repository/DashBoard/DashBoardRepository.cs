@@ -17,7 +17,8 @@ namespace MarketBal.Repository.DashBoard
         {
             string query = $@"SELECT 
                             (SELECT COUNT(*) FROM Inv.Products) AS TotalProducts,
-                            (SELECT COUNT(*) FROM Inv.ProductVariants) AS TotalVariants";
+                            (SELECT COUNT(*) FROM Inv.ProductVariants) AS TotalVariants,
+                            (SELECT COUNT(*) FROM HRM.LoginUsers) AS TotalUsers";
             var param = new
             {
               

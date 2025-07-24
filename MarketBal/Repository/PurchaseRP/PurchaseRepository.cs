@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MarketBal.Repository.PurchaseRP
 {
-    public class PurchaseRepository : IPurchaseRepository
+    public class PurchaseRepository 
     {
         private readonly IConfiguration _config;
         private readonly DBManager _db;
@@ -26,12 +26,8 @@ namespace MarketBal.Repository.PurchaseRP
 
      
        //Save As Requisition
+    
         public async Task<int> SavePurchase(PurchaseDataDto model)
-        {
-            int result = await AddPurchase(model);
-            return await Task.FromResult(result);
-        }
-        private async Task<int> AddPurchase(PurchaseDataDto model)
         {
             var groupedItems = model.Items
                 .GroupBy(x => x.ProductId)

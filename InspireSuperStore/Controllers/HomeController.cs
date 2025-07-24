@@ -1,9 +1,12 @@
+using InspireSuperStore.Areas.Notification.Data;
 using InspireSuperStore.Models;
 using MainModels;
 using MainModels.DTOModels;
+using MainModels.Util;
 using MarketBal.Repository.DashBoard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Diagnostics;
 
 namespace InspireSuperStore.Controllers
@@ -16,13 +19,17 @@ namespace InspireSuperStore.Controllers
 		private readonly IConfiguration _config;
 		private readonly ApiMethods _apiMethod;
 		private readonly DashBoardRepository _dashboard;
-		public HomeController(ILogger<HomeController> logger,IConfiguration config)
+		private readonly NotificationService _notificationServices;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        public HomeController(ILogger<HomeController> logger,IConfiguration config, NotificationService notificationService, IHubContext<NotificationHub> hubContext)
 		{
 			_config = config;
 			_logger = logger;
 			_apiMethod = new ApiMethods();
 			_dashboard = new DashBoardRepository(_config);
-			var systemSettings = _config.GetSection("SystemSettings").Get<SystemSettings>();
+			_notificationServices = notificationService;
+            _hubContext = hubContext;
+            var systemSettings = _config.GetSection("SystemSettings").Get<SystemSettings>();
 			PagesViewModel.SystemSettings = systemSettings;
 			if (PagesViewModel.ThemeSettings==null)
 			{
@@ -37,9 +44,15 @@ namespace InspireSuperStore.Controllers
 			}
 		}
 
-		public IActionResult Index()
+		public async Task<IActionResult> Index()
 		{
-			return View();
+			//var reu = await _notificationServices.NotifyOnlineUsersUpdated();
+			//await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Welcome! You are logged in.");
+
+			
+			//string message = "this is my message to send to admin@inspirenation.us";
+   //         await _hubContext.Clients.User("admin@inspirenation.us").SendAsync("ReceiveNotification", $"Private: {message}");
+            return View();
 		}
 
 		public IActionResult ToggleSideMenu()

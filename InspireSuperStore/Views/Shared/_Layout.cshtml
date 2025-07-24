@@ -39,6 +39,37 @@
         </div>
     </footer>
     <script>
+                   const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/notificationHub")
+        .withAutomaticReconnect() // <--- this enables default retry behavior
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+            debugger
+        // Receive message handler
+        connection.on("ReceiveNotification", function (message) {
+            debugger
+            console.log("Notification received:", message);
+            // Optionally show toast / append to DOM etc.
+        });
+                connection.start().then(function () {
+            console.log("SignalR connected.");
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+                connection.onreconnecting((error) => {
+            console.warn("SignalR connection lost. Attempting to reconnect...", error);
+            // Optionally show a message to the user
+        });
+                connection.onreconnected((connectionId) => {
+            console.log("SignalR reconnected. New connection ID:", connectionId);
+            // Optionally update UI or re-sync data
+        });
+           function sendTest() {
+            fetch('/Home/SendTestMessage', { method: 'POST' });
+        }
+    </script>
+        
+    <script>
         $('#toggleSideBar').on('click',function(){
              $.ajax({
                 url:'/Home/ToggleSideMenu/',

@@ -1,9 +1,11 @@
+using InspireSuperStore.Areas.Notification.Data;
 using InspireSuperStore.Models;
 using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository.DCS;
 using MarketBal.Repository.PurchaseRP;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,14 +61,16 @@ builder.Services.AddAuthentication(cookieScheme).AddCookie(cookieScheme, options
         }
         return Task.CompletedTask;
     };
+ 
     options.Events.OnSigningOut = context =>
     {
         context.HttpContext.Response.Cookies.Delete(cookieScheme);
         return Task.CompletedTask;
     };
 });
-builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
-
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+builder.Services.AddScoped<NotificationService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -99,4 +103,5 @@ app.MapControllerRoute(
 	name: "default",
 	pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.MapHub<NotificationHub>("/notificationHub");
 app.Run();
