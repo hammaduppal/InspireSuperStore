@@ -1,0 +1,96 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Collections";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">Collections</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+
+	<div class="card shadow-5">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Login Users</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<a href="/collection/addcollection" class="btn btn-success addProduct">Add Collection</a>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="table-responsive">
+			<table class="table">
+				<thead>
+					<tr>
+						<th class="text-center">Collectionid</th>
+						<th class="text-center">CollectionName</th>
+
+						<th class="text-center">Supplier Code</th>
+						<th class="text-center">Status</th>
+						<th class="text-center">Manage</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var item in Model.Collections)
+					{
+						<tr>
+							<td class="text-center"><a href="#">@item.CollectionId</a></td>
+							<td class="text-center">@item.CollectionName</td>
+							<td class="text-center">
+								@item.CollectionDetails
+							</td>
+							<td class="text-center">
+								@if (item.IsActive)
+								{
+									<span class="badge badge-success">Active</span>
+
+
+								}
+								else
+								{
+									<span class="badge badge-secondary">UnActive</span>
+
+								}
+							</td>
+							<td class="text-center">
+								<div class="list-icons">
+									<a href="#" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a>
+									<a href="#" class="list-icons-item text-danger-600"><i class="icon-trash"></i></a>
+									<a href="#" class="list-icons-item text-teal-600"><i class="icon-cog6"></i></a>
+								</div>
+							</td>
+						</tr>
+
+					}
+				</tbody>
+			</table>
+
+		</div>
+	</div>
+
+
+</div>
+
+

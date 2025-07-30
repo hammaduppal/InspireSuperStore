@@ -26,8 +26,8 @@ var DateTimePickers = function() {
 
         // Basic initialization
         $('.daterange-basic').daterangepicker({
-            applyClass: 'bg-slate-600',
-            cancelClass: 'btn-light'
+            applyClass: 'btn-success',
+            cancelClass: 'btn-danger'
         });
 
         // Display week numbers

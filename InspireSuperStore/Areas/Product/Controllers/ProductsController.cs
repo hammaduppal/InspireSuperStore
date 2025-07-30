@@ -128,16 +128,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
         [HttpPost]
         public async Task<IActionResult> AddProductImages(UploadImage model)
         {
-            var result = await FileRepository.ConvertToBase64Async(model.File);
-            var extension = Path.GetExtension(model.File.FileName);
-            var FileRequest = new APIImageContentRequest
-            {
-                Folder = "Products",
-                DataType = "Products",
-                Base64String = result,
-                FileExtension = extension
-            };
-            var uploadResult = await _file.SaveFile(FileRequest);
+            var uploadResult = await _file.SaveFile(model.File,"Products","Products");
             if (uploadResult.StatusCode == "200")
             {
                 var resu = await _product.SaveProductImage(Guid.Parse(model.Id), uploadResult.ImageUrl);

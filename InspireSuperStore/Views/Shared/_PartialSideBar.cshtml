@@ -60,7 +60,18 @@
 					</ul>
 				</li>
 			}
-			
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.PowerUser, UserRolesConstants.Purchase))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-truck "></i> <span>Collections</span></a>
+					<ul class="nav nav-group-sub" data-submenu-title="Collections">
+						<li class="nav-item"><a href="/collection/collections" class="nav-link"><i class="icon-store"></i>Collections</a></li>
+						<li class="nav-item"><a href="/collection/addcollection" class="nav-link"><i class="icon-cart4"></i>Add Collection</a></li>
+
+					</ul>
+				</li>
+			}
+
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.SuperAdmin))
 			{
 				<li class="nav-item nav-item-submenu">

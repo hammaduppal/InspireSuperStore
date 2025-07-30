@@ -19,6 +19,8 @@
     <Folder Include="Areas\Account\Models\" />
     <Folder Include="Areas\AdminArea\Data\" />
     <Folder Include="Areas\AdminArea\Models\" />
+    <Folder Include="Areas\Collections\Data\" />
+    <Folder Include="Areas\Collections\Models\" />
     <Folder Include="Areas\Notification\Models\" />
     <Folder Include="Areas\Notification\Views\" />
     <Folder Include="Areas\Product\Data\" />

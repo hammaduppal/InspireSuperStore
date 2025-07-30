@@ -459,6 +459,23 @@ const Utility = {
             return null;
         }
     },
+    RequestFileAjax: async function (data) {
+        try {
+            const response = await $.ajax({
+                url: data.url,
+                data: data.data, // should be FormData
+                type: data.type || 'POST',
+                contentType: false,
+                processData: false,
+                cache: false
+            });
+            return response;
+        } catch (error) {
+            console.error("File Upload AJAX error:", error);
+            return null;
+        }
+    }
+    ,
     RequestAjax: async function (url) {
         try {
             const response = await $.ajax({

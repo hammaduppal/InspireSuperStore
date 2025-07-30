@@ -314,6 +314,91 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
             var result = await _db.GetSingleItemDatatWithQueryAndParam<ProductVariantVM>(query, param);
             return result;
         }
+        public async Task<List<ProductVariantVM>> SearchProducts(ProductSearchVM model)
+        {
+            string query = $@"
+    SELECT 
+        p.ProductId,
+        pv.VariantId,
+        p.ProductName,
+        p.ProductDescription,
+        p.ProductSlug,
+        c.ColorName,
+        m.MaterialName,
+        s.SizeName,
+        uom.UOMName,
+        uoms.SubUOMName,
+        pv.QuantityPerUnit,
+        pv.VariantImageId,
+        b.BrandName,
+        pv.BarCode,
+        pv.RetailPrice
+    FROM Inv.ProductVariants pv 
+    JOIN Inv.Products p ON pv.ProductId = p.ProductId
+    JOIN Inv.Colors c ON pv.ColorId = c.ColorId
+    JOIN Inv.Material m ON pv.MaterialId = m.MaterialId
+    JOIN Inv.Sizes s ON pv.SizeId = s.SizeId
+    JOIN Inv.UOM uom ON p.UOMId = uom.UOMId
+    JOIN Inv.UOMSub uoms ON pv.SubUOMId = uoms.SubUOMId
+    JOIN Inv.Brands b ON p.BrandId = b.BrandId
+    WHERE 
+        pv.IsActive = 1 AND pv.IsDeleted = 0
+        /*** DYNAMIC CONDITIONS WILL BE INJECTED HERE ***/ 
+    ORDER BY p.ProductName";
+
+            var whereConditions = new List<string>();
+            var param = new DynamicParameters();
+
+            if (!string.IsNullOrWhiteSpace(model.SearchParams))
+            {
+                var terms = model.SearchParams.Split('%');
+
+                // Case: Structured Search
+                if (terms.Length >= 1)
+                {
+                    whereConditions.Add("LOWER(p.ProductName) LIKE '%' + LOWER(@nameTerm) + '%'");
+                    param.Add("nameTerm", terms[0]);
+                }
+                if (terms.Length >= 2)
+                {
+                    whereConditions.Add("LOWER(s.SizeName) LIKE '%' + LOWER(@sizeTerm) + '%'");
+                    param.Add("sizeTerm", terms[1]);
+                }
+                if (terms.Length >= 3)
+                {
+                    whereConditions.Add("CAST(pv.RetailPrice AS VARCHAR) LIKE '%' + @priceTerm + '%'");
+                    param.Add("priceTerm", terms[2]);
+                }
+
+                // Fallback fuzzy search if only one term (no `%`)
+                if (terms.Length == 1)
+                {
+                    whereConditions.Clear();
+                    string fallback = terms[0];
+                    param.Add("searchTerm", fallback);
+
+                    whereConditions.Add(@"
+                (
+                    LOWER(p.ProductName) LIKE '%' + LOWER(@searchTerm) + '%' OR
+                    LOWER(s.SizeName) LIKE '%' + LOWER(@searchTerm) + '%' OR
+                    LOWER(c.ColorName) LIKE '%' + LOWER(@searchTerm) + '%' OR
+                    LOWER(m.MaterialName) LIKE '%' + LOWER(@searchTerm) + '%' OR
+                    LOWER(pv.BarCode) LIKE '%' + LOWER(@searchTerm) + '%' OR
+                    CAST(pv.RetailPrice AS VARCHAR) LIKE '%' + @searchTerm + '%'
+                )");
+                }
+            }
+
+            // Inject dynamic WHERE
+            string whereClause = whereConditions.Any()
+                ? " AND " + string.Join(" AND ", whereConditions)
+                : "";
+
+            query = query.Replace("/*** DYNAMIC CONDITIONS WILL BE INJECTED HERE ***/", whereClause);
+
+            var result = await _db.GetDataListWithQueryAndParam<ProductVariantVM>(query, param);
+            return result.ToList();
+        }
 
 
 

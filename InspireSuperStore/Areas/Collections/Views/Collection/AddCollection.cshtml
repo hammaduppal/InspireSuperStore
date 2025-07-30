@@ -1,0 +1,320 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Add Supplier";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="~/global_assets/js/plugins/ui/moment/moment.min.js"></script>
+<script src="~/global_assets/js/plugins/pickers/daterangepicker.js"></script>
+<script src="~/global_assets/js/demo_pages/picker_date.js"></script>
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+				<a href="/collection/collections" class="breadcrumb-item"><i class="icon-store2  mr-2"></i> Collection</a>
+
+
+				<span class="breadcrumb-item active">Add Collection</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+<div class="content">
+	<!-- Form validation -->
+	<div class="card shadow-5">
+
+
+		<div class="card-body">
+
+			<form id="addNewCollection" class="form-validate-jquery" action="#">
+
+
+				<fieldset class="mb-3 ">
+					<legend class="text-uppercase font-size-sm font-weight-bold">Add Collection</legend>
+
+
+					<div class="row">
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="supplierBusinessName" class="col-form-label col-lg-4">BarCode<span class="text-danger">*</span></label>
+								<div class="col-lg-8">
+									<input type="text" id="barCode" name="barCode" class="form-control" autocomplete="off" placeholder="BarCode" />
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="supplierCode" class="col-form-label col-lg-3">Name <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<div class="form-group-feedback form-group-feedback-right">
+										<select id="productSearch" style="width: 100%" class="form-control"></select>
+
+									</div>
+								</div>
+							</div>
+						</div>
+
+
+
+
+
+					</div>
+
+					<div class="row">
+						<table id="collectionTable" class="table table-stripped">
+							<thead>
+								<tr>
+									<th>
+										BarCode
+									</th>
+									<th>
+										Product Name
+									</th>
+
+									<th>
+										Size
+									</th>
+									<th>
+										Color
+									</th>
+									<th>
+										Material
+									</th>
+									<th>
+										Price
+									</th>
+									<th>Manage</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+					<div class="row">
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Select Collection Start and End Date:</label>
+									<div class="input-group">
+										<span class="input-group-prepend">
+											<span class="input-group-text"><i class="icon-calendar22"></i></span>
+										</span>
+										<input type="text" id="daterange-basic" class="form-control daterange-basic" value="@DateTime.Now.ToString("MM/dd/yyyy") - @DateTime.Now.AddMonths(1).ToString("MM/dd/yyyy")" required />
+									</div>
+							</div>
+						</div>
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label>Collection Name:</label>
+								<div class="input-group">
+								
+									<input id="collectionName" type="text" class="form-control" required />
+								</div>
+							</div>
+							
+						</div>
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Collection Description:</label>
+								<div class="input-group">
+
+									<textarea id="collectionDescription" required class="form-control"></textarea>
+								</div>
+							</div>
+
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Collection Image:</label>
+								<div class="input-group">
+
+									<input id="collectionImage" type="file" class="form-control" required />
+								</div>
+							</div>
+
+						</div>
+					</div>
+
+				</fieldset>
+
+
+				<div class="d-flex justify-content-end align-items-center">
+					<button type="reset" class="btn btn-light" id="reset">Reset <i class="icon-reload-alt ml-2"></i></button>
+					<button id="addNewCollectionbtn" type="submit" class="btn btn-primary ml-3">Submit <i class="icon-paperplane ml-2"></i></button>
+				</div>
+			</form>
+		</div>
+	</div>
+	<!-- /form validation -->
+
+
+
+
+</div>
+<script>
+	$(document).ready(function(){
+		  $(document).on('keydown', '#barCode', async function (e) {
+
+			  if (e.key === 'Enter') {
+					var barCode= $(this).val();
+
+					 const data = await Utility.RequestDataAjax( {
+					  data: { BarCode: barCode },
+					  url: '/Products/GetVariantbyBarCode'
+				  });
+				  console.log(data);
+				  if(data){
+					appendProductToTable(data);
+						$(this).focus();
+					$('#barCode').val('');
+
+				  } else
+				  {
+					alert('Product not found!');
+				  }
+
+				}
+		  });
+			  function appendProductToTable(result) {
+
+		if (!result) return;
+
+		// Check for duplicate barcode
+		let isDuplicate = false;
+		$('#collectionTable tbody tr').each(function () {
+			if ($(this).find('td').eq(0).text().trim() === result.barCode) {
+				isDuplicate = true;
+				return false; // break loop
+			}
+		});
+
+		if (isDuplicate) {
+			alert('This barcode already exists in the table.');
+			return;
+		}
+
+		// Create and append row
+		let row = `
+			<tr>
+				<td>${result.BarCode}</td>
+				<td>${result.ProductName}</td>
+				<td>${result.SizeName}</td>
+				<td>${result.ColorName || ''}</td>
+				<td>${result.MaterialName || ''}</td>
+				<td>${result.RetailPrice ? result.RetailPrice.toFixed(2) : '0.00'}</td>
+				<td>
+					<div class="list-icons">
+						<a href="#" data-VariantId="${result.VariantId}" class="list-icons-item text-danger-600 removeRow"><i class="icon-trash"></i></a>
+					</div>
+				</td>
+			</tr>
+		`;
+			$('#collectionTable tbody').append(row);
+		}
+			$('#productSearch').select2({
+			placeholder: 'Search product by name, size, color, material...',
+			minimumInputLength: 2,
+			ajax: {
+				url: '/Products/SearchProducts',
+				type: 'POST',
+				dataType: 'json',
+				delay: 300,
+				data: function (params) {
+					return {
+						SearchParams: params.term
+					};
+				},
+				processResults: function (data) {
+					// Expected: [{id, text, fullProductObject}]
+					return {
+						results: data.map(function (item) {
+							return {
+								id: item.BarCode, // or item.id
+								text: `${item.ProductName} - ${item.SizeName || ''} ${item.ColorName || ''} ${item.MaterialName || ''}`,
+								fullData: item
+							};
+						})
+					};
+				},
+				cache: true
+			},
+			templateResult: formatProductResult,
+			templateSelection: formatProductSelection
+		});
+
+		// On select, append to table
+		$('#productSearch').on('select2:select', function (e) {
+			const data = e.params.data;
+			appendProductToTable(data.fullData);
+			// Optionally clear
+			$(this).val(null).trigger('change');
+		});
+
+		function formatProductResult(data) {
+			if (data.loading) return data.text;
+			return $(`<div>
+				<strong>${data.text}</strong><br/>
+				<small>Price: ${data.fullData?.RetailPrice || 'N/A'}</small>
+			</div>`);
+		}
+
+		function formatProductSelection(data) {
+			return data.text;
+		}
+		$(document).on('click','.removeRow',function(e){
+			e.preventDefault();
+				$(this).closest('tr').remove();
+		})
+		$('#addNewCollection').submit(async function(e){
+			e.preventDefault();
+			 const rows = $('#collectionTable tbody tr');
+
+			if (rows.length === 0) {
+				alert('Please add at least one product before submitting.');
+				return;
+			}
+			 let variantIds = [];
+			rows.each(function () {
+				const variantId = $(this).find('.removeRow').attr('data-variantid');
+				if (variantId) {
+					variantIds.push(variantId);
+				}
+			});
+			const dateRange = $('#daterange-basic').val(); 
+			const collectionName = $('#collectionName').val();
+			const collectionDescription = $('#collectionDescription').val();
+			const collectionImageFile = $('#collectionImage')[0].files[0];
+			if (!collectionImageFile) {
+				alert('Please upload a collection image.');
+				return;
+			}
+				const formData = new FormData();
+				formData.append('CollectionName', collectionName);
+				formData.append('CollectionDescription', collectionDescription);
+				formData.append('DateRange', dateRange);
+				formData.append('Image', collectionImageFile);
+				formData.append('VariantIds', variantIds); // Send as string array
+
+			const response = await Utility.RequestFileAjax({
+				data: formData,
+				url: '/Collection/AddNewCollection',
+				contentType: false,
+				processData: false,
+				type: 'POST',
+				isFileUpload: true
+			});
+		});
+	})
+
+
+
+
+
+</script>
