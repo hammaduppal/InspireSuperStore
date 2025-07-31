@@ -39,3 +39,4 @@ namespace InspireSuperStore.Areas.Collections.Controllers
         }
     }
 }
+    

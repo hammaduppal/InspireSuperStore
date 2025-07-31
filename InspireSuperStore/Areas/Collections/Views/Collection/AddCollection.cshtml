@@ -211,7 +211,7 @@
 				<td>${result.RetailPrice ? result.RetailPrice.toFixed(2) : '0.00'}</td>
 				<td>
 					<div class="list-icons">
-						<a href="#" data-VariantId="${result.VariantId}" class="list-icons-item text-danger-600 removeRow"><i class="icon-trash"></i></a>
+						<a href="#" data-VariantId="${result.VariantId}" data-productId="${result.ProductId}" class="list-icons-item text-danger-600 removeRow"><i class="icon-trash"></i></a>
 					</div>
 				</td>
 			</tr>
@@ -310,6 +310,17 @@
 				type: 'POST',
 				isFileUpload: true
 			});
+			if(response.statusCode==='200')
+			{
+				Utility.successMessage(response.Message);
+				setTimeout(function(){
+					location.reload();
+				},1000)
+				$('#addNewCollection')[0].reset();
+			}
+			else{
+				Utility.failMessage(response.Message);
+			}
 		});
 	})
 

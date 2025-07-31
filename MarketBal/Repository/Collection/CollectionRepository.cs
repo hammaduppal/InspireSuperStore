@@ -40,7 +40,7 @@ namespace MarketBal.Repository.Collection
                 {
                      CollectionDetailId = Guid.NewGuid(),
                     VariantId = item,
-                   CollectionId=collectionId
+                   CollectionId =collectionId
 
                 });
 
@@ -73,6 +73,8 @@ namespace MarketBal.Repository.Collection
                 IsActive = true,
             };
             await _onedb.CollectionMasters.AddAsync(ppc);
+             await _onedb.SaveChangesAsync();
+
             await _onedb.CollectionDetails.AddRangeAsync(items);
             return await _onedb.SaveChangesAsync();
         }
