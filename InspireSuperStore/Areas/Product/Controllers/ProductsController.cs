@@ -44,7 +44,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             return Json(res);
         }
         [HttpPost]
-        public async Task<IActionResult> ActiveUnactive(RequestModel model)
+        public async Task<IActionResult> ActiveUnactive(RequestModel model)     
         {
             var res = await _product.ActiveUnActiveProduct(model.ProductId, model.IsActive ? 1 : 0);
             if (res)

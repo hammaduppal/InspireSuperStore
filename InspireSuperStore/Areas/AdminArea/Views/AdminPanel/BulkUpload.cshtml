@@ -1,0 +1,125 @@
+﻿
+@{
+    ViewData["Title"] = "BulkUpload";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">Add User</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+<div class="content">
+	<!-- Form validation -->
+	<div class="card shadow-5">
+
+		<div class="card-body">
+
+			<form id="addNewUser" class="form-validate-jquery " action="#">
+
+
+				<fieldset class="mb-3 ">
+					<legend class="text-uppercase font-size-sm font-weight-bold">Add User</legend>
+					<div class="row mb-3">
+
+						
+					</div>
+
+
+					<div class="row">
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="file" class="col-form-label col-lg-3">Upload Excel File<span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<input type="file" id="file" name="file" class="form-control" autocomplete="off" required  />
+
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="file" class="col-form-label col-lg-3">Upload Excel File<span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<a id="downloadMasterData" class="btn btn-success" href="#">Download Master Data Details</a>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					
+					
+				</fieldset>
+
+
+				<div class="d-flex justify-content-end align-items-center">
+					<button type="reset" class="btn btn-light" id="reset">Reset <i class="icon-reload-alt ml-2"></i></button>
+					<button id="newuseraddBtn" type="submit" class="btn btn-primary ml-3">Submit <i class="icon-paperplane ml-2"></i></button>
+				</div>
+			</form>
+		</div>
+	</div>
+	<!-- /form validation -->
+	<div class="row">
+	</div>
+
+
+
+</div>
+
+<script>
+	$('#downloadMasterData').click(function(e){
+		e.preventDefault();
+		$.ajax({
+		url: '/AdminPanel/GetMasterData', // adjust to your actual route
+		method: 'GET', // or POST if your endpoint expects it
+		xhrFields: {
+			responseType: 'blob' // important for binary
+		},
+		beforeSend: function (xhr) {
+			// If you use anti-forgery (CSRF), add token header here:
+			// const token = $('input[name="__RequestVerificationToken"]').val();
+			// xhr.setRequestHeader('RequestVerificationToken', token);
+		},
+		success: function (data, status, xhr) {
+			// Get filename from Content-Disposition if provided
+			let filename = 'MasterExport.xlsx';
+			const disposition = xhr.getResponseHeader('Content-Disposition');
+			if (disposition && disposition.indexOf('filename=') !== -1) {
+				const matches = /filename\*?=(?:UTF-8'')?["']?([^;"']+)/i.exec(disposition);
+				if (matches && matches[1]) {
+					filename = decodeURIComponent(matches[1].replace(/["']/g, ''));
+				}
+			}
+
+			// Create blob and trigger download
+			const blob = new Blob([data], { type: xhr.getResponseHeader('Content-Type') || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			a.remove();
+			window.URL.revokeObjectURL(url);
+
+			// Optionally hide loading indicator here
+		},
+		error: function (xhr, status, error) {
+			console.error('Download failed', error);
+			alert('Failed to download file.');
+			// Optionally hide loading indicator here
+		}
+	});
+	});
+</script>

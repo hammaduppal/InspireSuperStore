@@ -88,6 +88,17 @@
 					</ul>
 				</li>
 			}
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="mi-settings"></i> <span>Data Manager</span></a>
+					<ul class="nav nav-group-sub" data-submenu-title="Data Manager">
+						<li class="nav-item"><a href="/AdminPanel/BulkUpload" class="nav-link"><i class="mi-person"></i>Bulk Upload</a></li>
+					
+
+					</ul>
+				</li>
+			}
 
 		
 

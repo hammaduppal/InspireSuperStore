@@ -115,9 +115,9 @@ namespace MarketBal.Repository.Products
         public async Task<bool> ActiveUnActiveProduct(Guid Id, int IsActive)
         {
             string query = $"UPDATE INV.Products SET IsActive={IsActive} WHERE ProductId='{Id}'";
-            var result = await _db.ExecuteQuery<int>(query, 1);
+            var result = await _db.ExecuteQuery<int>(query);
 
-            return result > 0;
+            return true;
         }
 
 

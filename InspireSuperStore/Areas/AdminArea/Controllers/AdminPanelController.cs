@@ -201,6 +201,17 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                 return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
             }
         }
+       public async Task<IActionResult> BulkUpload()
+        {
+            return View();
+        }
+        public async Task<IActionResult> GetMasterData()
+        {
+            var result = await _adminPanel.MasterDataExcel();
+            return File(result,
+                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                 $"MasterExport_{DateTime.UtcNow:yyyyMMddHHmmss}.xlsx");
+        }
         //[AllowAnonymous]
         //public async Task<IActionResult> ResetData()
         //{

@@ -480,5 +480,17 @@ namespace MarketBal.Repository.Products
             return result.ToList();
         }
         #endregion
+        public async Task<List<DCSExcel>> GetDCS()
+        {
+            string query = $@"select d.DepartmentId,d.DepartmentName,c.CategoryId,c.CategoryName,sc.SubCategoryId,sc.SubCategoryName from Inv.Departments d join INV.Categories c on d.DepartmentId= c.DepartmentId join Inv.SubCategory sc on c.CategoryId = sc.CategoryId";
+            var result = await _db.ExecuteQueryList<DCSExcel>(query);
+            return result.ToList();
+        }
+        public async Task<List<UOMSUBUomExcel>> GETUOMSUBUOM()
+        {
+            string query = $@"select uom.UOMId, uom.UOMName,usub.SubUOMId,usub.SubUOMName from INV.UOM uom  join INV.UOMSUB usub on uom.UOMId = usub.UOMId";
+            var result = await _db.ExecuteQueryList<UOMSUBUomExcel>(query);
+            return result.ToList();
+        }
     }
 }

@@ -1,8 +1,12 @@
-﻿using MainModels;
+﻿using System.Collections;
+using MainModels;
 using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
+using MarketBal.Helper.Excel;
+using MarketBal.Repository.Products;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using Microsoft.IdentityModel.Abstractions;
 
 namespace MarketBal.Repository
@@ -14,12 +18,14 @@ namespace MarketBal.Repository
         private readonly DBManager _db;
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
+        private readonly AttributeRepository _attrib;
         public AdminPanelRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
+            _attrib = new AttributeRepository(_config);
         }
         
         public async Task<List<LoginUserVM>> GetLoginUser()
@@ -824,7 +830,41 @@ VALUES
 ";
             return await _db.ExecuteQueryModify(query);
         }
-    
+        
+        public async Task<byte[]> MasterDataExcel()
+        {
+            var subcats = await _attrib.GetDCS();
+            var color = await _attrib.GetColors();
+            var size= await _attrib.GetSizes();
+            var materials = await _attrib.GetMaterials();
+            var uom = await _attrib.GETUOMSUBUOM();
+            var sizes = size.Select(x=> new SizeExcel
+            {
+                SizeId=x.SizeId,SizeName=x.SizeName
+            }).ToList();
+            var materialsExcel = materials.Select(x => new MaterialExcel
+            {
+                MaterialId = x.MaterialId,
+                MaterialName = x.MaterialName
+            }).ToList();
+            var colorExcel = color.Select(x => new ColorExcel
+            {
+                 ColorId=x.ColorId,
+                 ColorName=x.ColorName
+            }).ToList();
+            var sheets = new Dictionary<string, IEnumerable>
+            {
+                ["SubCategories"] = subcats,
+                ["Colors"] = colorExcel,
+                ["Sizes"] = sizes,
+                ["Materials"] = materialsExcel,
+                ["UOMs"] = uom
+            };
+
+            var excelHandler = new ExcelHandler("INSPIRE"); // or your name/org
+            byte[] bytes = await excelHandler.BuildWorkbook(sheets);
+            return bytes;
+        }
     
     
     
