@@ -1,0 +1,429 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+	ViewData["Title"] = "CreateInvoice";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+
+<div class="content">
+
+
+
+	<div class="mb-0">
+		<div class="row">
+			<!-- Barcode Input -->
+			<div class="col-md-6">
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="icon-barcode2"></i></span>
+					</div>
+					<input type="text" id="barCode" name="barCode" class="form-control" autocomplete="off" placeholder="Search BarCode........." />
+				</div>
+			</div>
+			<!-- Manual Search Input -->
+			<div class="col-md-6">
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="icon-search4"></i></span>
+					</div>
+					<div class="form-group-feedback form-group-feedback-right">
+						<select id="productSearch" style="width: 100%" class="form-control"></select>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="container">
+		<div class="card">
+			
+			<div class="card-body">
+				<div class="row">
+					<div class="col-lg-2">
+						<label>
+							Full Payment
+							<input readonly id="total" type="text" class="form-control" />
+
+						</label>
+					</div>
+					<div class="col-lg-2">
+						<label>
+							Discount
+							<input  id="discount" type="text" class="form-control" />
+						</label>
+					</div>
+					<div class="col-lg-1">
+						<label style="font-weight:700">
+							Payable
+							<input id="payable" type="text" class="form-control" />
+						</label>
+					</div>
+					<div class="col-lg-1">
+						<label style="">
+							Tax
+							<input style="color:red" id="tax" type="text" class="form-control" />
+						</label>
+					</div>
+					<div class="col-lg-2">
+						<label style="font-weight:700;">
+							Grand Total
+							<input id="grandTotal" type="text" class="form-control" />
+						</label>
+					</div>
+					<div class="col-lg-4">
+						<label>Select Customer</label>
+						<div class="">
+							<div class="input-group">
+								<select class="form-control">
+									<option>Walk-in Customer</option>
+									<option>John Smith</option>
+									<option>Maria Garcia</option>
+								</select>
+								<div class="input-group-append">
+									<button class="btn btn-light" type="button"><i class="icon-user-plus"></i></button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<!-- Left Side: Dynamic Product Area (Grid / Search) -->
+		<div class="col-lg-8">
+			<div class="card h-100">
+				<!-- Navigation for Grid/Search -->
+				<div class="card-header">
+					<ul class="nav nav-tabs nav-tabs-solid card-header-tabs">
+						<li class="nav-item"><a href="#pos-grid" class="nav-link active" data-toggle="tab">Product Grid</a></li>
+						<li class="nav-item"><a href="#pos-search-results" class="nav-link" data-toggle="tab">Search Results</a></li>
+					</ul>
+				</div>
+
+				<!-- Tab content -->
+				<div class="tab-content card-body">
+					<!-- Product Grid Pane -->
+					<div class="tab-pane fade show active" id="pos-grid" style="max-height: 50vh; overflow-y: auto;">
+						<div class="mb-2">
+							@if (Model.Departments != null)
+							{
+								@foreach (var item in Model.Departments)
+								{
+									<button class="btn btn-light">@item.DepartmentName</button>
+
+								}
+							}
+						
+						</div>
+						<div class="row">
+							<!-- Product Tile -->
+							<div class="col-md-3 mb-3"><div class="card card-body text-center p-2 h-100" style="cursor: pointer;"><h6 class="font-weight-semibold mb-0">Espresso</h6><span class="text-muted">$2.50</span></div></div>
+							<div class="col-md-3 mb-3"><div class="card card-body text-center p-2 h-100" style="cursor: pointer;"><h6 class="font-weight-semibold mb-0">Latte</h6><span class="text-muted">$4.00</span></div></div>
+							<div class="col-md-3 mb-3"><div class="card card-body text-center p-2 h-100 bg-primary-300 text-white" style="cursor: pointer;"><h6 class="font-weight-semibold mb-0">Daily Special</h6><span class="opacity-75">$5.00</span></div></div>
+							<div class="col-md-3 mb-3"><div class="card card-body text-center p-2 h-100" style="cursor: pointer;"><h6 class="font-weight-semibold mb-0">Croissant</h6><span class="text-muted">$3.00</span></div></div>
+							<!-- Add more product tiles -->
+						</div>
+					</div>
+
+					<!-- Search Results Pane (Initially Hidden) -->
+					<div class="tab-pane fade" id="pos-search-results" style="max-height: 50vh; overflow-y: auto; overflow-x:auto">
+						<div class="table-responsive">
+							<table id="" class="table table-hover">
+								<thead>
+									<tr>
+										<th>Product</th>
+										<th>SKU</th>
+										<th class="text-center">Stock</th>
+										<th class="text-right">Price</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									<!-- Sample Search Result Row -->
+									<tr>
+										<td><div class="font-weight-semibold">Premium Whole Bean Coffee</div></td>
+										<td>COFF-WB-PREM</td>
+										<td class="text-center text-success font-weight-bold">120</td>
+										<td class="text-right">$18.99</td>
+										<td class="text-center"><button class="btn btn-primary btn-sm">Add</button></td>
+									</tr>
+									<tr>
+										<td><div class="font-weight-semibold">Stainless Steel Travel Mug</div></td>
+										<td>MUG-SS-TVL-16</td>
+										<td class="text-center text-warning font-weight-bold">15</td>
+										<td class="text-right">$24.50</td>
+										<td class="text-center"><button class="btn btn-primary btn-sm">Add</button></td>
+									</tr>
+									<tr>
+										<td><div class="font-weight-semibold">Chocolate Chip Cookie</div></td>
+										<td>PASTRY-CK-CC</td>
+										<td class="text-center text-danger font-weight-bold">0</td>
+										<td class="text-right">$2.25</td>
+										<td class="text-center"><button class="btn btn-light btn-sm" disabled>Out</button></td>
+									</tr>
+									<!-- Results will be dynamically added here -->
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					
+				</div>
+			</div>
+
+		</div>
+		<!-- /left side -->
+		<!-- /left side -->
+		<!-- Right Side: Bill & Actions with new class -->
+		<div class="col-lg-4 pos-fixed-sidebar">
+			<!--
+			PASTE YOUR ENTIRE RIGHT-SIDE HTML HERE
+			(The code you provided in your prompt)
+			-->
+			<div class="card h-100 d-flex flex-column">
+			
+				
+				<div class="card-body border-top">
+					<div id="invoiceRowSection" class="table-responsive " style="max-height:30vh;min-height:30vh;overflow-x:auto">
+						<table id="invoiceTable" class="table table-sm">
+							<thead>
+								<tr>
+									<th class="text-center">Name</th>
+									<th class="text-right">Size</th>
+									<th class="text-right">Color</th>
+									<th class="text-right">Price</th>
+									<th>Manage</th>
+								</tr>
+							</thead>
+							<tbody>
+								<!-- Cart items will be added here -->
+
+							</tbody>
+						</table>
+					</div>
+					
+				</div>
+
+				<!-- Numpad & Final Actions -->
+				<div class="card-footer bg-white">
+					<div class="row no-gutters text-center mb-0">
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">1</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">2</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">3</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block font-weight-bold">Qty</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">4</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">5</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">6</button></div>
+						<div class="col-3 p-1"><button class="btn btn-info btn-block">Disc</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">7</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">8</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">9</button></div>
+						<div class="col-3 p-1"><button class="btn btn-danger btn-block"><i class="icon-arrow-left8"></i></button></div>
+						<div class="col-6 p-1"><button class="btn btn-light btn-block">0</button></div>
+						<div class="col-6 p-1"><button class="btn btn-light btn-block">.</button></div>
+					</div>
+					<div class="btn-group w-100">
+						<button type="button" class="btn btn-warning" style="flex-grow: 1;">Hold</button>
+						<button type="button" class="btn btn-danger" style="flex-grow: 1;">Cancel</button>
+						<button type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">PAY</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /right side -->
+
+
+
+
+	</div>
+
+
+</div>
+<script>
+	$(document).ready(function(){
+		  $(document).on('keydown', '#barCode', async function (e) {
+
+			  if (e.key === 'Enter') {
+					var barCode= $(this).val();
+
+					 const data = await Utility.RequestDataAjax( {
+					  data: { BarCode: barCode },
+					  url: '/Products/GetVariantbyBarCode'
+				  });
+				  console.log(data);
+				  if(data){
+					appendProductToTable(data);
+
+						$(this).focus();
+					$('#barCode').val('');
+
+				  } else
+				  {
+					alert('Product not found!');
+					$(this).val('');
+
+				  }
+
+				}
+		  });
+			function scrollInvoiceTableToBottom() {
+				let container = $('#invoiceRowSection');
+			 container.scrollTop(container[0].scrollHeight);
+			}
+		function appendProductToTable(result) {
+
+			if (!result) return;
+
+			// Check for duplicate barcode
+			let isDuplicate = false;
+			$('#invoiceTable tbody tr').each(function () {
+				if ($(this).find('td').eq(0).text().trim() === result.barCode) {
+					isDuplicate = true;
+					return false; // break loop
+				}
+			});
+
+			if (isDuplicate) {
+				alert('This barcode already exists in the table.');
+				return;
+			}
+
+			// Create and append row
+								// <td>${result.BarCode}</td>
+					//<td>${result.MaterialName || ''}</td>
+
+			let row = `
+				<tr>
+
+					<td>${result.ProductName}</td>
+					<td>${result.SizeName}</td>
+					<td>${result.ColorName || ''}</td>
+					<td>${result.RetailPrice ? result.RetailPrice.toFixed(2) : '0.00'}</td>
+					<td>
+						<div class="list-icons">
+							<a href="#" data-VariantId="${result.VariantId}" data-productId="${result.ProductId}" class="list-icons-item text-danger-600 removeRow"><i class="icon-trash"></i></a>
+						</div>
+					</td>
+				</tr>
+			`;
+			$('#invoiceTable tbody').append(row);
+			  scrollInvoiceTableToBottom();
+		}
+
+		$('#productSearch').select2({
+			placeholder: 'Search product by name, size, color, material...',
+			minimumInputLength: 2,
+			ajax: {
+				url: '/Products/SearchProducts',
+				type: 'POST',
+				dataType: 'json',
+				delay: 300,
+				data: function (params) {
+					return {
+						SearchParams: params.term
+					};
+				},
+				processResults: function (data) {
+					// Expected: [{id, text, fullProductObject}]
+					return {
+						results: data.map(function (item) {
+							return {
+								id: item.BarCode, // or item.id
+								text: `${item.ProductName} - ${item.SizeName || ''} ${item.ColorName || ''} ${item.MaterialName || ''}`,
+								fullData: item
+							};
+						})
+					};
+				},
+				cache: true
+			},
+			templateResult: formatProductResult,
+			templateSelection: formatProductSelection
+		});
+
+		// On select, append to table
+		$('#productSearch').on('select2:select', function (e) {
+			const data = e.params.data;
+			appendProductToTable(data.fullData);
+			// Optionally clear
+			$(this).val(null).trigger('change');
+		});
+
+		function formatProductResult(data) {
+			if (data.loading) return data.text;
+			return $(`<div>
+				<strong>${data.text}</strong><br/>
+				<small>Price: ${data.fullData?.RetailPrice || 'N/A'}</small>
+			</div>`);
+		}
+
+		function formatProductSelection(data) {
+			return data.text;
+		}
+		$(document).on('click','.removeRow',function(e){
+			e.preventDefault();
+				$(this).closest('tr').remove();
+		})
+		$('#addNewCollection').submit(async function(e){
+			e.preventDefault();
+			 const rows = $('#invoiceTable tbody tr');
+
+			if (rows.length === 0) {
+				alert('Please add at least one product before submitting.');
+				return;
+			}
+			 let variantIds = [];
+			rows.each(function () {
+				const variantId = $(this).find('.removeRow').attr('data-variantid');
+				if (variantId) {
+					variantIds.push(variantId);
+				}
+			});
+			const dateRange = $('#daterange-basic').val();
+			const collectionName = $('#collectionName').val();
+			const collectionDescription = $('#collectionDescription').val();
+			const collectionImageFile = $('#collectionImage')[0].files[0];
+			if (!collectionImageFile) {
+				alert('Please upload a collection image.');
+				return;
+			}
+				const formData = new FormData();
+				formData.append('CollectionName', collectionName);
+				formData.append('CollectionDescription', collectionDescription);
+				formData.append('DateRange', dateRange);
+				formData.append('Image', collectionImageFile);
+				formData.append('VariantIds', variantIds); // Send as string array
+
+			const response = await Utility.RequestFileAjax({
+				data: formData,
+				url: '/Collection/AddNewCollection',
+				contentType: false,
+				processData: false,
+				type: 'POST',
+				isFileUpload: true
+			});
+			if(response.statusCode==='200')
+			{
+				Utility.successMessage(response.Message);
+				setTimeout(function(){
+					location.reload();
+				},1000)
+				$('#addNewCollection')[0].reset();
+			}
+			else{
+				Utility.failMessage(response.Message);
+			}
+		});
+	})
+
+
+
+
+
+</script>

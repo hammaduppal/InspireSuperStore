@@ -165,11 +165,11 @@ namespace MarketBal.Repository.Products
             string query = $@"select p.ProductId,p.ProductName,uom.UOMName,p.UOMId,p.ProductDescription, sc.SubCategoryId,sc.SubCategoryName,c.CategoryName, d.DepartmentName,p.ProductSlug, ppimg.ImageUrl 
     ,b.BrandId,b.BrandName
 from Inv.Products p 
-JOIN INV.SubCategory sc on p.SubCategoryId = sc.SubCategoryId 
-JOIN INV.Categories c on sc.CategoryId =c.CategoryId 
-JOIN Inv.Departments d on c.DepartmentId=d.DepartmentId 
+LEFT JOIN INV.SubCategory sc on p.SubCategoryId = sc.SubCategoryId 
+LEFT JOIN INV.Categories c on sc.CategoryId =c.CategoryId 
+LEFT JOIN Inv.Departments d on c.DepartmentId=d.DepartmentId 
 Left JOIN INV.Brands b on p.BrandId = b.BrandId
- JOIN INV.UOM uom on p.UOMId = uom.UOMId
+ LEFT JOIN INV.UOM uom on p.UOMId = uom.UOMId
 LEFT JOIN Inv.ProductImages ppimg on p.Productid = ppimg.ProductId and ppimg.IsDefault = 1
                 where P.ProductId = @ProductId";
             var param = new

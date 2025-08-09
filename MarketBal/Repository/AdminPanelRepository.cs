@@ -838,6 +838,12 @@ VALUES
             var size= await _attrib.GetSizes();
             var materials = await _attrib.GetMaterials();
             var uom = await _attrib.GETUOMSUBUOM();
+            var brands = await _attrib.GetBrands();
+           var brandExcel = brands.Select(x=> new
+            {
+                BrandId=x.BrandId,
+                BrandName=x.BrandName
+            }).ToList();
             var sizes = size.Select(x=> new SizeExcel
             {
                 SizeId=x.SizeId,SizeName=x.SizeName
@@ -858,7 +864,8 @@ VALUES
                 ["Colors"] = colorExcel,
                 ["Sizes"] = sizes,
                 ["Materials"] = materialsExcel,
-                ["UOMs"] = uom
+                ["UOMs"] = uom,
+                ["Brands"]=brandExcel
             };
 
             var excelHandler = new ExcelHandler("INSPIRE"); // or your name/org

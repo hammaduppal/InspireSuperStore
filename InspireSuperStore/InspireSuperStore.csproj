@@ -23,6 +23,8 @@
     <Folder Include="Areas\Collections\Models\" />
     <Folder Include="Areas\Notification\Models\" />
     <Folder Include="Areas\Notification\Views\" />
+    <Folder Include="Areas\POS\Data\" />
+    <Folder Include="Areas\POS\Models\" />
     <Folder Include="Areas\Product\Data\" />
     <Folder Include="Areas\Product\Models\" />
     <Folder Include="Areas\Purchase\Data\" />

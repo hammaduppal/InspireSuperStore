@@ -20,6 +20,13 @@
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.DataEntry, UserRolesConstants.Product, UserRolesConstants.PowerUser))
 			{
 				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "> <span><i class="fa fa-cash-register"></i> POS</span></a>
+
+					<ul class="nav nav-group-sub" data-submenu-title="Point of Sale">
+						<li class="nav-item"><a href="/POSManager/CreateInvoice" class="nav-link"><i class="fa fa-file-invoice-dollar"></i> Invoice</a></li>
+					</ul>
+				</li>
+				<li class="nav-item nav-item-submenu">
 					<a href="#" class="nav-link "><i class="icon-stack2 "></i><span>Products</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="Products">
@@ -88,7 +95,7 @@
 					</ul>
 				</li>
 			}
-			@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin))
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
 			{
 				<li class="nav-item nav-item-submenu">
 					<a href="#" class="nav-link "><i class="mi-settings"></i> <span>Data Manager</span></a>

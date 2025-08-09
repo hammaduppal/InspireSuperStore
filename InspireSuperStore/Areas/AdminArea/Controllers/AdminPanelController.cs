@@ -1,4 +1,5 @@
-﻿using MainModels.DTOModels;
+﻿using System.Security.Cryptography.Pkcs;
+using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository;
@@ -6,6 +7,8 @@ using MarketBal.Repository.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.SqlServer.Server;
+using Newtonsoft.Json;
+using OfficeOpenXml;
 
 namespace InspireSuperStore.Areas.AdminArea.Controllers
 {
@@ -27,7 +30,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             _adminPanel = new AdminPanelRepository(_config, _oneDb);
             _account = new AccountRepository(_config);
         }
-       
+
         public async Task<IActionResult> LoginUser()
         {
             vm.LoginUsers = await _adminPanel.GetLoginUser();
@@ -201,7 +204,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                 return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
             }
         }
-       public async Task<IActionResult> BulkUpload()
+        public async Task<IActionResult> BulkUpload()
         {
             return View();
         }
@@ -211,6 +214,102 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             return File(result,
                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                  $"MasterExport_{DateTime.UtcNow:yyyyMMddHHmmss}.xlsx");
+        }
+        public async Task<IActionResult> UploadBulkFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream);
+            ExcelPackage.License.SetNonCommercialPersonal("Inspire");
+            using var package = new ExcelPackage(stream);
+            var worksheet = package.Workbook.Worksheets[0]; 
+
+            var rowCount = worksheet.Dimension.Rows;
+            var currentTime = DateTime.UtcNow;
+            var products = new List<MainModels.Models.Product>();
+            var variants = new List<ProductVariant>();
+            Guid? currentProductId = null;
+            for (int row = 2; row <= rowCount; row++) 
+            {
+                string isVariant = worksheet.Cells[row, 1].Text.Trim().ToLower();
+
+                if (isVariant == "no")
+                {
+                    var product = new MainModels.Models.Product();
+
+                    product.ProductId = Guid.NewGuid();
+                    product.ProductName = worksheet.Cells[row, 2].Text.Trim();
+                    Guid.TryParse(worksheet.Cells[row, 3].Text?.Trim(), out Guid subcatId);
+                    product.SubCategoryId = subcatId == Guid.Empty ? null : subcatId;
+                    product.ProductDescription = worksheet.Cells[row, 4].Text.Trim();
+
+                    Guid.TryParse(worksheet.Cells[row, 5].Text?.Trim(), out Guid uomId);
+                    product.Uomid = uomId == Guid.Empty ? null : uomId;
+                    Guid.TryParse(worksheet.Cells[row, 6].Text?.Trim(), out Guid brandId);
+                    product.BrandId = brandId == Guid.Empty ? null : brandId;
+
+                    product.IsActive = true;
+                    product.IsDeleted = false;
+                    product.CreatedOn = currentTime;
+                    product.Createdby = AppDataUtility.SessionUser.Id;
+                    product.ProductSlug = HelperClass.CreateSlug(product.ProductName);
+                    product.BranchId = AppDataUtility.SessionUser.PersonVM.Branch.BranchId;
+                    product.OrganizationId = AppDataUtility.SessionUser.PersonVM.Branch.Organization.OrganizationId;
+
+                    currentProductId = product.ProductId;
+                    products.Add(product);
+                }
+                else if (isVariant == "yes" && currentProductId != null)
+                {
+                    var variant = new ProductVariant();
+                    variant.VariantId = Guid.NewGuid();
+                    variant.ProductId = currentProductId.Value;
+                    Guid.TryParse(worksheet.Cells[row, 7].Text?.Trim(), out Guid subuomId);
+                    variant.SubUomid = subuomId == Guid.Empty ? null : subuomId;
+                    Guid.TryParse(worksheet.Cells[row, 8].Text?.Trim(), out Guid materialId);
+                    variant.MaterialId = materialId == Guid.Empty ? null : materialId;
+                    Guid.TryParse(worksheet.Cells[row, 9].Text?.Trim(), out Guid colorId);
+                    variant.ColorId = colorId == Guid.Empty ? null : colorId;
+                    Guid.TryParse(worksheet.Cells[row, 10].Text?.Trim(), out Guid sizeId);
+                    variant.SizeId = sizeId == Guid.Empty ? null : sizeId;
+                    variant.BarCode = worksheet.Cells[row, 11].Text?.Trim();
+                    variant.Cost = decimal.TryParse(worksheet.Cells[row, 12].Text, out var cost) ? cost : 0;
+                    variant.SalesPrice = decimal.TryParse(worksheet.Cells[row, 13].Text, out var sp) ? sp : 0;
+                    variant.PromotionPrice = decimal.TryParse(worksheet.Cells[row, 14].Text, out var pp) ? pp : 0;
+                    variant.RetailPrice = decimal.TryParse(worksheet.Cells[row, 15].Text, out var rp) ? rp : 0;
+                    Guid.TryParse(worksheet.Cells[row, 16].Text?.Trim(), out Guid subUomId);
+                    variant.SubUomid = subUomId == Guid.Empty ? null : subUomId;
+                    variant.QuantityPerUnit = int.TryParse(worksheet.Cells[row, 17].Text, out var qpu) ? qpu : 0;
+                    var isSerialText = worksheet.Cells[row, 18].Text?.Trim();
+                    variant.IsSerial = isSerialText == "1";
+                    variant.MinQty = int.TryParse(worksheet.Cells[row, 19].Text, out var minQty) ? minQty : 0;
+                    variant.MaxQty = int.TryParse(worksheet.Cells[row, 20].Text, out var maxQty) ? maxQty : 0;
+                    variant.PriceFormat = int.TryParse(worksheet.Cells[row, 21].Text, out var pf) ? pf : 0;
+                    variant.IsActive = true;
+                    variant.IsDeleted = false;
+                    variant.BranchId = AppDataUtility.SessionUser.PersonVM.Branch.BranchId;
+                    variant.OrganizationId = AppDataUtility.SessionUser.PersonVM.Branch.Organization.OrganizationId;
+                    variant.CreatedOn = currentTime;
+                    variant.Createdby = AppDataUtility.SessionUser.Id;
+                    variants.Add(variant);
+                }
+            }
+            var allProducts = JsonConvert.SerializeObject(products);
+            var allvariants = JsonConvert.SerializeObject(variants);
+            HttpContext.Session.SetString("products", allProducts);
+            HttpContext.Session.SetString("variants", allvariants);
+            var filePath = Path.Combine(Path.GetTempPath(), file.FileName);
+            using (var streamtwo = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            await _oneDb.Products.AddRangeAsync(products);
+            await _oneDb.ProductVariants.AddRangeAsync(variants);
+            await _oneDb.SaveChangesAsync();
+            // TODO: Read and process Excel here (e.g., using EPPlus or ClosedXML)
+
+            return Json(new { statusCode = "200" });
         }
         //[AllowAnonymous]
         //public async Task<IActionResult> ResetData()
@@ -226,5 +325,18 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         //        return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
         //    }
         //}
+        public IActionResult DownloadExcel()
+        {
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/invn.xlsx");
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found");
+
+            var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            var fileName = "DownloadedFile.xlsx"; // This is the name the browser will use
+
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, contentType, fileName);
+        }
     }
 }
