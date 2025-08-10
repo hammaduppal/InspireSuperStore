@@ -9,6 +9,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
         public async Task<IActionResult> GetVariantbyBarCode(ProductVariantVM model)
         {
             var result = await _product.GetProductVariant(model.BarCode);
+
             return Json(result);
         }
         public async Task<IActionResult> SearchProducts(ProductSearchVM model)

@@ -1,10 +1,66 @@
 ﻿@using MainModels.DTOModels
+@using MainModels.Util
 @model PagesViewModel
 @{
 	ViewData["Title"] = "CreateInvoice";
 	Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<div class="page-header page-header-light">
+	<div class="row">
+		<!-- Barcode Input -->
+		<div class="col-md-3">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text"><i class="icon-barcode2"></i></span>
+				</div>
+				<input type="text" id="barCode" name="barCode" class="form-control" autocomplete="off" placeholder="Search BarCode........." />
+			</div>
+		</div>
+		<!-- Manual Search Input -->
+		<div class="col-md-3">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text"><i class="icon-search4"></i></span>
+				</div>
+				<div class="form-group-feedback form-group-feedback-right">
+					<select id="productSearch" style="width: 100%" class="form-control"></select>
 
+				</div>
+			</div>
+		</div>
+		<div class="col-lg-3">
+			<div class="input-group">
+				<select class="form-control">
+					<option>Walk-in Customer</option>
+					<option>John Smith</option>
+					<option>Maria Garcia</option>
+				</select>
+				<div class="input-group-append">
+					<button id="addCustomer" class="btn btn-light" type="button"><i class="icon-user-plus"></i></button>
+				</div>
+			</div>
+		</div>
+		<div class="col-lg-3">
+			<div class="input-group">
+				<select class="form-control">
+					<option>Walk-in Customer</option>
+					<option>John Smith</option>
+					<option>Maria Garcia</option>
+				</select>
+
+			</div>
+		</div>
+	</div>
+	<script>
+		$('#addCustomer').on('click', function () {
+			// Open a modal or redirect to customer creation page
+			alert('Add Customer functionality not implemented yet.');
+		});
+
+	</script>
+	
+
+</div>
 
 
 
@@ -12,82 +68,57 @@
 
 
 
-	<div class="mb-0">
-		<div class="row">
-			<!-- Barcode Input -->
-			<div class="col-md-6">
-				<div class="input-group">
-					<div class="input-group-prepend">
-						<span class="input-group-text"><i class="icon-barcode2"></i></span>
-					</div>
-					<input type="text" id="barCode" name="barCode" class="form-control" autocomplete="off" placeholder="Search BarCode........." />
-				</div>
-			</div>
-			<!-- Manual Search Input -->
-			<div class="col-md-6">
-				<div class="input-group">
-					<div class="input-group-prepend">
-						<span class="input-group-text"><i class="icon-search4"></i></span>
-					</div>
-					<div class="form-group-feedback form-group-feedback-right">
-						<select id="productSearch" style="width: 100%" class="form-control"></select>
-
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+	
 	<div class="container">
-		<div class="card">
+		<style>
+			#invoiceSummary * {
+				padding-top: 0 !important;
+				padding-bottom: 0 !important;
+			}
+		</style>
+		<div class="card" id="invoiceSummary">
 			
 			<div class="card-body">
 				<div class="row">
 					<div class="col-lg-2">
 						<label>
 							Full Payment
-							<input readonly id="total" type="text" class="form-control" />
-
 						</label>
+
+							<input readonly id="invoiceTotal" type="text" class="form-control invoiceTotal" />
+
 					</div>
 					<div class="col-lg-2">
 						<label>
 							Discount
+						</label>
+
 							<input  id="discount" type="text" class="form-control" />
-						</label>
-					</div>
-					<div class="col-lg-1">
-						<label style="font-weight:700">
-							Payable
-							<input id="payable" type="text" class="form-control" />
-						</label>
-					</div>
-					<div class="col-lg-1">
-						<label style="">
-							Tax
-							<input style="color:red" id="tax" type="text" class="form-control" />
-						</label>
 					</div>
 					<div class="col-lg-2">
 						<label style="font-weight:700;">
 							Grand Total
-							<input id="grandTotal" type="text" class="form-control" />
 						</label>
+
+							<input id="grandTotal" type="text" class="form-control" />
 					</div>
-					<div class="col-lg-4">
-						<label>Select Customer</label>
-						<div class="">
-							<div class="input-group">
-								<select class="form-control">
-									<option>Walk-in Customer</option>
-									<option>John Smith</option>
-									<option>Maria Garcia</option>
-								</select>
-								<div class="input-group-append">
-									<button class="btn btn-light" type="button"><i class="icon-user-plus"></i></button>
-								</div>
-							</div>
-						</div>
+					<div class="col-lg-2">
+						<label style="">
+							Tax
+						</label>
+
+							<input style="color:red" id="tax" type="text" class="form-control" />
 					</div>
+					<div class="col-lg-2">
+						<label style="font-weight:700">
+							Paying Amount
+						</label>
+
+							<input id="payingAmount" type="text" class="form-control" />
+					</div>
+					
+				
+					
 
 
 				</div>
@@ -96,7 +127,7 @@
 	</div>
 	<div class="row">
 		<!-- Left Side: Dynamic Product Area (Grid / Search) -->
-		<div class="col-lg-8">
+		<div class="col-lg-7">
 			<div class="card h-100">
 				<!-- Navigation for Grid/Search -->
 				<div class="card-header">
@@ -181,23 +212,32 @@
 		<!-- /left side -->
 		<!-- /left side -->
 		<!-- Right Side: Bill & Actions with new class -->
-		<div class="col-lg-4 pos-fixed-sidebar">
+		<div class="col-lg-5 pos-fixed-sidebar">
 			<!--
 			PASTE YOUR ENTIRE RIGHT-SIDE HTML HERE
 			(The code you provided in your prompt)
 			-->
 			<div class="card h-100 d-flex flex-column">
-			
+				<style>
+					/* Apply only to invoiceTable */
+					#invoiceTable tr,
+					#invoiceTable td,
+					#invoiceTable th {
+						padding: 0 !important;
+					}
+				</style>
 				
 				<div class="card-body border-top">
-					<div id="invoiceRowSection" class="table-responsive " style="max-height:30vh;min-height:30vh;overflow-x:auto">
-						<table id="invoiceTable" class="table table-sm">
+					<div id="invoiceRowSection" class="table-responsive " style="max-height:22vh;min-height:22vh;overflow-x:auto">
+						<table  id="invoiceTable" class="table table-border-dashed">
 							<thead>
 								<tr>
 									<th class="text-center">Name</th>
-									<th class="text-right">Size</th>
-									<th class="text-right">Color</th>
-									<th class="text-right">Price</th>
+									<th class="text-center">Size</th>
+									<th class="text-center">Qty</th>
+									<th class="text-center">Unit Price</th>
+
+									<th class="text-center">Line Total</th>
 									<th>Manage</th>
 								</tr>
 							</thead>
@@ -247,6 +287,8 @@
 </div>
 <script>
 	$(document).ready(function(){
+	
+
 		  $(document).on('keydown', '#barCode', async function (e) {
 
 			  if (e.key === 'Enter') {
@@ -272,51 +314,70 @@
 
 				}
 		  });
-			function scrollInvoiceTableToBottom() {
-				let container = $('#invoiceRowSection');
-			 container.scrollTop(container[0].scrollHeight);
-			}
+
 		function appendProductToTable(result) {
-
 			if (!result) return;
+			
 
-			// Check for duplicate barcode
 			let isDuplicate = false;
+			let incomingBarcode = String(result.BarCode); // ensure barcode is string
+
 			$('#invoiceTable tbody tr').each(function () {
-				if ($(this).find('td').eq(0).text().trim() === result.barCode) {
+				const barcode = String($(this).find('td').eq(0).data('barcode')); // also as string
+				
+				if (barcode === incomingBarcode) {
 					isDuplicate = true;
+
+					let qtyInput = $(this).find('td').eq(2).find('input');
+					let currentQty = parseFloat(qtyInput.val()) || 0;
+					let newQty = currentQty + 1;
+					qtyInput.val(newQty);
+
+					// update line total
+					let price = parseFloat(result.CurrentPrice) || 0;
+					$(this).find('td').eq(4).text((price * newQty).toFixed(2));
+
+					setTotalPrice();
 					return false; // break loop
 				}
 			});
 
 			if (isDuplicate) {
-				alert('This barcode already exists in the table.');
-				return;
+				return; // No need to append new row
 			}
 
-			// Create and append row
-								// <td>${result.BarCode}</td>
-					//<td>${result.MaterialName || ''}</td>
-
-			let row = `
-				<tr>
-
-					<td>${result.ProductName}</td>
-					<td>${result.SizeName}</td>
-					<td>${result.ColorName || ''}</td>
-					<td>${result.RetailPrice ? result.RetailPrice.toFixed(2) : '0.00'}</td>
-					<td>
-						<div class="list-icons">
-							<a href="#" data-VariantId="${result.VariantId}" data-productId="${result.ProductId}" class="list-icons-item text-danger-600 removeRow"><i class="icon-trash"></i></a>
-						</div>
-					</td>
-				</tr>
-			`;
-			$('#invoiceTable tbody').append(row);
-			  scrollInvoiceTableToBottom();
+		appendRow(result,incomingBarcode);
+			setTotalPrice();
+			scrollInvoiceTableToBottom();
 		}
 
-		$('#productSearch').select2({
+		$(document).on('input', '.lineqty', function () {
+			let qty = parseFloat($(this).val()) || 0;
+			let row = $(this).closest('tr');
+
+			// Get the unit price from the currentPrice td
+			let unitPrice = parseFloat(row.find('.currentPrice').text()) || 0;
+
+			// Calculate the new line total
+			let lineTotal = unitPrice * qty;
+
+			// Update the line total cell
+			row.find('.lineTotal').text(lineTotal.toFixed(2));
+
+			// Update overall invoice total
+			setTotalPrice();
+		});
+		$(document).on('input','#discount',function(){
+			setTotalPrice();
+		})
+			function scrollInvoiceTableToBottom() {
+				let container = $('#invoiceRowSection');
+			 container.scrollTop(container[0].scrollHeight);
+			}
+		
+			
+			
+			$('#productSearch').select2({
 			placeholder: 'Search product by name, size, color, material...',
 			minimumInputLength: 2,
 			ajax: {
@@ -363,13 +424,13 @@
 			</div>`);
 		}
 
-		function formatProductSelection(data) {
-			return data.text;
-		}
+		
 		$(document).on('click','.removeRow',function(e){
 			e.preventDefault();
 				$(this).closest('tr').remove();
+				setTotalPrice();
 		})
+		
 		$('#addNewCollection').submit(async function(e){
 			e.preventDefault();
 			 const rows = $('#invoiceTable tbody tr');
@@ -420,10 +481,48 @@
 				Utility.failMessage(response.Message);
 			}
 		});
+	
+	
+		function formatProductSelection(data) {
+			return data.text;
+		}
+		function appendRow(result,incomingBarcode){
+				let row = `
+			<tr>
+				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+					${result.ProductName}
+				</td>
+				<td>${result.SizeName}</td>
+				<td><input class='lineqty' type='text' value='1' style='max-width:50px;'/></td>
+				<td class='currentPrice'>${result.CurrentPrice}</td>
+				<td class='lineTotal text-center'>${result.CurrentPrice ? result.CurrentPrice.toFixed(2) : '0.00'}</td>
+				<td>
+					<div class="list-icons text-center">
+						<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}" class="list-icons-item text-danger-600 removeRow text-center"><i class="icon-trash"></i></a>
+					</div>
+				</td>
+			</tr>
+			`;
+			$('#invoiceTable tbody').append(row);
+		}
+
+		function setTotalPrice(){
+
+				let invoiceTotal = 0;
+			  $('.lineTotal').each(function () {
+				  debugger
+				  const val = parseFloat($(this).text()) || 0;
+				  invoiceTotal += val;
+			  });
+			  // Display grand total
+			  $('#invoiceTotal').val(invoiceTotal.toFixed(2));
+			  (updateGrandTotal(invoiceTotal));
+		}
+
+		function updateGrandTotal(invoiceTotal){
+				  const val = parseFloat($('#discount').val()) || 0;
+				  let grandTotal = invoiceTotal-val;
+				  $('#grandTotal').val(grandTotal);
+		}
 	})
-
-
-
-
-
 </script>

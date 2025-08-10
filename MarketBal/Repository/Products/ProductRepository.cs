@@ -182,7 +182,7 @@ LEFT JOIN Inv.ProductImages ppimg on p.Productid = ppimg.ProductId and ppimg.IsD
         }
         public async Task<int> UpdateDescriptionSection(ProductVM vm)
         {
-            if (vm.BrandId == null || vm.SubCategoryId==null||vm.BrandId==null)
+            if (vm.BrandId == null || vm.SubCategoryId == null || vm.BrandId == null)
             {
                 return -1;
             }
@@ -200,10 +200,10 @@ LEFT JOIN Inv.ProductImages ppimg on p.Productid = ppimg.ProductId and ppimg.IsD
 
             var param = new
             {
-               
-               vm.ProductName,
-               vm.ProductDescription,
-               vm.SubCategoryId,
+
+                vm.ProductName,
+                vm.ProductDescription,
+                vm.SubCategoryId,
                 vm.BrandId,
                 vm.UOMId,
                 vm.ProductId,
@@ -225,7 +225,7 @@ LEFT JOIN Inv.ProductImages ppimg on p.Productid = ppimg.ProductId and ppimg.IsD
             return result.ToList();
 
         }
-        public async Task<Guid> SaveProductImage(Guid ProductId,string ImageUrl)
+        public async Task<Guid> SaveProductImage(Guid ProductId, string ImageUrl)
         {
             string query = $@"
 
@@ -236,7 +236,7 @@ INSERT INTO INV.ProductImages(ProductImageId,ImageUrl,ProductId,IsDeleted, Branc
                             select @NewProductId
                             ";
             var commonParams = CommonParamHelper.GetCommonParams();
-          
+
             var param = new
             {
                 ImageUrl,
@@ -293,7 +293,7 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
             {
                 ProductId
             };
-            var result = await _db.GetDataListWithQueryAndParam<ProductVariantVM>(query,param);
+            var result = await _db.GetDataListWithQueryAndParam<ProductVariantVM>(query, param);
             return result.ToList();
         }
         public async Task<ProductVariantVM> GetProductVariant(string BarCode)
@@ -312,27 +312,27 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
                 BarCode
             };
             var result = await _db.GetSingleItemDatatWithQueryAndParam<ProductVariantVM>(query, param);
+            if (result != null)
+            {
+                if (result.PriceFormat == (int)AppConstants.EnumPriceFormat.RetailPrice)
+                {
+                    result.CurrentPrice = result.RetailPrice;
+                }
+                if (result.PriceFormat == (int)AppConstants.EnumPriceFormat.SalesPrice)
+                {
+                    result.CurrentPrice = result.SalesPrice;
+                }
+                if (result.PriceFormat == (int)AppConstants.EnumPriceFormat.PromotionPrice)
+                {
+                    result.CurrentPrice = result.PromotionPrice;
+                }
+            }
             return result;
         }
         public async Task<List<ProductVariantVM>> SearchProducts(ProductSearchVM model)
         {
             string query = $@"
-    SELECT 
-        p.ProductId,
-        pv.VariantId,
-        p.ProductName,
-        p.ProductDescription,
-        p.ProductSlug,
-        c.ColorName,
-        m.MaterialName,
-        s.SizeName,
-        uom.UOMName,
-        uoms.SubUOMName,
-        pv.QuantityPerUnit,
-        pv.VariantImageId,
-        b.BrandName,
-        pv.BarCode,
-        pv.RetailPrice
+    SELECT p.ProductId,p.ProductName,p.ProductDescription,p.ProductSlug,c.ColorName,m.MaterialName,s.SizeName,uom.UOMName,uoms.SubUOMName,pv.QuantityPerUnit,pv.VariantImageId,b.BrandName, *
     FROM Inv.ProductVariants pv 
     JOIN Inv.Products p ON pv.ProductId = p.ProductId
     JOIN Inv.Colors c ON pv.ColorId = c.ColorId
@@ -397,7 +397,7 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
             query = query.Replace("/*** DYNAMIC CONDITIONS WILL BE INJECTED HERE ***/", whereClause);
 
             var result = await _db.GetDataListWithQueryAndParam<ProductVariantVM>(query, param);
-            return result.ToList();
+            return UpdateCurrentPrice(result.ToList());
         }
 
 
@@ -507,11 +507,11 @@ Update INV.ProductVariants set VariantImageId = @VariantImageId where VariantId 
             return result;
 
         }
-        
+
         public async Task<int> UpdateVariant(UpdateVariantModel model)
         {
             string query = "";
-            if (model.DataType=="BarCode")
+            if (model.DataType == "BarCode")
             {
                 query = @"
                         IF EXISTS (
@@ -536,7 +536,7 @@ Update INV.ProductVariants set VariantImageId = @VariantImageId where VariantId 
                 };
 
 
-                var result = await _db.ExecuteQuery<int>(query,param);
+                var result = await _db.ExecuteQuery<int>(query, param);
                 return result;
 
             }
@@ -547,11 +547,37 @@ Update INV.ProductVariants set VariantImageId = @VariantImageId where VariantId 
                 var allResult = await _db.ExecuteQueryModify(query);
                 return allResult;
             }
-          
 
-            
 
-           
+
+
+
         }
+        public List<ProductVariantVM> UpdateCurrentPrice(List<ProductVariantVM> model)
+        {
+            foreach (var item in model)
+            {
+                if (item.PriceFormat == (int)AppConstants.EnumPriceFormat.RetailPrice)
+                {
+                    item.CurrentPrice = item.RetailPrice;
+                }
+                else if (item.PriceFormat == (int)AppConstants.EnumPriceFormat.SalesPrice)
+                {
+                    item.CurrentPrice = item.SalesPrice;
+                }
+                else if (item.PriceFormat == (int)AppConstants.EnumPriceFormat.PromotionPrice)
+                {
+                    item.CurrentPrice = item.PromotionPrice;
+                }
+                else // If null or doesn't match, default to RetailPrice
+                {
+                    item.CurrentPrice = item.RetailPrice;
+                }
+            }
+
+            return model;
+        }
+
+
     }
 }
