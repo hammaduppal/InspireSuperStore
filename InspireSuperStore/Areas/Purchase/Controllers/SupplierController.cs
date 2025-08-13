@@ -27,7 +27,7 @@ namespace InspireSuperStore.Areas.Purchase.Controllers
 
             vm = new PagesViewModel();
             _config = config;
-            _product = new ProductRepository(_config);
+            _product = new ProductRepository(_config, _one);
             repo = new SupplierRepository(_config, _one);
             _admin = new AdminPanelRepository(_config, _one);
 

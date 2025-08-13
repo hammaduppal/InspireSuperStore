@@ -22,11 +22,13 @@ namespace InspireSuperStore.Areas.Product.Controllers
         private readonly AttributeRepository _attrib;
         private readonly FileRepository _file;
         private readonly PagesViewModel vm = new PagesViewModel();
-        public ProductsController(IConfiguration config)
+        private readonly OneDb oneDb;
+        public ProductsController(IConfiguration config, OneDb oneDb)
         {
+            this.oneDb = oneDb;
 
             _config = config;
-            _product = new ProductRepository(_config);
+            _product = new ProductRepository(_config, oneDb);
             _dcs = new DCSRepository(_config);
             _attrib = new AttributeRepository(_config);
             _file = new FileRepository();

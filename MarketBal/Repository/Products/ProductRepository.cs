@@ -4,6 +4,7 @@ using MainModels;
 using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using static Azure.Core.HttpHeader;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -17,15 +18,17 @@ namespace MarketBal.Repository.Products
         private readonly IConfiguration _config;
         private readonly DBManager _db;
         private readonly ApiMethods _api;
+        private readonly OneDb context;
         string baseAPIURL;
         private readonly MemoryStream memoryStream;
-        public ProductRepository(IConfiguration config)
+        public ProductRepository(IConfiguration config, OneDb context)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             baseAPIURL = _config.GetValue<string>("SystemSettings:ContentAPIUrl");
             memoryStream = new MemoryStream();
+            this.context = context;
         }
 
         //public async Task<object> GetProducts(DataTableRequest request)
@@ -399,6 +402,84 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
             var result = await _db.GetDataListWithQueryAndParam<ProductVariantVM>(query, param);
             return UpdateCurrentPrice(result.ToList());
         }
+        public class SearchTopProductResult
+        {
+            public List<ProductVariantVM> TopProducts { get; set; } = new();
+            public List<ProductVariantVM> AllProducts { get; set; } = new();
+        }
+        public async Task<SearchTopProductResult> ProductsBySubCategories(Guid subCategoryId, bool isPaginated = false, int page = 1, int pageSize = 20)
+        {
+            var result = new SearchTopProductResult();
+
+            var query = context.ProductVariants
+                .Where(p => p.Product.SubCategoryId == subCategoryId)
+                .Select(p => new ProductVariantVM
+                {
+                    VariantId = p.VariantId,
+                    MaterialId = p.MaterialId,
+                    ColorId = p.ColorId,
+                    SizeId = p.SizeId,
+                    ProductId = p.ProductId,
+
+                    QoH = p.QoH,
+                    Cost = p.Cost,
+                    BarCode = p.BarCode,
+                    SalesPrice = p.SalesPrice,
+                    PromotionPrice = p.PromotionPrice,
+                    RetailPrice = p.RetailPrice,
+                    MinQty = p.MinQty,
+                    MaxQty = p.MaxQty,
+
+                    LastPurchase = p.LastPurchase,
+                    LastSold = p.LastSold,
+                    CreatedOn = p.CreatedOn,
+                    Createdby = p.Createdby,
+                    ModifiedOn = p.ModifiedOn,
+                    IsActive = p.IsActive,
+                    IsDeleted = p.IsDeleted,
+                    BranchId = p.BranchId,
+                    VariantImageId = p.VariantImageId,
+
+                    ProductName = p.Product.ProductName,
+                    ProductDescription = p.Product.ProductDescription,
+                    ProductSlug = p.Product.ProductSlug,
+                    ColorName = p.Color.ColorName,
+                    MaterialName = p.Material.MaterialName,
+                    SizeName = p.Size.SizeName,
+                    UOMName = p.Product.Uom.Uomname,
+                    SubUOMName = p.SubUom.SubUomname,
+                    Uomid = p.Product.Uomid,
+                    PriceFormat = p.PriceFormat,
+                    SubUomid = p.SubUomid,
+                    BrandName = p.Product.Brand.BrandName,
+                    QuantityPerUnit = p.QuantityPerUnit,
+                    IsSerial = p.IsSerial,
+                });
+
+            if (!isPaginated)
+            {
+                // Get top 5 products (example: by CreatedDate descending)
+                result.TopProducts = await query
+                    .OrderByDescending(p => p.CreatedOn) // adjust field as needed
+                    .Take(5)
+                    .ToListAsync();
+
+                // Get all products in this subcategory
+                result.AllProducts = await query.ToListAsync();
+            }
+            else
+            {
+                // Paginate only
+                result.AllProducts = await query
+                    .OrderByDescending(p => p.CreatedOn) // adjust field as needed
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+            }
+
+            return result;
+        }
+
 
 
 

@@ -34,7 +34,7 @@ namespace InspireSuperStore.Areas.Purchases.Controllers
             _one = one;
             vm = new PagesViewModel();
             _config = config;
-            _product = new ProductRepository(_config);
+            _product = new ProductRepository(_config, _one);
             _supplier = new SupplierRepository(_config, _one);
             repository = new PurchaseRepository(_config, _one);
             _notificationServices = notificationService;
@@ -98,42 +98,16 @@ namespace InspireSuperStore.Areas.Purchases.Controllers
         public async Task<IActionResult> POChangeStatus(PurchaseMasterVM model)
         {
             var result = await repository.UpdatePOSTATUS(model);
-            if (result> (int)ErrorCodesForReturn.Success)
-            {
+           
                 return Ok(new { statusCode = "", Message = "" });
 
 
-            }
-            else if(result== (int)ErrorCodesForReturn.Failure)
-            {
-                return Ok(new { statusCode="",Message=""});
-            }
-            else if (result == (int)ErrorCodesForReturn.CrashError)
-            {
-                return Ok(new { statusCode = "", Message = "" });
-
-            }
-            else if (result == (int)ErrorCodesForReturn.Duplicate)
-            {
-                return Ok(new { statusCode = "", Message = "" });
-
-            }
-            else if (result == (int)ErrorCodesForReturn.DbConnection)
-            {
-                return Ok(new { statusCode = "", Message = "" });
-
-            }
-
-            else
-            {
-                return BadRequest();
-            }
 
         }
         public async Task<IActionResult> POChangeType(PurchaseMasterVM model)
         {
             var result = await repository.UpdatePOType(model);
-            if (result >= (int)ErrorCodesForReturn.Success)
+            if (result >= 1)
             {
                 return Ok(new { statusCode = "200", Message = "Update SuccessFull" });
             }

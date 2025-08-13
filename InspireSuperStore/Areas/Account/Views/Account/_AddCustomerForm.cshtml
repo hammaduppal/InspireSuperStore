@@ -1,0 +1,170 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+<div class="row">
+	
+
+	<div class="card-body">
+		<form id="addNewCustomer" action="/AddCustomer/AddCustomer">
+			<div class="form-group">
+				<label>First Name:</label>
+				<input id="firstName" type="text" class="form-control" autocomplete="off" placeholder="First Name....">
+			</div>
+			<div class="form-group">
+				<label>Last Name:</label>
+				<input id="lastName" type="text" class="form-control" autocomplete="off" placeholder="Last Name....">
+			</div>
+			<div class="form-group">
+				<label>Customer Mobile:</label>
+				<input id="mobile" type="text" class="form-control" autocomplete="off" placeholder="Customer Mobile....">
+			</div>
+			<div class="form-group">
+				<label>Customer Email:</label>
+				<input id="email" type="email" class="form-control" autocomplete="off" placeholder="Customer Email....">
+			</div>
+			<div class="form-group">
+				<label>Customer Address:</label>
+				<input id="address" type="text" class="form-control" autocomplete="off" placeholder="Customer Address....">
+			</div>
+			
+			<div class="row">
+
+				<div class="col-lg-4">
+					<div class="form-group">
+						<label>Country:</label>
+						<select id="country" class="form-control">
+							<option>Select Country</option>
+							<optgroup label="Country">
+								@if (Model.Countries != null)
+								{
+									@foreach (var country in Model.Countries)
+									{
+										<option value="@country.CountryId">@country.CountryName</option>
+									}
+								}
+
+							</optgroup>
+						</select>
+					</div>
+				</div>
+
+				<div class="col-lg-4">
+					<div class="form-group">
+						<label>State Province:</label>
+						<select id="province"  class="form-control">
+							<option>Select</option>
+							<optgroup label="State">
+
+							</optgroup>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-4">
+					<div class="form-group">
+						<label>City:</label>
+						<select id="city"  class="form-control">
+							<option>Select</option>
+							<optgroup label="City">
+
+							</optgroup>
+						</select>
+					</div>
+				</div>
+
+
+			</div>
+
+			<div class="d-flex justify-content-end align-items-center">
+				<button type="submit" class="btn btn-light">Cancel</button>
+				<button id="addCustomerbtn" type="submit" class="btn bg-blue ml-3">Submit <i class="icon-paperplane ml-2"></i></button>
+			</div>
+		</form>
+	
+	</div>
+</div>
+
+<script>
+
+	$(document).ready(function () {
+	
+		$('#country').change(async function () {
+			var CountryId = $(this).val();
+			var states = await GetStates(CountryId);
+			debugger;
+
+			$('#province').empty();
+			$('#city').empty();
+
+			states.forEach(function (province) {
+				$('#province').append(`<option value="${province.StateProvinceId}">${province.StateProvinceName}</option>`);
+			});
+
+			var firstState = states[0];
+			var cities = await GetCities(firstState.StateProvinceId);
+
+			cities.forEach(function (city) {
+				$('#city').append(`<option value="${city.CityId}">${city.CityName}</option>`);
+			});
+
+			console.log(firstState);
+		});
+
+		$('#province').change(async function () {
+			debugger;
+			var StateId = $(this).val();
+
+			var formData = {
+				StateProvinceId: StateId
+			};
+
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/GetCityByStateId/'
+			};
+
+			const result = await Utility.RequestDataAjax(objectData);
+
+			$('#city').empty();
+
+			result.forEach(function (province) {
+				$('#city').append(`<option value="${province.CityId}">${province.CityName}</option>`);
+			});
+		});
+
+		async function GetCities(Id) {
+			debugger;
+
+			var formData = {
+				StateProvinceId: Id
+			};
+
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/GetCityByStateId/'
+			};
+
+			const result = await Utility.RequestDataAjax(objectData);
+			return result;
+		}
+
+		async function GetStates(Id) {
+			debugger;
+
+			var formData = {
+				CountryId: Id
+			};
+
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/GetStatesByCountryId/'
+			};
+
+			const result = await Utility.RequestDataAjax(objectData);
+			return result;
+		}
+	});
+
+
+
+
+</script>
+

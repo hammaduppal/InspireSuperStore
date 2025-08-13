@@ -17,5 +17,11 @@ namespace InspireSuperStore.Areas.Product.Controllers
             var result = await _product.SearchProducts(model);
             return Json(result);
         }
+        public async Task<IActionResult> GetProductBySubCategoryId(SubCategoryVM model)
+        {
+            var result = await _product.ProductsBySubCategories(model.SubCategoryId);
+            return Json(result);
+        }
+
     }
 }

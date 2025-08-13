@@ -181,11 +181,11 @@ namespace MarketBal.Repository
 
         public async Task<List<CountryVM>> Countries()
         {
-            return _onedb.Countries.Select(x => new CountryVM
+            return await _onedb.Countries.Select(x => new CountryVM
             {
                 CountryId = x.CountryId,
                 CountryName = x.CountryName
-            }).ToList();
+            }).ToListAsync();
         }
         public async Task<List<StateProvinceVM>> GetStatesByCountryId(int? Id)
         {
@@ -872,14 +872,37 @@ VALUES
             byte[] bytes = await excelHandler.BuildWorkbook(sheets);
             return bytes;
         }
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+        public async Task<List<CustomerVM>> Customers()
+        {
+            return await _onedb.Customers.Select(x => new CustomerVM
+            {
+                CustomerName = x.Person.FirstName + "" + x.Person.LastName,
+                Mobile = x.Person.MobileNumber,
+                Email = x.Person.Email,
+                CustomerId = x.CustomerId,
+                CustomerCode = x.CustomerCode
+
+            }).ToListAsync();
+        }
+
+        public async Task<CustomerVM> Customers(Guid CustomerId)
+        {
+            var result =  await _onedb.Customers.Where(x=>x.CustomerId==CustomerId).Select(x => new CustomerVM
+            {
+                CustomerName = x.Person.FirstName + "" + x.Person.LastName,
+                Mobile = x.Person.MobileNumber,
+                Email = x.Person.Email,
+                CustomerId = x.CustomerId,
+                CustomerCode = x.CustomerCode
+
+            }).FirstOrDefaultAsync();
+            return result;
+        }
+
+
+
+
     }
 }

@@ -338,5 +338,13 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             var fileBytes = System.IO.File.ReadAllBytes(filePath);
             return File(fileBytes, contentType, fileName);
         }
+        public async Task<IActionResult> GetCustomers()
+        {
+            return Ok(await _adminPanel.Customers());
+        }
+        public async Task<IActionResult> GetCustomerById(CustomerVM model)
+        {
+            return Ok(await _adminPanel.Customers(model.CustomerId));
+        }
     }
 }

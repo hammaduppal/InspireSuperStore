@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using MainModels;
 using MainModels.DTOModels;
+using MainModels.Models;
 using MainModels.Util;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -30,11 +31,11 @@ namespace MarketBal.Repository.Account
                 var roles = await _db.ExecuteQueryList<RolesVM>(query);
                 result.Roles = roles.ToList();
 
-                if (result.Roles!=null)
+                if (result.Roles != null)
                 {
                     var singleRole = result.Roles.FirstOrDefault();
                     result.RoleName = singleRole.Name;
-                    if (singleRole.Name=="SuperAdmin")
+                    if (singleRole.Name == "SuperAdmin")
                     {
                         return result;
 
@@ -61,7 +62,7 @@ namespace MarketBal.Repository.Account
                 //new Claim("UserName",u.PersonVM.FirstName??""),
                 new Claim("UserEmail", u.UserName??""),
                 new Claim("ThemeStyle", "1"),
-               
+
                 new Claim(ClaimTypes.NameIdentifier,u.UserName??""),
                 };
             foreach (var item in u.Roles)
@@ -85,5 +86,91 @@ namespace MarketBal.Repository.Account
             httpContext.Response.Cookies.Delete(_config.GetValue<string>("SystemSettings:CookieName"));
         }
 
+        public async Task<Guid> AddCustomer(PersonVM model)
+        {
+            string query = "select * from HRM.Persons where MobileNumber = @MobileNumber";
+            var param = new
+            {
+                MobileNumber = model.MobileNumber
+            };
+            var existingPerson = await _db.GetSingleItemDatatWithQueryAndParam<PersonVM>(query, param);
+            string insertQuery = $@"INSERT INTO HRM.Customers (CustomerId,CustomerCode,PersonId,CreatedOn,Createdby,IsActive,BranchId,IsDeleted) 
+                        VALUES (@CustomerId,@CustomerCode,@PersonId,@CreatedOn,@Createdby,@IsActive,@BranchId,@IsDeleted) select 1";
+            if (existingPerson != null)
+            {
+
+                var parameters = new
+                {
+                    CustomerId = Guid.NewGuid(), // updated to generate a new Guid
+
+                    CustomerCode = RandomHelper.GenerateRandomAlphaNumeric(),
+                    PersonId = existingPerson.Id,
+                    BranchId = AppDataUtility.SessionUser.PersonVM.BranchId,
+                    Createdby = AppDataUtility.SessionUser.Id,
+                    CreatedOn = DateTime.Now,
+                    IsActive = true,
+                    IsDeleted = false,
+                };
+                try
+                {
+                     await _db.ExecuteQuery<int>(insertQuery, parameters); // revert back to ExecuteQueryModify
+                    return parameters.CustomerId;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Error adding customer.", ex);
+                }
+            }
+            else
+            {
+                model.IsActive = true;
+                model.CreatedOn = DateTime.Now;
+                model.BranchId = AppDataUtility.SessionUser.PersonVM.BranchId;
+                insertQuery = $@"DECLARE @NewPersonId INT;
+
+-- Get max PersonId and add 1 (handle null if table is empty)
+SELECT @NewPersonId = ISNULL(MAX(Id), 0) + 1
+FROM HRM.Persons;
+
+INSERT INTO HRM.Persons 
+(Id, FirstName, LastName, MobileNumber, Email, IsActive, CreatedOn, BranchId)
+OUTPUT INSERTED.Id
+VALUES 
+(@NewPersonId,@FirstName, @LastName, @MobileNumber, @Email, @IsActive, @CreatedOn, @BranchId) select 1
+
+
+
+";
+                var personId = await _db.ExecuteQuery<int>
+                    (insertQuery, model);
+                var parameters = new
+                {
+                    CustomerId = Guid.NewGuid(), // updated to generate a new Guid
+                    CustomerCode = RandomHelper.GenerateRandomAlphaNumeric(),
+                    PersonId = personId,
+                    BranchId = AppDataUtility.SessionUser.PersonVM.BranchId,
+                    Createdby = AppDataUtility.SessionUser.Id,
+                    CreatedOn = DateTime.Now,
+                    IsActive = true,
+                    IsDeleted = false,
+                };
+                insertQuery = $@"INSERT INTO HRM.Customers (CustomerId,CustomerCode,PersonId,CreatedOn,Createdby,IsActive,BranchId,IsDeleted) 
+                        VALUES (@CustomerId,@CustomerCode,@PersonId,@CreatedOn,@Createdby,@IsActive,@BranchId,@IsDeleted) select 1";
+                try
+                {
+                     await _db.ExecuteQuery<int>(insertQuery, parameters); // revert back to ExecuteQueryModify
+                    return parameters.CustomerId;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Error adding customer.", ex);
+                }
+                return Guid.Empty;
+            }
+        }
+    
+
+    
+    
     }
 }

@@ -10,10 +10,14 @@
 			<select id="country" data-placeholder="Enter 'Country'" class="form-control select-minimum" data-fouc>
 				<option>Select Country</option>
 				<optgroup label="Country">
-					@foreach (var country in Model.Countries)
+					@if (Model.Countries!= null)
 					{
-						<option value="@country.CountryId">@country.CountryName</option>
+						@foreach (var country in Model.Countries)
+						{
+							<option value="@country.CountryId">@country.CountryName</option>
+						}
 					}
+					
 				</optgroup>
 			</select>
 		</div>

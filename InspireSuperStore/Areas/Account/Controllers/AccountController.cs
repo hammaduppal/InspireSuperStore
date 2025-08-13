@@ -14,20 +14,21 @@ namespace InspireSuperStore.Areas.Account.Controllers
         private readonly IConfiguration _config;
         private readonly AccountRepository _login;
         private readonly AESEncryption _aes;
+        private readonly PagesViewModel vm = new PagesViewModel();
         private readonly AdminPanelRepository _admin;
         private readonly OneDb _oneDb;
-        public AccountController(IConfiguration config,OneDb onedb)
+        public AccountController(IConfiguration config, OneDb onedb)
         {
             _config = config;
             _oneDb = onedb;
             _login = new AccountRepository(_config);
             _aes = new AESEncryption();
-            _admin = new AdminPanelRepository(_config,_oneDb);
+            _admin = new AdminPanelRepository(_config, _oneDb);
         }
         public async Task<IActionResult> Login(string? ReturnUrl = null)
         {
-            var result =await _admin.GetOrganizations();
-            if (result.Count==0)
+            var result = await _admin.GetOrganizations();
+            if (result.Count == 0)
             {
                 return Redirect("/AdminPanel/StartupSettings");
             }
@@ -77,16 +78,28 @@ namespace InspireSuperStore.Areas.Account.Controllers
         public IActionResult DecryptSomeThing(SecretLock model)
         {
             string aesresult = _aes.Decrypt(model.UnlockKey);
-            if (aesresult=="ERP")
+            if (aesresult == "ERP")
             {
-                return Json(new { statusCode = "200",Message="Special Feature Unlocked" });
+                return Json(new { statusCode = "200", Message = "Special Feature Unlocked" });
 
             }
             else
             {
-                return Json(new { statusCode = "300",Message="Wrong Password" });
+                return Json(new { statusCode = "300", Message = "Wrong Password" });
 
             }
         }
+
+        public async Task< IActionResult> _AddCustomerForm()
+        {
+            vm.Countries= await _admin.Countries();
+            return View(vm);
+        }
+        public async Task<IActionResult> AddNewCustomer(PersonVM model)
+        {
+            var result = await _login.AddCustomer(model);
+            return Json(new {statusCode="200", CustomerId=result });
+        }
+        
     }
 }

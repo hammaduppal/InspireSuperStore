@@ -30,33 +30,76 @@
 		</div>
 		<div class="col-lg-3">
 			<div class="input-group">
-				<select class="form-control">
-					<option>Walk-in Customer</option>
-					<option>John Smith</option>
-					<option>Maria Garcia</option>
+				<select id="customers" class="form-control">
+					@foreach (var item in Model.Customers)
+					{
+						<option value="@item.CustomerId">@item.CustomerName + @item.Mobile </option>
+
+					}
 				</select>
 				<div class="input-group-append">
 					<button id="addCustomer" class="btn btn-light" type="button"><i class="icon-user-plus"></i></button>
 				</div>
 			</div>
 		</div>
-		<div class="col-lg-3">
-			<div class="input-group">
-				<select class="form-control">
-					<option>Walk-in Customer</option>
-					<option>John Smith</option>
-					<option>Maria Garcia</option>
-				</select>
-
+		@if(AppDataUtility.SystemPreferences.IsAffilatedInvoice)
+		{
+			<div class="col-lg-3">
+				<div class="input-group">
+					<select class="form-control">
+						<option>Walk-in Customer</option>
+						<option>John Smith</option>
+						<option>Maria Garcia</option>
+					</select>
+				</div>
 			</div>
-		</div>
+		}
+	
 	</div>
 	<script>
-		$('#addCustomer').on('click', function () {
-			// Open a modal or redirect to customer creation page
-			alert('Add Customer functionality not implemented yet.');
+		$('#addCustomer').on('click',async function () {
+			var result = await Utility.RequestAjax('/Account/_AddCustomerForm');
+			$('.modal-title-horizontal').html('Add New Customer');
+			$('#modal-body-horizontal').html(result);
+			$('#modal_form_horizontal').modal();
 		});
+			$(document).on('submit','#addNewCustomer',async function(e){
+			  e.preventDefault();
+			     var formData = {
+					FirstName: $('#firstName').val(),
+					LastName: $('#lastName').val(),
+					MobileNumber: $('#mobile').val(),
+					Email: $('#email').val(),
+					Address: $('#address').val(),
+					CityId: $('#city').val()
+				};
+				console.log(formData);
+				var objectData={
+					url:'/Account/AddNewCustomer',
+					data:formData,
+				}
+				var result =await Utility.RequestDataAjax(objectData);
+				if(result.statusCode==='200'){
+					debugger
+					$('#modal_form_horizontal').modal('hide');
+					var customers = await Utility.RequestAjax('/AdminPanel/GetCustomers');
+					var $select = $('#customers');
+					$select.empty();
 
+					// Populate new options
+					customers.forEach(function (item) {
+						var isSelected = item.CustomerId === result.CustomerId; // check if it's the newly added
+						var option = $('<option>', {
+							value: item.CustomerId,
+							text: item.CustomerName + ' ' + item.Mobile,
+							selected: isSelected
+						});
+						$select.append(option);
+					});
+
+				}
+		    })
+		
 	</script>
 	
 
@@ -79,16 +122,23 @@
 		<div class="card" id="invoiceSummary">
 			
 			<div class="card-body">
-				<div class="row">
+				<style>
+					#invoice-section label,
+					#invoice-section .form-control {
+						margin: 0 !important;
+						padding: 2px 4px; /* Optional: tighter spacing */
+					}
+				</style>
+				<div id="invoice-section" class="row">
 					<div class="col-lg-2">
 						<label>
-							Full Payment
+							Invoice Total
 						</label>
 
-							<input readonly id="invoiceTotal" type="text" class="form-control invoiceTotal" />
+							<input readonly id="invoiceTotal" type="text" value="0.00" class="form-control invoiceTotal" />
 
 					</div>
-					<div class="col-lg-2">
+					<div class="col-lg-1">
 						<label>
 							Discount
 						</label>
@@ -100,21 +150,34 @@
 							Grand Total
 						</label>
 
-							<input id="grandTotal" type="text" class="form-control" />
+							<input readonly id="grandTotal" type="text" class="form-control" />
 					</div>
-					<div class="col-lg-2">
-						<label style="">
-							Tax
-						</label>
+					@if (AppDataUtility.SystemPreferences.EnableTax)
+					{
+						<div class="col-lg-1">
+							<label style="">
+								Tax
+							</label>
 
-							<input style="color:red" id="tax" type="text" class="form-control" />
-					</div>
+							<input  value="@AppDataUtility.SystemPreferences.DefaultTaxRate %" readonly style="color:red" id="tax" type="text" class="form-control" />
+						</div>
+						<div class="col-lg-1">
+							<label style="font-weight:700">
+								Total Tax
+							</label>
+
+							<input readonly id="totalTax" type="text" class="form-control" />
+						</div>
+
+					}
+
+				
 					<div class="col-lg-2">
 						<label style="font-weight:700">
-							Paying Amount
+							Total Payable Amount
 						</label>
 
-							<input id="payingAmount" type="text" class="form-control" />
+							<input readonly id="totalPayable" type="text" class="form-control" />
 					</div>
 					
 				
@@ -140,32 +203,187 @@
 				<!-- Tab content -->
 				<div class="tab-content card-body">
 					<!-- Product Grid Pane -->
+					<button id="backbtn">Back</button>
+
 					<div class="tab-pane fade show active" id="pos-grid" style="max-height: 50vh; overflow-y: auto;">
-						<div class="mb-2">
+						<div id="dcs" class="mb-2">
 							@if (Model.Departments != null)
 							{
 								@foreach (var item in Model.Departments)
 								{
-									<button class="btn btn-light">@item.DepartmentName</button>
+									<button data-depid="@item.DepartmentId" class="btn btn-light depBtn">@item.DepartmentName</button>
 
 								}
 							}
 						
 						</div>
-						<div class="row">
-							<!-- Product Tile -->
-							<div class="col-md-3 mb-3"><div class="card card-body text-center p-2 h-100" style="cursor: pointer;"><h6 class="font-weight-semibold mb-0">Espresso</h6><span class="text-muted">$2.50</span></div></div>
-							<div class="col-md-3 mb-3"><div class="card card-body text-center p-2 h-100" style="cursor: pointer;"><h6 class="font-weight-semibold mb-0">Latte</h6><span class="text-muted">$4.00</span></div></div>
-							<div class="col-md-3 mb-3"><div class="card card-body text-center p-2 h-100 bg-primary-300 text-white" style="cursor: pointer;"><h6 class="font-weight-semibold mb-0">Daily Special</h6><span class="opacity-75">$5.00</span></div></div>
-							<div class="col-md-3 mb-3"><div class="card card-body text-center p-2 h-100" style="cursor: pointer;"><h6 class="font-weight-semibold mb-0">Croissant</h6><span class="text-muted">$3.00</span></div></div>
-							<!-- Add more product tiles -->
+						<div id="topfiveProducts" class="row">
+							
 						</div>
+						<script>
+							$(document).on('click', '.depBtn', async function () {
+									var departmentId = $(this).data('depid');
+									var categories = await Utility.RequestDataAjax({
+										url:'/AttributeManager/GetCategorybyDepartment',
+										data:{
+											DepartmentId:departmentId
+										}
+									})
+									var html = '';
+											if (categories && categories.length > 0) {
+												categories.forEach(function (cat) {
+													html += `<button type="button" class="btn btn-light catBtn" data-catid="${cat.CategoryId}">
+																${cat.CategoryName}
+												   </button>`;
+												});
+											} else {
+												html = '<p>No categories found.</p>';
+											}
+											// Replace department buttons with category buttons
+											$('#dcs').html(html);
+									
+							});
+							$(document).on('click', '.catBtn', async function () {
+									var categoryId = $(this).data('catid');
+									var subcategories = await Utility.RequestDataAjax({
+										url:'/AttributeManager/GetSubCategorybyCategory',
+										data:{
+											CategoryId:categoryId
+										}
+									})
+									var html = '';
+											if (subcategories && subcategories.length > 0) {
+												subcategories.forEach(function (cat) {
+													html += `<button type="button" class="btn btn-light subcatBtn" data-subcatid="${cat.SubCategoryId}">
+																${cat.SubCategoryName}
+												   </button>`;
+												});
+											} else {
+												html = '<p>No SubCategories found.</p>';
+											}
+											// Replace department buttons with category buttons
+											$('#dcs').html(html);
+
+							});
+
+							$(document).on('click', '.subcatBtn', async function () {
+									var subcategoryId = $(this).data('subcatid');
+									var getsubcatProducts = await Utility.RequestDataAjax({
+										url:'/Products/GetProductBySubCategoryId',
+										data:{
+											SubCategoryId:subcategoryId
+										}
+									})
+									console.log(getsubcatProducts);
+									renderTopFiveProducts(getsubcatProducts.TopProducts);
+									renderAllProducts(getsubcatProducts.AllProducts);
+
+							});
+
+
+
+
+
+
+
+
+								function renderTopFiveProducts(topProducts) {
+											const $wrap = $('#topfiveProducts');
+
+											if (!Array.isArray(topProducts) || topProducts.length === 0) {
+											$wrap.html('<div class="col-12 text-muted">No top products found.</div>');
+											return;
+											}
+
+											const html = topProducts.slice(0, 5).map(p => {
+											const price =
+												(p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0);
+											const priceText = Number(price).toLocaleString(undefined, {
+												minimumFractionDigits: 2,
+												maximumFractionDigits: 2
+											});
+
+											return `
+												<div class="col-md-3 mb-3">
+												<div class="card card-body text-center p-2 h-100" style="cursor: pointer;" data-variant-id="${p.VariantId}">
+													<h6 class="font-weight-semibold mb-0">${escapeHtml(p.ProductName ?? 'Unnamed')}</h6>
+													<span class="text-muted">$${priceText}</span>
+												</div>
+												</div>`;
+											}).join('');
+
+											$wrap.html(html);
+								}
+
+							function renderAllProducts(allProducts) {
+							  const $tbody = $('#searchResultTable tbody');
+
+							  if (!Array.isArray(allProducts) || allProducts.length === 0) {
+								$tbody.html('<tr><td colspan="5" class="text-muted text-center">No products found.</td></tr>');
+								return;
+							  }
+
+							  const rows = allProducts.map(p => {
+								const stock = p.QoH ?? 0; // quantity on hand
+								const price = p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0;
+								const priceText = Number(price).toLocaleString(undefined, {
+								  minimumFractionDigits: 2,
+								  maximumFractionDigits: 2
+								});
+
+								// Stock level color
+								let stockClass = 'text-success';
+								if (stock === 0) stockClass = 'text-danger';
+								else if (stock < 20) stockClass = 'text-warning';
+
+								// Add/Out button
+								const buttonHtml = stock > 0
+								  ? `<button class="btn btn-primary btn-sm" data-variant-id="${p.VariantId}">Add</button>`
+								  : `<button class="btn btn-light btn-sm" disabled>Out</button>`;
+
+								return `
+								  <tr>
+									<td><div class="font-weight-semibold">${escapeHtml(p.ProductName ?? 'Unnamed')}</div></td>
+									<td>${escapeHtml(p.BarCode ?? '')}</td>
+									<td class="text-center ${stockClass} font-weight-bold">${stock}</td>
+									<td class="text-right">$${priceText}</td>
+									<td class="text-center">${buttonHtml}</td>
+								  </tr>
+								`;
+							  }).join('');
+
+							  $tbody.html(rows);
+							}
+
+								function escapeHtml(str) {
+									return String(str).replace(/[&<>"'`=\/]/g, s =>
+									({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s])
+									);
+								}
+							
+								$(document).on('click', '#backbtn', async function () {
+									var departments = await Utility.RequestDataAjax({url:'/AttributeManager/GetDepartments'})
+									var html = '';
+										if (departments && departments.length > 0) {
+										departments.forEach(function (cat) {
+											html += `<button type="button" class="btn btn-light depBtn" data-depid="${cat.DepartmentId}">
+														${cat.DepartmentName}
+											</button>`;
+										});
+									} else {
+										html = '<p>No Departments found.</p>';
+									}
+									// Replace department buttons with category buttons
+									$('#dcs').html(html);
+								});
+						</script>
+						
 					</div>
 
 					<!-- Search Results Pane (Initially Hidden) -->
 					<div class="tab-pane fade" id="pos-search-results" style="max-height: 50vh; overflow-y: auto; overflow-x:auto">
 						<div class="table-responsive">
-							<table id="" class="table table-hover">
+							<table id="searchResultTable" class="table table-hover">
 								<thead>
 									<tr>
 										<th>Product</th>
@@ -288,7 +506,7 @@
 <script>
 	$(document).ready(function(){
 	
-
+		$('#barCode').focus();
 		  $(document).on('keydown', '#barCode', async function (e) {
 
 			  if (e.key === 'Enter') {
@@ -519,10 +737,30 @@
 			  (updateGrandTotal(invoiceTotal));
 		}
 
-		function updateGrandTotal(invoiceTotal){
-				  const val = parseFloat($('#discount').val()) || 0;
-				  let grandTotal = invoiceTotal-val;
-				  $('#grandTotal').val(grandTotal);
-		}
+			function updateGrandTotal(invoiceTotal) {
+					const discountAmount = parseFloat($('#discount').val()) || 0;
+					let subTotal = invoiceTotal - discountAmount;
+
+					// Set Grand Total before tax
+					$('#grandTotal').val(subTotal.toFixed(2));
+
+					let taxPercent = 0;
+					let taxAmount = 0;
+
+					// Check if tax field exists and has a value
+					if ($('#tax').length > 0) {
+						taxPercent = parseFloat($('#tax').val()) || 0;
+						if (taxPercent > 0) {
+							taxAmount = (subTotal * taxPercent) / 100;
+						}
+					}
+
+					// Set Tax Amount
+					$('#totalTax').val(taxAmount.toFixed(2));
+
+					// Calculate Final Total Payable (SubTotal + Tax)
+					const totalPayable = subTotal + taxAmount;
+					$('#totalPayable').val(totalPayable.toFixed(2));
+			}
 	})
 </script>
