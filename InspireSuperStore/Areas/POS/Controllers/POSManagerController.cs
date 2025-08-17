@@ -3,6 +3,7 @@ using MainModels.Models;
 using MarketBal.Repository;
 using MarketBal.Repository.Account;
 using MarketBal.Repository.HRM;
+using MarketBal.Repository.POSManager;
 using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +23,7 @@ namespace InspireSuperStore.Areas.POS.Controllers
         private readonly OneDb _oneDb;
         private readonly AssetRepository _assets;
         private readonly HumanRespourceRepository _hrm;
+        private readonly POSRepository _posRepo;
         public POSManagerController(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -31,6 +33,7 @@ namespace InspireSuperStore.Areas.POS.Controllers
             _admin = new AdminPanelRepository(_config,_oneDb);
             _assets = new AssetRepository(_config, _oneDb);
             _hrm = new HumanRespourceRepository(_config, _oneDb);
+            _posRepo = new POSRepository(_config, _oneDb);
         }
         public async Task<IActionResult> CreateInvoice()
         {
@@ -42,9 +45,9 @@ namespace InspireSuperStore.Areas.POS.Controllers
             vm.PaymentMethods = await _assets.PaymentMethods();
             return View(vm);
         }
-        public async Task<IActionResult> SaveInvoice(InvoiceMasterVM model)
+        public async Task<IActionResult> SaveInvoice([FromForm]InvoiceMasterVM model)
         {
-
+            var result = await _posRepo.SaveInvoice(model);
             return Json(new { success = true, message = "Invoice saved successfully!" });
         }
     }

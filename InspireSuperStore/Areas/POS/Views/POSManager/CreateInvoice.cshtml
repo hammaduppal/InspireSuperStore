@@ -60,7 +60,7 @@
 		{
 			<div class="col-lg-2">
 				<div class="input-group">
-					<select class="form-control">
+					<select id="servingTable" class="form-control">
 						@foreach (var item in Model.ServingTables)
 						{
 							<option value="@item.ServingTableId">@item.TableName</option>
@@ -88,14 +88,14 @@
 					Address: $('#address').val(),
 					CityId: $('#city').val()
 				};
-				
+
 				var objectData={
 					url:'/Account/AddNewCustomer',
 					data:formData,
 				}
 				var result =await Utility.RequestDataAjax(objectData);
 				if(result.statusCode==='200'){
-					
+
 					$('#modal_form_horizontal').modal('hide');
 					var customers = await Utility.RequestAjax('/AdminPanel/GetCustomers');
 					var $select = $('#customers');
@@ -209,13 +209,16 @@
 					</div>
 					<div class="col-lg-2">
 						<div class="input-group">
-							<select id="paymentMethod" class="form-control">
-								@foreach (var item in Model.PaymentMethods)
-								{
-									<option value="@item.PaymentMethodId">@item.Name</option>
+							<label style="font-weight:700">
+								Payment Method
+								<select id="paymentMethod" class="form-control">
+									@foreach (var item in Model.PaymentMethods)
+									{
+										<option value="@item.PaymentMethodId">@item.Name</option>
+									}
+								</select>
+							</label>
 
-								}
-							</select>
 						</div>
 					</div>
 
@@ -274,7 +277,6 @@
 									</tr>
 								</thead>
 								<tbody>
-								
 								</tbody>
 							</table>
 						</div>
@@ -374,11 +376,17 @@
 				alert('Please add at least one product.');
 				return;
 			}
-		   const cashReceived = parseFloat($('#cashRecieved').val()) || 0;
+
+			const cashReceived = parseFloat($('#cashRecieved').val()) || 0;
+			const Tax = parseFloat($('#totalTax').val()) || 0;
+			const invoiceTotal = parseFloat($('#invoiceTotal').val()) || 0;
 			const totalPayable = parseFloat($('#totalPayable').val()) || 0;
+			const discount = parseFloat($('#discount').val()) || null;
+			const salesPersonId = $('#salesPerson').val() || null;
+			const tableId = $('#servingTable').val() || null;
+			const customerId = $('#customer').val() || null;
 			const paymentMethodId = $('#paymentMethod').val() || null;
 			const CASH_PAYMENT_ID = 1;
-
 			
 			if (paymentMethodId == CASH_PAYMENT_ID) {
 				if (cashReceived < totalPayable) {
@@ -387,50 +395,40 @@
 				}
 			}
 
-		// Collect invoice items
 		const items = [];
 		$rows.each(function () {
 				const $tr = $(this);
-				const $firstTd = $tr.find('td').first(); // grab the first td
-				console.log($firstTd);
-				var abc = $firstTd.data('product-id');
-				console.log(abc);
+				const $firstTd = $tr.find('td').first(); 
 			items.push({
-		
-				ProductId: $firstTd.data('productid'),   // not product-id
-				VariantId: $firstTd.data('variantid'),   // not variant-id
+				ProductId: $firstTd.data('productid'),   
+				VariantId: $firstTd.data('variantid'),  
 				Quantity: parseFloat($tr.find('.lineqty').val()) || 0,
-				CurrentPrice: parseFloat($tr.find('.currentPrice').text()) || 0,
+				UnitPrice: parseFloat($tr.find('.currentPrice').text()) || 0,
 			});
 	   });
-			debugger
-
-		// Collect invoice-level info
-		const discount = parseFloat($('#discount').val()) || null;
-		const salesPersonId = $('#salesPerson').val() || null;
-		const tableId = $('#servingTable').val() || null;
-		const customerId = $('#customer').val() || null;
-
-
 		const payload = {
-			Invoice: {
-				TotalAmount: totalPayable,
+
+				TotalAmount: invoiceTotal,
+				NetAmount: totalPayable,
 				DiscountAmount:discount,
 				PaymentMethodId: paymentMethodId,
-				SalesPersonId: salesPersonId,
+				EmployeeId: salesPersonId,
 				ServingTableId: tableId,
 				CustomerId: customerId,
-			},
-			InvoiceDetails: items
+				TaxAmount:Tax,
+				InvoiceDetails: items
 		};
 
 		console.log("Submitting Invoice:", payload);
 
-		// Submit to backend API
 		var result = Utility.RequestDataAjax({
 		url:'/POSManager/SaveInvoice',
 		data:payload
 		});
+		if(result.statusCode='200')
+		{
+			location.reload();
+		}
 	}
 
 </script>
@@ -489,7 +487,7 @@
 					SubCategoryId:subcategoryId
 				}
 			})
-			
+
 			renderTopFiveProducts(getsubcatProducts.TopProducts);
 			renderAllProducts(getsubcatProducts.AllProducts);
 
@@ -644,7 +642,7 @@
 					  data: { BarCode: barCode },
 					  url: '/Products/GetVariantbyBarCode'
 				  });
-				  
+
 				  if(data){
 					appendProductToTable(data);
 
@@ -777,7 +775,7 @@
 				setTotalPrice();
 		})
 
-		
+
 
 		function formatProductSelection(data) {
 			return data.text;
@@ -806,7 +804,7 @@
 
 				let invoiceTotal = 0;
 			  $('.lineTotal').each(function () {
-				  
+
 				  const val = parseFloat($(this).text()) || 0;
 				  invoiceTotal += val;
 			  });
