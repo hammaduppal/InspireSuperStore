@@ -455,7 +455,6 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
                     QuantityPerUnit = p.QuantityPerUnit,
                     IsSerial = p.IsSerial,
                 });
-
             if (!isPaginated)
             {
                 // Get top 5 products (example: by CreatedDate descending)
@@ -476,6 +475,8 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
                     .Take(pageSize)
                     .ToListAsync();
             }
+            result.TopProducts = UpdateCurrentPrice(result.TopProducts);
+            result.AllProducts = UpdateCurrentPrice(result.AllProducts);
 
             return result;
         }

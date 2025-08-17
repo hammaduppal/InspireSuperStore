@@ -3,6 +3,7 @@ using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository;
 using MarketBal.Repository.Account;
+using MarketBal.Repository.HRM;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InspireSuperStore.Areas.Account.Controllers
@@ -17,6 +18,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
         private readonly PagesViewModel vm = new PagesViewModel();
         private readonly AdminPanelRepository _admin;
         private readonly OneDb _oneDb;
+        private readonly HumanRespourceRepository _hrm;
         public AccountController(IConfiguration config, OneDb onedb)
         {
             _config = config;
@@ -24,6 +26,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
             _login = new AccountRepository(_config);
             _aes = new AESEncryption();
             _admin = new AdminPanelRepository(_config, _oneDb);
+            _hrm = new HumanRespourceRepository(_config, _oneDb);
         }
         public async Task<IActionResult> Login(string? ReturnUrl = null)
         {
@@ -100,6 +103,6 @@ namespace InspireSuperStore.Areas.Account.Controllers
             var result = await _login.AddCustomer(model);
             return Json(new {statusCode="200", CustomerId=result });
         }
-        
+
     }
 }

@@ -28,9 +28,9 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-lg-3">
+		<div class="col-lg-2">
 			<div class="input-group">
-				<select id="customers" class="form-control">
+				<select id="customer" class="form-control">
 					@foreach (var item in Model.Customers)
 					{
 						<option value="@item.CustomerId">@item.CustomerName + @item.Mobile </option>
@@ -42,19 +42,34 @@
 				</div>
 			</div>
 		</div>
-		@if(AppDataUtility.SystemPreferences.IsAffilatedInvoice)
+		@if (AppDataUtility.SystemPreferences.IsAffilatedInvoice)
 		{
-			<div class="col-lg-3">
+			<div class="col-lg-2">
 				<div class="input-group">
-					<select class="form-control">
-						<option>Walk-in Customer</option>
-						<option>John Smith</option>
-						<option>Maria Garcia</option>
+					<select id="salesPerson" class="form-control">
+						@foreach (var item in Model.Employees)
+						{
+							<option value="@item.EmployeeId">@item.EmployeeCode</option>
+						}
 					</select>
 				</div>
 			</div>
 		}
-	
+
+		@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
+		{
+			<div class="col-lg-2">
+				<div class="input-group">
+					<select class="form-control">
+						@foreach (var item in Model.ServingTables)
+						{
+							<option value="@item.ServingTableId">@item.TableName</option>
+						}
+					</select>
+				</div>
+			</div>
+		}
+
 	</div>
 	<script>
 		$('#addCustomer').on('click',async function () {
@@ -65,7 +80,7 @@
 		});
 			$(document).on('submit','#addNewCustomer',async function(e){
 			  e.preventDefault();
-			     var formData = {
+				 var formData = {
 					FirstName: $('#firstName').val(),
 					LastName: $('#lastName').val(),
 					MobileNumber: $('#mobile').val(),
@@ -73,14 +88,14 @@
 					Address: $('#address').val(),
 					CityId: $('#city').val()
 				};
-				console.log(formData);
+				
 				var objectData={
 					url:'/Account/AddNewCustomer',
 					data:formData,
 				}
 				var result =await Utility.RequestDataAjax(objectData);
 				if(result.statusCode==='200'){
-					debugger
+					
 					$('#modal_form_horizontal').modal('hide');
 					var customers = await Utility.RequestAjax('/AdminPanel/GetCustomers');
 					var $select = $('#customers');
@@ -98,10 +113,10 @@
 					});
 
 				}
-		    })
-		
+			})
+
 	</script>
-	
+
 
 </div>
 
@@ -111,7 +126,7 @@
 
 
 
-	
+
 	<div class="container">
 		<style>
 			#invoiceSummary * {
@@ -120,7 +135,7 @@
 			}
 		</style>
 		<div class="card" id="invoiceSummary">
-			
+
 			<div class="card-body">
 				<style>
 					#invoice-section label,
@@ -130,12 +145,12 @@
 					}
 				</style>
 				<div id="invoice-section" class="row">
-					<div class="col-lg-2">
+					<div class="col-lg-1">
 						<label>
-							Invoice Total
+							Total
 						</label>
 
-							<input readonly id="invoiceTotal" type="text" value="0.00" class="form-control invoiceTotal" />
+						<input readonly id="invoiceTotal" type="text" value="0.00" class="form-control invoiceTotal" />
 
 					</div>
 					<div class="col-lg-1">
@@ -143,14 +158,14 @@
 							Discount
 						</label>
 
-							<input  id="discount" type="text" class="form-control" />
+						<input id="discount" type="text" class="form-control" />
 					</div>
-					<div class="col-lg-2">
+					<div class="col-lg-1">
 						<label style="font-weight:700;">
-							Grand Total
+							G-Total
 						</label>
 
-							<input readonly id="grandTotal" type="text" class="form-control" />
+						<input readonly id="grandTotal" type="text" class="form-control" />
 					</div>
 					@if (AppDataUtility.SystemPreferences.EnableTax)
 					{
@@ -159,7 +174,7 @@
 								Tax
 							</label>
 
-							<input  value="@AppDataUtility.SystemPreferences.DefaultTaxRate %" readonly style="color:red" id="tax" type="text" class="form-control" />
+							<input value="@AppDataUtility.SystemPreferences.DefaultTaxRate %" readonly style="color:red" id="tax" type="text" class="form-control" />
 						</div>
 						<div class="col-lg-1">
 							<label style="font-weight:700">
@@ -168,20 +183,43 @@
 
 							<input readonly id="totalTax" type="text" class="form-control" />
 						</div>
-
 					}
 
-				
-					<div class="col-lg-2">
+
+					<div class="col-lg-1">
 						<label style="font-weight:700">
-							Total Payable Amount
+							Payable
 						</label>
 
-							<input readonly id="totalPayable" type="text" class="form-control" />
+						<input readonly id="totalPayable" type="text" class="form-control" />
 					</div>
-					
-				
-					
+					<div class="col-lg-1">
+						<label style="font-weight:700">
+							Payment
+						</label>
+
+						<input id="cashRecieved" type="text" class="form-control" />
+					</div>
+					<div class="col-lg-1">
+						<label style="font-weight:700">
+							Balance
+						</label>
+
+						<input id="balance" type="text" class="form-control" />
+					</div>
+					<div class="col-lg-2">
+						<div class="input-group">
+							<select id="paymentMethod" class="form-control">
+								@foreach (var item in Model.PaymentMethods)
+								{
+									<option value="@item.PaymentMethodId">@item.Name</option>
+
+								}
+							</select>
+						</div>
+					</div>
+
+
 
 
 				</div>
@@ -215,169 +253,11 @@
 
 								}
 							}
-						
+
 						</div>
 						<div id="topfiveProducts" class="row">
-							
 						</div>
-						<script>
-							$(document).on('click', '.depBtn', async function () {
-									var departmentId = $(this).data('depid');
-									var categories = await Utility.RequestDataAjax({
-										url:'/AttributeManager/GetCategorybyDepartment',
-										data:{
-											DepartmentId:departmentId
-										}
-									})
-									var html = '';
-											if (categories && categories.length > 0) {
-												categories.forEach(function (cat) {
-													html += `<button type="button" class="btn btn-light catBtn" data-catid="${cat.CategoryId}">
-																${cat.CategoryName}
-												   </button>`;
-												});
-											} else {
-												html = '<p>No categories found.</p>';
-											}
-											// Replace department buttons with category buttons
-											$('#dcs').html(html);
-									
-							});
-							$(document).on('click', '.catBtn', async function () {
-									var categoryId = $(this).data('catid');
-									var subcategories = await Utility.RequestDataAjax({
-										url:'/AttributeManager/GetSubCategorybyCategory',
-										data:{
-											CategoryId:categoryId
-										}
-									})
-									var html = '';
-											if (subcategories && subcategories.length > 0) {
-												subcategories.forEach(function (cat) {
-													html += `<button type="button" class="btn btn-light subcatBtn" data-subcatid="${cat.SubCategoryId}">
-																${cat.SubCategoryName}
-												   </button>`;
-												});
-											} else {
-												html = '<p>No SubCategories found.</p>';
-											}
-											// Replace department buttons with category buttons
-											$('#dcs').html(html);
 
-							});
-
-							$(document).on('click', '.subcatBtn', async function () {
-									var subcategoryId = $(this).data('subcatid');
-									var getsubcatProducts = await Utility.RequestDataAjax({
-										url:'/Products/GetProductBySubCategoryId',
-										data:{
-											SubCategoryId:subcategoryId
-										}
-									})
-									console.log(getsubcatProducts);
-									renderTopFiveProducts(getsubcatProducts.TopProducts);
-									renderAllProducts(getsubcatProducts.AllProducts);
-
-							});
-
-
-
-
-
-
-
-
-								function renderTopFiveProducts(topProducts) {
-											const $wrap = $('#topfiveProducts');
-
-											if (!Array.isArray(topProducts) || topProducts.length === 0) {
-											$wrap.html('<div class="col-12 text-muted">No top products found.</div>');
-											return;
-											}
-
-											const html = topProducts.slice(0, 5).map(p => {
-											const price =
-												(p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0);
-											const priceText = Number(price).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 2
-											});
-
-											return `
-												<div class="col-md-3 mb-3">
-												<div class="card card-body text-center p-2 h-100" style="cursor: pointer;" data-variant-id="${p.VariantId}">
-													<h6 class="font-weight-semibold mb-0">${escapeHtml(p.ProductName ?? 'Unnamed')}</h6>
-													<span class="text-muted">$${priceText}</span>
-												</div>
-												</div>`;
-											}).join('');
-
-											$wrap.html(html);
-								}
-
-							function renderAllProducts(allProducts) {
-							  const $tbody = $('#searchResultTable tbody');
-
-							  if (!Array.isArray(allProducts) || allProducts.length === 0) {
-								$tbody.html('<tr><td colspan="5" class="text-muted text-center">No products found.</td></tr>');
-								return;
-							  }
-
-							  const rows = allProducts.map(p => {
-								const stock = p.QoH ?? 0; // quantity on hand
-								const price = p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0;
-								const priceText = Number(price).toLocaleString(undefined, {
-								  minimumFractionDigits: 2,
-								  maximumFractionDigits: 2
-								});
-
-								// Stock level color
-								let stockClass = 'text-success';
-								if (stock === 0) stockClass = 'text-danger';
-								else if (stock < 20) stockClass = 'text-warning';
-
-								// Add/Out button
-								const buttonHtml = stock > 0
-								  ? `<button class="btn btn-primary btn-sm" data-variant-id="${p.VariantId}">Add</button>`
-								  : `<button class="btn btn-light btn-sm" disabled>Out</button>`;
-
-								return `
-								  <tr>
-									<td><div class="font-weight-semibold">${escapeHtml(p.ProductName ?? 'Unnamed')}</div></td>
-									<td>${escapeHtml(p.BarCode ?? '')}</td>
-									<td class="text-center ${stockClass} font-weight-bold">${stock}</td>
-									<td class="text-right">$${priceText}</td>
-									<td class="text-center">${buttonHtml}</td>
-								  </tr>
-								`;
-							  }).join('');
-
-							  $tbody.html(rows);
-							}
-
-								function escapeHtml(str) {
-									return String(str).replace(/[&<>"'`=\/]/g, s =>
-									({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s])
-									);
-								}
-							
-								$(document).on('click', '#backbtn', async function () {
-									var departments = await Utility.RequestDataAjax({url:'/AttributeManager/GetDepartments'})
-									var html = '';
-										if (departments && departments.length > 0) {
-										departments.forEach(function (cat) {
-											html += `<button type="button" class="btn btn-light depBtn" data-depid="${cat.DepartmentId}">
-														${cat.DepartmentName}
-											</button>`;
-										});
-									} else {
-										html = '<p>No Departments found.</p>';
-									}
-									// Replace department buttons with category buttons
-									$('#dcs').html(html);
-								});
-						</script>
-						
 					</div>
 
 					<!-- Search Results Pane (Initially Hidden) -->
@@ -394,35 +274,13 @@
 									</tr>
 								</thead>
 								<tbody>
-									<!-- Sample Search Result Row -->
-									<tr>
-										<td><div class="font-weight-semibold">Premium Whole Bean Coffee</div></td>
-										<td>COFF-WB-PREM</td>
-										<td class="text-center text-success font-weight-bold">120</td>
-										<td class="text-right">$18.99</td>
-										<td class="text-center"><button class="btn btn-primary btn-sm">Add</button></td>
-									</tr>
-									<tr>
-										<td><div class="font-weight-semibold">Stainless Steel Travel Mug</div></td>
-										<td>MUG-SS-TVL-16</td>
-										<td class="text-center text-warning font-weight-bold">15</td>
-										<td class="text-right">$24.50</td>
-										<td class="text-center"><button class="btn btn-primary btn-sm">Add</button></td>
-									</tr>
-									<tr>
-										<td><div class="font-weight-semibold">Chocolate Chip Cookie</div></td>
-										<td>PASTRY-CK-CC</td>
-										<td class="text-center text-danger font-weight-bold">0</td>
-										<td class="text-right">$2.25</td>
-										<td class="text-center"><button class="btn btn-light btn-sm" disabled>Out</button></td>
-									</tr>
-									<!-- Results will be dynamically added here -->
+								
 								</tbody>
 							</table>
 						</div>
 					</div>
 
-					
+
 				</div>
 			</div>
 
@@ -444,10 +302,10 @@
 						padding: 0 !important;
 					}
 				</style>
-				
+
 				<div class="card-body border-top">
 					<div id="invoiceRowSection" class="table-responsive " style="max-height:22vh;min-height:22vh;overflow-x:auto">
-						<table  id="invoiceTable" class="table table-border-dashed">
+						<table id="invoiceTable" class="table table-border-dashed">
 							<thead>
 								<tr>
 									<th class="text-center">Name</th>
@@ -465,7 +323,7 @@
 							</tbody>
 						</table>
 					</div>
-					
+
 				</div>
 
 				<!-- Numpad & Final Actions -->
@@ -486,10 +344,12 @@
 						<div class="col-6 p-1"><button class="btn btn-light btn-block">0</button></div>
 						<div class="col-6 p-1"><button class="btn btn-light btn-block">.</button></div>
 					</div>
+					<div class="row">
+					</div>
 					<div class="btn-group w-100">
 						<button type="button" class="btn btn-warning" style="flex-grow: 1;">Hold</button>
 						<button type="button" class="btn btn-danger" style="flex-grow: 1;">Cancel</button>
-						<button type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">PAY</button>
+						<button id="btn-submit" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">PAY</button>
 					</div>
 				</div>
 			</div>
@@ -504,8 +364,276 @@
 
 </div>
 <script>
+	$(document).on('click', '#btn-submit', function () {
+		submitInvoice();
+	});
+
+	function submitInvoice() {
+			const $rows = $('#invoiceTable tbody tr');
+			if ($rows.length === 0) {
+				alert('Please add at least one product.');
+				return;
+			}
+		   const cashReceived = parseFloat($('#cashRecieved').val()) || 0;
+			const totalPayable = parseFloat($('#totalPayable').val()) || 0;
+			const paymentMethodId = $('#paymentMethod').val() || null;
+			const CASH_PAYMENT_ID = 1;
+
+			
+			if (paymentMethodId == CASH_PAYMENT_ID) {
+				if (cashReceived < totalPayable) {
+					alert('Cash received is less than invoice total. Please collect full payment.');
+					return;
+				}
+			}
+
+		// Collect invoice items
+		const items = [];
+		$rows.each(function () {
+				const $tr = $(this);
+				const $firstTd = $tr.find('td').first(); // grab the first td
+				console.log($firstTd);
+				var abc = $firstTd.data('product-id');
+				console.log(abc);
+			items.push({
+		
+				ProductId: $firstTd.data('productid'),   // not product-id
+				VariantId: $firstTd.data('variantid'),   // not variant-id
+				Quantity: parseFloat($tr.find('.lineqty').val()) || 0,
+				CurrentPrice: parseFloat($tr.find('.currentPrice').text()) || 0,
+			});
+	   });
+			debugger
+
+		// Collect invoice-level info
+		const discount = parseFloat($('#discount').val()) || null;
+		const salesPersonId = $('#salesPerson').val() || null;
+		const tableId = $('#servingTable').val() || null;
+		const customerId = $('#customer').val() || null;
+
+
+		const payload = {
+			Invoice: {
+				TotalAmount: totalPayable,
+				DiscountAmount:discount,
+				PaymentMethodId: paymentMethodId,
+				SalesPersonId: salesPersonId,
+				ServingTableId: tableId,
+				CustomerId: customerId,
+			},
+			InvoiceDetails: items
+		};
+
+		console.log("Submitting Invoice:", payload);
+
+		// Submit to backend API
+		var result = Utility.RequestDataAjax({
+		url:'/POSManager/SaveInvoice',
+		data:payload
+		});
+	}
+
+</script>
+
+<script>
+	$(document).on('click', '.depBtn', async function () {
+			var departmentId = $(this).data('depid');
+			var categories = await Utility.RequestDataAjax({
+				url:'/AttributeManager/GetCategorybyDepartment',
+				data:{
+					DepartmentId:departmentId
+				}
+			})
+			var html = '';
+					if (categories && categories.length > 0) {
+						categories.forEach(function (cat) {
+							html += `<button type="button" class="btn btn-light catBtn" data-catid="${cat.CategoryId}">
+										${cat.CategoryName}
+						   </button>`;
+						});
+					} else {
+						html = '<p>No categories found.</p>';
+					}
+					// Replace department buttons with category buttons
+					$('#dcs').html(html);
+
+	});
+	$(document).on('click', '.catBtn', async function () {
+			var categoryId = $(this).data('catid');
+			var subcategories = await Utility.RequestDataAjax({
+				url:'/AttributeManager/GetSubCategorybyCategory',
+				data:{
+					CategoryId:categoryId
+				}
+			})
+			var html = '';
+					if (subcategories && subcategories.length > 0) {
+						subcategories.forEach(function (cat) {
+							html += `<button type="button" class="btn btn-light subcatBtn" data-subcatid="${cat.SubCategoryId}">
+										${cat.SubCategoryName}
+						   </button>`;
+						});
+					} else {
+						html = '<p>No SubCategories found.</p>';
+					}
+					// Replace department buttons with category buttons
+					$('#dcs').html(html);
+
+	});
+
+	$(document).on('click', '.subcatBtn', async function () {
+			var subcategoryId = $(this).data('subcatid');
+			var getsubcatProducts = await Utility.RequestDataAjax({
+				url:'/Products/GetProductBySubCategoryId',
+				data:{
+					SubCategoryId:subcategoryId
+				}
+			})
+			
+			renderTopFiveProducts(getsubcatProducts.TopProducts);
+			renderAllProducts(getsubcatProducts.AllProducts);
+
+	});
+
+	function renderTopFiveProducts(topProducts) {
+				const $wrap = $('#topfiveProducts');
+
+				if (!Array.isArray(topProducts) || topProducts.length === 0) {
+				$wrap.html('<div class="col-12 text-muted">No top products found.</div>');
+				return;
+				}
+
+				const html = topProducts.slice(0, 5).map(p => {
+				const price =
+					(p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0);
+				const priceText = Number(price).toLocaleString(undefined, {
+					minimumFractionDigits: 2,
+					maximumFractionDigits: 2
+				});
+
+				return `
+								<div class="col-md-3 mb-3">
+								<div class="card card-body text-center p-2 h-100 product-tile"
+									style="cursor: pointer;"
+									data-barcode="${p.BarCode || ''}"
+									data-product-id="${p.ProductId || ''}"
+									data-variant-id="${p.VariantId || ''}" data-sizename='${p.SizeName}		'>
+									<h6 class="font-weight-semibold mb-0">
+										${escapeHtml(p.ProductName ?? 'Unnamed')}
+									</h6>
+									<span class="text-muted">$${priceText}</span>
+								</div>
+							</div>
+							`;
+				}).join('');
+
+				$wrap.html(html);
+	}
+
+	function renderAllProducts(allProducts) {
+		const $tbody = $('#searchResultTable tbody');
+
+		if (!Array.isArray(allProducts) || allProducts.length === 0) {
+			$tbody.html('<tr><td colspan="5" class="text-muted text-center">No products found.</td></tr>');
+			return;
+		}
+
+		const rows = allProducts.map(p => {
+			const stock = p.QoH ?? 0; // quantity on hand
+			const price = p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0;
+			const priceText = Number(price).toLocaleString(undefined, {
+				minimumFractionDigits: 2,
+				maximumFractionDigits: 2
+			});
+
+			// Stock level color
+			let stockClass = 'text-success';
+			if (stock === 0) stockClass = 'text-danger';
+			else if (stock < 20) stockClass = 'text-warning';
+
+			// Button now has all product data
+			const buttonHtml = stock > 0
+				? `<button class="btn btn-primary btn-sm product-add-btn"
+							data-barcode="${p.BarCode || ''}"
+							data-product-id="${p.ProductId || ''}"
+							data-variant-id="${p.VariantId || ''}"
+							data-sizename="${p.SizeName || ''}"
+							data-product-name="${escapeHtml(p.ProductName ?? 'Unnamed')}"
+							data-price="${price}">
+						Add
+					</button>`
+				: `<button class="btn btn-light btn-sm" disabled>Out</button>`;
+
+			return `
+				<tr>
+					<td><div class="font-weight-semibold">${escapeHtml(p.ProductName ?? 'Unnamed')}</div></td>
+					<td>${escapeHtml(p.BarCode ?? '')}</td>
+					<td class="text-center ${stockClass} font-weight-bold">${stock}</td>
+					<td class="text-right">$${priceText}</td>
+					<td class="text-center">${buttonHtml}</td>
+				</tr>
+			`;
+		}).join('');
+
+		$tbody.html(rows);
+	}
+
+
+	function escapeHtml(str) {
+		return String(str).replace(/[&<>"'`=\/]/g, s =>
+		({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s])
+		);
+	}
+
+	$(document).on('click', '#backbtn', async function () {
+			var departments = await Utility.RequestDataAjax({url:'/AttributeManager/GetDepartments'})
+			var html = '';
+				if (departments && departments.length > 0) {
+				departments.forEach(function (cat) {
+					html += `<button type="button" class="btn btn-light depBtn" data-depid="${cat.DepartmentId}">
+								${cat.DepartmentName}
+					</button>`;
+				});
+			} else {
+				html = '<p>No Departments found.</p>';
+			}
+			// Replace department buttons with category buttons
+			$('#dcs').html(html);
+		});
+</script>
+
+<script>
 	$(document).ready(function(){
-	
+		$(document).on('click', '.product-add-btn', function () {
+			const $btn = $(this);
+
+			const productData = {
+				BarCode: $btn.data('barcode'),
+				ProductId: $btn.data('product-id'),
+				VariantId: $btn.data('variant-id'),
+				SizeName: $btn.data('sizename'),
+				ProductName: $btn.data('product-name'),
+				CurrentPrice: parseFloat($btn.data('price'))
+			};
+
+			appendProductToTable(productData);
+		});
+		$(document).on('click', '.product-tile', function () {
+			const $tile = $(this);
+
+			// Gather all product data from data attributes
+			const productData = {
+				BarCode: $tile.data('barcode'),
+				ProductId: $tile.data('product-id'),
+				VariantId: $tile.data('variant-id'),
+				SizeName: $tile.data('sizename'),
+				ProductName: $tile.find('h6').text().trim(),
+				CurrentPrice: parseFloat($tile.find('span').text().replace(/[^0-9.]/g, ''))
+			};
+
+			// Use your existing function to add to invoice table
+			appendProductToTable(productData);
+		});
 		$('#barCode').focus();
 		  $(document).on('keydown', '#barCode', async function (e) {
 
@@ -516,7 +644,7 @@
 					  data: { BarCode: barCode },
 					  url: '/Products/GetVariantbyBarCode'
 				  });
-				  console.log(data);
+				  
 				  if(data){
 					appendProductToTable(data);
 
@@ -535,14 +663,14 @@
 
 		function appendProductToTable(result) {
 			if (!result) return;
-			
+
 
 			let isDuplicate = false;
 			let incomingBarcode = String(result.BarCode); // ensure barcode is string
 
 			$('#invoiceTable tbody tr').each(function () {
 				const barcode = String($(this).find('td').eq(0).data('barcode')); // also as string
-				
+
 				if (barcode === incomingBarcode) {
 					isDuplicate = true;
 
@@ -592,9 +720,9 @@
 				let container = $('#invoiceRowSection');
 			 container.scrollTop(container[0].scrollHeight);
 			}
-		
-			
-			
+
+
+
 			$('#productSearch').select2({
 			placeholder: 'Search product by name, size, color, material...',
 			minimumInputLength: 2,
@@ -642,65 +770,15 @@
 			</div>`);
 		}
 
-		
+
 		$(document).on('click','.removeRow',function(e){
 			e.preventDefault();
 				$(this).closest('tr').remove();
 				setTotalPrice();
 		})
+
 		
-		$('#addNewCollection').submit(async function(e){
-			e.preventDefault();
-			 const rows = $('#invoiceTable tbody tr');
 
-			if (rows.length === 0) {
-				alert('Please add at least one product before submitting.');
-				return;
-			}
-			 let variantIds = [];
-			rows.each(function () {
-				const variantId = $(this).find('.removeRow').attr('data-variantid');
-				if (variantId) {
-					variantIds.push(variantId);
-				}
-			});
-			const dateRange = $('#daterange-basic').val();
-			const collectionName = $('#collectionName').val();
-			const collectionDescription = $('#collectionDescription').val();
-			const collectionImageFile = $('#collectionImage')[0].files[0];
-			if (!collectionImageFile) {
-				alert('Please upload a collection image.');
-				return;
-			}
-				const formData = new FormData();
-				formData.append('CollectionName', collectionName);
-				formData.append('CollectionDescription', collectionDescription);
-				formData.append('DateRange', dateRange);
-				formData.append('Image', collectionImageFile);
-				formData.append('VariantIds', variantIds); // Send as string array
-
-			const response = await Utility.RequestFileAjax({
-				data: formData,
-				url: '/Collection/AddNewCollection',
-				contentType: false,
-				processData: false,
-				type: 'POST',
-				isFileUpload: true
-			});
-			if(response.statusCode==='200')
-			{
-				Utility.successMessage(response.Message);
-				setTimeout(function(){
-					location.reload();
-				},1000)
-				$('#addNewCollection')[0].reset();
-			}
-			else{
-				Utility.failMessage(response.Message);
-			}
-		});
-	
-	
 		function formatProductSelection(data) {
 			return data.text;
 		}
@@ -711,9 +789,9 @@
 					${result.ProductName}
 				</td>
 				<td>${result.SizeName}</td>
-				<td><input class='lineqty' type='text' value='1' style='max-width:50px;'/></td>
+				<td><input class='lineqty' type='number' min='1' step='1' value='1' style='max-width:50px;'/></td>
 				<td class='currentPrice'>${result.CurrentPrice}</td>
-				<td class='lineTotal text-center'>${result.CurrentPrice ? result.CurrentPrice.toFixed(2) : '0.00'}</td>
+				<td class='lineTotal text-center'>${(parseFloat(result.CurrentPrice) || 0).toFixed(2)}</td>
 				<td>
 					<div class="list-icons text-center">
 						<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}" class="list-icons-item text-danger-600 removeRow text-center"><i class="icon-trash"></i></a>
@@ -728,7 +806,7 @@
 
 				let invoiceTotal = 0;
 			  $('.lineTotal').each(function () {
-				  debugger
+				  
 				  const val = parseFloat($(this).text()) || 0;
 				  invoiceTotal += val;
 			  });
@@ -762,5 +840,14 @@
 					const totalPayable = subTotal + taxAmount;
 					$('#totalPayable').val(totalPayable.toFixed(2));
 			}
+		$(document).on('input', '#cashRecieved', function () {
+			let payable = parseFloat($('#totalPayable').val()) || 0;
+			let cashRecived = parseFloat($(this).val());
+			// Get the unit price from the currentPrice td
+			let balance =cashRecived - payable || 0;
+			balance = Math.floor(balance);
+			$('#balance').val(balance);
+		});
+
 	})
 </script>
