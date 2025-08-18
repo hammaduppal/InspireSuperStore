@@ -1,0 +1,143 @@
+﻿
+@{
+    ViewData["Title"] = "AccountPrefrences";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow p-3 rounded-3">
+        <div class="card-header fw-bold text-center">
+            Accounting Preferences
+        </div>
+        <div class="card-body">
+            <div class="row">
+
+                <!-- Fiscal Year -->
+                <div class="col-lg-4 mb-3">
+                    <label>Fiscal Year Start Month</label>
+                    <input type="text" class="form-control" id="FiscalYearStartMonth">
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <label>Fiscal Year End Month</label>
+                    <input type="text" class="form-control" id="FiscalYearEndMonth">
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <label>Fiscal Year Start Date</label>
+                    <input type="date" class="form-control" id="FiscalYearStartDate">
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <label>Fiscal Year End Date</label>
+                    <input type="date" class="form-control" id="FiscalYearEndDate">
+                </div>
+
+                <!-- Currency -->
+                <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+                    <label>Enable Multi-Currency</label>
+                    <label class="switch">
+                        <input type="checkbox" id="EnableMultiCurrency">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <label>Base Currency Code</label>
+                    <input type="text" class="form-control" id="BaseCurrencyCode">
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <label>Default Exchange Rate Source</label>
+                    <input type="text" class="form-control" id="DefaultExchangeRateSource">
+                </div>
+
+                <!-- Year Closing -->
+                <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+                    <label>Enable Automatic Year Closing</label>
+                    <label class="switch">
+                        <input type="checkbox" id="EnableAutomaticYearClosing">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+                    <label>Lock Transactions After Period Close</label>
+                    <label class="switch">
+                        <input type="checkbox" id="LockTransactionsAfterPeriodClose">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Default Accounts -->
+                <div class="col-lg-4 mb-3">
+                    <label>Default Sales Account</label>
+                    <input type="text" class="form-control" id="DefaultSalesAccount">
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <label>Default Purchase Account</label>
+                    <input type="text" class="form-control" id="DefaultPurchaseAccount">
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <label>Default Tax Account</label>
+                    <input type="text" class="form-control" id="DefaultTaxAccount">
+                </div>
+
+                <!-- Transactions -->
+                <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+                    <label>Allow Back-Dated Transactions</label>
+                    <label class="switch">
+                        <input type="checkbox" id="AllowBackDatedTransactions">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- Save Button -->
+            <div class="text-center mt-4">
+                <button class="btn btn-success px-4">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Switch style */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 46px;
+        height: 24px;
+    }
+
+        .switch input {
+            display: none;
+        }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+    input:checked + .slider {
+        background-color: #28a745;
+    }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+</style>

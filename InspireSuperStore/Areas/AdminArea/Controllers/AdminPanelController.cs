@@ -6,6 +6,7 @@ using MarketBal.Repository;
 using MarketBal.Repository.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.SqlServer.Server;
 using Newtonsoft.Json;
 using OfficeOpenXml;
@@ -345,6 +346,23 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         public async Task<IActionResult> GetCustomerById(CustomerVM model)
         {
             return Ok(await _adminPanel.Customers(model.CustomerId));
+        }
+        
+        public async Task<IActionResult> SystemPrefrences(CustomerVM model)
+        {
+           vm.SystemPreferences = await _adminPanel.GetSystemPreferences();
+            vm.Branches= await _adminPanel.GetBranches();
+            return View(vm);
+        }
+        public async Task<IActionResult> AccountPrefrences(CustomerVM model)
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> SaveSystemPrefrences(SystemPreferencesVM model, IFormFile? CompanyLogoFile)
+        {
+            var result = await _adminPanel.SavePrefrences(model);
+            return Json(new { });
         }
     }
 }

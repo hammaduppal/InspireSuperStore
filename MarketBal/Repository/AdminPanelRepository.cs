@@ -27,7 +27,7 @@ namespace MarketBal.Repository
             _onedb = oneDb;
             _attrib = new AttributeRepository(_config);
         }
-        
+
         public async Task<List<LoginUserVM>> GetLoginUser()
         {
             string query = $@"select  * from Hrm.LoginUsers l where l.Id !=1";
@@ -361,7 +361,7 @@ namespace MarketBal.Repository
             return await _onedb.SaveChangesAsync();
         }
 
-        
+
 
 
 
@@ -424,7 +424,7 @@ namespace MarketBal.Repository
                     };
 
                     await _onedb.Organizations.AddAsync(organization);
-                   await _onedb.SaveChangesAsync(); // Save to generate OrganizationId (if Identity)
+                    await _onedb.SaveChangesAsync(); // Save to generate OrganizationId (if Identity)
                     var category = _onedb.BusinessCategories.Where(x => x.BusinessCategoryId == model.BusinessCategory).FirstOrDefault();
                     var businessType = _onedb.BusinessEntityTypes.Where(x => x.BusinessEntityTypeId == model.BusinessEntity).FirstOrDefault();
                     var getOrganization = _onedb.Organizations.ToList();
@@ -434,7 +434,7 @@ namespace MarketBal.Repository
                         BranchId = branchId,
                         BranchName = model.BranchName,
                         OrganizationId = singleOrganization.OrganizationId,
-                     
+
                     };
                     await _onedb.Branches.AddAsync(branch);
 
@@ -453,7 +453,7 @@ namespace MarketBal.Repository
                     {
                         Id = 1,
                         Name = "SuperAdmin",
-                        IsActive=true
+                        IsActive = true
                     };
                     await _onedb.Roles.AddAsync(role);
 
@@ -517,9 +517,9 @@ delete from Hrm.UserAssignedBranches
             delete from Business.Organizations
 select 1;
 ";
-           return  await _db.ExecuteQueryModify(query);
+            return await _db.ExecuteQueryModify(query);
         }
-        
+
         public async Task<int> InsertSeedData()
         {
             string query = $@"
@@ -830,23 +830,24 @@ VALUES
 ";
             return await _db.ExecuteQueryModify(query);
         }
-        
+
         public async Task<byte[]> MasterDataExcel()
         {
             var subcats = await _attrib.GetDCS();
             var color = await _attrib.GetColors();
-            var size= await _attrib.GetSizes();
+            var size = await _attrib.GetSizes();
             var materials = await _attrib.GetMaterials();
             var uom = await _attrib.GETUOMSUBUOM();
             var brands = await _attrib.GetBrands();
-           var brandExcel = brands.Select(x=> new
+            var brandExcel = brands.Select(x => new
             {
-                BrandId=x.BrandId,
-                BrandName=x.BrandName
+                BrandId = x.BrandId,
+                BrandName = x.BrandName
             }).ToList();
-            var sizes = size.Select(x=> new SizeExcel
+            var sizes = size.Select(x => new SizeExcel
             {
-                SizeId=x.SizeId,SizeName=x.SizeName
+                SizeId = x.SizeId,
+                SizeName = x.SizeName
             }).ToList();
             var materialsExcel = materials.Select(x => new MaterialExcel
             {
@@ -855,8 +856,8 @@ VALUES
             }).ToList();
             var colorExcel = color.Select(x => new ColorExcel
             {
-                 ColorId=x.ColorId,
-                 ColorName=x.ColorName
+                ColorId = x.ColorId,
+                ColorName = x.ColorName
             }).ToList();
             var sheets = new Dictionary<string, IEnumerable>
             {
@@ -865,7 +866,7 @@ VALUES
                 ["Sizes"] = sizes,
                 ["Materials"] = materialsExcel,
                 ["UOMs"] = uom,
-                ["Brands"]=brandExcel
+                ["Brands"] = brandExcel
             };
 
             var excelHandler = new ExcelHandler("INSPIRE"); // or your name/org
@@ -889,7 +890,7 @@ VALUES
 
         public async Task<CustomerVM> Customers(Guid CustomerId)
         {
-            var result =  await _onedb.Customers.Where(x=>x.CustomerId==CustomerId).Select(x => new CustomerVM
+            var result = await _onedb.Customers.Where(x => x.CustomerId == CustomerId).Select(x => new CustomerVM
             {
                 CustomerName = x.Person.FirstName + "" + x.Person.LastName,
                 Mobile = x.Person.MobileNumber,
@@ -900,7 +901,203 @@ VALUES
             }).FirstOrDefaultAsync();
             return result;
         }
+        public async Task<SystemPreferencesVM> GetSystemPreferences()
+        {
+            var result = await _onedb.SystemPreferences
 
+                .Select(x => new SystemPreferencesVM
+                {
+                    // General Settings
+                    CompanyName = x.CompanyName,
+                    IsRestaurantApplication = x.IsRestaurantApplication,
+                    CompanyLogoUrl = x.CompanyLogoUrl,
+                    DefaultLanguage = x.DefaultLanguage,
+                    TimeZone = x.TimeZone,
+                    DateFormat = x.DateFormat,
+                    CurrencyCode = x.CurrencyCode,
+                    CurrencySymbol = x.CurrencySymbol,
+                    DecimalPlaces = x.DecimalPlaces,
+                    IsAffilatedInvoice = x.IsAffilatedInvoice,
+
+                    // Tax & Financial
+                    EnableTax = x.EnableTax,
+                    DefaultTaxRate = x.DefaultTaxRate,
+                    TaxRegistrationNumber = x.TaxRegistrationNumber,
+                    PricesIncludeTax = x.PricesIncludeTax,
+
+                    // Inventory & Sales
+                    EnableInventoryTracking = x.EnableInventoryTracking,
+                    DefaultWarehouse = x.DefaultWarehouse,
+                    LowStockThreshold = x.LowStockThreshold,
+                    AllowNegativeStock = x.AllowNegativeStock,
+
+                    // Invoice & Document Settings
+                    InvoicePrefix = x.InvoicePrefix,
+                    InvoiceStartNumber = x.InvoiceStartNumber,
+                    QuotationPrefix = x.QuotationPrefix,
+                    ReceiptPrefix = x.ReceiptPrefix,
+                    ShowLogoOnInvoices = x.ShowLogoOnInvoices,
+                    ShowTaxBreakdown = x.ShowTaxBreakdown,
+
+                    // User & Security
+                    EnableTwoFactorAuth = x.EnableTwoFactorAuth,
+                    SessionTimeoutMinutes = x.SessionTimeoutMinutes,
+                    AllowMultipleLogins = x.AllowMultipleLogins,
+
+                    // Email & Communication
+                    SmtpServer = x.SmtpServer,
+                    SmtpPort = x.SmtpPort,
+                    SmtpUserName = x.SmtpUserName,
+                    SmtpPassword = x.SmtpPassword,
+                    EnableSsl = x.EnableSsl,
+                    DefaultFromEmail = x.DefaultFromEmail,
+
+                    // Other Options
+                    EnableAutoBackup = x.EnableAutoBackup,
+                    AutoBackupIntervalDays = x.AutoBackupIntervalDays,
+                    BackupLocation = x.BackupLocation
+                })
+                .FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return new SystemPreferencesVM();
+            }
+            else
+            {
+                return result;
+            }
+        }
+        public async Task<List<BranchVM>> GetBranches()
+        {
+            return await _onedb.Branches.Select(x => new BranchVM
+            {
+                BranchId = x.BranchId,
+                BranchName = x.BranchName
+            }).ToListAsync();
+        }
+        public async Task<int> SavePrefrences(SystemPreferencesVM model)
+        {
+            // Try to find existing preferences for this BranchId
+            var existing = await _onedb.SystemPreferences
+                .FirstOrDefaultAsync(x => x.BranchId == model.BranchId);
+
+            if (existing != null)
+            {
+                // Update existing record
+                existing.CompanyName = model.CompanyName;
+                existing.IsRestaurantApplication = model.IsRestaurantApplication;
+                existing.CompanyLogoUrl = model.CompanyLogoUrl;
+                existing.DefaultLanguage = model.DefaultLanguage;
+                existing.TimeZone = model.TimeZone;
+                existing.DateFormat = model.DateFormat;
+                existing.CurrencyCode = model.CurrencyCode;
+                existing.CurrencySymbol = model.CurrencySymbol;
+                existing.DecimalPlaces = model.DecimalPlaces;
+                existing.IsAffilatedInvoice = model.IsAffilatedInvoice;
+
+                // Tax & Financial
+                existing.EnableTax = model.EnableTax;
+                existing.DefaultTaxRate = model.DefaultTaxRate;
+                existing.TaxRegistrationNumber = model.TaxRegistrationNumber;
+                existing.PricesIncludeTax = model.PricesIncludeTax;
+
+                // Inventory & Sales
+                existing.EnableInventoryTracking = model.EnableInventoryTracking;
+                existing.DefaultWarehouse = model.DefaultWarehouse;
+                existing.LowStockThreshold = model.LowStockThreshold;
+                existing.AllowNegativeStock = model.AllowNegativeStock;
+
+                // Invoice & Document Settings
+                existing.InvoicePrefix = model.InvoicePrefix;
+                existing.InvoiceStartNumber = model.InvoiceStartNumber;
+                existing.QuotationPrefix = model.QuotationPrefix;
+                existing.ReceiptPrefix = model.ReceiptPrefix;
+                existing.ShowLogoOnInvoices = model.ShowLogoOnInvoices;
+                existing.ShowTaxBreakdown = model.ShowTaxBreakdown;
+
+                // User & Security
+                existing.EnableTwoFactorAuth = model.EnableTwoFactorAuth;
+                existing.SessionTimeoutMinutes = model.SessionTimeoutMinutes;
+                existing.AllowMultipleLogins = model.AllowMultipleLogins;
+
+                // Email & Communication
+                existing.SmtpServer = model.SmtpServer;
+                existing.SmtpPort = model.SmtpPort;
+                existing.SmtpUserName = model.SmtpUserName;
+                existing.SmtpPassword = model.SmtpPassword;
+                existing.EnableSsl = model.EnableSsl;
+                existing.DefaultFromEmail = model.DefaultFromEmail;
+
+                // Other Options
+                existing.EnableAutoBackup = model.EnableAutoBackup;
+                existing.AutoBackupIntervalDays = model.AutoBackupIntervalDays;
+                existing.BackupLocation = model.BackupLocation;
+
+                _onedb.SystemPreferences.Update(existing);
+            }
+            else
+            {
+                // Insert new
+                var entity = new SystemPreference
+                {
+                    SystemPreferenceId = Guid.NewGuid(),
+                    BranchId = model.BranchId,
+                    CompanyName = model.CompanyName,
+                    IsRestaurantApplication = model.IsRestaurantApplication,
+                    CompanyLogoUrl = model.CompanyLogoUrl,
+                    DefaultLanguage = model.DefaultLanguage,
+                    TimeZone = model.TimeZone,
+                    DateFormat = model.DateFormat,
+                    CurrencyCode = model.CurrencyCode,
+                    CurrencySymbol = model.CurrencySymbol,
+                    DecimalPlaces = model.DecimalPlaces,
+                    IsAffilatedInvoice = model.IsAffilatedInvoice,
+
+                    // Tax & Financial
+                    EnableTax = model.EnableTax,
+                    DefaultTaxRate = model.DefaultTaxRate,
+                    TaxRegistrationNumber = model.TaxRegistrationNumber,
+                    PricesIncludeTax = model.PricesIncludeTax,
+
+                    // Inventory & Sales
+                    EnableInventoryTracking = model.EnableInventoryTracking,
+                    DefaultWarehouse = model.DefaultWarehouse,
+                    LowStockThreshold = model.LowStockThreshold,
+                    AllowNegativeStock = model.AllowNegativeStock,
+
+                    // Invoice & Document Settings
+                    InvoicePrefix = model.InvoicePrefix,
+                    InvoiceStartNumber = model.InvoiceStartNumber,
+                    QuotationPrefix = model.QuotationPrefix,
+                    ReceiptPrefix = model.ReceiptPrefix,
+                    ShowLogoOnInvoices = model.ShowLogoOnInvoices,
+                    ShowTaxBreakdown = model.ShowTaxBreakdown,
+
+                    // User & Security
+                    EnableTwoFactorAuth = model.EnableTwoFactorAuth,
+                    SessionTimeoutMinutes = model.SessionTimeoutMinutes,
+                    AllowMultipleLogins = model.AllowMultipleLogins,
+
+                    // Email & Communication
+                    SmtpServer = model.SmtpServer,
+                    SmtpPort = model.SmtpPort,
+                    SmtpUserName = model.SmtpUserName,
+                    SmtpPassword = model.SmtpPassword,
+                    EnableSsl = model.EnableSsl,
+                    DefaultFromEmail = model.DefaultFromEmail,
+
+                    // Other Options
+                    EnableAutoBackup = model.EnableAutoBackup,
+                    AutoBackupIntervalDays = model.AutoBackupIntervalDays,
+                    BackupLocation = model.BackupLocation
+                };
+
+                await _onedb.SystemPreferences.AddAsync(entity);
+            }
+
+            return await _onedb.SaveChangesAsync();
+        }
 
 
 

@@ -2,7 +2,9 @@ using InspireSuperStore.Areas.Notification.Data;
 using InspireSuperStore.Models;
 using MainModels;
 using MainModels.DTOModels;
+using MainModels.Models;
 using MainModels.Util;
+using MarketBal.Repository;
 using MarketBal.Repository.DashBoard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,17 +21,23 @@ namespace InspireSuperStore.Controllers
 		private readonly IConfiguration _config;
 		private readonly ApiMethods _apiMethod;
 		private readonly DashBoardRepository _dashboard;
+		private readonly AdminPanelRepository _admin;
 		private readonly NotificationService _notificationServices;
         private readonly IHubContext<NotificationHub> _hubContext;
-        public HomeController(ILogger<HomeController> logger,IConfiguration config, NotificationService notificationService, IHubContext<NotificationHub> hubContext)
+		private readonly OneDb _onedb;
+        public HomeController(ILogger<HomeController> logger, OneDb onedb,IConfiguration config, NotificationService notificationService, IHubContext<NotificationHub> hubContext)
 		{
 			_config = config;
 			_logger = logger;
 			_apiMethod = new ApiMethods();
-			_dashboard = new DashBoardRepository(_config);
+			_onedb = onedb;
+            _dashboard = new DashBoardRepository(_config,_onedb);
+			_admin = new AdminPanelRepository(_config, _onedb);
 			_notificationServices = notificationService;
             _hubContext = hubContext;
             var systemSettings = _config.GetSection("SystemSettings").Get<SystemSettings>();
+			var systemPref =  _admin.GetSystemPreferences();
+			AppDataUtility.SystemPreferences = systemPref.Result;
 			PagesViewModel.SystemSettings = systemSettings;
 			if (PagesViewModel.ThemeSettings==null)
 			{

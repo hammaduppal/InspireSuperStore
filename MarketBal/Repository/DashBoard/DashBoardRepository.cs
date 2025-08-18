@@ -1,6 +1,7 @@
 ﻿using MainModels;
 using MainModels.DTOModels;
 using MainModels.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace MarketBal.Repository.DashBoard
 {
@@ -8,10 +9,12 @@ namespace MarketBal.Repository.DashBoard
     {
         private readonly IConfiguration _config;
         private readonly DBManager _db;
-        public DashBoardRepository(IConfiguration config)
+        private readonly OneDb _onedb;
+        public DashBoardRepository(IConfiguration config, OneDb onedb)
         {
             _config = config;
             _db = new DBManager(_config);
+            _onedb = onedb;
         }
         public async Task<DashBoardSettings> Settings()
         {
@@ -27,5 +30,6 @@ namespace MarketBal.Repository.DashBoard
             return result;
         }
 
+     
     }
 }

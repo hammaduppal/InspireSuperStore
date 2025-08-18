@@ -28,6 +28,7 @@ namespace MarketBal.Repository.POSManager
             {
                 try
                 {
+                    
                     var commonParams = CommonParamHelper.GetCommonParams();
                     var lastInvoice = await _onedb.InvoiceMasters
                         .OrderByDescending(i => i.CreatedDate)
