@@ -12,7 +12,7 @@ namespace InspireSuperStore.Areas.POS.Controllers
 {
     [Area("POS")]
     [Route("[controller]/[action]")]
-    
+
     public class POSManagerController : Controller
     {
         PagesViewModel vm = new PagesViewModel();
@@ -30,7 +30,7 @@ namespace InspireSuperStore.Areas.POS.Controllers
             _oneDb = oneDb;
             _attrib = new AttributeRepository(_config);
             _account = new AccountRepository(_config);
-            _admin = new AdminPanelRepository(_config,_oneDb);
+            _admin = new AdminPanelRepository(_config, _oneDb);
             _assets = new AssetRepository(_config, _oneDb);
             _hrm = new HumanRespourceRepository(_config, _oneDb);
             _posRepo = new POSRepository(_config, _oneDb);
@@ -45,10 +45,23 @@ namespace InspireSuperStore.Areas.POS.Controllers
             vm.PaymentMethods = await _assets.PaymentMethods();
             return View(vm);
         }
-        public async Task<IActionResult> SaveInvoice([FromForm]InvoiceMasterVM model)
+        public async Task<IActionResult> SaveInvoice([FromForm] InvoiceMasterVM model)
         {
-            var result = await _posRepo.SaveInvoice(model);
-            return Json(new { success = true, message = "Invoice saved successfully!" });
+                var result = await _posRepo.SaveInvoice(model);
+            var invoice = await _posRepo.GenerateInvoiceHTML(model);
+            if (invoice != null)
+            {
+                return File(invoice, "application/pdf","invoice.pdf");
+            }
+            else
+            {
+                return Json(new { success = true, message = "Invoice saved successfully!" });
+
+            }
+        }
+        public async Task<IActionResult> PreviewInvoice()
+        {
+            return View();
         }
     }
 }

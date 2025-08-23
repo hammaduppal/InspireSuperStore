@@ -1,9 +1,14 @@
-﻿using MainModels;
+﻿using System.Text;
+using MainModels;
 using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
+using MarketBal.Helper;
+using MarketBal.Helper.PDF;
 using MarketBal.Repository.Products;
 using Microsoft.EntityFrameworkCore;
+using PuppeteerSharp;
+using PuppeteerSharp.Media;
 
 namespace MarketBal.Repository.POSManager
 {
@@ -28,7 +33,6 @@ namespace MarketBal.Repository.POSManager
             {
                 try
                 {
-                    
                     var commonParams = CommonParamHelper.GetCommonParams();
                     var lastInvoice = await _onedb.InvoiceMasters
                         .OrderByDescending(i => i.CreatedDate)
@@ -50,7 +54,7 @@ namespace MarketBal.Repository.POSManager
                         InvoiceMasterId = Guid.NewGuid(),
                         InvoiceNo = newInvoiceNo,
                         InvoiceDate = commonParams.CreatedOn.Value,
-                       
+
                         CustomerId = (model.CustomerId.HasValue && model.CustomerId.Value != Guid.Empty)
                                         ? model.CustomerId
                                         : null,
@@ -125,7 +129,7 @@ namespace MarketBal.Repository.POSManager
                     await _onedb.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    return 1; 
+                    return 1;
                 }
                 catch (Exception)
                 {
@@ -134,7 +138,55 @@ namespace MarketBal.Repository.POSManager
                 }
             }
         }
-
+        public async Task<byte[]> GenerateInvoiceHTML(InvoiceMasterVM items)
+        {
+            string companyName = "";
+            string companyAddress = "";
+            string companyContact = "";
+            string invoiceNo = "";
+            string invoiceDate = "";
+            string customerName = "";
+            string qrCodeBase64 = "";
+            decimal subTotal = 0;
+            decimal discount = 0;
+            decimal tax = 0;
+            decimal grandTotal = 0;
+            string footerMessage = "";
+            
+            var html = $@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                 <meta charset='UTF-8'>
+                   <style>
+                {ReportHelper.GetCustomCSS()}
+                    </style>
+                </head>
+                <body>
+                <section style='width:80mm; margin:0 auto;'>
+                     <div class=""company-info"">
+                        <h2>My Company Name</h2>
+                        <p>123 Main St, City, Country</p>
+                        <p>Phone: +1234567890 | Email: info@company.com</p>
+                    </div>
+                </section>
+                </body>
+                </html>";
+            var pdfoptions = new PdfOptions
+            {
+                Width = "80mm",       // ✅ POS paper width
+                PrintBackground = true,
+                MarginOptions = new MarginOptions
+                {
+                    Top = "2mm",
+                    Bottom = "2mm",
+                    Left = "2mm",
+                    Right = "2mm"
+                }
+            };
+            var result =    await PdfGenerator.GeneratePdfAsync(html,pdfoptions);
+            return result;
+        }
 
     }
 }

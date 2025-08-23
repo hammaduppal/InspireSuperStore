@@ -419,15 +419,66 @@
 				InvoiceDetails: items
 		};
 
-		console.log("Submitting Invoice:", payload);
-
-		var result = Utility.RequestDataAjax({
-		url:'/POSManager/SaveInvoice',
-		data:payload
+		$.ajax({
+			url: '/POSManager/SaveInvoice',
+			type: 'POST',
+			data: payload,
+			xhrFields: {
+				responseType: 'blob'  // 👈 this is the key
+			},
+			success: function (data) {
+				var blob = new Blob([data], { type: "application/pdf" });
+				var url = URL.createObjectURL(blob);
+				window.open(url, "_blank"); // open in new tab
+			}
 		});
-		if(result.statusCode='200')
-		{
-			location.reload();
+		// 	var result = await Utility.RequestDataAjax({
+		// 	url:'/POSManager/SaveInvoice',
+		// 	data:payload
+		// 	});
+		// 	debugger
+		// 	console.log(result, typeof result, result.constructor.name);
+		// 		if (result instanceof ArrayBuffer) {
+		// 	var blob = new Blob([result], { type: "application/pdf" });
+		// 	var url = URL.createObjectURL(blob);
+		// 	window.open(url, "_blank");
+		// 	}
+		// else {
+		// 	// Otherwise assume JSON or text
+		// 	console.log("JSON Response:", result);
+		// }
+		// if(result.statusCode='200')
+		// {
+		// 	location.reload();
+		// }
+	}
+		async function printInvoice(invoiceId) {
+		try {
+			// Connect to QZ Tray
+			await qz.websocket.connect();
+
+			// Fetch invoice HTML from server
+			const response = await fetch(`/Invoices/GetInvoiceHtml?invoiceId=${invoiceId}`);
+			const html = await response.text();
+
+			// Configure printer (replace with your printer name)
+			const config = qz.configs.create("Your Printer Name");
+
+			// Prepare print data
+			const data = [{
+				type: 'html',
+				format: 'plain',
+				data: html
+			}];
+
+			// Send to printer silently
+			await qz.print(config, data);
+
+			console.log("Invoice printed successfully!");
+		} catch (err) {
+			console.error("Print error:", err);
+		} finally {
+			qz.websocket.disconnect();
 		}
 	}
 
