@@ -89,6 +89,8 @@
 						{
 							<li class="nav-item"><a href="/AdminPanel/AddUser" class="nav-link"><i class="mi-person-add"></i>Add User</a></li>
 							<li class="nav-item"><a href="/AdminPanel/SystemPrefrences" class="nav-link"><i class="mi-security "></i>System Prefrences</a></li>
+							<li class="nav-item"><a href="/AdminPanel/AccountPrefrences" class="nav-link"><i class="mi-security "></i>Account Prefrences</a></li>
+
 
 						}
 
@@ -107,7 +109,18 @@
 				</li>
 			}
 
-		
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="mi-settings"></i> <span>Business Manager</span></a>
+					<ul class="nav nav-group-sub" data-submenu-title="Business Manager">
+						<li class="nav-item"><a href="/AdminPanel/BusinessEntities" class="nav-link"><i class="mi-person"></i>Business Entities</a></li>
+						<li class="nav-item"><a href="/AdminPanel/Organizations" class="nav-link"><i class="mi-person"></i>Organizations</a></li>
+						<li class="nav-item"><a href="/AdminPanel/Branches" class="nav-link"><i class="mi-person"></i>Branches</a></li>
+
+					</ul>
+				</li>
+			}
 
 
 		</ul>

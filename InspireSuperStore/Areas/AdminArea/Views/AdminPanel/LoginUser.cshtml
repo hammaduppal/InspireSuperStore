@@ -1,4 +1,5 @@
 ﻿@using MainModels.DTOModels
+@using MainModels.Util
 @model PagesViewModel
 @{
 	ViewData["Title"] = "EditProduct";
@@ -46,7 +47,9 @@
 				<thead>
 					<tr>
 						<th>UserId</th>
-						<th>Branchid</th>
+						<th>Branch Name</th>
+						<th>Organization Name</th>
+
 
 						<th>CreatedOn</th>
 						<th>Status</th>
@@ -58,8 +61,10 @@
 					{
 						<tr>
 							<td>@item.UserName</td>
-							<td><a href="#">@item.BranchId</a></td>
-							<td>@item.CreatedOn</td>
+							<td><a href="#">@item.PersonVM?.Branch?.BranchName</a></td>
+							<td><a href="#">@item.PersonVM?.Branch?.Organization.OrganizationName</a></td>
+
+							<td>@TimeHelper.GetFormattedTimeSpan( item.CreatedOn.Value)</td>
 							<td>
 								@if (item.IsActive)
 								{
@@ -76,8 +81,6 @@
 							<td class="text-center">
 								<div class="list-icons">
 									<a href="/AdminPanel/EditUser/@item.Id" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a>
-									<a href="#" class="list-icons-item text-danger-600"><i class="icon-trash"></i></a>
-									<a href="#" class="list-icons-item text-teal-600"><i class="icon-cog6"></i></a>
 								</div>
 							</td>
 						</tr>

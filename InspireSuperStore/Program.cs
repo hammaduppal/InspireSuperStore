@@ -2,13 +2,15 @@ using InspireSuperStore.Areas.Notification.Data;
 using InspireSuperStore.Models;
 using MainModels.Models;
 using MainModels.Util;
-using MarketBal.Repository.DCS;
-using MarketBal.Repository.PurchaseRP;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-var builder = WebApplication.CreateBuilder(args);
 
+var builder = WebApplication.CreateBuilder(args);
+var env = builder.Environment;
+
+// Add services to the container.
+builder.Services.AddControllersWithViews();
 builder.Services.AddControllersWithViews()
     .AddRazorOptions(options =>
     {
@@ -72,6 +74,7 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddScoped<NotificationService>();
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

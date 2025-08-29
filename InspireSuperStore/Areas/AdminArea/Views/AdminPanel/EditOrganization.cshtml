@@ -1,0 +1,106 @@
+﻿@using MainModels.DTOModels
+@model OrganizationVM
+<div class="content">
+	
+	<!-- Text inputs -->
+	<div class="card shadow">
+		@using (Html.BeginForm("EditOrganization", "Business", FormMethod.Post, new {@class="", id = "editOrganizationForm" }))
+		{
+			@Html.AntiForgeryToken()
+			@Html.HiddenFor(x => x.OrganizationId, new { Id = "organizationId" })
+			<div class="card-body">
+				<div class="form-group form-group-float">
+					@Html.LabelFor(x => x.OrganizationName, new { @class = "form-group-float-label" })
+					@Html.TextBoxFor(x => x.OrganizationName, new { id = "organizationName", @class = "form-control", required = true, placeholder = "Enter Organization Name",values=Model.OrganizationName })
+				</div>
+				<div class="form-group form-group-float">
+					@Html.LabelFor(x => x.BranchCode, new { @class = "form-group-float-label" })
+					@Html.TextBoxFor(x => x.BranchCode, new { id = "branchCode", @class = "form-control", required = true, placeholder = "Enter Organization Code",value=Model.BranchCode })
+				</div>
+				@{
+					string CreatedOnFormatted = Model.CreatedOn.HasValue ? Model.CreatedOn.Value.ToString("yyyy-MM-dd") : "";
+
+				}
+				<div class="row">
+					<div class="col-lg-4">
+						<div class="form-group form-group-float">
+							@Html.LabelFor(x => x.CreatedOn, new { @class = "form-group-float-label" })
+							@Html.TextBox("CreatedOn", CreatedOnFormatted, new
+								{
+									id = "createdOn",
+									@class = "form-control",
+									
+									placeholder = "Select Created On",
+									type = "date"
+								})
+						</div>
+						</div>
+					</div>
+			
+				
+				<div class="form-group form-group-float">
+					@Html.LabelFor(x => x.IsActive, new { @class = "form-group-float-label" })
+				
+
+					@Html.CheckBoxFor(x => x.IsActive, new { id = "isActive", @class = "form-control",  value = Model.IsActive })
+				</div>
+		
+
+				<div class="modal-footer">
+					<button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn bg-primary">Save changes</button>
+				</div>
+
+			
+
+			</div>
+		}
+		
+	</div>
+	<!-- /text inputs -->
+
+</div>
+<script>
+	$('#editOrganizationForm').submit(function(e){
+		e.preventDefault();
+		
+
+		const validate = Utility.validateFormAndInputs('#editOrganizationForm');
+		const isFormValid = validate();
+			if (isFormValid) {
+					e.preventDefault();
+					var formData = {
+						OrganizationId: $('#organizationId').val(),
+						OrganizationName: $('#organizationName').val(),
+						BranchCode: $('#branchCode').val(),
+						CreatedOn: $('#createdOn').val(),
+						IsActive: $('#isActive').is(':checked') 
+					};
+					
+
+					$.ajax({
+						url: "/AdminPanel/UpdateOrganization/",
+						method: "POST",
+						data: formData,
+						success: function (result) {
+							
+							if(result.statusCode==='200'){
+								Utility.successMessage('Record Updated');
+						$('#modal_large').modal('hide');
+
+							}
+							else{
+								Utility.failMessage('Some issue in Updating Record');
+
+							}
+						},
+						error: function (error) {
+							console.error("Error:", error);
+						}
+					});
+
+
+				}
+
+	});
+</script>

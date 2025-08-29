@@ -7,8 +7,6 @@ using MarketBal.Helper;
 using MarketBal.Helper.PDF;
 using MarketBal.Repository.Products;
 using Microsoft.EntityFrameworkCore;
-using PuppeteerSharp;
-using PuppeteerSharp.Media;
 
 namespace MarketBal.Repository.POSManager
 {
@@ -172,21 +170,45 @@ namespace MarketBal.Repository.POSManager
                 </section>
                 </body>
                 </html>";
-            var pdfoptions = new PdfOptions
-            {
-                Width = "80mm",       // ✅ POS paper width
-                PrintBackground = true,
-                MarginOptions = new MarginOptions
-                {
-                    Top = "2mm",
-                    Bottom = "2mm",
-                    Left = "2mm",
-                    Right = "2mm"
-                }
-            };
-            var result =    await PdfGenerator.GeneratePdfAsync(html,pdfoptions);
+       
+      
+
+            var result = PdfGenerator.GeneratePdf(html);
             return result;
         }
-
+     
+    public enum SizeVM
+    {
+        A0,
+        A1,
+        A2,
+        A3,
+        A4,
+        A5,
+        A6,
+        A7,
+        A8,
+        A9,
+        B0,
+        B1,
+        B2,
+        B3,
+        B4,
+        B5,
+        B6,
+        B7,
+        B8,
+        B9,
+        B10,
+        C5E,
+        Comm10E,
+        Dle,
+        Executive,
+        Folio,
+        Ledger,
+        Legal,
+        Letter,
+        Tabloid
     }
+}
 }

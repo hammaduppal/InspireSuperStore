@@ -1,0 +1,44 @@
+﻿@using MainModels.DTOModels
+@model OrganizationVM
+<div class="content">
+
+
+	<div class="row">
+		<div class="col-md-3">
+			<label class="badge badge-success p2">Organization Name:</label>
+		</div>
+		<div class="col-md-3">
+			<span>@Model.OrganizationName</span>
+		</div>
+	</div>
+	<hr />
+	<div class="row">
+		<div class="col-md-3">
+			<label class="badge badge-success p2">Organization Code</label>
+		</div>
+		<div class="col-md-3">
+			<span>@Model.BranchCode</span>
+		</div>
+	</div>
+	<hr />
+	<div class="row">
+		<div class="col-md-3">
+			<label class="badge badge-success p2">Status</label>
+		</div>
+		<div class="col-md-3">
+			<span >@Model.IsActive</span>
+		</div>
+	</div>
+	<hr />
+
+	<div class="row">
+		<div class="col-md-3">
+			<span class="badge badge-success p2">Created On</span>
+		</div>
+		<div class="col-md-3">
+			<span>@Model.CreatedOn</span>
+		</div>
+	</div>
+	<hr />
+
+</div>

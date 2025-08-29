@@ -8,6 +8,7 @@ using MarketBal.Repository.Products;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using Microsoft.IdentityModel.Abstractions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MarketBal.Repository
 {
@@ -30,9 +31,39 @@ namespace MarketBal.Repository
 
         public async Task<List<LoginUserVM>> GetLoginUser()
         {
-            string query = $@"select  * from Hrm.LoginUsers l where l.Id !=1";
-            var result = await _db.ExecuteQueryList<LoginUserVM>(query);
-            return result.ToList();
+            var r = await _onedb.LoginUsers
+      .Where(x => x.Id != 1)
+      .Select(x => new LoginUserVM
+      {
+          Id = x.Id,
+          UserName = x.UserName,
+          IsActive = x.IsActive.Value,
+          CreatedOn = x.CreatedOn,
+          PersonVM = new PersonVM
+          {
+              FirstName = x.Person.FirstName,
+              LastName = x.Person.LastName,
+              Email = x.Person.Email,
+              MobileNumber = x.Person.MobileNumber,
+              IsActive = x.IsActive,
+              CreatedOn = x.CreatedOn,
+              Branch = new BranchVM
+              {
+                  BranchId = x.Person.Branch.BranchId,
+                  BranchName = x.Person.Branch.BranchName,
+                  Organization = new OrganizationVM
+                  {
+                      OrganizationId = x.Person.Branch.Organization.OrganizationId,
+                      OrganizationName = x.Person.Branch.Organization.OrganizationName
+                  }
+              }
+          }
+      })
+      .ToListAsync();
+            return r;
+            //string query = $@"select  * from Hrm.LoginUsers l where l.Id !=1";
+            //var result = await _db.ExecuteQueryList<LoginUserVM>(query);
+            //return result.ToList();
         }
         public async Task<LoginUserVM> GetLoginUser(int Id)
         {
@@ -368,15 +399,123 @@ namespace MarketBal.Repository
 
 
 
+        public async Task<object> GetOrganizations(DataTableRequest request)
+        {
+            string tableName = "Business.Organizations";
+            var columnMap = new List<string>
+            {
+                "OrganizationId","OrganizationName","BranchCode","IsActive","CreatedOn","ModifiedOn","CreatedBy,IsDeleted"
+            };
+
+            var queries = ParamQueries.BuildDataTableQuery(tableName, "OrganizationName", request, columnMap);
+            int totalRecords = await _db.ExecuteQuery<int>(queries.TotalRecordsQuery);
+            int filteredRecords = await _db.ExecuteQuery<int>(queries.FilteredRecordsQuery);
+            var data = await _db.ExecuteQueryList<OrganizationVM>(queries.DataQuery);
+            return new
+            {
+                draw = request.Draw,
+                recordsTotal = totalRecords,
+                recordsFiltered = filteredRecords,
+                data = data.ToList()
+            };
+        }
+        public async Task<bool> AddOrganization(OrganizationVM request)
+        {
+
+            string query = "INSERT INTO Business.Organizations (OrganizationName, IsActive,CreatedOn,CreatedBy,IsDeleted) " +
+                "VALUES ( @OrganizationName,@IsActive,@CreatedOn,@CreatedBy,@IsDeleted)";
+
+            var parameters = new
+            {
+                OrganizationName = request.OrganizationName,
+                IsActive = 1,
+                CreatedOn = DateTime.Now,
+                CreatedBy = AppDataUtility.SessionUser.Id,
+                IsDeleted = 0
+
+            };
+
+            var data = await _db.ExecuteInsertQueryandParam(query, parameters);
+            return data > 0;
+        }
 
 
+        public async Task<OrganizationVM> GetOrganization(int Id)
+        {
+            string query = $"SELECT * FROM Business.Organizations where OrganizationId='{Id}'";
+            return await _db.ExecuteQuery<OrganizationVM>(query);
+        }
+
+        public async Task<bool> EditOrganization(OrganizationVM request)
+        {
+            string query = @"UPDATE Business.Organizations 
+                     SET 
+                         OrganizationName = @OrganizationName, 
+                         IsActive = @IsActive, 
+                         ModifiedOn = @ModifiedOn
+                     WHERE 
+                         OrganizationId = @OrganizationId";
+
+            var parameters = new
+            {
+                OrganizationId = request.OrganizationId, // ID of the organization to be updated
+                OrganizationName = request.OrganizationName,
+
+                IsActive = request.IsActive,
+                ModifiedOn = DateTime.Now, // Current timestamp for update
+            };
+
+            var result = await _db.ExecuteInsertQueryandParam(query, parameters);
+
+            return true;
+        }
+
+        public async Task<bool> RemoveOrganization(int Id)
+        {
+            string query = $"UPDATE Business.Organizations SET IsDeleted=1 WHERE OrganizationId={Id}";
+            var result = await _db.ExecuteInsertQueryandParam(query);
+
+            return result > 0;
+        }
+
+        public async Task<bool> UpdateOrganization(int Id, int IsActive)
+        {
+            string query = $"UPDATE Business.Organizations SET IsActive={IsActive} WHERE OrganizationId={Id}";
+            var result = await _db.ExecuteInsertQueryandParam(query);
+
+            return result > 0;
+        }
         public async Task<List<OrganizationVM>> GetOrganizations()
         {
-            return await _onedb.Organizations.Select(x => new OrganizationVM
+            return await _onedb.Organizations.Where(x => x.IsActive == true && x.IsDeleted == false).Select(x => new OrganizationVM
             {
                 OrganizationId = x.OrganizationId,
                 OrganizationName = x.OrganizationName
             }).ToListAsync();
+        }
+        public async Task<bool> AddBranch(BranchVM request)
+        {
+
+            string query = $@"INSERT INTO Business.Branches (BranchId,BranchName,OrganizationId, BranchCode,BusinessCategoryId,BusinessEntityTypeId) 
+                VALUES (
+NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessCategoryId)";
+
+            var parameters = new
+            {
+                BranchName = request.BranchName,
+                OrganizationId = request.OrganizationId,
+                BranchCode = request.BranchCode,
+                request.BusinessEntityTypeId,
+                request.BusinessCategoryId,
+                IsActive = 1,
+                CreatedOn = DateTime.Now,
+                CreatedBy = AppDataUtility.SessionUser.Id,
+                IsDeleted = 0
+
+            };
+
+            var data = await _db.ExecuteInsertQueryandParam(query, parameters);
+            return data > 0;
         }
         public async Task<List<BranchVM>> GetBranches(int OrganizationId)
         {
@@ -968,12 +1107,118 @@ VALUES
                 return result;
             }
         }
+        public async Task<SystemPreferencesVM> GetSystemPreferences(Guid branchid)
+        {
+            var result = await _onedb.SystemPreferences.Where(x => x.BranchId == branchid)
+
+                .Select(x => new SystemPreferencesVM
+                {
+                    // General Settings
+                    CompanyName = x.CompanyName,
+                    IsRestaurantApplication = x.IsRestaurantApplication,
+                    CompanyLogoUrl = x.CompanyLogoUrl,
+                    DefaultLanguage = x.DefaultLanguage,
+                    TimeZone = x.TimeZone,
+                    DateFormat = x.DateFormat,
+                    CurrencyCode = x.CurrencyCode,
+                    CurrencySymbol = x.CurrencySymbol,
+                    DecimalPlaces = x.DecimalPlaces,
+                    IsAffilatedInvoice = x.IsAffilatedInvoice,
+
+                    // Tax & Financial
+                    EnableTax = x.EnableTax,
+                    DefaultTaxRate = x.DefaultTaxRate,
+                    TaxRegistrationNumber = x.TaxRegistrationNumber,
+                    PricesIncludeTax = x.PricesIncludeTax,
+
+                    // Inventory & Sales
+                    EnableInventoryTracking = x.EnableInventoryTracking,
+                    DefaultWarehouse = x.DefaultWarehouse,
+                    LowStockThreshold = x.LowStockThreshold,
+                    AllowNegativeStock = x.AllowNegativeStock,
+
+                    // Invoice & Document Settings
+                    InvoicePrefix = x.InvoicePrefix,
+                    InvoiceStartNumber = x.InvoiceStartNumber,
+                    QuotationPrefix = x.QuotationPrefix,
+                    ReceiptPrefix = x.ReceiptPrefix,
+                    ShowLogoOnInvoices = x.ShowLogoOnInvoices,
+                    ShowTaxBreakdown = x.ShowTaxBreakdown,
+
+                    // User & Security
+                    EnableTwoFactorAuth = x.EnableTwoFactorAuth,
+                    SessionTimeoutMinutes = x.SessionTimeoutMinutes,
+                    AllowMultipleLogins = x.AllowMultipleLogins,
+
+                    // Email & Communication
+                    SmtpServer = x.SmtpServer,
+                    SmtpPort = x.SmtpPort,
+                    SmtpUserName = x.SmtpUserName,
+                    SmtpPassword = x.SmtpPassword,
+                    EnableSsl = x.EnableSsl,
+                    DefaultFromEmail = x.DefaultFromEmail,
+
+                    // Other Options
+                    EnableAutoBackup = x.EnableAutoBackup,
+                    AutoBackupIntervalDays = x.AutoBackupIntervalDays,
+                    BackupLocation = x.BackupLocation
+                })
+                .FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return new SystemPreferencesVM();
+            }
+            else
+            {
+                return result;
+            }
+        }
+        public async Task<AccountingPreferencesVM> GetAccountPrefrences(Guid branchid)
+        {
+            var result = await _onedb.AccountingPreferences
+      .Where(x => x.BranchId == branchid)
+      .Select(x => new AccountingPreferencesVM
+      {
+          FiscalYearStartMonth = x.FiscalYearStartMonth,
+          FiscalYearEndMonth = x.FiscalYearEndMonth,
+          FiscalYearStartDate = x.FiscalYearStartDate,
+          FiscalYearEndDate = x.FiscalYearEndDate,
+
+          EnableMultiCurrency = x.EnableMultiCurrency,
+          BaseCurrencyCode = x.BaseCurrencyCode,
+          DefaultExchangeRateSource = x.DefaultExchangeRateSource,
+
+          EnableAutomaticYearClosing = x.EnableAutomaticYearClosing,
+          LockTransactionsAfterPeriodClose = x.LockTransactionsAfterPeriodClose,
+
+          DefaultSalesAccount = x.DefaultSalesAccount,
+          DefaultPurchaseAccount = x.DefaultPurchaseAccount,
+          DefaultTaxAccount = x.DefaultTaxAccount,
+
+          AllowBackDatedTransactions = x.AllowBackDatedTransactions
+      })
+      .FirstOrDefaultAsync();
+
+
+            if (result == null)
+            {
+                return new AccountingPreferencesVM();
+            }
+            else
+            {
+                return result;
+            }
+        }
         public async Task<List<BranchVM>> GetBranches()
         {
-            return await _onedb.Branches.Select(x => new BranchVM
+            return await _onedb.Branches.Where(x => x.Organization.IsActive == true).Select(x => new BranchVM
             {
                 BranchId = x.BranchId,
-                BranchName = x.BranchName
+                BranchName = x.BranchName,
+                OrganizationName = x.Organization.OrganizationName,
+                BranchCode = x.BranchCode
+
             }).ToListAsync();
         }
         public async Task<int> SavePrefrences(SystemPreferencesVM model)
@@ -1098,7 +1343,154 @@ VALUES
 
             return await _onedb.SaveChangesAsync();
         }
+        public async Task<int> SaveAccountingPreferences(AccountingPreferencesVM model)
+        {
+            // Try to find existing preferences for this BranchId
+            var existing = await _onedb.AccountingPreferences
+                .FirstOrDefaultAsync(x => x.BranchId == model.BranchId);
 
+            if (existing != null)
+            {
+                // Update existing record
+                existing.FiscalYearStartMonth = model.FiscalYearStartMonth;
+                existing.FiscalYearEndMonth = model.FiscalYearEndMonth;
+                existing.FiscalYearStartDate = model.FiscalYearStartDate;
+                existing.FiscalYearEndDate = model.FiscalYearEndDate;
+
+                existing.EnableMultiCurrency = model.EnableMultiCurrency;
+                existing.BaseCurrencyCode = model.BaseCurrencyCode;
+                existing.DefaultExchangeRateSource = model.DefaultExchangeRateSource;
+
+                existing.EnableAutomaticYearClosing = model.EnableAutomaticYearClosing;
+                existing.LockTransactionsAfterPeriodClose = model.LockTransactionsAfterPeriodClose;
+
+                existing.DefaultSalesAccount = model.DefaultSalesAccount;
+                existing.DefaultPurchaseAccount = model.DefaultPurchaseAccount;
+                existing.DefaultTaxAccount = model.DefaultTaxAccount;
+
+                existing.AllowBackDatedTransactions = model.AllowBackDatedTransactions;
+
+                _onedb.AccountingPreferences.Update(existing);
+            }
+            else
+            {
+                // Insert new
+                var entity = new AccountingPreference
+                {
+                    AccountingPreferenceId = Guid.NewGuid(),
+                    BranchId = model.BranchId,
+
+                    FiscalYearStartMonth = model.FiscalYearStartMonth,
+                    FiscalYearEndMonth = model.FiscalYearEndMonth,
+                    FiscalYearStartDate = model.FiscalYearStartDate,
+                    FiscalYearEndDate = model.FiscalYearEndDate,
+
+                    EnableMultiCurrency = model.EnableMultiCurrency,
+                    BaseCurrencyCode = model.BaseCurrencyCode,
+                    DefaultExchangeRateSource = model.DefaultExchangeRateSource,
+
+                    EnableAutomaticYearClosing = model.EnableAutomaticYearClosing,
+                    LockTransactionsAfterPeriodClose = model.LockTransactionsAfterPeriodClose,
+
+                    DefaultSalesAccount = model.DefaultSalesAccount,
+                    DefaultPurchaseAccount = model.DefaultPurchaseAccount,
+                    DefaultTaxAccount = model.DefaultTaxAccount,
+
+                    AllowBackDatedTransactions = model.AllowBackDatedTransactions
+                };
+
+                await _onedb.AccountingPreferences.AddAsync(entity);
+            }
+
+            return await _onedb.SaveChangesAsync();
+        }
+
+
+        public async Task<IEnumerable<BusinessEntityTypeVM>> GetEntities()
+        {
+            return await _db.ExecuteQueryList<BusinessEntityTypeVM>("SELECT * FROM Business.BusinessEntityType");
+        }
+
+        public async Task<IEnumerable<BusinessCategoryVM>> GetBusinessCategories()
+        {
+            return await _db.ExecuteQueryList<BusinessCategoryVM>("SELECT * FROM Business.BusinessCategory");
+        }
+
+        public async Task<int> AddBusinessEntity(BusinessEntityTypeVM model)
+        {
+            string query = $@"
+
+    IF EXISTS (
+        SELECT 1 
+        FROM Business.BusinessEntityType
+        WHERE BusinessEntityTypeName = '{model.BusinessEntityTypeName}'
+    )
+    BEGIN
+        SELECT -2 AS Result;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO Business.BusinessEntityType (
+            BusinessEntityTypeId, BusinessEntityTypeName, IsActive, CreatedBy, CreatedOn
+        )
+        VALUES (
+            (SELECT ISNULL(MAX(BusinessEntityTypeId), 0) + 1 FROM Business.BusinessEntityType),
+            @BusinessEntityTypeName, @IsActive, @CreatedBy, @CreatedOn
+        );
+
+        SELECT SCOPE_IDENTITY() AS Result;
+    END";
+
+            var param = new
+            {
+                BusinessEntityTypeName = model.BusinessEntityTypeName,
+                IsActive = 1,
+                CreatedBy = AppDataUtility.SessionUser.Id,
+                CreatedOn = DateTime.Now
+            };
+
+            return await _db.ExecuteInsertQueryandParam(query, param);
+
+        }
+
+        public async Task<int> AddBusinessCategory(BusinessCategoryVM model)
+        {
+            string query = $@"
+
+    IF EXISTS (
+        SELECT 1 
+        FROM Business.BusinessCategory
+        WHERE BusinessCategoryName = '{model.BusinessCategoryName}'
+    )
+    BEGIN
+        SELECT -2 AS Result;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO Business.BusinessCategory (
+            BusinessCategoryId, BusinessCategoryName, IsActive, CreatedBy, CreatedOn
+        )
+        VALUES (
+            (SELECT ISNULL(MAX(BusinessCategoryId), 0) + 1 FROM Business.BusinessCategory),
+            @BusinessCategoryName, @IsActive, @CreatedBy, @CreatedOn
+        );
+
+        SELECT SCOPE_IDENTITY() AS Result;
+    END";
+
+            var param = new
+            {
+                BusinessCategoryName = model.BusinessCategoryName,
+                IsActive = 1,
+                CreatedBy = AppDataUtility.SessionUser.Id,
+                CreatedOn = DateTime.Now
+            };
+
+            return await _db.ExecuteInsertQueryandParam(query, param);
+
+
+
+        }
 
 
     }

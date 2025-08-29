@@ -1,0 +1,76 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+
+
+<div class="row">
+
+	<div class="col-lg-4">
+		<div class="form-group">
+			<label>Country:</label>
+			<select id="organizationId" data-placeholder="Enter 'Organization Name'" class="form-control select-minimum" data-fouc>
+				<option>Select Organization</option>
+				<optgroup label="Organization">
+					@if (Model.Organizations != null)
+					{
+						@foreach (var organization in Model.Organizations)
+						{
+							<option value="@organization.OrganizationId">@organization.OrganizationName</option>
+						}
+					}
+
+				</optgroup>
+			</select>
+		</div>
+	</div>
+
+	<div class="col-lg-4">
+		<div class="form-group">
+			<label>Select Branch:</label>
+			<select id="branch" data-placeholder="Enter 'Branch'" class="form-control select-minimum" data-fouc>
+				<option>Select</option>
+				<optgroup label="Branch">
+
+				</optgroup>
+			</select>
+		</div>
+	</div>
+
+
+</div>
+
+<script>
+
+	$(document).ready(function () {
+		$('#organizationId').change(async function () {
+			var OrganizationId = $(this).val();
+			var branches = await GetBranches(OrganizationId); // Fetch branches instead of states
+
+			$('#branch').empty(); // Clear branch dropdown
+
+			branches.forEach(function (branch) {
+				$('#branch').append(`<option value="${branch.BranchId}">${branch.BranchName}</option>`); // Populate branch dropdown
+			});
+
+			
+		});
+
+	
+		async function GetBranches(Id) {
+			var formData = {
+				OrganizationId: Id
+			};
+
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/GetBranchesByOrganizationId/' // Updated URL to reflect branch fetching
+			};
+
+			const result = await Utility.RequestDataAjax(objectData);
+			return result;
+		}
+	});
+
+
+
+
+</script>

@@ -31,14 +31,13 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             _adminPanel = new AdminPanelRepository(_config, _oneDb);
             _account = new AccountRepository(_config);
         }
-
+        #region Users
         public async Task<IActionResult> LoginUser()
         {
             vm.LoginUsers = await _adminPanel.GetLoginUser();
 
             return View(vm);
         }
-        [AllowAnonymous]
         [HttpGet]
         [Route("/AdminPanel/EditUser/{Id}")]
         public async Task<IActionResult> EditUser(int Id)
@@ -73,35 +72,6 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             {
                 return Json(new { statusCode = "300", Message = "Unable to Update Roles" });
             }
-        }
-        [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetStatesByCountryId(StateProvinceVM vm)
-        {
-            var result = await _adminPanel.GetStatesByCountryId(vm.CountryId);
-            return Json(result);
-        }
-        [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetCityByStateId(CityVM vm)
-        {
-            var result = await _adminPanel.GetCityByStateId(vm.StateProvinceId);
-            return Json(result);
-        }
-        public async Task<IActionResult> UpdateAddress(LaneAddressVM formData)
-        {
-            var result = await _adminPanel.UpdateAddress(formData);
-
-            if (result > 0)
-            {
-                return Json(new { statusCode = "200", Message = "Address  Updated" });
-            }
-            else
-            {
-                return Json(new { statusCode = "300", Message = "Unable to Update Address" });
-            }
-
-
         }
         public async Task<IActionResult> AddUser()
         {
@@ -170,13 +140,241 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         }
 
 
+        #endregion
+        
+        #region RegionManagement
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetStatesByCountryId(StateProvinceVM vm)
+        {
+            var result = await _adminPanel.GetStatesByCountryId(vm.CountryId);
+            return Json(result);
+        }
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetCityByStateId(CityVM vm)
+        {
+            var result = await _adminPanel.GetCityByStateId(vm.StateProvinceId);
+            return Json(result);
+        }
+        public async Task<IActionResult> UpdateAddress(LaneAddressVM formData)
+        {
+            var result = await _adminPanel.UpdateAddress(formData);
+
+            if (result > 0)
+            {
+                return Json(new { statusCode = "200", Message = "Address  Updated" });
+            }
+            else
+            {
+                return Json(new { statusCode = "300", Message = "Unable to Update Address" });
+            }
 
 
+        }
+
+        #endregion
+     
+        #region OrganizationRegion
+        public IActionResult Organizations()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> GetOrganizations(DataTableRequest request)
+        {
+            var res = await _adminPanel.GetOrganizations(request);
+            return Json(res);
+        }
+        public IActionResult AddOrganizationView(int Id)
+        {
+
+            return PartialView();
+        }
+        [HttpPost]
+        public async Task<IActionResult> AddOrganization(OrganizationVM model)
+        {
+            var res = await _adminPanel.AddOrganization(model);
+            if (res)
+            {
+                return Json(new { statusCode = "200" });
+            }
+            return Json(new { statusCode = "300" });
+        }
+
+        public async Task<IActionResult> GetOrganization(OrganizationVM model)
+        {
+            var res = await _adminPanel.GetOrganization(model.OrganizationId);
+
+            return PartialView(res);
+        }
+        public async Task<IActionResult> EditOrganization(OrganizationVM model)
+        {
+            var res = await _adminPanel.GetOrganization(model.OrganizationId);
+
+            return PartialView(res);
+        }
+        public async Task<IActionResult> UpdateOrganization(OrganizationVM model)
+        {
+            var res = await _adminPanel.EditOrganization(model);
+            if (res)
+            {
+                return Json(new { statusCode = "200" });
+            }
+            else
+            {
+                return Json(new { statusCode = "300" });
+
+            }
+        }
+        public async Task<IActionResult> RemoveOrganization(OrganizationVM model)
+        {
+            var res = await _adminPanel.RemoveOrganization(model.OrganizationId);
+            if (res)
+            {
+                return Json(new { statusCode = "200" });
+            }
+            return Json(new { statusCode = "300" });
+
+        }
+        public async Task<IActionResult> ActiveUnactiveOrganization(OrganizationVM model)
+        {
+            var res = await _adminPanel.UpdateOrganization(model.OrganizationId, model.IsActive ? 1 : 0);
+            if (res)
+            {
+                return Json(new { statusCode = "200" });
+            }
+            return Json(new { statusCode = "300" });
+
+        }
+        #endregion
+        #region BranchRegion
         public async Task<IActionResult> GetBranchesByOrganizationId(OrganizationVM model)
         {
             var result = await _adminPanel.GetBranches(model.OrganizationId);
             return Json(result);
         }
+        public async Task<IActionResult> Branches()
+        {
+            vm.Branches = await _adminPanel.GetBranches();
+            return View(vm);
+        }
+     
+        public async Task<IActionResult> AddBranchView()
+        {
+            vm.Organizations = await _adminPanel.GetOrganizations();
+            vm.BusinessEntities = await _adminPanel.GetEntities();
+            vm.BusinessCategories = await _adminPanel.BusinessCategories();
+            return PartialView(vm);
+        }
+        [HttpPost]
+        public async Task<IActionResult> AddBranch(BranchVM model)
+        {
+            var res = await _adminPanel.AddBranch(model);
+            if (res)
+            {
+                return Json(new { statusCode = "200" });
+            }
+            return Json(new { statusCode = "300" });
+        }
+
+        public async Task<IActionResult> GetBranch(OrganizationVM model)
+        {
+            var res = await _adminPanel.GetOrganization(model.OrganizationId);
+
+            return PartialView(res);
+        }
+        public async Task<IActionResult> EditBranch(OrganizationVM model)
+        {
+            var res = await _adminPanel.GetOrganization(model.OrganizationId);
+
+            return PartialView(res);
+        }
+        public async Task<IActionResult> UpdateBranch(OrganizationVM model)
+        {
+            var res = await _adminPanel.EditOrganization(model);
+            if (res)
+            {
+                return Json(new { statusCode = "200" });
+            }
+            else
+            {
+                return Json(new { statusCode = "300" });
+
+            }
+        }
+        public async Task<IActionResult> RemoveBranch(OrganizationVM model)
+        {
+            var res = await _adminPanel.RemoveOrganization(model.OrganizationId);
+            if (res)
+            {
+                return Json(new { statusCode = "200" });
+            }
+            return Json(new { statusCode = "300" });
+
+        }
+        public async Task<IActionResult> ActiveUnactiveBranch(OrganizationVM model)
+        {
+            var res = await _adminPanel.UpdateOrganization(model.OrganizationId, model.IsActive ? 1 : 0);
+            if (res)
+            {
+                return Json(new { statusCode = "200" });
+            }
+            return Json(new { statusCode = "300" });
+
+        }
+        #endregion
+        #region BusinessFeatures
+        public async Task<IActionResult> BusinessEntities()
+        {
+            vm.BusinessEntities = await _adminPanel.GetEntities();
+            vm.BusinessCategories = await _adminPanel.GetBusinessCategories();
+            return View(vm);
+        }
+        public async Task<IActionResult> AddBusinessEntity(BusinessEntityTypeVM model)
+        {
+            var result = await _adminPanel.AddBusinessEntity(model);
+            if (result == -1)
+            {
+                return Json(new { statusCode = "210" });
+
+            }
+            else if (result == 1)
+            {
+                return Json(new { statusCode = "200" });
+
+            }
+            else
+            {
+                return Json(new { statusCode = "300" });
+
+            }
+        }
+        public async Task<IActionResult> AddBusinessCategory(BusinessCategoryVM model)
+        {
+            var result = await _adminPanel.AddBusinessCategory(model);
+            if (result == -1)
+            {
+                return Json(new { statusCode = "210" });
+
+            }
+            else if (result == 1)
+            {
+                return Json(new { statusCode = "200" });
+
+            }
+            else
+            {
+                return Json(new { statusCode = "300" });
+
+            }
+        }
+
+
+
+        #endregion
+
+
         [AllowAnonymous]
         public async Task<IActionResult> StartupSettings()
         {
@@ -351,12 +549,26 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         public async Task<IActionResult> SystemPrefrences(CustomerVM model)
         {
            vm.SystemPreferences = await _adminPanel.GetSystemPreferences();
+            vm.Organizations = await _adminPanel.GetOrganizations();
             vm.Branches= await _adminPanel.GetBranches();
             return View(vm);
         }
+        public async Task<IActionResult> GetSystemPrefrences(CustomerVM model)
+        {
+            vm.SystemPreferences = await _adminPanel.GetSystemPreferences(model.BranchId.Value);
+            return PartialView(vm);
+        }
         public async Task<IActionResult> AccountPrefrences(CustomerVM model)
         {
-            return View();
+            vm.SystemPreferences = await _adminPanel.GetSystemPreferences();
+            vm.Organizations = await _adminPanel.GetOrganizations();
+            vm.Branches = await _adminPanel.GetBranches();
+            return View(vm);
+        }
+        public async Task<IActionResult> GetAccountPrefrences(CustomerVM model)
+        {
+            vm.AccountingPreferences = await _adminPanel.GetAccountPrefrences(model.BranchId.Value);
+            return PartialView(vm);
         }
         [HttpPost]
         public async Task<IActionResult> SaveSystemPrefrences(SystemPreferencesVM model, IFormFile? CompanyLogoFile)
@@ -364,5 +576,12 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             var result = await _adminPanel.SavePrefrences(model);
             return Json(new { });
         }
+        [HttpPost]
+        public async Task<IActionResult> SaveAccountingPreferences(AccountingPreferencesVM model)
+        {
+            var result = await _adminPanel.SaveAccountingPreferences(model);
+            return Json(new { });
+        }
+
     }
 }

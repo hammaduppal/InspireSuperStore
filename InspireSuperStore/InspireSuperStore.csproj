@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DinkToPdf" Version="1.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.7" />
@@ -34,6 +35,18 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Repositories\MainModels\MainModels\MainModels.csproj" />
     <ProjectReference Include="..\MarketBal\MarketBal.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="libwkhtmltox.a">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="wkhtmltopdf.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="libwkhtmltox.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

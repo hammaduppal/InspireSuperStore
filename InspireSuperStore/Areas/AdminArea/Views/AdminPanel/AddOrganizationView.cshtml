@@ -1,0 +1,69 @@
+﻿@using MainModels.DTOModels
+@model OrganizationVM
+@using (Html.BeginForm("AddOrganization", "Business", FormMethod.Post, new { Id = "addOrganizationForm" }))
+{
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-12">
+				@Html.LabelFor(x => x.OrganizationName)
+				@Html.TextBoxFor(x => x.OrganizationName, new { id = "organizationName", @class = "form-control", required = true, placeholder = "Enter Organization Name" })
+			
+			</div>
+		</div>
+	</div>
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-12">
+				@Html.LabelFor(x => x.BranchCode)
+				@Html.TextBoxFor(x => x.BranchCode, new { id = "brarnchCode", @class = "form-control", required = true, placeholder = "Enter Branch Code" })
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
+		<button type="submit" class="btn bg-primary">Submit form</button>
+	</div>
+}
+
+
+<script>
+	$('#addOrganizationForm').submit(function(e)
+	{
+		e.preventDefault();
+		const validate = Utility.validateFormAndInputs('#addOrganizationForm');
+		const isFormValid = validate();
+			if (isFormValid) {
+					e.preventDefault();
+					var formData = {
+						OrganizationName: $('#organizationName').val(),
+						BranchCode: $('#brarnchCode').val(),
+					}
+
+					$.ajax({
+						url: "/AdminPanel/AddOrganization/",
+						method: "POST",
+						data: formData,
+						success: function (result) {
+							// Decrypt server response
+							if(result.statusCode==='200'){
+								Utility.successMessage('Record Added Successfully');
+								location.reload();
+								debugger
+							}
+							else{
+								Utility.failMessage('Unable to Update Record');
+
+							}
+						},
+						error: function (error) {
+							console.error("Error:", error);
+						}
+					});
+
+
+				}
+
+	});
+
+</script>
+

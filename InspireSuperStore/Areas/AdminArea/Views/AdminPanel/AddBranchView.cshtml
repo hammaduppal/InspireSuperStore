@@ -1,0 +1,109 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@using (Html.BeginForm("AddBranch", "Business", FormMethod.Post, new { Id = "addBranchForm" }))
+{
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-12">
+				<div class="row">
+					<div class="col-md-4">
+						<select id="organization" class="form-control">
+							@foreach (var item in Model.Organizations)
+							{
+								<option value="@item.OrganizationId">
+									@item.OrganizationName
+								</option>
+							}
+						</select>
+					</div>
+					<div class="col-md-4">
+						<select id="businessEntityTypeId" class="form-control">
+							@foreach (var item in Model.BusinessEntities)
+							{
+								<option value="@item.BusinessEntityTypeId">
+									@item.BusinessEntityTypeName
+								</option>
+							}
+						</select>
+					</div>
+					<div class="col-md-4">
+						<select id="businessCategoryId" class="form-control">
+							@foreach (var item in Model.BusinessCategories)
+							{
+								<option value="@item.BusinessCategoryId">
+									@item.BusinessCategoryName
+								</option>
+							}
+						</select>
+					</div>
+
+				</div>
+			
+
+			</div>
+			<div class="col-sm-12">
+				<label>Branch Name</label>
+				<input type="text" placeholder="Enter Branch Name" id="branchName" class="form-control" />
+			</div>
+		</div>
+	</div>
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-12">
+				<label>Branch Code</label>
+				<input type="text" placeholder="Enter Branch Code" id="brarnchCode" class="form-control" />
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
+		<button type="submit" class="btn bg-primary">Submit form</button>
+	</div>
+}
+
+
+<script>
+	$('#addBranchForm').submit(function(e)
+	{
+		e.preventDefault();
+		const validate = Utility.validateFormAndInputs('#addBranchForm');
+		const isFormValid = validate();
+			if (isFormValid) {
+					e.preventDefault();
+					var formData = {
+						branchName: $('#branchName').val(),
+						BranchCode: $('#brarnchCode').val(),
+						OrganizationId:$('#organization').val(),
+						BusinessEntityTypeId:$('#businessEntityTypeId').val(),
+						BusinessCategoryId:$('#businessCategoryId').val(),
+
+					}
+
+					$.ajax({
+						url: "/AdminPanel/AddBranch/",
+						method: "POST",
+						data: formData,
+						success: function (result) {
+							// Decrypt server response
+							if(result.statusCode==='200'){
+								Utility.successMessage('Record Added Successfully');
+								location.reload();
+								debugger
+							}
+							else{
+								Utility.failMessage('Unable to Update Record');
+
+							}
+						},
+						error: function (error) {
+							console.error("Error:", error);
+						}
+					});
+
+
+				}
+
+	});
+
+</script>
+

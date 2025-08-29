@@ -1,0 +1,181 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Organization";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<!-- Page header -->
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+		<div class="page-title d-flex">
+			<h4> <span class="font-weight-semibold">Branches</span> </h4>
+		</div>
+
+		<div class="header-elements d-none">
+			<div class="d-flex justify-content-center">
+				<a href="#" class="btn btn-success addBranch">Add Branch</a>
+
+			</div>
+		</div>
+	</div>
+
+	<div class="breadcrumb-line breadcrumb-line-light header-elements-md-inline">
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+				<span class="breadcrumb-item active">Branches</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+
+
+	</div>
+</div>
+<!-- /page header -->
+<!-- Content area -->
+<div class="content">
+
+	<!-- Basic responsive table -->
+	<div class="card shadow">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Branches</h5>
+			<div class="header-elements">
+				<div class="list-icons">
+					<a class="list-icons-item" data-action="collapse"></a>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="table-responsive">
+			<table id="BranchTable" class="table  table-bordered table-striped table-hover  ">
+				<thead>
+					<tr>
+						<th class="text-center">Serial#</th>
+						<th class="text-center">Branch Name</th>
+						<th class="text-center">Organization Name</th>
+						<th class="text-center">Branch Code</th>
+
+						<th class="text-center" style="width: 30px;"><i class="icon-menu-open2"></i></th>
+					</tr>
+				</thead>
+				<tbody>
+					@{
+						int i = 1;
+					}
+					@foreach (var item in Model.Branches)
+					{
+						<tr>
+							<td>@i</td>
+							<td><a href="#">@item.BranchName</a></td>
+							<td>@item.OrganizationName</td>
+							<td>@item.BranchCode</td>
+						
+						</tr>
+
+					}
+				
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<!-- /basic responsive table -->
+</div>
+<script>
+	$(document).ready(function(){
+		$('.addBranch').click(function(e){
+
+			e.preventDefault();
+			$.ajax({
+				url:'/AdminPanel/AddBranchView',
+				method:'POST',
+				success:function(e){
+					$('.full-modal-title').html('Add Organization');
+					$('.full-modal-body').html(e);
+					$('#modal_full').modal('show');
+				}
+			})
+		});
+
+		$(document).on('click', '.view', function (e) {
+				e.preventDefault();
+				var Id = $(this).attr('data-value');
+				var formData={
+				OrganizationId:Id
+				}
+				$.ajax({
+					url:'/AdminPanel/GetOrganization',
+					method:'POST',
+					data:formData,
+					success:function(e){
+						console.log(e);
+						$('.full-modal-title').html('View Organization');
+						$('.full-modal-body').html(e);
+						$('#modal_full').modal('show');
+					}
+				})
+			});
+				$(document).on('click', '.edit', function (e) {
+				e.preventDefault();
+				var Id = $(this).attr('data-value');
+				var formData={
+				OrganizationId:Id
+				}
+				$.ajax({
+					url:'/AdminPanel/EditOrganization',
+					method:'POST',
+					data:formData,
+					success:function(e){
+						$('.full-modal-title').html('Edit Organization');
+						$('.full-modal-body').html(e);
+						$('#modal_full').modal('show');
+					}
+				})
+			});
+				$(document).on('click', '.remove', function (e) {
+				e.preventDefault();
+				var Id = $(this).attr('data-value');
+				var formData={
+				OrganizationId:Id
+				}
+				$.ajax({
+					url:'/AdminPanel/RemoveOrganization',
+					method:'POST',
+					data:formData,
+					success:function(e){
+								Utility.successMessage('Record Added');
+					branchTable.ajax.reload(null, false);
+					  }
+				})
+			});
+			$(document).on('click', '.activeUnactive', function (e) {
+				e.preventDefault();
+				var Id = $(this).attr('data-value');
+				var formData={
+				OrganizationId:Id,
+					IsActive: $(this).is(':checked')
+					}
+				$.ajax({
+					url:'/AdminPanel/ActiveUnactiveOrganization',
+					method:'POST',
+					data:formData,
+					success:function(result){
+							if(result.statusCode==='200'){
+								Utility.successMessage('Record Updated');
+								location.reload();
+							}
+							else{
+								Utility.failMessage('Some issue in Updating Record');
+
+							}
+					}
+				})
+			});
+
+
+	})
+</script>
