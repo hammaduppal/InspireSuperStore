@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Areas\AdminArea\Views\AdminPanel\StartupSettings.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DinkToPdf" Version="1.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.7" />

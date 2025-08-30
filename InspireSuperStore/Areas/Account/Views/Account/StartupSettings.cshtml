@@ -1,0 +1,300 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+	ViewData["Title"] = "StartupSettings";
+	Layout = "~/Views/Shared/_SettingsLayout.cshtml";
+}
+
+<!-- Wizard with validation -->
+<div class="content">
+
+	<div class="card shadow-5 mt-5">
+		<div class="card-header bg-white header-elements-inline">
+			<h6 class="card-title">Start up Wizard</h6>
+
+		</div>
+
+		<form class="wizard-form steps-validation" action="#" data-fouc>
+			<h6>Organization data</h6>
+			<fieldset>
+
+				<div class="row">
+					<div class="col-md-4">
+						<div class="form-group">
+							<label>Organization Name: <span class="text-danger">*</span></label>
+							<input id="organizationName" type="text" name="businessName" class="form-control required" placeholder="Nestle" />
+						</div>
+					</div>
+
+					<div class="col-md-4">
+						<div class="form-group">
+							<label>Branch Name / Type: <span class="text-danger">*</span></label>
+							<input id="branchName" type="text" name="branchName" class="form-control required" placeholder="Head Office / Warehouse / Main Branch" />
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="form-group">
+							<label>Website: <span class="text-danger">*</span></label>
+							<input id="webSite" type="text" name="webSite" class="form-control required" placeholder="WebSite" />
+						</div>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-6">
+						<div class="form-group form-check">
+							<label>Business Category <span class="text-danger">*</span></label>
+							<select id="businessCategory" name="businessCategory" class="form-control required" required>
+								<option value="">Select Value</option>
+								@foreach (var item in Model.BusinessCategories)
+								{
+									<option value="@item.BusinessCategoryId">
+										@item.BusinessCategoryName
+									</option>
+								}
+							</select>
+
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="form-group">
+							<label>Business Category <span class="text-danger">*</span></label>
+							<select id="businessEntity" name="businessEntity" class="form-control required" required>
+								<option value="">Select Value</option>
+								@foreach (var item in Model.BusinessEntities)
+								{
+									<option value="@item.BusinessEntityTypeId">
+										@item.BusinessEntityTypeName
+									</option>
+								}
+							</select>
+
+						</div>
+					</div>
+				</div>
+			</fieldset>
+
+			<h6>Admin Email</h6>
+			<fieldset>
+				<div class="row">
+					<div class="col-md-6">
+						<div class="form-group">
+							<label>Email: <span class="text-danger">*</span></label>
+							<input id="email" type="email" readonly name="email" placeholder="Email" class="form-control required" />
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="form-group">
+							<label>Password: <span class="text-danger">*</span></label>
+							<input id="password" type="password" name="password" placeholder="Password" class="form-control required" />
+						</div>
+					</div>
+
+				</div>
+
+
+			</fieldset>
+
+			<h6>Your experience</h6>
+			<fieldset>
+				<div class="row" style="min-height:200px">
+					<div class="col-md-12">
+
+
+						<div class="text-center">
+							<div>
+								<div class="pace-demo w-auto h-auto p-3 pb-4" style="padding-bottom: 30px;">
+									<div class="theme_bar_sm">
+										<div class="pace_progress" data-progress-text="0%" data-progress="0" style="width: 0%;">0%</div>
+									</div>
+								</div>
+
+							</div>
+
+						</div>
+						<div class="pt-2 text-center">
+
+							<div>
+
+
+								<div class="pace-demo ml-2">
+									<div class="theme_perspective theme_perspective_with_text">
+										<div class="pace-progress" data-progress-text="0%" data-progress="0"></div>
+										<div class="pace_activity"></div>
+										<span>0%</span>
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</div>
+
+				</div>
+			</fieldset>
+
+			<h6>Additional info</h6>
+			<fieldset>
+				<div class="row">
+					<p>Thank you for Your SubScription You Can Continue with your Email and Password</p>
+					<div class="col-lg-4">
+						<div class="card">
+							<div class="card-body text-center">
+								<i class="icon-reading icon-2x text-blue border-blue border-3 rounded-round p-3 mb-3 mt-1"></i>
+								<h5 class="card-title">Thank you VeryMuch</h5>
+								<p class="mb-3">Thank you for Your SubScription You Can Continue with your Email and Password</p>
+								<a href="/Account/Login" class="btn bg-blue">Login</a>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+			</fieldset>
+		</form>
+	</div>
+
+
+</div>
+<script>
+	$(document).ready(function(){
+			var formData=new FormData();
+
+		$(document).on('click','.legitRipple',async function(e){
+			 var currentStep = $(".wizard-form").steps("getCurrentIndex");
+				   var businessName = $('#organizationName').val();
+					var branchName = $('#branchName').val();
+					var website = $('#webSite').val();
+					var domainName = getDomainName(website);
+					var businessCategory = $('#businessCategory').val();
+					var businessEntity = $('#businessEntity').val();
+					$('#email').val('superadmin@@'+domainName);
+
+			 if(currentStep===2){
+				 formData.append("BusinessName", businessName);
+					formData.append("BranchName", branchName);
+					formData.append("Website", website);
+					formData.append("BusinessCategory", businessCategory);
+					formData.append("BusinessEntity", businessEntity);
+							formData.append("Email", $('#email').val());
+					formData.append("Password", $('#password').val());
+						for (var pair of formData.entries()) {
+							console.log(pair[0]+ ': ' + pair[1]);
+						}
+				  $('.actions a[href="#next"]').addClass('disabled').css('pointer-events', 'none');
+				  $('.actions a[href="#previous"]').addClass('disabled').css('pointer-events', 'none');
+
+				  debugger
+				  const loaderInterval = startLoaderProgress();
+					 $.ajax({
+							url: '/Account/SeedData',
+							data: formData,
+							type: 'POST',
+							processData: false,
+							contentType: false,
+							success: function (result) {
+								console.log('Success:', result);
+								debugger
+									if(result.statusCode==="200"){
+										 //Utility.successMessage(result.Message);
+										 completeLoaderProgress(loaderInterval);
+											 $('.actions a[href="#next"]').addClass('disabled').css('pointer-events', 'none');
+											$('.actions a[href="#previous"]').addClass('disabled').css('pointer-events', 'none');
+											$(".wizard-form").steps("next");
+											$('.actions a[href="#previous"]').addClass('disabled').css('pointer-events', 'none');
+									}
+									else{
+										 Utility.failMessage(result.Message);
+										 completeLoaderProgress(loaderInterval);
+									}
+
+							},
+							 error: function (xhr, status, error) {
+								console.error('Error:', error);
+							 }
+					});
+
+
+
+			 }
+			 if(currentStep===3){
+				 window.location.href='/Account/Login';
+			 }
+			 var formDataObject = formDataToObject(formData);
+			localStorage.setItem("wizardStep", JSON.stringify(formDataObject));
+		});
+
+
+
+		function getDomainName(url) {
+		// Add protocol if missing
+		if (!url.startsWith("http://") && !url.startsWith("https://")) {
+			url = "http://" + url;
+		}
+
+		try {
+			var hostname = new URL(url).hostname;
+
+			// Remove 'www.' if present
+			if (hostname.startsWith("www.")) {
+				hostname = hostname.slice(4);
+			}
+
+			return hostname;
+		} catch (e) {
+			console.error("Invalid URL", e);
+			return null;
+		}
+		}
+			function formDataToObject(fd) {
+		const obj = {};
+		for (const [key, value] of fd.entries()) {
+			obj[key] = value;
+		}
+		return obj;
+	}
+	})
+	$(document).ready(function(){
+			var savedData = localStorage.getItem("wizardStep");
+		if (savedData) {
+		var parsedData = JSON.parse(savedData);
+		console.log(parsedData.BusinessName);
+	$('#organizationName').val(parsedData.BusinessName);
+	   $('#branchName').val(parsedData.BranchName);
+	   $('#webSite').val(parsedData.Website);
+	   $('#businessCategory').val(parsedData.BusinessCategory).trigger('change');
+	   $('#businessEntity').val(parsedData.BusinessEntity).trigger('change');
+		}
+	})
+		function startLoaderProgress() {
+		let progress = 0;
+		const paceBar = $('.pace_progress');
+		const progressText = $('.theme_perspective span');
+
+		// Reset values
+		paceBar.css('width', '0%').attr('data-progress', '0').text('0%');
+		progressText.text('0%');
+
+		// Simulate progress
+		const interval = setInterval(() => {
+			if (progress >= 90) {
+				clearInterval(interval); // stop at 90%, finish later
+			} else {
+				progress += 1
+				paceBar.css('width', progress + '%').attr('data-progress', progress).text(progress + '%');
+				progressText.text(progress + '%');
+			}
+		}, 100);
+
+		return interval; // so we can clear or continue later
+	}
+
+	function completeLoaderProgress(interval) {
+		clearInterval(interval);
+		const paceBar = $('.pace_progress');
+		const progressText = $('.theme_perspective span');
+
+		paceBar.css('width', '100%').attr('data-progress', '100').text('100%');
+		progressText.text('100%');
+	}
+
+</script>

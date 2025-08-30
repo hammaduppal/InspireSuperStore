@@ -4,6 +4,7 @@ using MainModels.Util;
 using MarketBal.Repository;
 using MarketBal.Repository.Account;
 using MarketBal.Repository.HRM;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InspireSuperStore.Areas.Account.Controllers
@@ -33,7 +34,8 @@ namespace InspireSuperStore.Areas.Account.Controllers
             var result = await _admin.GetOrganizations();
             if (result.Count == 0)
             {
-                return Redirect("/AdminPanel/StartupSettings");
+                // Redirect to StartupSettings in AdminPanel controller
+                return RedirectToAction("StartupSettings", "Account");
             }
             TempData["ReturnURL"] = ReturnUrl;
             return View();
@@ -104,5 +106,33 @@ namespace InspireSuperStore.Areas.Account.Controllers
             return Json(new {statusCode="200", CustomerId=result });
         }
 
+
+
+        public async Task<IActionResult> StartupSettings()
+        {
+            //var result = await _adminPanel.GetOrganizations();
+            //if (result.Count > 0)
+            //{
+            //    return Redirect("/");
+            //}
+            vm.BusinessCategories = await _admin.BusinessCategories();
+            vm.BusinessEntities = await _admin.BusinessEntityType();
+
+            return View(vm);
+        }
+        [HttpPost]
+        public async Task<IActionResult> SeedData(OrganizationRegistrationDto model)
+        {
+            var result = await _admin.SeedinData(model);
+            if (result)
+            {
+                return Json(new { statusCode = "200", Message = "New Record Updated" });
+            }
+
+            else
+            {
+                return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
+            }
+        }
     }
 }

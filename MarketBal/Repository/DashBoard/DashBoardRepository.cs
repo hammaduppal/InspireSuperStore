@@ -31,6 +31,7 @@ namespace MarketBal.Repository.DashBoard
               
             };
             var result = await _db.GetSingleItemDatatWithQueryAndParam<DashBoardSettings>(query, param);
+            result.TotalUsers = result.TotalUsers - 1;
             return result;
         }
 

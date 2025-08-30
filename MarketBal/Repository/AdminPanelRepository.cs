@@ -152,7 +152,7 @@ namespace MarketBal.Repository
 
         public async Task<List<RolesVM>> GetRoles()
         {
-            return await _onedb.Roles.Select(r => new RolesVM
+            return await _onedb.Roles.Where(x=>x.Name!=UserRolesConstants.SuperAdmin).Select(r => new RolesVM
             {
                 Id = r.Id,
                 Name = r.Name,
@@ -548,7 +548,7 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
             using var transaction = await _onedb.Database.BeginTransactionAsync();
             try
             {
-                var removed = await removeData();
+              //  var removed = await removeData();
                 var currentTime = DateTime.UtcNow;
                 Guid branchId = Guid.NewGuid();
 
@@ -557,8 +557,8 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                 {
                     var organization = new Organization
                     {
-                        OrganizationName = model.BranchName,
-                        CreatedOn = currentTime,
+                        OrganizationName = model.BusinessName,
+                        CreatedOn = currentTime, IsActive=true, IsDeleted=false,
                         ModifiedOn = currentTime
                     };
 
@@ -648,7 +648,7 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
             delete from hrm.StateProvince
 
             delete from HRM.Countries
-            delete from hrm.Department
+            delete from hrm.EmployeeDepartments
 delete from Hrm.UserAssignedBranches
             delete from Hrm.LoginUsers
             delete from hrm.Persons

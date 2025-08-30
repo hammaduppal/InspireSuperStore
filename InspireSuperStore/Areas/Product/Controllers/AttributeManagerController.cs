@@ -1,4 +1,5 @@
 ﻿using MainModels.DTOModels;
+using MainModels.Util;
 using MarketBal.Repository.DCS;
 using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +9,8 @@ namespace InspireSuperStore.Areas.Product.Controllers
 {
     [Area("Product")]
     [Route("[controller]/[action]")]
-    
+    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry + "," + UserRolesConstants.Product + "," + UserRolesConstants.Purchase )]
+
     public class AttributeManagerController : Controller
     {
         private readonly IConfiguration _config;
@@ -233,7 +235,9 @@ namespace InspireSuperStore.Areas.Product.Controllers
         }
 
 
-
+        #region CRUDS
+       
+        #endregion
 
 
 

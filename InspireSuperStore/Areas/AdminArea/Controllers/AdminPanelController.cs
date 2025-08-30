@@ -375,34 +375,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         #endregion
 
 
-        [AllowAnonymous]
-        public async Task<IActionResult> StartupSettings()
-        {
-            var result = await _adminPanel.GetOrganizations();
-            if (result.Count > 0)
-            {
-                return Redirect("/");
-            }
-            vm.BusinessCategories = await _adminPanel.BusinessCategories();
-            vm.BusinessEntities = await _adminPanel.BusinessEntityType();
-
-            return View(vm);
-        }
-        [AllowAnonymous]
-        [HttpPost]
-        public async Task<IActionResult> SeedData(OrganizationRegistrationDto model)
-        {
-            var result = await _adminPanel.SeedinData(model);
-            if (result)
-            {
-                return Json(new { statusCode = "200", Message = "New Record Updated" });
-            }
-
-            else
-            {
-                return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
-            }
-        }
+        
         public async Task<IActionResult> BulkUpload()
         {
             return View();
