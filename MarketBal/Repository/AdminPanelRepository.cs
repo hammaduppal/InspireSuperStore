@@ -39,7 +39,7 @@ namespace MarketBal.Repository
           UserName = x.UserName,
           IsActive = x.IsActive.Value,
           CreatedOn = x.CreatedOn,
-          PersonVM = new PersonVM
+          Person = new PersonVM
           {
               FirstName = x.Person.FirstName,
               LastName = x.Person.LastName,
@@ -93,14 +93,14 @@ namespace MarketBal.Repository
                 Id
             };
             var loginUser = await _db.ExecuteQuery<LoginUserVM>(query, loginparam);
-            loginUser.Passwords = EncryptionPasses.Decrypt(loginUser.Passwords, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
+            loginUser.Password = EncryptionPasses.Decrypt(loginUser.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
             query = "select * from HRM.Persons where HRM.Persons.Id=@PersonId";
             var personParam = new
             {
                 loginUser.PersonId
             };
             var person = await _db.ExecuteQuery<PersonVM>(query, personParam);
-            loginUser.PersonVM = person;
+            loginUser.Person = person;
             query = $"select * from SYSTEM.AssignedRoles ar join SYSTEM.Roles r on ar.RoleId=r.Id where ar.LoginId={loginUser.Id}";
             var roles = await _db.ExecuteQueryList<RolesVM>(query);
             loginUser.Roles = roles.ToList();
@@ -111,7 +111,7 @@ namespace MarketBal.Repository
                 loginUser.PersonId
             };
             var addresses = await _db.GetDataListWithQueryAndParam<LaneAddressVM>(query, addressParam);
-            loginUser.PersonVM.LaneAddress = addresses.ToList();
+            loginUser.Person.LaneAddress = addresses.ToList();
 
 
 
@@ -196,13 +196,13 @@ namespace MarketBal.Repository
             var currentTime = DateTime.UtcNow;
             var user = _onedb.LoginUsers.Include("Person").Where(x => x.Id == vm.Id).FirstOrDefault();
             user.UserName = !string.IsNullOrWhiteSpace(vm.UserName) ? vm.UserName : user.UserName;
-            user.Passwords = !string.IsNullOrWhiteSpace(vm.Passwords) ? EncryptionPasses.Encrypt(vm.Passwords, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE) : user.Passwords;
-            user.Person.FirstName = !string.IsNullOrWhiteSpace(vm.PersonVM.FirstName) ? vm.PersonVM.FirstName : user.Person.FirstName;
-            user.Person.LastName = !string.IsNullOrWhiteSpace(vm.PersonVM.LastName) ? vm.PersonVM.LastName : user.Person.LastName;
-            user.Person.Cnic = !string.IsNullOrWhiteSpace(vm.PersonVM.Cnic) ? vm.PersonVM.Cnic : user.Person.Cnic;
-            user.Person.SocialSecurity = !string.IsNullOrWhiteSpace(vm.PersonVM.SocialSecurity) ? vm.PersonVM.SocialSecurity : user.Person.SocialSecurity;
-            user.Person.MobileNumber = !string.IsNullOrWhiteSpace(vm.PersonVM.MobileNumber) ? vm.PersonVM.MobileNumber : user.Person.MobileNumber;
-            user.Person.Email = !string.IsNullOrWhiteSpace(vm.PersonVM.Email) ? vm.PersonVM.Email : user.Person.Email;
+            user.Passwords = !string.IsNullOrWhiteSpace(vm.Password) ? EncryptionPasses.Encrypt(vm.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE) : user.Passwords;
+            user.Person.FirstName = !string.IsNullOrWhiteSpace(vm.Person.FirstName) ? vm.Person.FirstName : user.Person.FirstName;
+            user.Person.LastName = !string.IsNullOrWhiteSpace(vm.Person.LastName) ? vm.Person.LastName : user.Person.LastName;
+            user.Person.Cnic = !string.IsNullOrWhiteSpace(vm.Person.Cnic) ? vm.Person.Cnic : user.Person.Cnic;
+            user.Person.SocialSecurity = !string.IsNullOrWhiteSpace(vm.Person.SocialSecurity) ? vm.Person.SocialSecurity : user.Person.SocialSecurity;
+            user.Person.MobileNumber = !string.IsNullOrWhiteSpace(vm.Person.MobileNumber) ? vm.Person.MobileNumber : user.Person.MobileNumber;
+            user.Person.Email = !string.IsNullOrWhiteSpace(vm.Person.Email) ? vm.Person.Email : user.Person.Email;
             user.ModifiedOn = currentTime;
             user.Person.ModifiedOn = currentTime;
             _onedb.LoginUsers.Update(user);
@@ -255,7 +255,7 @@ namespace MarketBal.Repository
             {
                 return -3;
             }
-            var existingPerson = await _onedb.Persons.Where(x => x.Cnic == model.PersonVM.Cnic || x.MobileNumber == model.PersonVM.MobileNumber).FirstOrDefaultAsync();
+            var existingPerson = await _onedb.Persons.Where(x => x.Cnic == model.Person.Cnic || x.MobileNumber == model.Person.MobileNumber).FirstOrDefaultAsync();
 
             if (existingPerson != null)
             {
@@ -270,7 +270,7 @@ namespace MarketBal.Repository
             int maxAddressId = _onedb.LaneAddresses.Any()
                   ? _onedb.LaneAddresses.Max(x => x.AddressId)
                   : 0;
-            var addone = model.PersonVM.LaneAddress.FirstOrDefault();
+            var addone = model.Person.LaneAddress.FirstOrDefault();
             var addressBilling = new LaneAddress
             {
                 AddressId = maxAddressId + 1,
@@ -302,7 +302,7 @@ namespace MarketBal.Repository
 
             var assignBranch = new UserAssignedBranch
             {
-                BranchId = model.PersonVM.BranchId,
+                BranchId = model.Person.BranchId,
                 LoginUserId = maxLoginId,
                 IsActive = true,
                 IsDeleted = false,
@@ -315,7 +315,7 @@ namespace MarketBal.Repository
             {
                 Id = maxLoginId + 1,
                 UserName = model.UserName,
-                Passwords = EncryptionPasses.Encrypt(model.Passwords, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE),
+                Passwords = EncryptionPasses.Encrypt(model.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE),
                 CreatedOn = currentTime,
                 ModifiedOn = currentTime,
                 IsActive = true,
@@ -325,14 +325,14 @@ namespace MarketBal.Repository
                 Person = new Person
                 {
                     Id = maxPersonId + 1,
-                    Cnic = model.PersonVM.Cnic,
+                    Cnic = model.Person.Cnic,
                     Email = model.UserName,
-                    SocialSecurity = model.PersonVM.SocialSecurity,
-                    LastName = model.PersonVM.LastName,
-                    FirstName = model.PersonVM.FirstName,
-                    MobileNumber = model.PersonVM.MobileNumber,
+                    SocialSecurity = model.Person.SocialSecurity,
+                    LastName = model.Person.LastName,
+                    FirstName = model.Person.FirstName,
+                    MobileNumber = model.Person.MobileNumber,
                     LaneAddresses = addresses,
-                    BranchId = model.PersonVM.BranchId,
+                    BranchId = model.Person.BranchId,
                     CreatedOn = currentTime,
                     ModifiedOn = currentTime,
                     IsActive = true,

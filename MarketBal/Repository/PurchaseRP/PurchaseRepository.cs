@@ -245,7 +245,8 @@ namespace MarketBal.Repository.PurchaseRP
                 var variant = variants.FirstOrDefault(x => x.VariantId == detail.VariantId);
                 if (variant != null)
                 {
-                    variant.QoH = (variant.QoH ?? 0) + (detail.Qty ?? 0); variant.ModifiedOn = DateTime.UtcNow;
+                    var qpu = variant.QuantityPerUnit??1;
+                    variant.QoH = (variant.QoH ?? 0) + ((detail.Qty * qpu) ?? 0); variant.ModifiedOn = DateTime.UtcNow;
                 }
             }
 

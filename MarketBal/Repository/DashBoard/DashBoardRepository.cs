@@ -34,7 +34,14 @@ namespace MarketBal.Repository.DashBoard
             result.TotalUsers = result.TotalUsers - 1;
             return result;
         }
-
+        public async Task<List<SettingVM>> GetSettings()
+        {
+            return await _onedb.Settings.Where(x=>x.IsActive==true).Select(x => new SettingVM
+            {
+                 ApplicationId=x.ApplicationId, ApplicationName=x.ApplicationName, ApplicationUrl   =x.ApplicationUrl,
+                 SettingsId=x.SettingsId, BranchId=x.BranchId,IsActive=x.IsActive
+            }).ToListAsync();
+        }
      
     }
 }

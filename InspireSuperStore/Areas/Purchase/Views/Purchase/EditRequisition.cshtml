@@ -30,7 +30,6 @@
 		<div class="card-header bg-transparent header-elements-inline">
 			<h6 class="card-title">Static invoice</h6>
 			<div class="header-elements">
-				<button type="button" class="btn btn-light btn-sm"><i class="icon-file-check mr-2"></i> Save</button>
 				<button type="button" class="btn btn-light btn-sm ml-3"><i class="icon-printer mr-2"></i> Print</button>
 			</div>
 		</div>
@@ -85,13 +84,13 @@
 
 						<th>Unit Price</th>
 						<th>Line Total</th>
-						<th>Manage</th>
 
 					</tr>
 				</thead>
 				<tbody>
 					@foreach (var item in Model.PurchaseMaster.PurchaseDetails)
 					{
+						
 						<tr>
 							<td>@item.ProductVariant.BarCode</td>
 							<td>
@@ -103,13 +102,7 @@
 
 							<td class="unitPrice">@item.UnitPrice</td>
 							<td><span class="font-weight-semibold lineTotal">@item.LineTotal</span></td>
-							<td>
-								<div class="list-icons">
-									<a href="#" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a>
-									<a href="#" class="list-icons-item text-danger-600 removeItem"><i class="icon-trash"></i></a>
-									<a href="#" class="list-icons-item text-teal-600"><i class="icon-cog6"></i></a>
-								</div>
-							</td>
+						
 						</tr>
 
 					}
@@ -155,7 +148,6 @@
 					</div>
 
 					<div class="text-right mt-3">
-						<button type="button" class="btn btn-primary btn-labeled btn-labeled-left"><b><i class="icon-paperplane"></i></b> Send invoice</button>
 					</div>
 				</div>
 			</div>

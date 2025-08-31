@@ -48,7 +48,9 @@ namespace InspireSuperStore.Controllers
 			}
 			if (PagesViewModel.DashBoardSetting==null)
 			{
-				PagesViewModel.DashBoardSetting  =  _dashboard.Settings().GetAwaiter().GetResult();
+                PagesViewModel.Settings = _dashboard.GetSettings().GetAwaiter().GetResult();
+
+                PagesViewModel.DashBoardSetting  =  _dashboard.Settings().GetAwaiter().GetResult();
 			}
 		}
 

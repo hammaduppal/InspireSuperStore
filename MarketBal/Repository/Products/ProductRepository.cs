@@ -74,7 +74,7 @@ namespace MarketBal.Repository.Products
     };
 
             var parameters = new DynamicParameters();
-            parameters.Add("OrganizationId", AppDataUtility.SessionUser.PersonVM.Branch.Organization.OrganizationId);
+            parameters.Add("OrganizationId", AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId);
 
             // Optional Search filter
             if (!string.IsNullOrWhiteSpace(searchValue))
@@ -93,7 +93,8 @@ namespace MarketBal.Repository.Products
 
             string dataQuery = $@"
         SELECT * 
-        FROM INV.Products
+        FROM INV.Products 
+
         {whereSql}
         ORDER BY {sortColumn} {sortDirection}
         OFFSET @Skip ROWS FETCH NEXT @PageSize ROWS ONLY;

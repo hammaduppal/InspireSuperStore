@@ -20,9 +20,9 @@ namespace MarketBal.Repository.Account
         }
         public async Task<LoginUserVM> ValidateLogin(LoginUserVM model)
         {
-            string encodedPass = EncryptionPasses.Encrypt(model.Passwords, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
+            string encodedPass = EncryptionPasses.Encrypt(model.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
 
-            var query = $"select * from HRM.LoginUsers  u  where u.UserName='{model.UserName}' and u.Passwords='{encodedPass}' and u.IsActive = 1   ";
+            var query = $"select * from HRM.LoginUsers  u  where u.UserName='{model.UserName}' and u.Password='{encodedPass}' and u.IsActive = 1   ";
             var result = await _db.ExecuteQuery<LoginUserVM>(query);
 
             if (result != null)
@@ -44,16 +44,54 @@ namespace MarketBal.Repository.Account
                 query = $"SELECT * FROM HRM.Persons WHERE Id={result.PersonId}";
 
                 var person = await _db.ExecuteQuery<PersonVM>(query);
-                result.PersonVM = person;
-                query = $@"select * from Business.Branches where BranchId = '{result.PersonVM.BranchId}'";
+                result.Person = person;
+                query = $@"select * from Business.Branches where BranchId = '{result.Person.BranchId}'";
                 var branch = await _db.ExecuteQuery<BranchVM>(query);
-                result.PersonVM.Branch = branch;
-                query = $@"select * from Business.Organizations where OrganizationId={result.PersonVM.Branch.OrganizationId}";
+                result.Person.Branch = branch;
+                query = $@"select * from Business.Organizations where OrganizationId={result.Person.Branch.OrganizationId}";
                 var organzation = await _db.ExecuteQuery<OrganizationVM>(query);
-                result.PersonVM.Branch.Organization = organzation;
+                result.Person.Branch.Organization = organzation;
             }
             return result;
         }
+
+        public async Task<LoginUserVM> SSOValidateLogin(LoginUserVM model)
+        {
+            //string encodedPass = EncryptionPasses.Encrypt(model.Passwords, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
+
+            var query = $"select * from HRM.LoginUsers  u  where u.UserName='{model.UserName}' and u.Password='{model.Password}' and u.IsActive = 1   ";
+            var result = await _db.ExecuteQuery<LoginUserVM>(query);
+
+            if (result != null)
+            {
+                query = $"select * from SYSTEM.AssignedRoles ar join SYSTEM.Roles r on ar.RoleId=r.Id where ar.LoginId={result.Id}";
+                var roles = await _db.ExecuteQueryList<RolesVM>(query);
+                result.Roles = roles.ToList();
+
+                if (result.Roles != null)
+                {
+                    var singleRole = result.Roles.FirstOrDefault();
+                    result.RoleName = singleRole.Name;
+                    if (singleRole.Name == "SuperAdmin")
+                    {
+                        return result;
+
+                    }
+                }
+                query = $"SELECT * FROM HRM.Persons WHERE Id={result.PersonId}";
+
+                var person = await _db.ExecuteQuery<PersonVM>(query);
+                result.Person = person;
+                query = $@"select * from Business.Branches where BranchId = '{result.Person.BranchId}'";
+                var branch = await _db.ExecuteQuery<BranchVM>(query);
+                result.Person.Branch = branch;
+                query = $@"select * from Business.Organizations where OrganizationId={result.Person.Branch.OrganizationId}";
+                var organzation = await _db.ExecuteQuery<OrganizationVM>(query);
+                result.Person.Branch.Organization = organzation;
+            }
+            return result;
+        }
+
 
         public async Task SigninAsync(LoginUserVM u, HttpContext httpcontext)
         {
@@ -80,6 +118,9 @@ namespace MarketBal.Repository.Account
             var identity = new ClaimsIdentity(Claims, CookieAuthenticationDefaults.AuthenticationScheme + _config.GetValue<string>("SystemSettings:CookieName"));
             await httpcontext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme + _config.GetValue<string>("SystemSettings:CookieName"), new ClaimsPrincipal(identity), authProperties);
         }
+
+  
+
         public async Task LogoutAsync(HttpContext httpContext)
         {
             await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme + _config.GetValue<string>("SystemSettings:CookieName"));
@@ -105,7 +146,7 @@ namespace MarketBal.Repository.Account
 
                     CustomerCode = RandomHelper.GenerateRandomAlphaNumeric(),
                     PersonId = existingPerson.Id,
-                    BranchId = AppDataUtility.SessionUser.PersonVM.BranchId,
+                    BranchId = AppDataUtility.SessionUser.Person.BranchId,
                     Createdby = AppDataUtility.SessionUser.Id,
                     CreatedOn = DateTime.Now,
                     IsActive = true,
@@ -125,7 +166,7 @@ namespace MarketBal.Repository.Account
             {
                 model.IsActive = true;
                 model.CreatedOn = DateTime.Now;
-                model.BranchId = AppDataUtility.SessionUser.PersonVM.BranchId;
+                model.BranchId = AppDataUtility.SessionUser.Person.BranchId;
                 insertQuery = $@"DECLARE @NewPersonId INT;
 
 -- Get max PersonId and add 1 (handle null if table is empty)
@@ -148,7 +189,7 @@ VALUES
                     CustomerId = Guid.NewGuid(), // updated to generate a new Guid
                     CustomerCode = RandomHelper.GenerateRandomAlphaNumeric(),
                     PersonId = personId,
-                    BranchId = AppDataUtility.SessionUser.PersonVM.BranchId,
+                    BranchId = AppDataUtility.SessionUser.Person.BranchId,
                     Createdby = AppDataUtility.SessionUser.Id,
                     CreatedOn = DateTime.Now,
                     IsActive = true,

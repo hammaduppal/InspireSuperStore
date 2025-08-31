@@ -30,7 +30,6 @@
 		<div class="card-header bg-transparent header-elements-inline">
 			<h6 class="card-title">Static invoice</h6>
 			<div class="header-elements">
-				<button type="button" class="btn btn-light btn-sm"><i class="icon-file-check mr-2"></i> Save</button>
 				<button type="button" class="btn btn-light btn-sm ml-3"><i class="icon-printer mr-2"></i> Print</button>
 			</div>
 		</div>
@@ -85,7 +84,6 @@
 
 						<th>Unit Price</th>
 						<th>Line Total</th>
-						<th>Manage</th>
 
 					</tr>
 				</thead>
@@ -102,14 +100,8 @@
 							<td><input data-purchaseDetailId="@item.PurchaseDetailId" data-purchaseMasterId="@Model.PurchaseMaster.PurchaseMasterId" data-variantId="@item.VariantId" min="1" class="qty" type="number" value="@item.Qty" /></td>
 
 							<td><input class="unitPrice" type="text" value="@item.UnitPrice" /> </td>
-							<td><span class="font-weight-semibold lineTotal">@item.LineTotal</span></td>
-							<td>
-								<div class="list-icons">
-									<a href="#" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a>
-									<a href="#" class="list-icons-item text-danger-600 removeItem"><i class="icon-trash"></i></a>
-									<a href="#" class="list-icons-item text-teal-600"><i class="icon-cog6"></i></a>
-								</div>
-							</td>
+							<td><span class="font-weight-semibold lineTotal">@item.LineTotal.Value.ToString("F2")</span></td>
+						
 						</tr>
 
 					}

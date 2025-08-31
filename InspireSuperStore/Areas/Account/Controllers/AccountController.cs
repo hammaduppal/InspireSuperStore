@@ -6,6 +6,9 @@ using MarketBal.Repository.Account;
 using MarketBal.Repository.HRM;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.SqlServer.Server;
+using Newtonsoft.Json;
+using static QRCoder.PayloadGenerator;
 
 namespace InspireSuperStore.Areas.Account.Controllers
 {
@@ -50,7 +53,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
                 if (res != null)
                 {
                     await _login.SigninAsync(res, HttpContext);
-                    res.Passwords = "";
+                   // res.Passwords = "";
                     AppDataUtility.SessionUser = res;
                     //if (res.RoleName=="SuperAdmin")
                     //{
@@ -134,5 +137,34 @@ namespace InspireSuperStore.Areas.Account.Controllers
                 return Json(new { statusCode = "300", Message = "Unable to Setup Business" });
             }
         }
+
+        [HttpGet]
+        [Route("/sso")]
+        public async Task<IActionResult> SSO(string key)
+        {
+            string decrypted = EncryptionPasses.RandomDecrypt(key);
+            LoginUserVM user = JsonConvert.DeserializeObject<LoginUserVM>(decrypted);
+            var res = await _login.SSOValidateLogin(user);
+            if (res != null)
+            {
+                await _login.SigninAsync(res, HttpContext);
+                res.Password = "";
+                AppDataUtility.SessionUser = res;
+                //if (res.RoleName=="SuperAdmin")
+                //{
+                //    url = "/adminPanel";
+
+                //}
+                return Redirect("/");
+
+            }
+            else
+            {
+                return View();
+            }
+        }
+    
+    
+    
     }
 }

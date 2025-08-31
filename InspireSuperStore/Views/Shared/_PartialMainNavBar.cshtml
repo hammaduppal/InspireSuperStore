@@ -1,4 +1,6 @@
-﻿@using MainModels.Util
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@using MarketBal.Helper
 <div class="navbar-brand">
 	<a href="/" class="d-inline-block">
 		<img src="/global_assets/images/ecomlogo.png" alt="Inspire E-Comm" />
@@ -29,7 +31,65 @@
 	</span>
 
 	<ul class="navbar-nav ml-md-auto">
+		<li class="nav-item dropdown">
+			<a href="#" class="navbar-nav-link  dropdown-toggle" data-toggle="dropdown">
+				<i class="icon-make-group mr-2"></i>
+				Applications
+			</a>
 
+			<div class="dropdown-menu dropdown-menu-right dropdown-content wmin-md-350">
+				<div class="dropdown-content-body p-2">
+					<div class="row no-gutters">
+						<div class="col-12 col-sm-4">
+							@if (PagesViewModel.Settings.Where(x=>x.ApplicationId==1001).Any())
+							{
+								var cmssetting = PagesViewModel.Settings.Where(x => x.ApplicationId == 1001).FirstOrDefault();
+								<a href="@AppHelper.CreateSSOURL(1001)" class="d-block text-default text-center ripple-dark rounded p-3">
+									<i class="icon-diff-added text-blue-400 icon-2x"></i>
+									<div class="font-size-sm font-weight-semibold text-uppercase mt-2">@cmssetting.ApplicationName</div>
+								</a>
+							}
+							@if (PagesViewModel.Settings.Where(x => x.ApplicationId == 1003).Any())
+							{
+								var websetupsetting = PagesViewModel.Settings.Where(x => x.ApplicationId == 1003).FirstOrDefault();
+								<a href="@AppHelper.CreateSSOURL(1003)" class="d-block text-default text-center ripple-dark rounded p-3">
+									<i class="icon-versions icon-2x"></i>
+									<div class="font-size-sm font-weight-semibold text-uppercase mt-2">@websetupsetting.ApplicationName</div>
+								</a>
+								
+							}
+							
+							
+						</div>
+
+						<div class="col-12 col-sm-4">
+							
+							@if (PagesViewModel.Settings.Where(x => x.ApplicationId == 1002).Any())
+							{
+								var marketsetting = PagesViewModel.Settings.Where(x => x.ApplicationId == 1002).FirstOrDefault();
+								<a href="@AppHelper.CreateSSOURL(1002)" class="d-block text-default text-center ripple-dark rounded p-3">
+									<i class="icon-store text-pink-400 icon-2x"></i>
+									<div class="font-size-sm font-weight-semibold text-uppercase mt-2">@marketsetting.ApplicationName</div>
+								</a>
+
+							}
+							@if (PagesViewModel.Settings.Where(x => x.ApplicationId == 1004).Any())
+							{
+								var setting = PagesViewModel.Settings.Where(x => x.ApplicationId == 1004).FirstOrDefault();
+								<a href="@AppHelper.CreateSSOURL(1004)" class="d-block text-default text-center ripple-dark rounded p-3">
+									<i class="icon-store2 text-success-400 icon-2x"></i>
+									<div class="font-size-sm font-weight-semibold text-uppercase mt-2">@setting.ApplicationName</div>
+								</a>
+
+							}
+
+							
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</li>
 
 		<li class="nav-item dropdown">
 			<a href="#" class="navbar-nav-link dropdown-toggle" data-toggle="dropdown">

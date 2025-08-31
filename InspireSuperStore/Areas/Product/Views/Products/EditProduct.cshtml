@@ -129,9 +129,13 @@
 															<div class="form-group">
 																<label>UOM Name</label>
 																<select disabled id="uom" data-placeholder="Enter 'cat'" class="form-control select-minimum" data-fouc>
+															
 																	<option value="@Model.Product.UOMId">@Model.Product.UOMName</option>
 																	<optgroup label="UOM">
-
+																		@foreach (var item in Model.UOMs)
+																		{
+																			<option value="@item.Uomid">@item.UOMName</option>
+																		}
 																	</optgroup>
 																</select>
 															</div>
@@ -236,6 +240,7 @@
 			var id= `@Model.Product.ProductId`;
 			$('#descForm').submit(async function(e){
 					e.preventDefault();
+					debugger
 					Utility.SpinnerMessageParent('descFormSubmitBtn','Loading..');
 					var formData = {
 					ProductName: $('#productName').val(),

@@ -52,7 +52,7 @@
 
 			<form id="updateLoginForm" class="form-validate-jquery" action="#">
 				<input type="hidden" id="Id" value="@Model.LoginUser.Id" />
-				<input type="hidden" id="PersonId" value="@Model.LoginUser.PersonVM.Id" />
+				<input type="hidden" id="PersonId" value="@Model.LoginUser.Person.Id" />
 
 				<fieldset class="mb-3">
 					<legend class="text-uppercase font-size-sm font-weight-bold">Edit Users</legend>
@@ -71,7 +71,7 @@
 								<label for="Password" class="col-form-label col-lg-3">Password <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
 									<div class="form-group-feedback form-group-feedback-right">
-										<input type="password" id="Password" name="Passwords" class="form-control" required placeholder="Password" value="@Model.LoginUser.Passwords" />
+										<input type="password" id="Password" name="Passwords" class="form-control" required placeholder="Password" value="@Model.LoginUser.Password" />
 										<div class="form-control-feedback">
 											<a id="viewPassword" href="#"><i class="icon-eye-blocked"></i></a>
 										</div>
@@ -86,7 +86,7 @@
 							<div class="form-group row">
 								<label for="FirstName" class="col-form-label col-lg-3">First Name <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
-									<input type="text" id="FirstName" name="FirstName" class="form-control" required placeholder="First Name" value="@Model.LoginUser.PersonVM.FirstName" />
+									<input type="text" id="FirstName" name="FirstName" class="form-control" required placeholder="First Name" value="@Model.LoginUser.Person.FirstName" />
 								</div>
 							</div>
 						</div>
@@ -95,7 +95,7 @@
 								<label for="LastName" class="col-form-label col-lg-3">Last Name <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
 									<div class="form-group-feedback form-group-feedback-right">
-										<input type="text" id="LastName" name="LastName" class="form-control" required placeholder="Last Name" value="@Model.LoginUser.PersonVM.LastName" />
+										<input type="text" id="LastName" name="LastName" class="form-control" required placeholder="Last Name" value="@Model.LoginUser.Person.LastName" />
 									</div>
 								</div>
 							</div>
@@ -107,7 +107,7 @@
 							<div class="form-group row">
 								<label for="Email" class="col-form-label col-lg-3">User Email <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
-									<input type="email" id="Email" name="Email" class="form-control" required placeholder="User Email" value="@Model.LoginUser.PersonVM.Email" />
+									<input type="email" id="Email" name="Email" class="form-control" required placeholder="User Email" value="@Model.LoginUser.Person.Email" />
 								</div>
 							</div>
 						</div>
@@ -116,7 +116,7 @@
 								<label for="Mobile" class="col-form-label col-lg-3">Mobile <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
 									<div class="form-group-feedback form-group-feedback-right">
-										<input type="text" id="Mobile" name="MobileNumber" class="form-control" required placeholder="Mobile" value="@Model.LoginUser.PersonVM.MobileNumber" />
+										<input type="text" id="Mobile" name="MobileNumber" class="form-control" required placeholder="Mobile" value="@Model.LoginUser.Person.MobileNumber" />
 									</div>
 								</div>
 							</div>
@@ -128,7 +128,7 @@
 							<div class="form-group row">
 								<label for="Cnic" class="col-form-label col-lg-3">User CNIC <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
-									<input type="text" id="Cnic" name="Cnic" class="form-control" required placeholder="User CNIC" value="@Model.LoginUser.PersonVM.Cnic" />
+									<input type="text" id="Cnic" name="Cnic" class="form-control" required placeholder="User CNIC" value="@Model.LoginUser.Person.Cnic" />
 								</div>
 							</div>
 						</div>
@@ -137,7 +137,7 @@
 								<label for="SocialSecurity" class="col-form-label col-lg-3">Social Security <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
 									<div class="form-group-feedback form-group-feedback-right">
-										<input type="text" id="SocialSecurity" name="SocialSecurity" class="form-control" required placeholder="Social Security" value="@Model.LoginUser.PersonVM.SocialSecurity" />
+										<input type="text" id="SocialSecurity" name="SocialSecurity" class="form-control" required placeholder="Social Security" value="@Model.LoginUser.Person.SocialSecurity" />
 									</div>
 								</div>
 							</div>
@@ -157,7 +157,7 @@
 	</div>
 	<!-- /form validation -->
 	<div class="row">
-		@foreach (var item in Model.LoginUser.PersonVM.LaneAddress)
+		@foreach (var item in Model.LoginUser.Person.LaneAddress)
 		{
 			<div class="col-md-6">
 				<div class="card">

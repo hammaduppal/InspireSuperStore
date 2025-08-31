@@ -426,8 +426,8 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                     product.CreatedOn = currentTime;
                     product.Createdby = AppDataUtility.SessionUser.Id;
                     product.ProductSlug = HelperClass.CreateSlug(product.ProductName);
-                    product.BranchId = AppDataUtility.SessionUser.PersonVM.Branch.BranchId;
-                    product.OrganizationId = AppDataUtility.SessionUser.PersonVM.Branch.Organization.OrganizationId;
+                    product.BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId;
+                    product.OrganizationId = AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId;
 
                     currentProductId = product.ProductId;
                     products.Add(product);
@@ -460,8 +460,8 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                     variant.PriceFormat = int.TryParse(worksheet.Cells[row, 21].Text, out var pf) ? pf : 0;
                     variant.IsActive = true;
                     variant.IsDeleted = false;
-                    variant.BranchId = AppDataUtility.SessionUser.PersonVM.Branch.BranchId;
-                    variant.OrganizationId = AppDataUtility.SessionUser.PersonVM.Branch.Organization.OrganizationId;
+                    variant.BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId;
+                    variant.OrganizationId = AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId;
                     variant.CreatedOn = currentTime;
                     variant.Createdby = AppDataUtility.SessionUser.Id;
                     variants.Add(variant);

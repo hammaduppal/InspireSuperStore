@@ -15,7 +15,7 @@ namespace MarketBal.Repository.Account
         }
         public async Task<APIImageContentResponse> SaveFile(APIImageContentRequest request)
         {
-            request.Website = AppDataUtility.SessionUser.PersonVM.Branch.BranchId.ToString();
+            request.Website = AppDataUtility.SessionUser.Person.Branch.BranchId.ToString();
             string content = JsonConvert.SerializeObject(request);
             var apiresponse = await _api.PostMethodNew(PagesViewModel.SystemSettings.ContentAPIUrl, "/api/Content/UploadImage", content,"iStore");
             if (string.IsNullOrEmpty(apiresponse.ResponseString))
@@ -43,7 +43,7 @@ namespace MarketBal.Repository.Account
                 FileExtension = extension
             };
 
-            FileRequest.Website = AppDataUtility.SessionUser.PersonVM.Branch.BranchId.ToString();
+            FileRequest.Website = AppDataUtility.SessionUser.Person.Branch.BranchId.ToString();
             string content = JsonConvert.SerializeObject(FileRequest);
             var apiresponse = await _api.PostMethodNew(PagesViewModel.SystemSettings.ContentAPIUrl, "/api/Content/UploadImage", content, "iStore");
             if (string.IsNullOrEmpty(apiresponse.ResponseString))

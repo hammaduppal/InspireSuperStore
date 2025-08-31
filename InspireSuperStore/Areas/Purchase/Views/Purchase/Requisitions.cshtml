@@ -61,52 +61,167 @@
 				@foreach (var item in Model.PurchaseMasters)
 				{
 					var selectedStatus = item?.Status ?? (int)PurchaseStatus.Draft;
-					<tr>
-						<td>@item?.PurchaseNumber</td>
-						<td>
-							<h6 class="mb-0">
-								@item.SupplierBusinessName
-							</h6>
-						</td>
-						<td>
-							<select data-pmId="@item.PurchaseMasterId" name="status" class="form-control form-control-select2 status" data-placeholder="Select status">
-								@foreach (PurchaseStatus status in Enum.GetValues(typeof(PurchaseStatus)))
-								{
-									<option  value="@((int)status)" @(selectedStatus == (int)status ? "selected" : "")>
-										@status
-									</option>
-								}
-							</select>
+					if (item.Status == (int)PurchaseStatus.Completed)
+					{
+						<tr class="bg-light">
+							<td>@item?.PurchaseNumber</td>
+							<td>
+								<h6 class="mb-0">
+									@item.SupplierBusinessName
+								</h6>
+							</td>
+							<td>
+								<select data-pmId="@item.PurchaseMasterId" name="status" class="form-control form-control-select2 status" data-placeholder="Select status">
+									@foreach (PurchaseStatus status in Enum.GetValues(typeof(PurchaseStatus)))
+									{
+										<option value="@((int)status)" @(selectedStatus == (int)status ? "selected" : "")>
+											@status
+										</option>
+									}
+								</select>
 
-						</td>
-						<td>
-							@TimeHelper.GetFormattedTimeSpan(DateTime.Parse(item?.CreatedOn.ToString()))
-						</td>
-						<td>
-							<h6 class="mb-0 font-weight-bold">@item?.TotalAmount </h6>
-						</td>
-						<td>
-							<h6 class="mb-0 font-weight-bold">@item?.DiscountAmount </h6>
-						</td>
-						<td>
-							<h6 class="mb-0 font-weight-bold">@item?.GrandTotal </h6>
-						</td>
-						<td class="text-center">
-							<div class="list-icons list-icons-extended">
-								<a href="/Purchase/EditRequisition?Id=@item?.PurchaseMasterId" class="list-icons-item"><i class="icon-file-plus"></i></a>
-								<div class="list-icons-item dropdown">
-									<a href="#" class="list-icons-item dropdown-toggle" data-toggle="dropdown"><i class="icon-file-text2"></i></a>
-									<div class="dropdown-menu dropdown-menu-right">
-										<a href="#" class="dropdown-item"><i class="icon-file-download"></i> Download</a>
-										<a href="#" class="dropdown-item"><i class="icon-printer"></i> Print</a>
-										<div class="dropdown-divider"></div>
-										<a href="#" class="dropdown-item"><i class="icon-cross2"></i> Remove</a>
-									</div>
+							</td>
+							<td>
+								@TimeHelper.GetFormattedTimeSpan(DateTime.Parse(item?.CreatedOn.ToString()))
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.TotalAmount </h6>
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.DiscountAmount </h6>
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.GrandTotal </h6>
+							</td>
+							<td class="text-center">
+								<div class="list-icons list-icons-extended">
+									<a href="/Purchase/EditRequisition?Id=@item?.PurchaseMasterId" class="list-icons-item"><i class="icon-file-plus"></i></a>
+									
 								</div>
-							</div>
-						</td>
-					</tr>
+							</td>
+						</tr>
+					}
+					else if (item.Status == (int)PurchaseStatus.Rejected)
+					{
+						<tr class="bg-danger">
+							<td>@item?.PurchaseNumber</td>
+							<td>
+								<h6 class="mb-0">
+									@item.SupplierBusinessName
+								</h6>
+							</td>
+							<td>
+								<select data-pmId="@item.PurchaseMasterId" name="status" class="form-control form-control-select2 status" data-placeholder="Select status">
+									@foreach (PurchaseStatus status in Enum.GetValues(typeof(PurchaseStatus)))
+									{
+										<option value="@((int)status)" @(selectedStatus == (int)status ? "selected" : "")>
+											@status
+										</option>
+									}
+								</select>
 
+							</td>
+							<td>
+								@TimeHelper.GetFormattedTimeSpan(DateTime.Parse(item?.CreatedOn.ToString()))
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.TotalAmount </h6>
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.DiscountAmount </h6>
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.GrandTotal </h6>
+							</td>
+							<td class="text-center">
+								<div class="list-icons list-icons-extended">
+									<a href="/Purchase/EditRequisition?Id=@item?.PurchaseMasterId" class="list-icons-item"><i class="icon-file-plus"></i></a>
+									
+								</div>
+							</td>
+						</tr>
+					}
+					else if (item.Status == (int)PurchaseStatus.Approved)
+					{
+						<tr class="bg-success">
+							<td>@item?.PurchaseNumber</td>
+							<td>
+								<h6 class="mb-0">
+									@item.SupplierBusinessName
+								</h6>
+							</td>
+							<td>
+								<select data-pmId="@item.PurchaseMasterId" name="status" class="form-control form-control-select2 status" data-placeholder="Select status">
+									@foreach (PurchaseStatus status in Enum.GetValues(typeof(PurchaseStatus)))
+									{
+										<option value="@((int)status)" @(selectedStatus == (int)status ? "selected" : "")>
+											@status
+										</option>
+									}
+								</select>
+
+							</td>
+							<td>
+								@TimeHelper.GetFormattedTimeSpan(DateTime.Parse(item?.CreatedOn.ToString()))
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.TotalAmount </h6>
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.DiscountAmount </h6>
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.GrandTotal </h6>
+							</td>
+							<td class="text-center">
+								<div class="list-icons list-icons-extended">
+									<a href="/Purchase/EditRequisition?Id=@item?.PurchaseMasterId" class="list-icons-item"><i class="icon-file-plus"></i></a>
+									
+								</div>
+							</td>
+						</tr>
+					}
+					else 
+					{
+						<tr class="bg-info">
+							<td>@item?.PurchaseNumber</td>
+							<td>
+								<h6 class="mb-0">
+									@item.SupplierBusinessName
+								</h6>
+							</td>
+							<td>
+								<select data-pmId="@item.PurchaseMasterId" name="status" class="form-control form-control-select2 status" data-placeholder="Select status">
+									@foreach (PurchaseStatus status in Enum.GetValues(typeof(PurchaseStatus)))
+									{
+										<option value="@((int)status)" @(selectedStatus == (int)status ? "selected" : "")>
+											@status
+										</option>
+									}
+								</select>
+
+							</td>
+							<td>
+								@TimeHelper.GetFormattedTimeSpan(DateTime.Parse(item?.CreatedOn.ToString()))
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.TotalAmount </h6>
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.DiscountAmount </h6>
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.GrandTotal </h6>
+							</td>
+							<td class="text-center">
+								<div class="list-icons list-icons-extended">
+									<a href="/Purchase/EditRequisition?Id=@item?.PurchaseMasterId" class="list-icons-item"><i class="icon-file-plus"></i></a>
+								
+								</div>
+							</td>
+						</tr>
+					}
+					
 				}
 			</tbody>
 		</table>

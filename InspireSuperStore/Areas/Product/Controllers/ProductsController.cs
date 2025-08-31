@@ -82,6 +82,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             var product = await _product.GetProduct(productId);
             vm.Departments = await _attrib.GetDepartment();
             vm.Brands = await _attrib.GetBrands();
+            vm.UOMs = await _attrib.GetUOM();
             vm.Product = product;
             vm.Permission = PermissionHelper.Permissions().Where(x => x.URL == "/Product/Products" && x.Module == ModuleList.Product.ToString() && x.Feature == ModuleList.Category.ToString() && x.UserId == 2).FirstOrDefault(); ;
 

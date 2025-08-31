@@ -40,8 +40,8 @@
 						<label>Company:</label>
 						<select id="company" data-placeholder="Enter 'Company'" class="form-control select-minimum" data-fouc required>
 
-							<option value="@AppDataUtility.SessionUser.PersonVM.Branch.Organization.OrganizationId">
-								@AppDataUtility.SessionUser.PersonVM.Branch.Organization.OrganizationName
+							<option value="@AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId">
+								@AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationName
 							</option>
 							<optgroup label="Company">
 
@@ -53,7 +53,7 @@
 					<div class="form-group">
 						<label>Branch:</label>
 						<select id="branch" data-placeholder="Enter 'Branch'" class="form-control select-minimum" data-fouc required>
-							<option value="@AppDataUtility.SessionUser.PersonVM.Branch.BranchId">@AppDataUtility.SessionUser.PersonVM.Branch.BranchName</option>
+							<option value="@AppDataUtility.SessionUser.Person.Branch.BranchId">@AppDataUtility.SessionUser.Person.Branch.BranchName</option>
 
 							<optgroup label="Branch">
 
