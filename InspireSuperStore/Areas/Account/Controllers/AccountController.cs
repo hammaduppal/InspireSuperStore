@@ -35,6 +35,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
         public async Task<IActionResult> Login(string? ReturnUrl = null)
         {
             var result = await _admin.GetOrganizations();
+            var res = HttpContext.RequestAborted;
             if (result.Count == 0)
             {
                 // Redirect to StartupSettings in AdminPanel controller
@@ -139,16 +140,16 @@ namespace InspireSuperStore.Areas.Account.Controllers
         }
 
         [HttpGet]
-        [Route("/sso")]
+        [Route("/Account/SSO/{key}")]
         public async Task<IActionResult> SSO(string key)
         {
-            string decrypted = EncryptionPasses.RandomDecrypt(key);
+            string base64 = Uri.UnescapeDataString(key);
+            string decrypted = EncryptionPasses.RandomDecrypt(base64);
             LoginUserVM user = JsonConvert.DeserializeObject<LoginUserVM>(decrypted);
             var res = await _login.SSOValidateLogin(user);
             if (res != null)
             {
                 await _login.SigninAsync(res, HttpContext);
-                res.Password = "";
                 AppDataUtility.SessionUser = res;
                 //if (res.RoleName=="SuperAdmin")
                 //{

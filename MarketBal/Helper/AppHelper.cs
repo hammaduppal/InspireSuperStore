@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Web;
 using MainModels.DTOModels;
 using MainModels.Util;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -14,7 +15,7 @@ namespace MarketBal.Helper
             string encrypted = EncryptionPasses.RandomEncrypt(JsonConvert.SerializeObject(AppDataUtility.SessionUser));
             string safeEncrypted = Uri.EscapeDataString(encrypted);
 
-            string url = $"{setting.ApplicationUrl}/sso?key={safeEncrypted}"; 
+            string url = $"{setting.ApplicationUrl}Account/SSO/{safeEncrypted}"; 
             return url;
         }
     }
