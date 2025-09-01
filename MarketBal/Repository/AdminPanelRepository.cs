@@ -196,7 +196,7 @@ namespace MarketBal.Repository
             var currentTime = DateTime.UtcNow;
             var user = _onedb.LoginUsers.Include("Person").Where(x => x.Id == vm.Id).FirstOrDefault();
             user.UserName = !string.IsNullOrWhiteSpace(vm.UserName) ? vm.UserName : user.UserName;
-            user.Passwords = !string.IsNullOrWhiteSpace(vm.Password) ? EncryptionPasses.Encrypt(vm.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE) : user.Passwords;
+            user.Password = !string.IsNullOrWhiteSpace(vm.Password) ? EncryptionPasses.Encrypt(vm.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE) : user.Password;
             user.Person.FirstName = !string.IsNullOrWhiteSpace(vm.Person.FirstName) ? vm.Person.FirstName : user.Person.FirstName;
             user.Person.LastName = !string.IsNullOrWhiteSpace(vm.Person.LastName) ? vm.Person.LastName : user.Person.LastName;
             user.Person.Cnic = !string.IsNullOrWhiteSpace(vm.Person.Cnic) ? vm.Person.Cnic : user.Person.Cnic;
@@ -250,103 +250,116 @@ namespace MarketBal.Repository
         }
         public async Task<int> AddNewUser(LoginUserVM model)
         {
-            var existingUser = await _onedb.LoginUsers.Include("Person").Where(x => x.UserName == model.UserName).FirstOrDefaultAsync();
-            if (existingUser != null)
+            if (_onedb.LoginUsers.Where(x => x.UserName == model.UserName).Any())
             {
-                return -3;
-            }
-            var existingPerson = await _onedb.Persons.Where(x => x.Cnic == model.Person.Cnic || x.MobileNumber == model.Person.MobileNumber).FirstOrDefaultAsync();
+                var existingUser = await _onedb.LoginUsers.Include("Person").Where(x => x.UserName == model.UserName).FirstOrDefaultAsync();
+                if (existingUser != null)
+                {
+                    return -3;
+                }
+                var existingPerson = await _onedb.Persons.Where(x => x.Cnic == model.Person.Cnic || x.MobileNumber == model.Person.MobileNumber).FirstOrDefaultAsync();
 
-            if (existingPerson != null)
-            {
-                return -4;
+                if (existingPerson != null)
+                {
+                    return -4;
+                }
             }
-            int maxLoginId = _onedb.LoginUsers.Any()
+            try
+            {
+                int maxLoginId = _onedb.LoginUsers.Any()
                     ? _onedb.LoginUsers.Max(x => x.Id)
                     : 0;
-            int maxPersonId = _onedb.Persons.Any()
-                  ? _onedb.Persons.Max(x => x.Id)
-                  : 0;
-            int maxAddressId = _onedb.LaneAddresses.Any()
-                  ? _onedb.LaneAddresses.Max(x => x.AddressId)
-                  : 0;
-            var addone = model.Person.LaneAddress.FirstOrDefault();
-            var addressBilling = new LaneAddress
-            {
-                AddressId = maxAddressId + 1,
-                LaneAddressOne = addone.LaneAddressOne,
-                LaneAddressTwo = addone.LaneAddressTwo,
-                Area = addone.Area,
-                FamousPlace = addone.FamousPlace,
-                CityId = addone.CityId,
-                AddressType = "Billing",
-
-
-            };
-            var addressShipping = new LaneAddress
-            {
-                AddressId = maxAddressId + 2,
-                LaneAddressOne = addone.LaneAddressOne,
-                LaneAddressTwo = addone.LaneAddressTwo,
-                Area = addone.Area,
-                FamousPlace = addone.FamousPlace,
-                CityId = addone.CityId,
-                AddressType = "Shipping"
-            };
-
-            var addresses = new List<LaneAddress>();
-            addresses.Add(addressShipping);
-            addresses.Add(addressBilling);
-            var currentTime = DateTime.UtcNow;
-            var assignBranches = new List<UserAssignedBranch>();
-
-            var assignBranch = new UserAssignedBranch
-            {
-                BranchId = model.Person.BranchId,
-                LoginUserId = maxLoginId,
-                IsActive = true,
-                IsDeleted = false,
-                CreatedOn = currentTime,
-                Createdby = AppDataUtility.SessionUser.Id
-
-            };
-            assignBranches.Add(assignBranch);
-            var newUser = new LoginUser
-            {
-                Id = maxLoginId + 1,
-                UserName = model.UserName,
-                Passwords = EncryptionPasses.Encrypt(model.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE),
-                CreatedOn = currentTime,
-                ModifiedOn = currentTime,
-                IsActive = true,
-                IsDeleted = false,
-                Createdby = AppDataUtility.SessionUser.Id,
-                UserAssignedBranches = assignBranches,
-                Person = new Person
+                int maxPersonId = _onedb.Persons.Any()
+                      ? _onedb.Persons.Max(x => x.Id)
+                      : 0;
+                int maxAddressId = _onedb.LaneAddresses.Any()
+                      ? _onedb.LaneAddresses.Max(x => x.AddressId)
+                      : 0;
+                var addone = model.Person.LaneAddress.FirstOrDefault();
+                var addressBilling = new LaneAddress
                 {
-                    Id = maxPersonId + 1,
-                    Cnic = model.Person.Cnic,
-                    Email = model.UserName,
-                    SocialSecurity = model.Person.SocialSecurity,
-                    LastName = model.Person.LastName,
-                    FirstName = model.Person.FirstName,
-                    MobileNumber = model.Person.MobileNumber,
-                    LaneAddresses = addresses,
+                    AddressId = maxAddressId + 1,
+                    LaneAddressOne = addone.LaneAddressOne,
+                    LaneAddressTwo = addone.LaneAddressTwo,
+                    Area = addone.Area,
+                    FamousPlace = addone.FamousPlace,
+                    CityId = addone.CityId,
+                    AddressType = "Billing",
+
+
+                };
+                var addressShipping = new LaneAddress
+                {
+                    AddressId = maxAddressId + 2,
+                    LaneAddressOne = addone.LaneAddressOne,
+                    LaneAddressTwo = addone.LaneAddressTwo,
+                    Area = addone.Area,
+                    FamousPlace = addone.FamousPlace,
+                    CityId = addone.CityId,
+                    AddressType = "Shipping"
+                };
+
+                var addresses = new List<LaneAddress>();
+                addresses.Add(addressShipping);
+                addresses.Add(addressBilling);
+                var currentTime = DateTime.UtcNow;
+                var assignBranches = new List<UserAssignedBranch>();
+
+                var assignBranch = new UserAssignedBranch
+                {
                     BranchId = model.Person.BranchId,
+                    LoginUserId = maxLoginId,
+                    IsActive = true,
+                    IsDeleted = false,
+                    CreatedOn = currentTime,
+                    Createdby = AppDataUtility.SessionUser.Id
+
+                };
+                assignBranches.Add(assignBranch);
+                var newUser = new LoginUser
+                {
+                    Id = maxLoginId + 1,
+                    UserName = model.UserName,
+                    Password = EncryptionPasses.Encrypt(model.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE),
                     CreatedOn = currentTime,
                     ModifiedOn = currentTime,
                     IsActive = true,
                     IsDeleted = false,
-                    Createdby = AppDataUtility.SessionUser.Id
+                    Createdby = AppDataUtility.SessionUser.Id,
+                    UserAssignedBranches = assignBranches,
+                    Person = new Person
+                    {
+                        Id = maxPersonId + 1,
+                        Cnic = model.Person.Cnic,
+                        Email = model.UserName,
+                        SocialSecurity = model.Person.SocialSecurity,
+                        LastName = model.Person.LastName,
+                        FirstName = model.Person.FirstName,
+                        MobileNumber = model.Person.MobileNumber,
+                        LaneAddresses = addresses,
+                        BranchId = model.Person.BranchId,
+                        CreatedOn = currentTime,
+                        ModifiedOn = currentTime,
+                        IsActive = true,
+                        IsDeleted = false,
+                        Createdby = AppDataUtility.SessionUser.Id
 
 
-                }
-            };
-            _onedb.LoginUsers.Add(newUser);
+                    }
+                };
+                _onedb.LoginUsers.Add(newUser);
 
-            var result = _onedb.SaveChanges();
+                var result = _onedb.SaveChanges();
+                return result;
 
-            return result;
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
+            
+
         }
 
         public async Task<int> ActiveDeactiveUser(LoginUserVM model)
@@ -581,7 +594,7 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                     {
                         Id = 1,
                         UserName = model.Email,
-                        Passwords = EncryptionPasses.Encrypt(model.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE),
+                        Password = EncryptionPasses.Encrypt(model.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE),
                         IsActive = true,
                         IsDeleted = false,
                         CreatedOn = currentTime

@@ -201,12 +201,12 @@
 				e.preventDefault();
 				const validate = Utility.validateFormAndInputs('#addNewUser');
 				const isFormValid = validate();
-					if (isFormValid) {
-				Utility.SpinnerMessageParent('newuseraddBtn','Loading..');
-				var formData={
+				if (isFormValid) {
+					Utility.SpinnerMessageParent('newuseraddBtn','Loading..');
+					var formData={
 						UserName: $('#UserName').val(),
-						Passwords: $('#Password').val(),
-					PersonVM:{
+						Password: $('#Password').val(),
+					Person:{
 						FirstName: $('#FirstName').val(),
 						LastName: $('#LastName').val(),
 						MobileNumber: $('#Mobile').val(),
@@ -222,29 +222,29 @@
 						}]
 					}
 
-				}
+					}
 
 
-				var objectData={
-				data:formData,
-				url:'/AdminPanel/AddNewUser'
-				}
-				debugger
-				const result = await Utility.RequestDataAjax(objectData);
-				Utility.StopSpinnerMessageParent('newuseraddBtn');
-				if(result.statusCode==='200'){
-				$('#reset').click();
-					Utility.successMessage(result.Message);
-				}
-				else if(result.statusCode==='201'){
-					Utility.infoMessage(result.Message);
-				}
-				else if(result.statusCode==='202'){
-					Utility.infoMessage(result.Message);
-				}
-				else{
-					Utility.failMessage(result.Message);
-				}
+					var objectData={
+					data:formData,
+					url:'/AdminPanel/AddNewUser'
+					}
+					debugger
+					const result = await Utility.RequestDataAjax(objectData);
+					Utility.StopSpinnerMessageParent('newuseraddBtn');
+					if(result.statusCode==='200'){
+					$('#reset').click();
+						Utility.successMessage(result.Message);
+					}
+					else if(result.statusCode==='201'){
+						Utility.infoMessage(result.Message);
+					}
+					else if(result.statusCode==='202'){
+						Utility.infoMessage(result.Message);
+					}
+					else{
+						Utility.failMessage(result.Message);
+					}
 				}
 			})
 

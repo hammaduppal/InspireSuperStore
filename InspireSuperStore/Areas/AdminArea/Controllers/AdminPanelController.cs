@@ -79,6 +79,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             vm.Countries = await _adminPanel.Countries();
             return View(vm);
         }
+        [HttpPost]
         public async Task<IActionResult> AddNewUser(LoginUserVM formData)
         {
             var result = await _adminPanel.AddNewUser(formData);
