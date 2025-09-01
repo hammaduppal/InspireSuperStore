@@ -7,6 +7,7 @@ using MarketBal.Repository.HRM;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.SqlServer.Server;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using Newtonsoft.Json;
 using static QRCoder.PayloadGenerator;
 
@@ -32,17 +33,54 @@ namespace InspireSuperStore.Areas.Account.Controllers
             _admin = new AdminPanelRepository(_config, _oneDb);
             _hrm = new HumanRespourceRepository(_config, _oneDb);
         }
-        public async Task<IActionResult> Login(string? ReturnUrl = null)
+        public async Task<IActionResult> Login(string? returnUrl = null)
         {
             var result = await _admin.GetOrganizations();
-            var res = HttpContext.RequestAborted;
+            
             if (result.Count == 0)
             {
                 // Redirect to StartupSettings in AdminPanel controller
                 return RedirectToAction("StartupSettings", "Account");
             }
-            TempData["ReturnURL"] = ReturnUrl;
+            if (CheckEncryption(returnUrl))
+            {
+                string base64 = Uri.UnescapeDataString(returnUrl);
+                string decrypted = EncryptionPasses.RandomDecrypt(base64);
+                LoginUserVM user = Newtonsoft.Json.JsonConvert.DeserializeObject<LoginUserVM>(decrypted);
+                var res = await _login.ValidateLogin(user);
+                if (res != null)
+                {
+                    await _login.SigninAsync(res, HttpContext);
+                    AppDataUtility.SessionUser = res;
+                 
+                }
+            }
+            TempData["ReturnURL"] = returnUrl;
             return View();
+        }
+        private bool CheckEncryption(string returnUrl)
+        {
+            bool isEncrypted = false;
+            string decrypted = null;
+
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                try
+                {
+                    string unescaped = Uri.UnescapeDataString(returnUrl);
+                    decrypted = EncryptionPasses.RandomDecrypt(unescaped);
+
+                    // if decryption didn't throw, assume it's valid
+                    if (!string.IsNullOrEmpty(decrypted))
+                        isEncrypted = true;
+                }
+                catch
+                {
+                    isEncrypted = false; // not encrypted
+                }
+            }
+
+            return isEncrypted;
         }
         [HttpPost]
         public async Task<IActionResult> ValidateLogin(LoginUserVM formData)

@@ -11,12 +11,26 @@ namespace MarketBal.Helper
     {
         public static string CreateSSOURL(int appId)
         {
-            var setting = PagesViewModel.Settings.Where(x => x.ApplicationId == appId).FirstOrDefault();
-            string encrypted = EncryptionPasses.RandomEncrypt(JsonConvert.SerializeObject(AppDataUtility.SessionUser));
+            var setting = PagesViewModel.Settings.FirstOrDefault(x => x.ApplicationId == appId);
+            var ssoLogin = new SSOLogin
+            {
+                UserName = AppDataUtility.SessionUser.UserName,
+                Password = EncryptionPasses.Decrypt(AppDataUtility.SessionUser.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE)
+
+            };
+            string encrypted = EncryptionPasses.RandomEncrypt(JsonConvert.SerializeObject(ssoLogin));
             string safeEncrypted = Uri.EscapeDataString(encrypted);
 
-            string url = $"{setting.ApplicationUrl}Account/SSO/{safeEncrypted}"; 
+            string baseUrl = setting.ApplicationUrl.TrimEnd('/');
+            string url = $"{baseUrl}/Account/Login?returnUrl={safeEncrypted}";
+
             return url;
         }
+
+    }
+   public class SSOLogin
+    {
+        public string UserName { get; set; }
+        public string Password { get; set; }
     }
 }
