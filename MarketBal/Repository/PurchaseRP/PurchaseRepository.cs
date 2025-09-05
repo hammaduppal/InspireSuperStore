@@ -238,6 +238,7 @@ namespace MarketBal.Repository.PurchaseRP
                     existingDetail.Qty = detail.Qty;
                     existingDetail.UnitPrice = detail.UnitPrice;
                     existingDetail.TotalPrice = detail.TotalPrice;
+                    
                     existingDetail.ModifiedOn = DateTime.UtcNow;
                 }
 
@@ -247,6 +248,7 @@ namespace MarketBal.Repository.PurchaseRP
                 {
                     var qpu = variant.QuantityPerUnit??1;
                     variant.QoH = (variant.QoH ?? 0) + ((detail.Qty * qpu) ?? 0); variant.ModifiedOn = DateTime.UtcNow;
+                    variant.Cost = detail.UnitPrice;
                 }
             }
 

@@ -1,6 +1,7 @@
 ﻿using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
+using MarketBal.Repository;
 using MarketBal.Repository.Account;
 using MarketBal.Repository.DCS;
 using MarketBal.Repository.Products;
@@ -11,7 +12,7 @@ using static MainModels.DTOModels.AppConstants;
 
 namespace InspireSuperStore.Areas.Product.Controllers
 {
-    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry+","+UserRolesConstants.Product + "," + UserRolesConstants.Purchase)]
+    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry + "," + UserRolesConstants.Product + "," + UserRolesConstants.Purchase)]
     [Area("Product")]
     [Route("Products/[action]")]
     public partial class ProductsController : Controller
@@ -23,6 +24,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
         private readonly FileRepository _file;
         private readonly PagesViewModel vm = new PagesViewModel();
         private readonly OneDb oneDb;
+        private readonly AdminPanelRepository _admin;
         public ProductsController(IConfiguration config, OneDb oneDb)
         {
             this.oneDb = oneDb;
@@ -32,11 +34,12 @@ namespace InspireSuperStore.Areas.Product.Controllers
             _dcs = new DCSRepository(_config);
             _attrib = new AttributeRepository(_config);
             _file = new FileRepository();
+            _admin = new AdminPanelRepository(_config, oneDb);
         }
-        public IActionResult Products()
+        public async Task<IActionResult> Products()
         {
             vm.Permission = PermissionHelper.Permissions().Where(x => x.URL == "/Product/Products" && x.Module == ModuleList.Product.ToString() && x.Role == "Admin").FirstOrDefault(); ;
-
+            vm.Branches = await _admin.GetBranches(AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId);
 
             return View(vm);
         }
@@ -46,7 +49,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             return Json(res);
         }
         [HttpPost]
-        public async Task<IActionResult> ActiveUnactive(RequestModel model)     
+        public async Task<IActionResult> ActiveUnactive(RequestModel model)
         {
             var res = await _product.ActiveUnActiveProduct(model.ProductId, model.IsActive ? 1 : 0);
             if (res)
@@ -66,7 +69,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
         public async Task<IActionResult> AddProduct(ProductVM product)
         {
 
-            if (product.BrandId==null || product.SubCategoryId==null)
+            if (product.BrandId == null || product.SubCategoryId == null)
             {
                 return Json(new { statusCode = "300" });
 
@@ -131,7 +134,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
         [HttpPost]
         public async Task<IActionResult> AddProductImages(UploadImage model)
         {
-            var uploadResult = await _file.SaveFile(model.File,"Products","Products");
+            var uploadResult = await _file.SaveFile(model.File, "Products", "Products");
             if (uploadResult.StatusCode == "200")
             {
                 var resu = await _product.SaveProductImage(Guid.Parse(model.Id), uploadResult.ImageUrl);

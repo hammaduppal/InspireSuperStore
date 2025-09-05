@@ -276,6 +276,7 @@
 				});
 
 				$(document).on('keyup','.qty', async function(e){
+					debugger
 					var newQty = $(this).val();
 					var pdId = $(this).attr('data-purchaseDetailId');
 					if(newQty==0){
