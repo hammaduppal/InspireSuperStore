@@ -142,6 +142,19 @@
 					<input type="text" id="max" name="max" class="form-control" placeholder="Max" />
 				</div>
 			</div>
+			<div class="col-md-2">
+				<div class="form-group">
+					<label>Type of Tax</label>
+					<select id="taxSlabs" class="form-control">
+						@foreach (var item in Model.TaxSlabs)
+						{
+							<option value="@item.TaxSlabId">@item.SlabName</option>
+						}
+
+					</select>
+					
+				</div>
+			</div>
 		</div>
 
 		<div class="text-right">
@@ -508,7 +521,8 @@
 				MinQty: $('#min').val(),
 				MaxQty: $('#max').val(),
 				IsSerial:serialNumberOption,
-				ProductId:ProductId
+				ProductId:ProductId,
+				TaxSlabId: $('#taxSlabs').val(),
 		}
 		var objectData={
 			data:formData,

@@ -5,6 +5,7 @@ using MarketBal.Repository;
 using MarketBal.Repository.Account;
 using MarketBal.Repository.DCS;
 using MarketBal.Repository.Products;
+using MarketBal.Repository.SystemRP;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
@@ -25,6 +26,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
         private readonly PagesViewModel vm = new PagesViewModel();
         private readonly OneDb oneDb;
         private readonly AdminPanelRepository _admin;
+        private readonly SystemRepository _system;
         public ProductsController(IConfiguration config, OneDb oneDb)
         {
             this.oneDb = oneDb;
@@ -35,6 +37,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             _attrib = new AttributeRepository(_config);
             _file = new FileRepository();
             _admin = new AdminPanelRepository(_config, oneDb);
+            _system =new SystemRepository(_config, oneDb);
         }
         public async Task<IActionResult> Products()
         {
@@ -86,6 +89,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             vm.Departments = await _attrib.GetDepartment();
             vm.Brands = await _attrib.GetBrands();
             vm.UOMs = await _attrib.GetUOM();
+            
             vm.Product = product;
             vm.Permission = PermissionHelper.Permissions().Where(x => x.URL == "/Product/Products" && x.Module == ModuleList.Product.ToString() && x.Feature == ModuleList.Category.ToString() && x.UserId == 2).FirstOrDefault(); ;
 
@@ -164,6 +168,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             vm.Colors = await _attrib.GetColors();
             vm.Materials = await _attrib.GetMaterials();
             vm.ProductVariants = await _product.GetProductVariants(model.ProductId);
+            vm.TaxSlabs = await _system.TaxSlabs();
             vm.Branches = await _admin.GetBranches(AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId);
             vm.ProductImages = await _product.GetProductImages(model.ProductId);
 

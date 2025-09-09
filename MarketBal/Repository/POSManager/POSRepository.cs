@@ -65,6 +65,7 @@ namespace MarketBal.Repository.POSManager
                         PaymentStatus = model.PaymentStatus,
                         Remarks = model.Remarks,
                         CreatedBy = 1,
+                         InvoiceSourceId=(int)AppConstants.InvoiceSource.POS,
                         CreatedDate = commonParams.CreatedOn,
                         UpdatedDate = commonParams.CreatedOn,
                         ServingTableId = (model.ServingTableId.HasValue && model.ServingTableId.Value != Guid.Empty)

@@ -478,6 +478,7 @@ WHERE pv.ProductId = @ProductId  AND bs.BranchId = @BranchId
             pv.QuantityPerUnit,
             pv.VariantImageId,
             b.BrandName,
+ts.Rate as TaxRate,
 pv.BarCode,
 pv.PriceFormat,
             pv.VariantId,
@@ -492,6 +493,7 @@ pv.PriceFormat,
             bs.IsDeleted AS BranchIsDeleted
         FROM inv.ProductVariants pv
         JOIN Inv.Products p ON pv.ProductId = p.ProductId
+JOIN System.TaxSlabs ts on pv.TaxSlabId = ts.TaxSlabId
         JOIN Inv.Colors c ON pv.ColorId = c.ColorId
         JOIN Inv.Material m ON pv.MaterialId = m.MaterialId
         JOIN Inv.Sizes s ON pv.SizeId = s.SizeId
@@ -574,9 +576,11 @@ pv.BarCode,
     bs.StaffPrice,
     bs.Cost,
     bs.Qty,
+ts.Rate as TaxRate,
     pv.PriceFormat
 FROM Inv.ProductVariants pv 
 JOIN Inv.Products p ON pv.ProductId = p.ProductId
+JOIN System.TaxSlabs ts on pv.TaxSlabId = ts.TaxSlabId
 JOIN Inv.Colors c ON pv.ColorId = c.ColorId
 JOIN Inv.Material m ON pv.MaterialId = m.MaterialId
 JOIN Inv.Sizes s ON pv.SizeId = s.SizeId
@@ -587,7 +591,7 @@ JOIN Inv.BranchStock bs ON pv.VariantId = bs.ProductVariantId AND bs.BranchId = 
 WHERE 
     pv.IsActive = 1 AND pv.IsDeleted = 0
     AND bs.IsActive = 1 AND bs.IsDeleted = 0
-    /*** DYNAMIC CONDITIONS WILL BE INJECTED HERE ***/ 
+    
 ORDER BY p.ProductName";
 
 
@@ -680,7 +684,7 @@ ORDER BY p.ProductName";
              BarCode = pv.BarCode,
              MinQty = pv.MinQty,
              MaxQty = pv.MaxQty,
-
+             TaxRate=pv.TaxSlab.Rate,
              LastPurchase = pv.LastPurchase,
              CreatedOn = pv.CreatedOn,
              Createdby = pv.Createdby,
@@ -789,14 +793,14 @@ BEGIN
         BarCode, SubUOMId, QuantityPerUnit, IsSerial,
         MinQty, MaxQty, CreatedOn, CreatedBy, ModifiedOn,
         IsActive, IsDeleted,
-        BranchId, OrganizationId
+        BranchId, OrganizationId,TaxSlabId
     )
     VALUES (
         @VariantId, @MaterialId, @ColorId, @SizeId, @ProductId,
         @BarCode, @SubUOMId, @QuantityPerUnit, @IsSerial,
         @MinQty, @MaxQty, @CreatedOn, @CreatedBy, @ModifiedOn,
         @IsActive, @IsDeleted, 
-        @BranchId, @OrganizationId
+        @BranchId, @OrganizationId,@TaxSlabId
     );
 
     -- Insert branch-specific pricing/quantity into BranchStock
@@ -842,7 +846,8 @@ END
                 commonParams.IsActive,
                 commonParams.IsDeleted,
                 commonParams.BranchId,
-                commonParams.OrganizationId
+                commonParams.OrganizationId,
+                model.TaxSlabId
             };
 
             var result = await _db.ExecuteQuery<int>(query, param);

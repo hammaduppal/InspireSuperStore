@@ -89,11 +89,11 @@
             <span class="slider"></span>
         </label>
     </div>
-    <div class="col-lg-4 mb-3">
+@*     <div class="col-lg-4 mb-3">
         <label>Default Tax Rate</label>
         <input type="number" class="form-control" id="DefaultTaxRate"
                value="@(Model.SystemPreferences.DefaultTaxRate == null ? 0 : Model.SystemPreferences.DefaultTaxRate.ToString())">
-    </div>
+    </div> *@
     <div class="col-lg-4 mb-3">
         <label>Tax Registration Number</label>
         <input type="text" class="form-control" id="TaxRegistrationNumber"
@@ -315,72 +315,87 @@
 <script>
     $(document).ready(function () {
 
-         $("#btnSavePreferences").click(function () {
-        var formData = new FormData();
+        $("#btnSavePreferences").click(function () {
+            var formData = new FormData();
 
-        // General Accounting Preferences
-        formData.append("BranchId", $("#branch").val());
+            // === General Settings ===
+            formData.append("CompanyName", $("#CompanyName").val());
+            formData.append("CurrencyCode", $("#CurrencyCode").val());
+            formData.append("CurrencySymbol", $("#CurrencySymbol").val());
+            formData.append("DecimalPlaces", $("#DecimalPlaces").val());
+            formData.append("DefaultLanguage", $("#DefaultLanguage").val());
+            formData.append("TimeZone", $("#TimeZone").val());
+            formData.append("DateFormat", $("#DateFormat").val());
+            formData.append("IsAffilatedInvoice", $("#IsAffilatedInvoice").is(":checked"));
+            formData.append("IsRestaurantApplication", $("#IsRestaurantApplication").is(":checked"));
 
-        // Fiscal Year
-        formData.append("FiscalYearStartMonth", $("#FiscalYearStartMonth").val());
-        formData.append("FiscalYearEndMonth", $("#FiscalYearEndMonth").val());
-        formData.append("FiscalYearStartDate", $("#FiscalYearStartDate").val());
-        formData.append("FiscalYearEndDate", $("#FiscalYearEndDate").val());
-
-        // Multi-Currency
-        formData.append("EnableMultiCurrency", $("#EnableMultiCurrency").is(":checked"));
-        formData.append("BaseCurrencyCode", $("#BaseCurrencyCode").val());
-        formData.append("DefaultExchangeRateSource", $("#DefaultExchangeRateSource").val());
-
-        // Year Closing
-        formData.append("EnableAutomaticYearClosing", $("#EnableAutomaticYearClosing").is(":checked"));
-        formData.append("LockTransactionsAfterPeriodClose", $("#LockTransactionsAfterPeriodClose").is(":checked"));
-
-        // Default Accounts
-        formData.append("DefaultSalesAccount", $("#DefaultSalesAccount").val());
-        formData.append("DefaultPurchaseAccount", $("#DefaultPurchaseAccount").val());
-        formData.append("DefaultTaxAccount", $("#DefaultTaxAccount").val());
-
-        // Other Options
-        formData.append("AllowBackDatedTransactions", $("#AllowBackDatedTransactions").is(":checked"));
-
-        // Debug: Log everything
-        console.log("=== FormData Debug Start ===");
-        for (var pair of formData.entries()) {
-            console.log(pair[0] + ": ", pair[1]);
-        }
-
-        // AJAX request
-        $.ajax({
-            url: '/AdminPanel/SaveAccountingPreferences',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response) {
-                alert("Accounting Preferences saved successfully!");
-            },
-            error: function (xhr, status, error) {
-                alert("Error saving accounting preferences: " + error);
+            var companyLogoFile = $("#CompanyLogoFile")[0].files[0];
+            if (companyLogoFile) {
+                formData.append("CompanyLogoFile", companyLogoFile);
             }
-        });
-    });
 
-       function toggleTaxRate() {
-            if ($("#EnableTax").is(":checked")) {
-                $("#DefaultTaxRate").closest(".col-lg-4").show();
-            } else {
-                $("#DefaultTaxRate").closest(".col-lg-4").hide();
+            // === Tax & Financial ===
+            formData.append("PricesIncludeTax", $("#PricesIncludeTax").is(":checked"));
+            formData.append("EnableTax", $("#EnableTax").is(":checked"));
+            // formData.append("DefaultTaxRate", $("#DefaultTaxRate").val()); // commented in HTML
+            formData.append("TaxRegistrationNumber", $("#TaxRegistrationNumber").val());
+
+            // === Inventory & Sales ===
+            formData.append("DefaultWarehouse", $("#DefaultWarehouse").val());
+            formData.append("LowStockThreshold", $("#LowStockThreshold").val());
+            formData.append("AllowNegativeStock", $("#AllowNegativeStock").is(":checked"));
+            formData.append("EnableInventoryTracking", $("#EnableInventoryTracking").is(":checked"));
+
+            // === Invoice & Document ===
+            formData.append("InvoicePrefix", $("#InvoicePrefix").val());
+            formData.append("InvoiceStartNumber", $("#InvoiceStartNumber").val());
+            formData.append("QuotationPrefix", $("#QuotationPrefix").val());
+            formData.append("ReceiptPrefix", $("#ReceiptPrefix").val());
+            formData.append("ShowLogoOnInvoices", $("#ShowLogoOnInvoices").is(":checked"));
+            formData.append("ShowTaxBreakdown", $("#ShowTaxBreakdown").is(":checked"));
+
+            // === User & Security ===
+            formData.append("EnableTwoFactorAuth", $("#EnableTwoFactorAuth").is(":checked"));
+            formData.append("SessionTimeoutMinutes", $("#SessionTimeoutMinutes").val());
+            formData.append("AllowMultipleLogins", $("#AllowMultipleLogins").is(":checked"));
+
+            // === Email & Communication ===
+            formData.append("SmtpServer", $("#SmtpServer").val());
+            formData.append("SmtpPort", $("#SmtpPort").val());
+            formData.append("SmtpUserName", $("#SmtpUserName").val());
+            formData.append("SmtpPassword", $("#SmtpPassword").val());
+            formData.append("EnableSsl", $("#EnableSsl").is(":checked"));
+            formData.append("DefaultFromEmail", $("#DefaultFromEmail").val());
+
+            // === Other Options ===
+            formData.append("EnableAutoBackup", $("#EnableAutoBackup").is(":checked"));
+            formData.append("AutoBackupIntervalDays", $("#AutoBackupIntervalDays").val());
+            formData.append("BackupLocation", $("#BackupLocation").val());
+            formData.append("BranchId", $("#branch").val());
+
+
+            // Debug: log all values
+            console.log("=== System Preferences FormData ===");
+            for (var pair of formData.entries()) {
+                console.log(pair[0] + ": ", pair[1]);
             }
-        }
 
-        // Run on page load
-        toggleTaxRate();
-
-        // Run on checkbox change
-        $("#EnableTax").change(function () {
-            toggleTaxRate();
+            // AJAX post
+            $.ajax({
+                url: '/AdminPanel/SaveSystemPrefrences',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    alert("System Preferences saved successfully!");
+                },
+                error: function (xhr, status, error) {
+                    alert("Error saving system preferences: " + error);
+                }
+            });
         });
+
     });
 </script>
 
