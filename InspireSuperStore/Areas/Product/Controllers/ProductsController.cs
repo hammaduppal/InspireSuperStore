@@ -164,12 +164,18 @@ namespace InspireSuperStore.Areas.Product.Controllers
             vm.Colors = await _attrib.GetColors();
             vm.Materials = await _attrib.GetMaterials();
             vm.ProductVariants = await _product.GetProductVariants(model.ProductId);
+            vm.Branches = await _admin.GetBranches(AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId);
             vm.ProductImages = await _product.GetProductImages(model.ProductId);
 
             return PartialView(vm);
         }
 
-
+        [HttpPost]
+        public async Task<IActionResult> SaveVariantBranches(ProductVariantVM model)
+        {
+            var res =await _product.AddProductVariantBranch(model);
+            return Json(new {Message="Branch Stock Updated Successfully!" });
+        }
         [HttpPost]
         public async Task<IActionResult> AddProductVariant(ProductVariantVM model)
 

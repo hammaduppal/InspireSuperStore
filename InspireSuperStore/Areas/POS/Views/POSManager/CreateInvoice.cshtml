@@ -71,6 +71,7 @@
 		}
 
 	</div>
+
 	<script>
 		$('#addCustomer').on('click',async function () {
 			var result = await Utility.RequestAjax('/Account/_AddCustomerForm');
@@ -772,7 +773,7 @@
 
 
 
-			$('#productSearch').select2({
+		$('#productSearch').select2({
 			placeholder: 'Search product by name, size, color, material...',
 			minimumInputLength: 2,
 			ajax: {
@@ -889,7 +890,8 @@
 					const totalPayable = subTotal + taxAmount;
 					$('#totalPayable').val(totalPayable.toFixed(2));
 			}
-		$(document).on('input', '#cashRecieved', function () {
+	
+			$(document).on('input', '#cashRecieved', function () {
 			let payable = parseFloat($('#totalPayable').val()) || 0;
 			let cashRecived = parseFloat($(this).val());
 			// Get the unit price from the currentPrice td

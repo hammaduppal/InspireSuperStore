@@ -7,18 +7,32 @@
 }
 
 <div class="page-header page-header-light">
-	<div class="page-header-content header-elements-md-inline">
-
-		<div class="d-flex">
-			<div class="breadcrumb">
-				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
-
-				<span class="breadcrumb-item active">Purchase Requisition</span>
+	<div class="row">
+		<!-- Barcode Input -->
+		<div class="col-md-3">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text"><i class="icon-barcode2"></i></span>
+				</div>
+				<input type="text" id="barCode" name="barCode" class="form-control" autocomplete="off" placeholder="Search BarCode........." />
 			</div>
-			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
 		</div>
-	</div>
+		<!-- Manual Search Input -->
+		<div class="col-md-3">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text"><i class="icon-search4"></i></span>
+				</div>
+				<div class="form-group-feedback form-group-feedback-right">
+					<select id="productSearch" style="width: 100%" class="form-control"></select>
 
+				</div>
+			</div>
+		</div>
+
+	
+
+	</div>
 
 </div>
 
@@ -83,8 +97,8 @@
 
 		</div>
 		<!-- /invoice archive -->
-		<div class="card shadow-5">
-			<table class="table table-bordered table-responsive p-2">
+		<div id="invoiceRowSection" class="card shadow-5">
+			<table id="purchaseRequisitionTable" class="table table-bordered table-responsive p-2">
 				<thead>
 					<tr>
 						<th>
@@ -102,53 +116,23 @@
 						<th>
 							Material
 						</th>
-
-						<th>
-							Purchase Price
-						</th>
 						<th>
 							Qty
 						</th>
 						<th>
+							Purchase Price
+						</th>
+						
+						<th>
 							Total Price
 						</th>
-
+						<th>Manage</th>
 					</tr>
 
 
 				</thead>
 				<tbody>
-					<tr>
-						<td>
-							<input data-rowCount="1" type="text" class="form-control barCode" />
-						</td>
-						<td>
-							<input disabled data-rowCount="1" type="text" class="form-control name" />
-
-						</td>
-						<td>
-							<input disabled data-rowCount="1" type="text" class="form-control color" />
-
-						</td>
-						<td>
-							<input disabled data-rowCount="1" type="text" class="form-control size" />
-
-						</td>
-						<td>
-							<input disabled data-rowCount="1" type="text" class="form-control material" />
-
-						</td>
-						<td>
-							<input data-rowCount="1" type="text" class="form-control purchasePrice" />
-						</td>
-						<td>
-							<input data-rowCount="1" type="text" class="form-control qty" />
-						</td>
-
-						<td>
-							<input disabled data-rowCount="1" type="text" class="form-control totalPrice" />
-						</td>
-					</tr>
+					
 				</tbody>
 			</table>
 
@@ -212,207 +196,301 @@
 
 </div>
 <!-- /content area -->
-
-
 <script>
-	  $(document).ready(function(){
-		  $(document).on('keydown', '.barCode', async function (e) {
-			  if (e.key === 'Enter') {
-				  e.preventDefault();
-				  var barCode = $(this).val();
-				  var rowCount = parseInt($(this).data('rowcount'));
+	$(document).ready(function(){
+	$('#barCode').focus();
+			  $(document).on('keydown', '#barCode', async function (e) {
 
-				  var objectData = {
+			  if (e.key === 'Enter') {
+					var barCode= $(this).val();
+
+					 const data = await Utility.RequestDataAjax( {
 					  data: { BarCode: barCode },
 					  url: '/Products/GetVariantbyBarCode'
-				  };
+				  });
+				  
+				  if(data){
+					appendProductToTable(data);
 
-				  const result = await Utility.RequestDataAjax(objectData);
-				  debugger
+					$('#barCode').focus();
+					$('#barCode').val('');
 
-				  if (result) {
-					  const data = result;
-					let isDuplicate = false;
+				  } else
+				  {
+					alert('Product not found!');
+					$(this).val('');
 
-					$('.barCode').each(function () {
-						const existingBarCode = $(this).val().trim();
-						const existingRowCount = $(this).data('rowcount');
-
-						if (existingRowCount !== rowCount && existingBarCode === barCode) {
-							isDuplicate = true;
-
-							// Update existing row's quantity and total
-							let existingQty = parseFloat($(`.qty[data-rowcount="${existingRowCount}"]`).val()) || 0;
-							let price = parseFloat($(`.purchasePrice[data-rowcount="${existingRowCount}"]`).val()) || 0;
-							let newQty = existingQty + 1;
-							let newTotal = price * newQty;
-
-							$(`.qty[data-rowcount="${existingRowCount}"]`).val(newQty);
-							$(`.totalPrice[data-rowcount="${existingRowCount}"]`).val(newTotal.toFixed(2));
-
-							// Remove current row (because duplicate)
-							$(`tr:has(.barCode[data-rowcount="${rowCount}"])`).find('input').val('');
-							rowCount++;
-							$(`.barCode[data-rowcount="${rowCount}"]`).closest('tr').remove();
-							// rowCount= rowCount-1;
-							// $(`.barCode[data-rowcount="${rowCount}"]`).closest('tr').remove();
-							// Focus the qty input in the updated row
-							//$(`.qty[data-rowcount="${existingRowCount}"]`).focus();
-
-							// Recalculate total
-							setTotalPrice();
-
-							return false; // Break loop
-						}
-					});
-
-					if (!isDuplicate) {
-						AddRowData(rowCount, data);
-					}
-									  $(`.qty[data-rowcount="${rowCount}"]`).off('keyup').on('keyup', function () {
-										  var price = parseFloat($(`.purchasePrice[data-rowcount="${rowCount}"]`).val()) || 0;
-										  var qty = parseFloat($(this).val()) || 0;
-										  var total = price * qty;
-										  $(`.totalPrice[data-rowcount="${rowCount}"]`).val(total.toFixed(2));
-										  setTotalPrice();
-									  });
-									  const totalRows = $('.barCode').length;
-									  const isLastRow = rowCount === totalRows;
-					  if (isLastRow) {
-							 const newRowCount = rowCount + 1;
-							 const newRow = `
-							  <tr>
-								  <td><input data-rowcount="${newRowCount}" type="text" class="form-control barCode" /></td>
-								  <td><input disabled data-rowcount="${newRowCount}" type="text" class="form-control name" /></td>
-								  <td><input disabled data-rowcount="${newRowCount}" type="text" class="form-control color" /></td>
-								  <td><input disabled data-rowcount="${newRowCount}" type="text" class="form-control size" /></td>
-								  <td><input disabled data-rowcount="${newRowCount}" type="text" class="form-control material" /></td>
-								  <td><input data-rowcount="${newRowCount}" type="text" class="form-control purchasePrice" /></td>
-								  <td><input data-rowcount="${newRowCount}" type="text" class="form-control qty" /></td>
-								  <td><input disabled data-rowcount="${newRowCount}" type="text" class="form-control totalPrice" /></td>
-							  </tr>
-							`;
-
-						  $(this).closest('tr').after(newRow);
-						  $(`.barCode[data-rowcount="${newRowCount}"]`).focus();
-					  }
-					  else {
-						  $(`.qty[data-rowcount="${rowCount}"]`).focus();
-					  }
-				  } else {
-					  bootboxAlertAsync("No Record Found", 'No Such Bar Code Exists');
-					  $(`input[data-rowcount="${rowCount}"]`).val('');
 				  }
-			  }
-		});
-		function setTotalPrice(){
 
+				}
+		  });
+
+	
+		$(document).on('input', '.lineqty', function () {
+			let qty = parseFloat($(this).val()) || 0;
+			let row = $(this).closest('tr');
+
+			// Get the unit price from the currentPrice td
+			let unitPrice = parseFloat(row.find('.currentPrice').text()) || 0;
+
+			// Calculate the new line total
+			let lineTotal = unitPrice * qty;
+
+			// Update the line total cell
+			row.find('.lineTotal').text(lineTotal.toFixed(2));
+
+			// Update overall invoice total
+			setTotalPrice();
+		});
+		$(document).on('input','#discount',function(){
+			setTotalPrice();
+		})
+			function scrollInvoiceTableToBottom() {
+				let container = $('#invoiceRowSection');
+			 container.scrollTop(container[0].scrollHeight);
+			}
+		$(document).on('click','.removeRow',function(e){
+			e.preventDefault();
+				$(this).closest('tr').remove();
+				setTotalPrice();
+		})
+
+			$('#productSearch').select2({
+		placeholder: 'Search product by name, size, color, material...',
+		minimumInputLength: 2,
+		ajax: {
+			url: '/Products/SearchProducts',
+			type: 'POST',
+			dataType: 'json',
+			delay: 300,
+			data: function (params) {
+				return {
+					SearchParams: params.term
+				};
+			},
+			processResults: function (data) {
+				return {
+					results: data.map(function (item) {
+						return {
+							id: item.BarCode,
+							text: `${item.ProductName} - ${item.SizeName || ''} ${item.ColorName || ''} ${item.MaterialName || ''}`,
+							fullData: item
+						};
+					})
+				};
+			},
+			cache: true
+		},
+		templateResult: formatProductResult,
+		templateSelection: formatProductSelection
+	})
+	.on('select2:select', function (e) {
+		const data = e.params.data;
+		appendProductToTable(data.fullData);
+		// clear selection after adding
+		$(this).val(null).trigger('change');
+	});
+
+		
+		
+		function formatProductSelection(data) {
+			return data.text;
+		}
+
+		function formatProductResult(data) {
+			if (data.loading) return data.text;
+			return $(`<div>
+				<strong>${data.text}</strong><br/>
+				<small>Price: ${data.fullData?.RetailPrice || 'N/A'}</small>
+			</div>`);
+		}	
+		// On select, append to table
+		// $(document).on('select2:select','#productSearch', function (e) {
+		// 	debugger
+		// 	const data = e.params.data;
+		// 	appendProductToTable(data.fullData);
+		// 	// Optionally clear
+		// 	$(this).val(null).trigger('change');
+		// });
+	
+
+			function appendProductToTable(result) {
+			if (!result) return;
+
+			debugger
+			let isDuplicate = false;
+			let incomingBarcode = String(result.BarCode); // ensure barcode is string
+
+			$('#purchaseRequisitionTable tbody tr').each(function () {
+				const barcode = String($(this).find('td').eq(0).data('barcode')); // also as string
+				debugger
+				if (barcode === incomingBarcode) {
+					isDuplicate = true;
+
+					let qtyInput = $(this).find('td').eq(5).find('input');
+					let currentQty = parseFloat(qtyInput.val()) || 0;
+					let newQty = currentQty + 1;
+					qtyInput.val(newQty);
+
+					// update line total
+					let price = parseFloat(result.Cost) || 0;
+					$(this).find('td').eq(7).text((price * newQty).toFixed(2));
+
+					setTotalPrice();
+					return false; // break loop
+				}
+			});
+
+			if (isDuplicate) {
+				return; // No need to append new row
+			}
+
+		appendRow(result,incomingBarcode);
+			setTotalPrice();
+			scrollInvoiceTableToBottom();
+		}
+
+		function appendRow(result,incomingBarcode){
+			debugger
+				let row = `
+			<tr>
+			<td class='barCode' data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+					${result.BarCode}
+				</td>
+				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+					${result.ProductName}
+				</td>
+				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+					${result.ColorName}
+				</td>
+				<td>${result.SizeName}</td>
+				<td>${result.MaterialName}</td>
+
+				<td><input class='lineqty' type='number' min='1' step='1' value='1' style='max-width:50px;'/></td>
+				<td class='currentPrice'>${result.Cost}</td>
+				<td class='lineTotal text-center'>${(parseFloat(result.Cost) || 0).toFixed(2)}</td>
+				<td>
+					<div class="list-icons text-center">
+						<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}" class="list-icons-item text-danger-600 removeRow text-center"><i class="icon-trash"></i></a>
+					</div>
+				</td>
+			</tr>
+			`;
+			$('#purchaseRequisitionTable tbody').append(row);
+		}
+
+		function setTotalPrice(){
+			debugger
 				let invoiceTotal = 0;
-			  $('.totalPrice').each(function () {
-				  const val = parseFloat($(this).val()) || 0;
+			  $('.lineTotal').each(function () {
+
+				  const val = parseFloat($(this).text()) || 0;
 				  invoiceTotal += val;
 			  });
-
 			  // Display grand total
 			  $('#invoiceTotal').val(invoiceTotal.toFixed(2));
 			  (updateGrandTotal(invoiceTotal));
 		}
 
-		function updateGrandTotal(invoiceTotal){
-				  const val = parseFloat($('#discount').val()) || 0;
-				  let grandTotal = invoiceTotal-val;
-				  $('#grandTotal').val(grandTotal);
-		 }
+			function updateGrandTotal(invoiceTotal) {
+				debugger
+					const discountAmount = parseFloat($('#discount').val()) || 0;
+					let subTotal = invoiceTotal - discountAmount;
 
-		$('#discount').keyup(function(){
-			 setTotalPrice();
-		 })
+					// Set Grand Total before tax
+					$('#grandTotal').val(subTotal.toFixed(2));
 
-		function AddRowData(rowCount,data){
-			  $(`.name[data-rowcount="${rowCount}"]`).val(data.ProductName);
-			  $(`.name[data-rowcount="${rowCount}"]`).attr('data-productid', data.ProductId);
-			  $(`.name[data-rowcount="${rowCount}"]`).attr('data-variantId', data.VariantId);
+					let taxPercent = 0;
+					let taxAmount = 0;
 
-					  $(`.color[data-rowcount="${rowCount}"]`).val(data.ColorName);
-					  $(`.size[data-rowcount="${rowCount}"]`).val(data.SizeName);
-					  $(`.material[data-rowcount="${rowCount}"]`).val(data.MaterialName);
-					  $(`.purchasePrice[data-rowcount="${rowCount}"]`).val(data.Cost || 0);
-					  $(`.qty[data-rowcount="${rowCount}"]`).val(1);
-					  $(`.totalPrice[data-rowcount="${rowCount}"]`).val(data.Cost);
-					  setTotalPrice();
+					// Check if tax field exists and has a value
+					if ($('#tax').length > 0) {
+						taxPercent = parseFloat($('#tax').val()) || 0;
+						if (taxPercent > 0) {
+							taxAmount = (subTotal * taxPercent) / 100;
+						}
+					}
+
+					// Set Tax Amount
+					$('#totalTax').val(taxAmount.toFixed(2));
+
+					// Calculate Final Total Payable (SubTotal + Tax)
+					const totalPayable = subTotal + taxAmount;
+					$('#totalPayable').val(totalPayable.toFixed(2));
+			}
+
+		$('#formVariant').submit(async function(e){
+		e.preventDefault();
+		debugger;
+
+		const items = [];
+
+		$('#purchaseRequisitionTable tbody tr').each(function () {
+			const row = $(this);
+			debugger
+			// Barcode is text inside <td class='barCode'>
+			const barCode = row.find('.barCode').data('barcode');
+
+			// ProductId / VariantId are also on <td class='barCode'>
+			const productId = row.find('.barCode').data('productid');
+			const variantId = row.find('.barCode').data('variantid');
+
+			// Qty is inside input
+			const qty = parseFloat(row.find('.lineqty').val()) || 0;
+
+			// Prices from td
+			const purchasePrice = parseFloat(row.find('.currentPrice').text()) || 0;
+			const totalPrice = parseFloat(row.find('.lineTotal').text()) || 0;
+
+			if (barCode) {
+				items.push({
+					BarCode: barCode,
+					Quantity: qty,
+					PurchasePrice: purchasePrice,
+					TotalPrice: totalPrice,
+					ProductId: productId,
+					VariantId: variantId
+				});
+			}
+		});
+		debugger
+		const discount = parseFloat($('#discount').val()) || 0;
+		const grandTotal = parseFloat($('#grandTotal').val()) || 0;
+		const branchId = $('#branch').val();
+		const supplierId = $('#supplier').val();
+
+		Utility.SpinnerMessageParent('requisitionsubmitBtn','Loading..');
+		const payload = {
+			Items: items,
+			Discount: discount,
+			GrandTotal: grandTotal,
+			SupplierId: supplierId,
+			BranchId: branchId
+		};
+
+		const objectData = {
+			data: payload,
+			url: '/Purchase/AddPurchaseRequisation'
+		};
+
+		const result = await Utility.RequestDataAjax(objectData);
+		Utility.StopSpinnerMessageParent('requisitionsubmitBtn');
+
+		if(result.statusCode === '200') {
+			Utility.successMessage('Record Added');
+			$('#formVariant')[0].reset();
+			$('#purchaseRequisitionTable tbody').empty(); // also clear table rows
 		}
+		else {
+			Utility.infoMessage('Record Already Exist');
+		}
+	});
 
-
-
-	  // $(document).on('submit','formVariant',function(e){
-		 //
-		 //  e.preventDefault();
-			// MergeDuplicateBarCodes();
-			// alert('Done');
-	  // });
-
-
-
-
-	  $('#formVariant').submit(async function(e){
-		 e.preventDefault();
-
-			const items = [];
-
-			$('tr').has('.barCode').each(function () {
-				const row = $(this);
-				const barCode = row.find('.barCode').val().trim();
-				const productId = row.find('.name').attr('data-productId');
-				const variantId = row.find('.name').attr('data-variantId');
-
-				if (barCode !== '') {
-					items.push({
-						BarCode: barCode,
-						Quantity: parseFloat(row.find('.qty').val()) || 0,
-						PurchasePrice: parseFloat(row.find('.purchasePrice').val()) || 0,
-						TotalPrice: parseFloat(row.find('.totalPrice').val()) || 0,
-						ProductId:productId,
-						VariantId:variantId
-					});
-				}
-			});
-
-			const discount = parseFloat($('#discount').val()) || 0;
-			const grandTotal = parseFloat($('#grandTotal').val()) || 0;
-			var branchId=$('#branch').val();
-			var supplierId=$('#supplier').val();
-
-			Utility.SpinnerMessageParent('requisitionsubmitBtn','Loading..');
-			const payload = {
-				Items: items,
-				Discount: discount,
-				GrandTotal: grandTotal,
-				SupplierId:supplierId,
-				BranchId:branchId
-
-			};
-			var objectData={
-				data:payload,
-				url:'/Purchase/AddPurchaseRequisation'
-			}
-			const result = await Utility.RequestDataAjax(objectData);
-			Utility.StopSpinnerMessageParent('requisitionsubmitBtn');
-			if(result.statusCode==='200')
-			{
-				Utility.successMessage('Record Added');
-				$('#formVariant')[0].reset();
-			}
-			else{
-				Utility.infoMessage('Record Already Exist');
-			}
-	  })
-
-
+	
 	})
 
-
-
 </script>
+
 
 <script>
 	function updateDateTime() {

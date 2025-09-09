@@ -281,74 +281,315 @@ update Inv.ProductImages set IsDefault = 1 where ProductImageId = @ProductImageI
 
         public async Task<List<ProductVariantVM>> GetProductVariants(Guid ProductId)
         {
-            string query = $@"select p.ProductId, p.ProductName,p.ProductDescription,p.ProductSlug,c.ColorName,m.MaterialName,s.SizeName,uom.UOMName,uoms.SubUOMName,
-pv.Qoh,pv.retailPrice,pv.PromotionPrice,pv.SalesPrice,pv.BarCode,pv.MinQty,pv.MaxQty,pv.IsSerial,pv.PriceFormat,pv.Cost,pv.VariantId,
-pv.QuantityPerUnit,pv.VariantImageId,b.BrandName
-from inv.ProductVariants pv 
-            JOIN Inv.Products p on pv.productId = p.productid
-            JOIN INv.Colors c on pv.colorid = c.ColorId
-            JOIN INV.Material m on pv.MaterialId = m.MaterialId
-            JOIN INV.Sizes s on pv.SizeId = s.SizeId
-            JOIN INV.UOM uom on p.UOMId = uom.UOMId
-            JOIN INV.UOMSub uoms on pv.SubUOMId = uoms.SubUOMId
-JOIN INV.Brands b on p.BrandId = b.BrandId
-            where pv.ProductId= @ProductId and pv.IsActive =1 and pv.IsDeleted =0";
+            string query = @"
+SELECT 
+    p.ProductId,
+    p.ProductName,
+    p.ProductDescription,
+    p.ProductSlug,
+    c.ColorName,
+    m.MaterialName,
+    s.SizeName,
+    uom.UOMName,
+    uoms.SubUOMName,
+    bs.SalePrice as SalesPrice,
+    bs.RetailPrice,
+    bs.PromotionPrice,
+    bs.Cost,
+    bs.Qty,
+    bs.BranchId,
+    pv.VariantId,
+    pv.QuantityPerUnit,
+pv.MinQty, pv.MaxQty,
+pv.IsSerial, pv.PriceFormat,pv.BarCode,
+    pv.VariantImageId,
+    b.BrandName
+FROM inv.ProductVariants pv
+JOIN Inv.Products p ON pv.ProductId = p.ProductId
+JOIN Inv.Colors c ON pv.ColorId = c.ColorId
+JOIN INV.Material m ON pv.MaterialId = m.MaterialId
+JOIN INV.Sizes s ON pv.SizeId = s.SizeId
+JOIN INV.UOM uom ON p.UOMId = uom.UOMId
+JOIN INV.UOMSub uoms ON pv.SubUOMId = uoms.SubUOMId
+JOIN INV.Brands b ON p.BrandId = b.BrandId
+JOIN INV.BranchStock bs ON pv.VariantId = bs.ProductVariantId
+WHERE pv.ProductId = @ProductId  AND bs.BranchId = @BranchId
+  AND pv.IsActive = 1 
+  AND pv.IsDeleted = 0
+  AND bs.IsActive = 1
+  AND bs.IsDeleted = 0";
+
             var param = new
             {
-                ProductId
+                ProductId,
+                AppDataUtility.SessionUser.Person.Branch.BranchId
             };
             var result = await _db.GetDataListWithQueryAndParam<ProductVariantVM>(query, param);
+            foreach (var variant in result)
+            {
+                var branchParam = new { VariantId = variant.VariantId };
+                var branches = await _db.GetDataListWithQueryAndParam<BranchStockVM>(
+                    @"SELECT bs.BranchStockId, b.BranchId, b.BranchName 
+          FROM INV.BranchStock bs
+          JOIN Business.Branches b ON bs.BranchId = b.BranchId
+          WHERE bs.ProductVariantId = @VariantId
+            AND bs.IsActive = 1
+            AND bs.IsDeleted = 0",
+                    branchParam
+                );
+
+                variant.BranchStock = branches.ToList(); // Add a property in your ProductVariantVM: List<BranchVM> AllowedBranches
+            }
+            foreach (var variant in result)
+            {
+                var branchParam = new { VariantId = variant.VariantId };
+                var branches = await _db.GetDataListWithQueryAndParam<BranchVM>(
+                    @"SELECT b.BranchId, b.BranchName 
+          FROM INV.BranchStock bs
+          JOIN Business.Branches b ON bs.BranchId = b.BranchId
+          WHERE bs.ProductVariantId = @VariantId
+            AND bs.IsActive = 1
+            AND bs.IsDeleted = 0",
+                    branchParam
+                );
+
+                variant.AllowedBranches = branches.ToList(); // Add a property in your ProductVariantVM: List<BranchVM> AllowedBranches
+            }
+
             return result.ToList();
         }
+
+        public async Task<int> AddProductVariantBranch(ProductVariantVM model)
+        {
+            if (model.IsActive == false)
+            {
+                string deactivateQuery = @"
+            UPDATE INV.BranchStock 
+            SET IsActive = 0 
+            WHERE BranchId = @BranchId AND ProductVariantId = @ProductVariantId;
+            SELECT 1;
+        ";
+
+                var deactivateParams = new
+                {
+                    BranchId = model.BranchId,
+                    ProductVariantId = model.VariantId
+                };
+
+                var result = await _db.ExecuteQuery<int>(deactivateQuery, deactivateParams);
+                return result;
+            }
+
+            if (model.BranchId == Guid.Empty)
+                return 0;
+
+            var masterBranchId = AppDataUtility.SessionUser.Person.Branch.BranchId;
+
+            // Skip if the selected branch is master
+            if (model.BranchId == masterBranchId)
+                return 0;
+
+            // Get master branch stock for the variant
+            var masterStock = await _db.ExecuteQuery<BranchStock>(
+                @"SELECT * FROM INV.BranchStock 
+          WHERE ProductVariantId = @VariantId AND BranchId = @MasterBranchId AND IsDeleted = 0",
+                new { VariantId = model.VariantId, MasterBranchId = masterBranchId }
+            );
+
+            if (masterStock == null)
+                return 0; // nothing to copy
+
+            // Check if branch stock already exists
+            var existingStockCount = await _db.GetDataListWithQueryAndParam<BranchStockVM>(
+                @"SELECT * FROM INV.BranchStock 
+          WHERE ProductVariantId = @VariantId AND BranchId = @BranchId AND IsDeleted = 0",
+                new { VariantId = model.VariantId, BranchId = model.BranchId }
+            );
+
+            if (existingStockCount.ToList().Count > 0)
+            {
+                // Update existing record with latest master stock values
+                await _db.ExecuteInsertQueryandParam(
+                    @"UPDATE INV.BranchStock
+              SET SalePrice = @SalePrice,
+                  RetailPrice = @RetailPrice,
+                  PromotionPrice = @PromotionPrice,
+                  Cost = @Cost,
+              
+                  IsActive = 1
+              WHERE ProductVariantId = @VariantId AND BranchId = @BranchId",
+                    new
+                    {
+                        VariantId = model.VariantId,
+                        BranchId = model.BranchId,
+                        SalePrice = masterStock.SalePrice,
+                        RetailPrice = masterStock.RetailPrice,
+                        PromotionPrice = masterStock.PromotionPrice,
+                        Cost = masterStock.Cost,
+                       
+                    }
+                );
+                return 2; // existing record updated
+            }
+            else
+            {
+                // Insert new BranchStock by copying master stock
+                var branchStockId = Guid.NewGuid();
+                await _db.ExecuteInsertQueryandParam(
+                    @"INSERT INTO INV.BranchStock
+              (BranchStockId, ProductVariantId, BranchId, SalePrice, RetailPrice, PromotionPrice, StaffPrice, Cost, Qty, IsActive, IsDeleted, CreatedOn, CreatedBy)
+              VALUES
+              (@BranchStockId, @VariantId, @BranchId, @SalePrice, @RetailPrice, @PromotionPrice, @StaffPrice, @Cost, @Qty, 1, 0, GETDATE(), @CreatedBy)",
+                    new
+                    {
+                        BranchStockId = branchStockId,
+                        VariantId = model.VariantId,
+                        BranchId = model.BranchId,
+                        SalePrice = masterStock.SalePrice,
+                        RetailPrice = masterStock.RetailPrice,
+                        PromotionPrice = masterStock.PromotionPrice,
+                        StaffPrice = masterStock.StaffPrice,
+                        Cost = masterStock.Cost,
+                        Qty = masterStock.Qty,
+                        CreatedBy = AppDataUtility.SessionUser.Person.Id
+                    }
+                );
+
+                return 1; // one branch added
+            }
+        }
+
+
         public async Task<ProductVariantVM> GetProductVariant(string BarCode)
         {
-            string query = $@"select p.ProductId,p.ProductName,p.ProductDescription,p.ProductSlug,c.ColorName,m.MaterialName,s.SizeName,uom.UOMName,uoms.SubUOMName,pv.QuantityPerUnit,pv.VariantImageId,b.BrandName, *  from inv.ProductVariants pv 
-            JOIN Inv.Products p on pv.productId = p.productid
-            JOIN INv.Colors c on pv.colorid = c.ColorId
-            JOIN INV.Material m on pv.MaterialId = m.MaterialId
-            JOIN INV.Sizes s on pv.SizeId = s.SizeId
-            JOIN INV.UOM uom on p.UOMId = uom.UOMId
-            JOIN INV.UOMSub uoms on pv.SubUOMId = uoms.SubUOMId
-            JOIN INV.Brands b on p.BrandId = b.BrandId
-            where pv.BarCode=@BarCode and pv.IsActive =1 and pv.IsDeleted =0";
+            var branchId = AppDataUtility.SessionUser.Person.Branch.BranchId; // Logged-in branch
+
+            string query = @"
+        SELECT 
+            p.ProductId,
+            p.ProductName,
+            p.ProductDescription,
+            p.ProductSlug,
+            c.ColorName,
+            m.MaterialName,
+            s.SizeName,
+            uom.UOMName,
+            uoms.SubUOMName,
+            pv.QuantityPerUnit,
+            pv.VariantImageId,
+            b.BrandName,
+pv.BarCode,
+pv.PriceFormat,
+            pv.VariantId,
+            bs.BranchStockId,
+            bs.SalePrice,
+            bs.RetailPrice,
+            bs.PromotionPrice,
+            bs.StaffPrice,
+            bs.Cost,
+            bs.Qty,
+            bs.IsActive AS BranchIsActive,
+            bs.IsDeleted AS BranchIsDeleted
+        FROM inv.ProductVariants pv
+        JOIN Inv.Products p ON pv.ProductId = p.ProductId
+        JOIN Inv.Colors c ON pv.ColorId = c.ColorId
+        JOIN Inv.Material m ON pv.MaterialId = m.MaterialId
+        JOIN Inv.Sizes s ON pv.SizeId = s.SizeId
+        JOIN Inv.UOM uom ON p.UOMId = uom.UOMId
+        JOIN Inv.UOMSub uoms ON pv.SubUOMId = uoms.SubUOMId
+        JOIN Inv.Brands b ON p.BrandId = b.BrandId
+        JOIN INV.BranchStock bs 
+            ON pv.VariantId = bs.ProductVariantId 
+            AND bs.BranchId = @BranchId
+            AND bs.IsActive = 1 
+            AND bs.IsDeleted = 0
+        WHERE pv.BarCode = @BarCode 
+          AND pv.IsActive = 1 
+          AND pv.IsDeleted = 0";
+
             var param = new
             {
-                BarCode
+                BarCode,
+                BranchId = branchId
             };
+
             var result = await _db.GetSingleItemDatatWithQueryAndParam<ProductVariantVM>(query, param);
+
             if (result != null)
             {
-                if (result.PriceFormat == (int)AppConstants.EnumPriceFormat.RetailPrice)
+                switch (result.PriceFormat)
                 {
-                    result.CurrentPrice = result.RetailPrice;
-                }
-                if (result.PriceFormat == (int)AppConstants.EnumPriceFormat.SalesPrice)
-                {
-                    result.CurrentPrice = result.SalesPrice;
-                }
-                if (result.PriceFormat == (int)AppConstants.EnumPriceFormat.PromotionPrice)
-                {
-                    result.CurrentPrice = result.PromotionPrice;
+                    case (int)AppConstants.EnumPriceFormat.RetailPrice:
+                        result.CurrentPrice = result.RetailPrice;
+                        break;
+                    case (int)AppConstants.EnumPriceFormat.SalesPrice:
+                        result.CurrentPrice = result.SalesPrice;
+                        break;
+                    case (int)AppConstants.EnumPriceFormat.PromotionPrice:
+                        result.CurrentPrice = result.PromotionPrice;
+                        break;
                 }
             }
+
             return result;
         }
+
         public async Task<List<ProductVariantVM>> SearchProducts(ProductSearchVM model)
         {
+            //        string query = $@"
+            //SELECT p.ProductId,p.ProductName,p.ProductDescription,p.ProductSlug,c.ColorName,m.MaterialName,s.SizeName,uom.UOMName,uoms.SubUOMName,pv.QuantityPerUnit,pv.VariantImageId,b.BrandName, *
+            //FROM Inv.ProductVariants pv 
+            //JOIN Inv.Products p ON pv.ProductId = p.ProductId
+            //JOIN Inv.Colors c ON pv.ColorId = c.ColorId
+            //JOIN Inv.Material m ON pv.MaterialId = m.MaterialId
+            //JOIN Inv.Sizes s ON pv.SizeId = s.SizeId
+            //JOIN Inv.UOM uom ON p.UOMId = uom.UOMId
+            //JOIN Inv.UOMSub uoms ON pv.SubUOMId = uoms.SubUOMId
+            //JOIN Inv.Brands b ON p.BrandId = b.BrandId
+            //WHERE 
+            //    pv.IsActive = 1 AND pv.IsDeleted = 0
+            //    /*** DYNAMIC CONDITIONS WILL BE INJECTED HERE ***/ 
+            //ORDER BY p.ProductName";
             string query = $@"
-    SELECT p.ProductId,p.ProductName,p.ProductDescription,p.ProductSlug,c.ColorName,m.MaterialName,s.SizeName,uom.UOMName,uoms.SubUOMName,pv.QuantityPerUnit,pv.VariantImageId,b.BrandName, *
-    FROM Inv.ProductVariants pv 
-    JOIN Inv.Products p ON pv.ProductId = p.ProductId
-    JOIN Inv.Colors c ON pv.ColorId = c.ColorId
-    JOIN Inv.Material m ON pv.MaterialId = m.MaterialId
-    JOIN Inv.Sizes s ON pv.SizeId = s.SizeId
-    JOIN Inv.UOM uom ON p.UOMId = uom.UOMId
-    JOIN Inv.UOMSub uoms ON pv.SubUOMId = uoms.SubUOMId
-    JOIN Inv.Brands b ON p.BrandId = b.BrandId
-    WHERE 
-        pv.IsActive = 1 AND pv.IsDeleted = 0
-        /*** DYNAMIC CONDITIONS WILL BE INJECTED HERE ***/ 
-    ORDER BY p.ProductName";
+SELECT 
+    p.ProductId,
+    p.ProductName,
+    p.ProductDescription,
+    p.ProductSlug,
+    c.ColorName,
+    m.MaterialName,
+    s.SizeName,
+    uom.UOMName,
+    uoms.SubUOMName,
+pv.BarCode,
+
+    pv.QuantityPerUnit,
+    pv.VariantImageId,
+    b.BrandName,
+    pv.VariantId,
+    bs.BranchStockId,
+    bs.SalePrice,
+    bs.RetailPrice,
+    bs.PromotionPrice,
+    bs.StaffPrice,
+    bs.Cost,
+    bs.Qty,
+    pv.PriceFormat
+FROM Inv.ProductVariants pv 
+JOIN Inv.Products p ON pv.ProductId = p.ProductId
+JOIN Inv.Colors c ON pv.ColorId = c.ColorId
+JOIN Inv.Material m ON pv.MaterialId = m.MaterialId
+JOIN Inv.Sizes s ON pv.SizeId = s.SizeId
+JOIN Inv.UOM uom ON p.UOMId = uom.UOMId
+JOIN Inv.UOMSub uoms ON pv.SubUOMId = uoms.SubUOMId
+JOIN Inv.Brands b ON p.BrandId = b.BrandId
+JOIN Inv.BranchStock bs ON pv.VariantId = bs.ProductVariantId AND bs.BranchId = @BranchId
+WHERE 
+    pv.IsActive = 1 AND pv.IsDeleted = 0
+    AND bs.IsActive = 1 AND bs.IsDeleted = 0
+    /*** DYNAMIC CONDITIONS WILL BE INJECTED HERE ***/ 
+ORDER BY p.ProductName";
+
 
             var whereConditions = new List<string>();
             var param = new DynamicParameters();
@@ -370,10 +611,10 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
                 }
                 if (terms.Length >= 3)
                 {
-                    whereConditions.Add("CAST(pv.RetailPrice AS VARCHAR) LIKE '%' + @priceTerm + '%'");
+                    whereConditions.Add("CAST(bs.RetailPrice AS VARCHAR) LIKE '%' + @priceTerm + '%'");
                     param.Add("priceTerm", terms[2]);
                 }
-
+                param.Add("BranchId", AppDataUtility.SessionUser.Person.Branch.BranchId);
                 // Fallback fuzzy search if only one term (no `%`)
                 if (terms.Length == 1)
                 {
@@ -388,7 +629,7 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
                     LOWER(c.ColorName) LIKE '%' + LOWER(@searchTerm) + '%' OR
                     LOWER(m.MaterialName) LIKE '%' + LOWER(@searchTerm) + '%' OR
                     LOWER(pv.BarCode) LIKE '%' + LOWER(@searchTerm) + '%' OR
-                    CAST(pv.RetailPrice AS VARCHAR) LIKE '%' + @searchTerm + '%'
+                    CAST(bs.RetailPrice AS VARCHAR) LIKE '%' + @searchTerm + '%'
                 )");
                 }
             }
@@ -403,6 +644,7 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
             var result = await _db.GetDataListWithQueryAndParam<ProductVariantVM>(query, param);
             return UpdateCurrentPrice(result.ToList());
         }
+      
         public class SearchTopProductResult
         {
             public List<ProductVariantVM> TopProducts { get; set; } = new();
@@ -411,51 +653,61 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
         public async Task<SearchTopProductResult> ProductsBySubCategories(Guid subCategoryId, bool isPaginated = false, int page = 1, int pageSize = 20)
         {
             var result = new SearchTopProductResult();
+            var branchId = AppDataUtility.SessionUser.Person.Branch.BranchId;
+            var query =
+         from pv in context.ProductVariants
+             // make the types match: pv.VariantId (Guid) -> (Guid?) so it equals bs.ProductVariantId (Guid?)
+         join bs in context.BranchStocks
+             on (Guid?)pv.VariantId equals bs.ProductVariantId into bsJoin
+         // pick only the branch we want (left join semantics)
+         from branchStock in bsJoin.Where(b => b.BranchId == branchId).DefaultIfEmpty()
+         where pv.Product.SubCategoryId == subCategoryId
+         select new ProductVariantVM
+         {
+             VariantId = pv.VariantId,
+             MaterialId = pv.MaterialId,
+             ColorId = pv.ColorId,
+             SizeId = pv.SizeId,
+             ProductId = pv.ProductId,
 
-            var query = context.ProductVariants
-                .Where(p => p.Product.SubCategoryId == subCategoryId)
-                .Select(p => new ProductVariantVM
-                {
-                    VariantId = p.VariantId,
-                    MaterialId = p.MaterialId,
-                    ColorId = p.ColorId,
-                    SizeId = p.SizeId,
-                    ProductId = p.ProductId,
+             // If branchStock is null use sensible fallbacks
+             QoH = branchStock != null ? branchStock.Qty : 0M,
+             Cost = branchStock != null ? branchStock.Cost : 0M,
+             SalesPrice = branchStock != null ? branchStock.SalePrice :0M,
+             PromotionPrice = branchStock != null ? branchStock.PromotionPrice  :0M,
+             RetailPrice = branchStock != null ? branchStock.RetailPrice : 0M,
 
-                    QoH = p.QoH,
-                    Cost = p.Cost,
-                    BarCode = p.BarCode,
-                    SalesPrice = p.SalesPrice,
-                    PromotionPrice = p.PromotionPrice,
-                    RetailPrice = p.RetailPrice,
-                    MinQty = p.MinQty,
-                    MaxQty = p.MaxQty,
+             BarCode = pv.BarCode,
+             MinQty = pv.MinQty,
+             MaxQty = pv.MaxQty,
 
-                    LastPurchase = p.LastPurchase,
-                    LastSold = p.LastSold,
-                    CreatedOn = p.CreatedOn,
-                    Createdby = p.Createdby,
-                    ModifiedOn = p.ModifiedOn,
-                    IsActive = p.IsActive,
-                    IsDeleted = p.IsDeleted,
-                    BranchId = p.BranchId,
-                    VariantImageId = p.VariantImageId,
+             LastPurchase = pv.LastPurchase,
+             CreatedOn = pv.CreatedOn,
+             Createdby = pv.Createdby,
+             ModifiedOn = pv.ModifiedOn,
+             IsActive = pv.IsActive,
+             IsDeleted = pv.IsDeleted,
+             BranchId = branchId,
+             VariantImageId = pv.VariantImageId,
 
-                    ProductName = p.Product.ProductName,
-                    ProductDescription = p.Product.ProductDescription,
-                    ProductSlug = p.Product.ProductSlug,
-                    ColorName = p.Color.ColorName,
-                    MaterialName = p.Material.MaterialName,
-                    SizeName = p.Size.SizeName,
-                    UOMName = p.Product.Uom.Uomname,
-                    SubUOMName = p.SubUom.SubUomname,
-                    Uomid = p.Product.Uomid,
-                    PriceFormat = p.PriceFormat,
-                    SubUomid = p.SubUomid,
-                    BrandName = p.Product.Brand.BrandName,
-                    QuantityPerUnit = p.QuantityPerUnit,
-                    IsSerial = p.IsSerial,
-                });
+             ProductName = pv.Product.ProductName,
+             ProductDescription = pv.Product.ProductDescription,
+             ProductSlug = pv.Product.ProductSlug,
+             ColorName = pv.Color.ColorName,
+             MaterialName = pv.Material.MaterialName,
+             SizeName = pv.Size.SizeName,
+             UOMName = pv.Product.Uom.Uomname,
+             SubUOMName = pv.SubUom.SubUomname,
+             Uomid = pv.Product.Uomid,
+             PriceFormat = pv.PriceFormat,
+             SubUomid = pv.SubUomid,
+             BrandName = pv.Product.Brand.BrandName,
+             QuantityPerUnit = pv.QuantityPerUnit,
+             IsSerial = pv.IsSerial,
+         };
+
+
+
             if (!isPaginated)
             {
                 // Get top 5 products (example: by CreatedDate descending)
@@ -494,32 +746,78 @@ JOIN INV.Brands b on p.BrandId = b.BrandId
             //                                        VALUES (@VariantId,@MaterialId,@ColorId,@SizeId,@ProductId,@Cost,@BarCode,@SalesPrice,@PromotionPrice,@RetailPrice,@UOMId,@SubUOMId,@QuantityPerUnit,@IsSerial,@MinQty,@MaxQty,@CreatedOn,@CreatedBy,@ModifiedOn,@IsActive,@IsDeleted,@BranchId);
             //select @VariantId
             //                            ";
-            string query = $@"DECLARE @VariantId UNIQUEIDENTIFIER = NEWID();
+            //            string query = $@"DECLARE @VariantId UNIQUEIDENTIFIER = NEWID();
 
-                    IF EXISTS (
-                        SELECT 1 FROM Inv.ProductVariants WHERE BarCode = @BarCode AND IsDeleted = 0
-                    )
-                    BEGIN
-                        SELECT -1 AS Result;
-                    END
-                    ELSE
-                    BEGIN
-                        INSERT INTO Inv.ProductVariants (
-                            VariantId, MaterialId, ColorId, SizeId, ProductId,
-                            Cost, BarCode, SalesPrice, PromotionPrice, RetailPrice,
-                             SubUOMId, QuantityPerUnit, IsSerial, MinQty,
-                            MaxQty, CreatedOn, CreatedBy, ModifiedOn, IsActive, IsDeleted, BranchId,OrganizationId
-                        )
-                        VALUES (
-                            @VariantId, @MaterialId, @ColorId, @SizeId, @ProductId,
-                            @Cost, @BarCode, @SalesPrice, @PromotionPrice, @RetailPrice,
-                             @SubUOMId, @QuantityPerUnit, @IsSerial, @MinQty,
-                            @MaxQty, @CreatedOn, @CreatedBy, @ModifiedOn, @IsActive, @IsDeleted, @BranchId,@OrganizationId
-                        );
+            //                    IF EXISTS (
+            //                        SELECT 1 FROM Inv.ProductVariants WHERE BarCode = @BarCode AND IsDeleted = 0
+            //                    )
+            //                    BEGIN
+            //                        SELECT -1 AS Result;
+            //                    END
+            //                    ELSE
+            //                    BEGIN
+            //                        INSERT INTO Inv.ProductVariants (
+            //                            VariantId, MaterialId, ColorId, SizeId, ProductId,
+            //                            Cost, BarCode, SalesPrice, PromotionPrice, RetailPrice,
+            //                             SubUOMId, QuantityPerUnit, IsSerial, MinQty,
+            //                            MaxQty, CreatedOn, CreatedBy, ModifiedOn, IsActive, IsDeleted, BranchId,OrganizationId
+            //                        )
+            //                        VALUES (
+            //                            @VariantId, @MaterialId, @ColorId, @SizeId, @ProductId,
+            //                            @Cost, @BarCode, @SalesPrice, @PromotionPrice, @RetailPrice,
+            //                             @SubUOMId, @QuantityPerUnit, @IsSerial, @MinQty,
+            //                            @MaxQty, @CreatedOn, @CreatedBy, @ModifiedOn, @IsActive, @IsDeleted, @BranchId,@OrganizationId
+            //                        );
 
-                        SELECT 300 AS Result;
-                    END
+            //                        SELECT 300 AS Result;
+            //                    END
+            //";
+            string query = @"
+DECLARE @VariantId UNIQUEIDENTIFIER = NEWID();
+
+IF EXISTS (
+    SELECT 1 FROM Inv.ProductVariants WHERE BarCode = @BarCode AND IsDeleted = 0
+)
+BEGIN
+    SELECT -1 AS Result;  -- Barcode already exists
+END
+ELSE
+BEGIN
+    -- Insert into ProductVariants
+    INSERT INTO Inv.ProductVariants (
+        VariantId, MaterialId, ColorId, SizeId, ProductId,
+        BarCode, SubUOMId, QuantityPerUnit, IsSerial,
+        MinQty, MaxQty, CreatedOn, CreatedBy, ModifiedOn,
+        IsActive, IsDeleted,
+        BranchId, OrganizationId
+    )
+    VALUES (
+        @VariantId, @MaterialId, @ColorId, @SizeId, @ProductId,
+        @BarCode, @SubUOMId, @QuantityPerUnit, @IsSerial,
+        @MinQty, @MaxQty, @CreatedOn, @CreatedBy, @ModifiedOn,
+        @IsActive, @IsDeleted, 
+        @BranchId, @OrganizationId
+    );
+
+    -- Insert branch-specific pricing/quantity into BranchStock
+ 
+DECLARE @BranchStockId UNIQUEIDENTIFIER = NEWID();
+
+INSERT INTO Inv.BranchStock (
+    BranchStockId, ProductVariantId, BranchId, SalePrice, RetailPrice, PromotionPrice, Cost,
+    IsActive, IsDeleted, CreatedOn, CreatedBy
+)
+VALUES (
+    @BranchStockId, @VariantId, @BranchId, @SalesPrice, @RetailPrice, @PromotionPrice, @Cost, 
+    @IsActive, @IsDeleted, @CreatedOn, @CreatedBy
+);
+
+
+    SELECT 300 AS Result;
+END
 ";
+
+
             var commonParams = CommonParamHelper.GetCommonParams();
 
             var param = new
@@ -626,7 +924,7 @@ Update INV.ProductVariants set VariantImageId = @VariantImageId where VariantId 
             else
             {
                 query = $@"
-                    UPDATE INV.ProductVariants set {model.DataType} = {model.Value} where VariantId = '{model.VariantId}'";
+                    UPDATE INV.BranchStock set {model.DataType} = {model.Value} where VariantId = '{model.VariantId}' && BranchId = {AppDataUtility.SessionUser.Person.Branch.BranchId}";
                 var allResult = await _db.ExecuteQueryModify(query);
                 return allResult;
             }

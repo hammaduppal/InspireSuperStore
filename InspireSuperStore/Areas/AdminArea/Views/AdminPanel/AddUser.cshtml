@@ -188,10 +188,13 @@
 			url:'/AdminPanel/GetBranchesByOrganizationId'
 		}
 		const result = await Utility.RequestDataAjax(objectData);
+		debugger
+		console.log(result);
+		 $('#branch').empty();
 		 result.forEach(function(branch) {
-			 $('#branch').empty();
+			
 					$('#branch').append(`<option value="${branch.BranchId}">${branch.BranchName}</option>`);
-			  });
+		 });
 	});
 </script>
 

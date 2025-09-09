@@ -102,15 +102,28 @@ namespace MarketBal.Repository.POSManager
                         _onedb.InvoiceDetails.Add(invoiceDetail);
                         if (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
                         {
-                            var variant = await _onedb.ProductVariants
-                                .FirstOrDefaultAsync(v => v.VariantId == detail.VariantId);
+                            //var variant = await _onedb.ProductVariants
+                            //    .FirstOrDefaultAsync(v => v.VariantId == detail.VariantId);
 
-                            if (variant != null)
+                            //if (variant != null)
+                            //{
+
+                            //    //variant.QoH -= detail.Quantity;
+                            //    _onedb.ProductVariants.Update(variant);
+                            //}
+
+                            var branchstock = await _onedb.BranchStocks
+                                .FirstOrDefaultAsync(v => v.ProductVariantId == detail.VariantId && v.BranchId==AppDataUtility.SessionUser.Person.Branch.BranchId);
+
+                            if (branchstock != null)
                             {
 
-                                variant.QoH -= detail.Quantity;
-                                _onedb.ProductVariants.Update(variant);
+                                branchstock.Qty -= detail.Quantity;
+                                _onedb.BranchStocks.Update(branchstock);
                             }
+
+
+
                         }
 
                         var product = await _onedb.Products

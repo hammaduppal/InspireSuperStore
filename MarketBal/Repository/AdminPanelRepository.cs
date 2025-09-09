@@ -498,6 +498,36 @@ namespace MarketBal.Repository
 
             return result > 0;
         }
+        public async Task<int> UpdateMasterBranch(Guid branchId, int organizationId, int isActive)
+        {
+            
+            string resetQuery = $"UPDATE Business.Branches SET IsMasterBranch = 0 WHERE OrganizationId = {organizationId}";
+            await _db.ExecuteInsertQueryandParam(resetQuery);
+
+            if (isActive == 1)
+            {
+                
+                string updateQuery = $"UPDATE Business.Branches SET IsMasterBranch = 1 WHERE BranchId = '{branchId}'";
+                var result = await _db.ExecuteInsertQueryandParam(updateQuery);
+                return result > 0 ? 1 : 0;
+            }
+            else
+            {
+                
+                string checkQuery = $"SELECT COUNT(*) FROM Business.Branches WHERE OrganizationId = {organizationId} AND IsMasterBranch = 1";
+                int activeCount = await _db.ExecuteInsertQueryandParam(checkQuery);
+
+                if (activeCount == 0)
+                {
+                    // no active branch exists
+                    return -1;
+                }
+
+                return 1;
+            }
+        }
+
+
         public async Task<List<OrganizationVM>> GetOrganizations()
         {
             return await _onedb.Organizations.Where(x => x.IsActive == true && x.IsDeleted == false).Select(x => new OrganizationVM
@@ -1230,7 +1260,9 @@ VALUES
                 BranchId = x.BranchId,
                 BranchName = x.BranchName,
                 OrganizationName = x.Organization.OrganizationName,
-                BranchCode = x.BranchCode
+                OrganizationId=x.Organization.OrganizationId,
+                BranchCode = x.BranchCode,
+                IsMasterBranch=x.IsMasterBranch 
 
             }).ToListAsync();
         }

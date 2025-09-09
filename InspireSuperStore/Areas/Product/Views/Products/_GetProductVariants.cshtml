@@ -1,4 +1,5 @@
 ﻿@using MainModels.DTOModels
+@using MainModels.Util
 @using static MainModels.DTOModels.AppConstants
 @model PagesViewModel
 
@@ -9,9 +10,13 @@
 
 			<div class="col-md-11">
 			</div>
-			<div class="col-md-1">
-				<button class="btn btn-success" id="addVariant">Show Form </button>
-			</div>
+			@if (AppDataUtility.SessionUser.Person.Branch.IsMasterBranch == true)
+			{
+				<div class="col-md-1">
+					<button class="btn btn-success" id="addVariant">Show Form </button>
+				</div>
+			}
+
 		</div>
 	</div>
 	<form id="formVariant" style="display:none" action="#">
@@ -167,12 +172,13 @@
 	{
 		i++;
 		<div class="col-lg-12">
-			<p class="">ProductName: <span class="font-weight-semibold">@item.ProductName,</span>
+			<p class="">
+				ProductName: <span class="font-weight-semibold">@item.ProductName,</span>
 				Product Size:  <span class="font-weight-semibold">@item.SizeName,</span>
 
-				ProductColor: <span class="font-weight-semibold">@item.ColorName,</span> 
-				Product Material: <span class="font-weight-semibold">@item.MaterialName,</span>  
-				
+				ProductColor: <span class="font-weight-semibold">@item.ColorName,</span>
+				Product Material: <span class="font-weight-semibold">@item.MaterialName,</span>
+
 			</p>
 			<div class="alert alert-primary shadow-3">
 				<div class="row">
@@ -197,19 +203,19 @@
 									<label>R-Price</label>
 									<input type="text" name="retail"
 										   id="rPrice-@i"
-										value="@item.RetailPrice" class="form-control retailPrice" placeholder="Min"
+										   value="@item.RetailPrice" class="form-control retailPrice" placeholder="Min"
 										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)"
 										   data-datatype="RetailPrice"
 										   data-variantId="@item.VariantId" />
 								</div>
 							</div>
-						
+
 							<div class="col-md-2">
 								<div class="form-group">
 									<label>S-Price</label>
 									<input type="text" name="sale"
 										   id="sPrice-@i"
-										value="@item.SalesPrice" class="form-control salePrice" placeholder="Sale Price"
+										   value="@item.SalesPrice" class="form-control salePrice" placeholder="Sale Price"
 										   data-variantId="@item.VariantId"
 										   data-datatype="SalesPrice"
 										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
@@ -220,7 +226,7 @@
 									<label>P-Price</label>
 									<input type="text" name="promo"
 										   id="pPrice-@i"
-										value="@item.PromotionPrice" class="form-control promotionPrice" placeholder="Promotion Price"
+										   value="@item.PromotionPrice" class="form-control promotionPrice" placeholder="Promotion Price"
 										   data-variantId="@item.VariantId"
 										   data-datatype="PromotionPrice"
 										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
@@ -232,7 +238,7 @@
 									<label>BarCode</label>
 									<input type="text" name="qpu"
 										   id="barCode-@i"
-										value="@item.BarCode" class="form-control barcode" placeholder="BarCode"
+										   value="@item.BarCode" class="form-control barcode" placeholder="BarCode"
 										   data-variantId="@item.VariantId"
 										   data-datatype="BarCode" />
 								</div>
@@ -243,7 +249,7 @@
 									<label>Q/U</label>
 									<input type="text" name="qpu"
 										   id="qpu-@i"
-										value="@item.QuantityPerUnit" class="form-control quantityperUnit" placeholder="Q/U"
+										   value="@item.QuantityPerUnit" class="form-control quantityperUnit" placeholder="Q/U"
 										   data-variantId="@item.VariantId"
 										   data-datatype="QuantityPerUnit"
 										   onchange="Utility.validateNumericValue(this, @PagesViewModel.SystemSettings.DecimalPoint)" />
@@ -272,7 +278,7 @@
 									<label>Max</label>
 									<input type="text" name="min"
 										   id="max-@i"
-										value="@item.MaxQty" class="form-control max" placeholder="Max"
+										   value="@item.MaxQty" class="form-control max" placeholder="Max"
 										   data-variantId="@item.VariantId"
 										   data-datatype="MaxQty"
 										   onchange="Utility.validateNumericValue(this, 0)" />
@@ -336,7 +342,7 @@
 									   value="@img.ProductImageId"
 									   class="image-radio d-none"
 									   id="@imageId"
-								@(img.ProductImageId == item.VariantImageId ? "checked" : "") />
+									   @(img.ProductImageId == item.VariantImageId ? "checked" : "") />
 								<img src="@PagesViewModel.SystemSettings.ContentAPIUrl/@img.ImageUrl"
 									 class="p-2 selectable-img"
 									 style="min-width:50px; max-width:50px;"
@@ -344,16 +350,68 @@
 							</label>
 						}
 					</div>
+					<div class="col-lg-8">
+						<label>Allowed Branches</label>
+						@if (AppDataUtility.SessionUser.Person.Branch.IsMasterBranch==true)
+						{
+							<div class="row">
+								@foreach (var branch in Model.Branches)
+								{
+									var isMaster = branch.BranchId == AppDataUtility.SessionUser.Person.Branch.BranchId;
+
+									// check if this branch exists in AllowedBranches / BranchStock
+									var isChecked = item.AllowedBranches.Any(ab => ab.BranchId == branch.BranchId);
+
+									<div class="col-md-3">
+										<input type="checkbox" class="branch-checkbox"
+											   data-variantid="@item.VariantId"
+											   name="SelectedBranchIds"
+											   value="@branch.BranchId"
+											   @(isChecked ? "checked" : "")
+											   @(isMaster ? "checked disabled" : "") />
+										<label>@branch.BranchName</label>
+									</div>
+								}
+							</div>
+						}
+
+
+
+
+
+					</div>
 				</div>
 			</div>
 		</div>
-		
+
 	}
 
 
 </div>
 
 <script>
+			$(document).ready( function () {
+				$('.branch-checkbox').on('click', async function () {
+					var branchId = $(this).val();
+					var variantId = $(this).data('variantid'); // get VariantId from data attribute
+					var isChecked = $(this).is(':checked');
+
+					console.log('VariantId:', variantId, 'BranchId:', branchId, 'Checked:', isChecked);
+					var result = await Utility.RequestDataAjax({
+						url:'/Products/SaveVariantBranches',
+						data:{
+							VariantId:variantId,
+							BranchId:branchId,
+							IsActive:isChecked
+						}
+
+					});
+					Utility.successMessage(result.Message);
+					// You can now call your AJAX to copy master branch stock
+				});
+			});
+
+
 		$('.min, .max, .quantityperUnit, .promotionPrice, .salePrice, .retailPrice, .cost,.barcode').on('focusout', async function() {
 			debugger
 			var id=$(this).attr('id');

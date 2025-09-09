@@ -316,12 +316,21 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         }
         public async Task<IActionResult> ActiveUnactiveBranch(OrganizationVM model)
         {
-            var res = await _adminPanel.UpdateOrganization(model.OrganizationId, model.IsActive ? 1 : 0);
-            if (res)
-            {
-                return Json(new { statusCode = "200" });
-            }
+            //var res = await _adminPanel.UpdateOrganization(model.OrganizationId, model.IsActive ? 1 : 0);
+            //if (res)
+            //{
+            //    return Json(new { statusCode = "200" });
+            //}
             return Json(new { statusCode = "300" });
+
+        }
+        public async Task<IActionResult> ActiveUnactiveMasterBranch(BranchVM model)
+        {
+            var res = await _adminPanel.UpdateMasterBranch(model.BranchId,model.OrganizationId.Value, model.IsMasterBranch.Value ? 1 : 0);
+           
+                return Json(new { statusCode = "200" });
+            
+            //return Json(new { statusCode = "300" });
 
         }
         #endregion
@@ -446,13 +455,13 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                     variant.ColorId = colorId == Guid.Empty ? null : colorId;
                     Guid.TryParse(worksheet.Cells[row, 10].Text?.Trim(), out Guid sizeId);
                     variant.SizeId = sizeId == Guid.Empty ? null : sizeId;
-                    variant.BarCode = worksheet.Cells[row, 11].Text?.Trim();
-                    variant.Cost = decimal.TryParse(worksheet.Cells[row, 12].Text, out var cost) ? cost : 0;
-                    variant.SalesPrice = decimal.TryParse(worksheet.Cells[row, 13].Text, out var sp) ? sp : 0;
-                    variant.PromotionPrice = decimal.TryParse(worksheet.Cells[row, 14].Text, out var pp) ? pp : 0;
-                    variant.RetailPrice = decimal.TryParse(worksheet.Cells[row, 15].Text, out var rp) ? rp : 0;
-                    Guid.TryParse(worksheet.Cells[row, 16].Text?.Trim(), out Guid subUomId);
-                    variant.SubUomid = subUomId == Guid.Empty ? null : subUomId;
+                    //variant.BarCode = worksheet.Cells[row, 11].Text?.Trim();
+                    //variant.Cost = decimal.TryParse(worksheet.Cells[row, 12].Text, out var cost) ? cost : 0;
+                    //variant.SalesPrice = decimal.TryParse(worksheet.Cells[row, 13].Text, out var sp) ? sp : 0;
+                    //variant.PromotionPrice = decimal.TryParse(worksheet.Cells[row, 14].Text, out var pp) ? pp : 0;
+                    //variant.RetailPrice = decimal.TryParse(worksheet.Cells[row, 15].Text, out var rp) ? rp : 0;
+                    //Guid.TryParse(worksheet.Cells[row, 16].Text?.Trim(), out Guid subUomId);
+                    //variant.SubUomid = subUomId == Guid.Empty ? null : subUomId;
                     variant.QuantityPerUnit = int.TryParse(worksheet.Cells[row, 17].Text, out var qpu) ? qpu : 0;
                     var isSerialText = worksheet.Cells[row, 18].Text?.Trim();
                     variant.IsSerial = isSerialText == "1";

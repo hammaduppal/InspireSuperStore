@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Linq;
+using Dapper;
 using MainModels;
 using MainModels.DTOModels;
 using MainModels.Models;
@@ -215,19 +216,34 @@ namespace MarketBal.Repository.PurchaseRP
         }
         public async Task<int> CreateGRNNote(PurchaseMasterVM model)
         {
-            // Load all variants involved
+            // 1. Get PurchaseMaster (for branch info)
+            var master = await _onedb.PurchaseMasters
+                .Include(x => x.PurchaseDetails)
+                .FirstOrDefaultAsync(x => x.PurchaseMasterId == model.PurchaseMasterId);
+
+            if (master == null)
+                return 0;
+
+            var branchId = master.BranchId;
+
+            // Load variants
             var variantIds = model.PurchaseDetails.Select(x => x.VariantId).ToList();
             var variants = await _onedb.ProductVariants
                 .Where(x => variantIds.Contains(x.VariantId))
                 .ToListAsync();
 
-            // Fetch their corresponding products
+            // Fetch products
             var productIds = variants.Select(v => v.ProductId).Distinct().ToList();
             var products = await _onedb.Products
                 .Where(p => productIds.Contains(p.ProductId))
                 .ToListAsync();
 
-            // 1. Update PurchaseDetail received quantity
+            // Load branch stocks
+            var branchStocks = await _onedb.BranchStocks
+                .Where(bs => bs.BranchId == branchId && variantIds.Contains(bs.ProductVariantId))
+                .ToListAsync();
+
+            // 2. Update details and stock
             foreach (var detail in model.PurchaseDetails)
             {
                 var existingDetail = await _onedb.PurchaseDetails
@@ -238,40 +254,48 @@ namespace MarketBal.Repository.PurchaseRP
                     existingDetail.Qty = detail.Qty;
                     existingDetail.UnitPrice = detail.UnitPrice;
                     existingDetail.TotalPrice = detail.TotalPrice;
-                    
                     existingDetail.ModifiedOn = DateTime.UtcNow;
                 }
 
-                // 2. Update Variant Quantity
-                var variant = variants.FirstOrDefault(x => x.VariantId == detail.VariantId);
-                if (variant != null)
+                var variant = variants.FirstOrDefault(v => v.VariantId == detail.VariantId);
+                var qpu = variant?.QuantityPerUnit ?? 1M;   // quantity per unit
+                var receivedQty = (detail.Qty ?? 0M) * qpu;
+
+                // Update / create branch stock
+                var branchStock = branchStocks.FirstOrDefault(bs => bs.ProductVariantId == detail.VariantId);
+                if (branchStock != null)
                 {
-                    var qpu = variant.QuantityPerUnit??1;
-                    variant.QoH = (variant.QoH ?? 0) + ((detail.Qty * qpu) ?? 0); variant.ModifiedOn = DateTime.UtcNow;
-                    variant.Cost = detail.UnitPrice;
+                    branchStock.Qty += receivedQty;
+                    branchStock.Cost = detail.UnitPrice;
+                }
+                else
+                {
+                    _onedb.BranchStocks.Add(new BranchStock
+                    {
+                        BranchStockId = Guid.NewGuid(),
+                        BranchId = branchId,
+                        ProductVariantId = detail.VariantId,
+                        Qty = receivedQty,
+                        Cost = detail.UnitPrice,
+                        CreatedOn = DateTime.UtcNow
+                    });
+                }
+
+                // Increment Product Qoh directly
+                var product = products.FirstOrDefault(p => p.ProductId == variant.ProductId);
+                if (product != null)
+                {
+                    product.Qoh = (product.Qoh ?? 0M) + receivedQty;
+                    product.ModifiedOn = DateTime.UtcNow;
                 }
             }
 
-            // 3. Update Product Quantity (sum of its variants)
-            foreach (var product in products)
-            {
-                var productVariants = variants.Where(v => v.ProductId == product.ProductId).ToList();
-                product.Qoh = productVariants.Sum(v => v.QoH);
-                product.ModifiedOn = DateTime.UtcNow;
-            }
-
-            // 4. Update PurchaseMaster totals if needed
-            var master = await _onedb.PurchaseMasters
-                .FirstOrDefaultAsync(x => x.PurchaseMasterId == model.PurchaseMasterId);
-
-            if (master != null)
-            {
-                master.TotalAmount = model.TotalAmount;
-                master.DiscountAmount = model.DiscountAmount;
-                master.GrandTotal = model.GrandTotal;
-                master.Status = 4; // Mark as received
-                master.ModifiedOn = DateTime.UtcNow;
-            }
+            // 3. Update PurchaseMaster
+            master.TotalAmount = model.TotalAmount;
+            master.DiscountAmount = model.DiscountAmount;
+            master.GrandTotal = model.GrandTotal;
+            master.Status = 4; // received
+            master.ModifiedOn = DateTime.UtcNow;
 
             await _onedb.SaveChangesAsync();
             return 1;

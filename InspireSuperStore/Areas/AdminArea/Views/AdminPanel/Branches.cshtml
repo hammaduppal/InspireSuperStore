@@ -59,6 +59,8 @@
 						<th class="text-center">Branch Name</th>
 						<th class="text-center">Organization Name</th>
 						<th class="text-center">Branch Code</th>
+						<th class="text-center">Master Branch</th>
+
 
 						<th class="text-center" style="width: 30px;"><i class="icon-menu-open2"></i></th>
 					</tr>
@@ -74,11 +76,13 @@
 							<td><a href="#">@item.BranchName</a></td>
 							<td>@item.OrganizationName</td>
 							<td>@item.BranchCode</td>
-						
+							<td><input type="checkbox" class="form-input-styled activeUnactive" @(item.IsMasterBranch.Value ? "checked disabled" : "") data-value="@item.BranchId" data-organizationId="@item.OrganizationId" value="@item.IsMasterBranch" /></td>
+
+
 						</tr>
 
 					}
-				
+
 				</tbody>
 			</table>
 		</div>
@@ -122,6 +126,7 @@
 				$(document).on('click', '.edit', function (e) {
 				e.preventDefault();
 				var Id = $(this).attr('data-value');
+
 				var formData={
 				OrganizationId:Id
 				}
@@ -155,12 +160,16 @@
 			$(document).on('click', '.activeUnactive', function (e) {
 				e.preventDefault();
 				var Id = $(this).attr('data-value');
+				var organizationid = $(this).attr('data-organizationid');
+
 				var formData={
-				OrganizationId:Id,
-					IsActive: $(this).is(':checked')
-					}
+						BranchId:Id,
+						Organizationid:organizationid,
+						IsMasterBranch: $(this).is(':checked')
+				}
+				
 				$.ajax({
-					url:'/AdminPanel/ActiveUnactiveOrganization',
+					url:'/AdminPanel/ActiveUnactiveMasterBranch',
 					method:'POST',
 					data:formData,
 					success:function(result){

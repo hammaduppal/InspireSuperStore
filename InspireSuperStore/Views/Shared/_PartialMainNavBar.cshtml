@@ -29,6 +29,15 @@
 		<span class="badge badge-mark border-orange-300 mr-2"></span>
 		@GreetingHelper.GetGreeting()
 	</span>
+	&nbsp;&nbsp;&nbsp; 
+	@if (AppDataUtility.SessionUser.Person != null)
+	{
+		<span>(@AppDataUtility.SessionUser.Person.Branch.BranchName) </span>
+	}
+	else
+	{
+		<span> (Super Admin) </span>
+	}
 
 	<ul class="navbar-nav ml-md-auto">
 		<li class="nav-item dropdown">
