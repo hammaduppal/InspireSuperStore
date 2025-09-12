@@ -5,7 +5,9 @@ using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Helper;
 using MarketBal.Helper.PDF;
+using MarketBal.Helper.PDF.OMS.Data.Repositories.PDFGenerate;
 using MarketBal.Repository.Products;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace MarketBal.Repository.POSManager
@@ -17,6 +19,7 @@ namespace MarketBal.Repository.POSManager
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
+        private readonly PdfService _pdfservice;
         public POSRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -24,17 +27,21 @@ namespace MarketBal.Repository.POSManager
             _api = new ApiMethods();
             _onedb = oneDb;
             _attrib = new AttributeRepository(_config);
+            _pdfservice = new PdfService();
         }
-        public async Task<int> SaveInvoice(InvoiceMasterVM model)
+        public async Task<int> SaveInvoice([FromBody]InvoiceMasterVM model)
         {
             using (var transaction = await _onedb.Database.BeginTransactionAsync())
             {
                 try
                 {
                     var commonParams = CommonParamHelper.GetCommonParams();
+
+                    // Generate Invoice Number
                     var lastInvoice = await _onedb.InvoiceMasters
                         .OrderByDescending(i => i.CreatedDate)
                         .FirstOrDefaultAsync();
+
                     var invoicePrefix = AppDataUtility.SystemPreferences.InvoicePrefix;
                     string newInvoiceNo = $"{invoicePrefix}-001";
 
@@ -46,28 +53,41 @@ namespace MarketBal.Repository.POSManager
                             newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
                         }
                     }
-                    // Map Invoice Master
+
+                    // ---------- Calculations ----------
+                    decimal totalAmount = model.InvoiceDetails.Sum(d => d.UnitPrice * d.Quantity);
+                    decimal totalTax = model.InvoiceDetails.Sum(d => (d.TaxRate) * (d.UnitPrice * d.Quantity) / 100);
+                    decimal discount = model.DiscountAmount ?? 0;
+                    decimal grandTotal = totalAmount + totalTax - discount;
+
+                    // ---------- Invoice Master ----------
                     var invoiceMaster = new InvoiceMaster
                     {
                         InvoiceMasterId = Guid.NewGuid(),
                         InvoiceNo = newInvoiceNo,
-                        InvoiceDate = commonParams.CreatedOn.Value,
+                        InvoiceDate = commonParams.CreatedOn ?? DateTime.Now,
 
                         CustomerId = (model.CustomerId.HasValue && model.CustomerId.Value != Guid.Empty)
                                         ? model.CustomerId
                                         : null,
 
-                        TotalAmount = model.TotalAmount,
-                        DiscountAmount = model.DiscountAmount,
-                        TaxAmount = model.TaxAmount,
-                        NetAmount = model.NetAmount,
+                        TotalAmount = totalAmount,
+                        DiscountAmount = discount,
+                        TaxAmount = totalTax,
+                        GrandTotal = grandTotal,
+
                         PaymentMethodId = model.PaymentMethodId,
-                        PaymentStatus = model.PaymentStatus,
-                        Remarks = model.Remarks,
+                        PaymentStatusId = 1,
+                        ShippingTypeId = 1,
+                        InvoiceSourceId = (int)AppConstants.InvoiceSource.POS,
+
+                        CustomerRemarks = model.CustomerRemarks,
+                        OfficeRemarks = model.OfficeRemarks,
+
                         CreatedBy = 1,
-                         InvoiceSourceId=(int)AppConstants.InvoiceSource.POS,
-                        CreatedDate = commonParams.CreatedOn,
-                        UpdatedDate = commonParams.CreatedOn,
+                        CreatedDate = commonParams.CreatedOn ?? DateTime.Now,
+                        UpdatedDate = commonParams.CreatedOn ?? DateTime.Now,
+
                         ServingTableId = (model.ServingTableId.HasValue && model.ServingTableId.Value != Guid.Empty)
                                             ? model.ServingTableId
                                             : null,
@@ -80,51 +100,47 @@ namespace MarketBal.Repository.POSManager
                     _onedb.InvoiceMasters.Add(invoiceMaster);
                     await _onedb.SaveChangesAsync();
 
+                    // ---------- Invoice Details ----------
                     foreach (var detail in model.InvoiceDetails)
                     {
+                        decimal lineTotal = detail.UnitPrice * detail.Quantity;
+                        decimal taxAmount = (detail.TaxRate ) * lineTotal / 100;
+                        decimal lineTotalWithTax = lineTotal + taxAmount;
+
                         var invoiceDetail = new InvoiceDetail
                         {
                             InvoiceDetailId = Guid.NewGuid(),
                             InvoiceMasterId = invoiceMaster.InvoiceMasterId,
                             ProductId = detail.ProductId,
-
                             VariantId = (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
                                             ? detail.VariantId
                                             : null,
 
                             Quantity = detail.Quantity,
                             UnitPrice = detail.UnitPrice,
-                            Discount = detail.Discount,
-                            Tax = detail.Tax,
-                            TotalAmount = detail.TotalAmount,
-                            Remarks = detail.Remarks
+                            Discount = detail.Discount ?? 0,
+                            TaxRate = detail.TaxRate ,
+                            TaxAmount = taxAmount,
+                            LineTotal = lineTotal,
+                            LineTotalWithTax = lineTotalWithTax,
+                            Remarks = detail.Remarks ?? string.Empty
                         };
 
                         _onedb.InvoiceDetails.Add(invoiceDetail);
+
+                        // ---------- Update Inventory ----------
                         if (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
                         {
-                            //var variant = await _onedb.ProductVariants
-                            //    .FirstOrDefaultAsync(v => v.VariantId == detail.VariantId);
-
-                            //if (variant != null)
-                            //{
-
-                            //    //variant.QoH -= detail.Quantity;
-                            //    _onedb.ProductVariants.Update(variant);
-                            //}
-
                             var branchstock = await _onedb.BranchStocks
-                                .FirstOrDefaultAsync(v => v.ProductVariantId == detail.VariantId && v.BranchId==AppDataUtility.SessionUser.Person.Branch.BranchId);
+                                .FirstOrDefaultAsync(v =>
+                                    v.ProductVariantId == detail.VariantId &&
+                                    v.BranchId == AppDataUtility.SessionUser.Person.Branch.BranchId);
 
                             if (branchstock != null)
                             {
-
                                 branchstock.Qty -= detail.Quantity;
                                 _onedb.BranchStocks.Update(branchstock);
                             }
-
-
-
                         }
 
                         var product = await _onedb.Products
@@ -132,7 +148,6 @@ namespace MarketBal.Repository.POSManager
 
                         if (product != null)
                         {
-
                             product.Qoh -= detail.Quantity;
                             _onedb.Products.Update(product);
                         }
@@ -150,6 +165,7 @@ namespace MarketBal.Repository.POSManager
                 }
             }
         }
+
         public async Task<byte[]> GenerateInvoiceHTML(InvoiceMasterVM items)
         {
             string companyName = "";
@@ -184,10 +200,10 @@ namespace MarketBal.Repository.POSManager
                 </section>
                 </body>
                 </html>";
-       
-      
 
-            var result = PdfGenerator.GeneratePdf(html);
+            //var result = await new PdfPupetter().GeneratePdfFromHtml(html);
+            var result =await _pdfservice.GeneratePdfFromHtml(html) ;
+            //var result = PdfGenerator.GeneratePdf(html);
             return result;
         }
      

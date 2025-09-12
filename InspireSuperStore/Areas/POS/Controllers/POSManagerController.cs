@@ -45,13 +45,13 @@ namespace InspireSuperStore.Areas.POS.Controllers
             vm.PaymentMethods = await _assets.PaymentMethods();
             return View(vm);
         }
-        public async Task<IActionResult> SaveInvoice([FromForm] InvoiceMasterVM model)
+        public async Task<IActionResult> SaveInvoice(InvoiceMasterVM model)
         {
-                var result = await _posRepo.SaveInvoice(model);
+            //var result = await _posRepo.SaveInvoice(model);
             var invoice = await _posRepo.GenerateInvoiceHTML(model);
             if (invoice != null)
             {
-                return File(invoice, "application/pdf","invoice.pdf");
+                return File(invoice, "application/pdf", "invoice.pdf");
             }
             else
             {

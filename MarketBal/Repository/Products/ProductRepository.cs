@@ -925,11 +925,17 @@ Update INV.ProductVariants set VariantImageId = @VariantImageId where VariantId 
                 var result = await _db.ExecuteQuery<int>(query, param);
                 return result;
 
+            }else if (model.DataType == "QuantityPerUnit" || model.DataType ==  "MinQty" || model.DataType == "MaxQty")
+            {
+                query = $@"
+                    UPDATE INV.ProductVariants set {model.DataType} = {model.Value} where VariantId = '{model.VariantId}' AND BranchId = '{AppDataUtility.SessionUser.Person.Branch.BranchId}'";
+                var allResult = await _db.ExecuteQueryModify(query);
+                return allResult;
             }
             else
             {
                 query = $@"
-                    UPDATE INV.BranchStock set {model.DataType} = {model.Value} where VariantId = '{model.VariantId}' && BranchId = {AppDataUtility.SessionUser.Person.Branch.BranchId}";
+                    UPDATE INV.BranchStock set {model.DataType} = {model.Value} where VariantId = '{model.VariantId}' AND BranchId = '{AppDataUtility.SessionUser.Person.Branch.BranchId}'";
                 var allResult = await _db.ExecuteQueryModify(query);
                 return allResult;
             }

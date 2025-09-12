@@ -128,7 +128,7 @@
 
 
 
-	<div class="container">
+	<div class="">
 		<style>
 			#invoiceSummary * {
 				padding-top: 0 !important;
@@ -146,87 +146,52 @@
 					}
 				</style>
 				<div id="invoice-section" class="row">
-					<div class="col-lg-1">
-						<label>
-							Total
-						</label>
-
-						<input readonly id="invoiceTotal" type="text" value="0.00" class="form-control invoiceTotal" />
-
-					</div>
-					<div class="col-lg-1">
-						<label>
-							Discount
-						</label>
-
-						<input id="discount" type="text" class="form-control" />
-					</div>
-					<div class="col-lg-1">
-						<label style="font-weight:700;">
-							G-Total
-						</label>
-
-						<input readonly id="grandTotal" type="text" class="form-control" />
-					</div>
-					@if (AppDataUtility.SystemPreferences.EnableTax)
-					{
-						<div class="col-lg-1">
-							<label style="">
-								Tax
-							</label>
-
-							<input value="@AppDataUtility.SystemPreferences.DefaultTaxRate %" readonly style="color:red" id="tax" type="text" class="form-control" />
-						</div>
-						<div class="col-lg-1">
-							<label style="font-weight:700">
-								Total Tax
-							</label>
-
-							<input readonly id="totalTax" type="text" class="form-control" />
-						</div>
-					}
-
-
-					<div class="col-lg-1">
-						<label style="font-weight:700">
-							Payable
-						</label>
-
-						<input readonly id="totalPayable" type="text" class="form-control" />
-					</div>
-					<div class="col-lg-1">
-						<label style="font-weight:700">
-							Payment
-						</label>
-
-						<input id="cashRecieved" type="text" class="form-control" />
-					</div>
-					<div class="col-lg-1">
-						<label style="font-weight:700">
-							Balance
-						</label>
-
-						<input id="balance" type="text" class="form-control" />
-					</div>
-					<div class="col-lg-2">
-						<div class="input-group">
-							<label style="font-weight:700">
-								Payment Method
-								<select id="paymentMethod" class="form-control">
-									@foreach (var item in Model.PaymentMethods)
-									{
-										<option value="@item.PaymentMethodId">@item.Name</option>
-									}
-								</select>
-							</label>
-
-						</div>
+					<div class="col-lg-1 text-center">
+						<label>Sub Total</label>
+						<input readonly id="subTotal" type="text" value="0.00" class="form-control text-center" />
 					</div>
 
+					<div class="col-lg-1 text-center">
+						<label>Total Tax</label>
+						<input readonly id="totalTax" type="text" value="0.00" class="form-control text-center" />
+					</div>
 
+					<div class="col-lg-1 text-center">
+						<label style="font-weight:700;">Grand Total</label>
+						<input readonly id="grandTotal" type="text" value="0.00" class="form-control text-center" />
+					</div>
 
+					<div class="col-lg-1 text-center">
+						<label>Discount</label>
+						<input id="discount" type="text" class="form-control text-center" />
+					</div>
 
+					<div class="col-lg-1 text-center">
+						<label style="font-weight:700;">Payable</label>
+						<input readonly id="totalPayable" type="text" value="0.00" class="form-control text-center" />
+					</div>
+
+					<div class="col-lg-1 text-center">
+						<label>Payment</label>
+						<input id="cashReceived" type="text" class="form-control text-center" />
+					</div>
+
+					<div class="col-lg-1  text-center">
+						<label>Balance</label>
+						<input id="balance" type="text" class="form-control text-right" />
+					</div>
+
+					<div class="col-lg-2  text-center">
+						<label>Payment Method</label>
+						<select id="paymentMethod" class="form-control">
+							@foreach (var item in Model.PaymentMethods)
+							{
+								<option value="@item.PaymentMethodId">@item.Name</option>
+							}
+						</select>
+					</div>
 				</div>
+
 			</div>
 		</div>
 	</div>
@@ -314,11 +279,17 @@
 									<th class="text-center">Name</th>
 									<th class="text-center">Size</th>
 									<th class="text-center">Qty</th>
-									<th class="text-center">Unit Price</th>
+									<th class="text-center">Price</th>
 
-									<th class="text-center">Line Total</th>
-									<th>Manage</th>
+									<!-- shorter tax labels -->
+									<th class="text-center">Tax %</th>
+									<th class="text-center">Tax Amt</th>
+									
+									<th class="text-center">Total</th>
+									<th class="text-center">Manage</th>
 								</tr>
+
+
 							</thead>
 							<tbody>
 								<!-- Cart items will be added here -->
@@ -371,89 +342,174 @@
 		submitInvoice();
 	});
 
-	function submitInvoice() {
-			const $rows = $('#invoiceTable tbody tr');
-			if ($rows.length === 0) {
-				alert('Please add at least one product.');
-				return;
-			}
+	// function submitInvoice() {
+	// 		const $rows = $('#invoiceTable tbody tr');
+	// 		if ($rows.length === 0) {
+	// 			alert('Please add at least one product.');
+	// 			return;
+	// 		}
 
-			const cashReceived = parseFloat($('#cashRecieved').val()) || 0;
-			const Tax = parseFloat($('#totalTax').val()) || 0;
-			const invoiceTotal = parseFloat($('#invoiceTotal').val()) || 0;
-			const totalPayable = parseFloat($('#totalPayable').val()) || 0;
-			const discount = parseFloat($('#discount').val()) || null;
-			const salesPersonId = $('#salesPerson').val() || null;
-			const tableId = $('#servingTable').val() || null;
-			const customerId = $('#customer').val() || null;
-			const paymentMethodId = $('#paymentMethod').val() || null;
-			const CASH_PAYMENT_ID = 1;
-			
-			if (paymentMethodId == CASH_PAYMENT_ID) {
-				if (cashReceived < totalPayable) {
-					alert('Cash received is less than invoice total. Please collect full payment.');
+	// 		const cashReceived = parseFloat($('#cashRecieved').val()) || 0;
+	// 		const Tax = parseFloat($('#totalTax').val()) || 0;
+	// 		const invoiceTotal = parseFloat($('#invoiceTotal').val()) || 0;
+	// 		const totalPayable = parseFloat($('#totalPayable').val()) || 0;
+	// 		const discount = parseFloat($('#discount').val()) || null;
+	// 		const salesPersonId = $('#salesPerson').val() || null;
+	// 		const tableId = $('#servingTable').val() || null;
+	// 		const customerId = $('#customer').val() || null;
+	// 		const paymentMethodId = $('#paymentMethod').val() || null;
+	// 		const CASH_PAYMENT_ID = 1;
+
+	// 		if (paymentMethodId == CASH_PAYMENT_ID) {
+	// 			if (cashReceived < totalPayable) {
+	// 				alert('Cash received is less than invoice total. Please collect full payment.');
+	// 				return;
+	// 			}
+	// 		}
+
+	// 	const items = [];
+	// 	$rows.each(function () {
+	// 			const $tr = $(this);
+	// 			const $firstTd = $tr.find('td').first();
+	// 		items.push({
+	// 			ProductId: $firstTd.data('productid'),
+	// 			VariantId: $firstTd.data('variantid'),
+	// 			Quantity: parseFloat($tr.find('.lineqty').val()) || 0,
+	// 			UnitPrice: parseFloat($tr.find('.currentPrice').text()) || 0,
+	// 		});
+	//    });
+	// 	const payload = {
+
+	// 			TotalAmount: invoiceTotal,
+	// 			NetAmount: totalPayable,
+	// 			DiscountAmount:discount,
+	// 			PaymentMethodId: paymentMethodId,
+	// 			EmployeeId: salesPersonId,
+	// 			ServingTableId: tableId,
+	// 			CustomerId: customerId,
+	// 			TaxAmount:Tax,
+	// 			InvoiceDetails: items
+	// 	};
+
+	// 	$.ajax({
+	// 		url: '/POSManager/SaveInvoice',
+	// 		type: 'POST',
+	// 		data: payload,
+	// 		xhrFields: {
+	// 			responseType: 'blob'  // 👈 this is the key
+	// 		},
+	// 		success: function (data) {
+	// 			var blob = new Blob([data], { type: "application/pdf" });
+	// 			var url = URL.createObjectURL(blob);
+	// 			window.open(url, "_blank"); // open in new tab
+	// 		}
+	// 	});
+	// 	// 	var result = await Utility.RequestDataAjax({
+	// 	// 	url:'/POSManager/SaveInvoice',
+	// 	// 	data:payload
+	// 	// 	});
+	// 	// 	debugger
+	// 	// 	console.log(result, typeof result, result.constructor.name);
+	// 	// 		if (result instanceof ArrayBuffer) {
+	// 	// 	var blob = new Blob([result], { type: "application/pdf" });
+	// 	// 	var url = URL.createObjectURL(blob);
+	// 	// 	window.open(url, "_blank");
+	// 	// 	}
+	// 	// else {
+	// 	// 	// Otherwise assume JSON or text
+	// 	// 	console.log("JSON Response:", result);
+	// 	// }
+	// 	// if(result.statusCode='200')
+	// 	// {
+	// 	// 	location.reload();
+	// 	// }
+	// }
+		function submitInvoice() {
+				const $rows = $('#invoiceTable tbody tr');
+				if ($rows.length === 0) {
+					alert('Please add at least one product.');
 					return;
 				}
-			}
+				debugger
+				const cashReceived = parseFloat($('#cashRecieved').val()) || 0;
+				const subTotal = parseFloat($('#subTotal').val()) || 0;
+				const totalTax = parseFloat($('#totalTax').val()) || 0;
+				const grandTotal = parseFloat($('#grandTotal').val()) || 0;
+				const totalPayable = parseFloat($('#totalPayable').val()) || 0;
+				const discount = parseFloat($('#discount').val()) || 0;
 
-		const items = [];
-		$rows.each(function () {
-				const $tr = $(this);
-				const $firstTd = $tr.find('td').first(); 
-			items.push({
-				ProductId: $firstTd.data('productid'),   
-				VariantId: $firstTd.data('variantid'),  
-				Quantity: parseFloat($tr.find('.lineqty').val()) || 0,
-				UnitPrice: parseFloat($tr.find('.currentPrice').text()) || 0,
-			});
-	   });
-		const payload = {
+				const salesPersonId = $('#salesPerson').val() || null;
+				const tableId = $('#servingTable').val() || null;
+				const customerId = $('#customer').val() || null;
+				const paymentMethodId = $('#paymentMethod').val() || null;
+				const CASH_PAYMENT_ID = 1;
 
-				TotalAmount: invoiceTotal,
-				NetAmount: totalPayable,
-				DiscountAmount:discount,
-				PaymentMethodId: paymentMethodId,
-				EmployeeId: salesPersonId,
-				ServingTableId: tableId,
-				CustomerId: customerId,
-				TaxAmount:Tax,
-				InvoiceDetails: items
-		};
+				if (paymentMethodId == CASH_PAYMENT_ID) {
+					if (cashReceived < totalPayable) {
+						alert('Cash received is less than payable total. Please collect full payment.');
+						return;
+					}
+				}
 
-		$.ajax({
-			url: '/POSManager/SaveInvoice',
-			type: 'POST',
-			data: payload,
-			xhrFields: {
-				responseType: 'blob'  // 👈 this is the key
-			},
-			success: function (data) {
-				var blob = new Blob([data], { type: "application/pdf" });
-				var url = URL.createObjectURL(blob);
-				window.open(url, "_blank"); // open in new tab
-			}
-		});
-		// 	var result = await Utility.RequestDataAjax({
-		// 	url:'/POSManager/SaveInvoice',
-		// 	data:payload
-		// 	});
-		// 	debugger
-		// 	console.log(result, typeof result, result.constructor.name);
-		// 		if (result instanceof ArrayBuffer) {
-		// 	var blob = new Blob([result], { type: "application/pdf" });
-		// 	var url = URL.createObjectURL(blob);
-		// 	window.open(url, "_blank");
-		// 	}
-		// else {
-		// 	// Otherwise assume JSON or text
-		// 	console.log("JSON Response:", result);
-		// }
-		// if(result.statusCode='200')
-		// {
-		// 	location.reload();
-		// }
-	}
-		async function printInvoice(invoiceId) {
+				const items = [];
+				$rows.each(function () {
+					const $tr = $(this);
+					debugger
+					const $firstTd = $tr.find('td').first();
+
+					const qty = parseFloat($tr.find('.lineqty').val()) || 0;
+					const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
+					const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
+					const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
+					const lineTotal = unitPrice * qty; // without tax
+					const lineTotalWithTax = lineTotal + taxAmount;
+
+					items.push({
+						ProductId: $firstTd.data('productid'),
+						VariantId: $firstTd.data('variantid'),
+						Quantity: qty,
+						UnitPrice: unitPrice,
+						TaxRate: taxRate,
+						TaxAmount: taxAmount,
+						LineTotal: lineTotal,
+						LineTotalWithTax: lineTotalWithTax
+					});
+				});
+
+				const payload = {
+					SubTotal: subTotal,
+					TotalTax: totalTax,
+					GrandTotal: grandTotal,
+					DiscountAmount: discount,
+					NetAmount: totalPayable, // after discount
+					CashReceived: cashReceived,
+					PaymentMethodId: paymentMethodId,
+					EmployeeId: salesPersonId,
+					ServingTableId: tableId,
+					CustomerId: customerId,
+					InvoiceDetails: items
+				};
+				
+				$.ajax({
+					url: '/POSManager/SaveInvoice',
+					type: 'POST',
+					data: payload,
+					
+					xhrFields: {
+						responseType: 'blob'  // expecting PDF back
+					},
+					success: function (data) {
+						var blob = new Blob([data], { type: "application/pdf" });
+						var url = URL.createObjectURL(blob);
+						window.open(url, "_blank");
+					},
+					error: function (xhr, status, error) {
+						alert("Error saving invoice: " + error);
+					}
+				});
+		}
+
+	async function printInvoice(invoiceId) {
 		try {
 			// Connect to QZ Tray
 			await qz.websocket.connect();
@@ -567,7 +623,7 @@
 									style="cursor: pointer;"
 									data-barcode="${p.BarCode || ''}"
 									data-product-id="${p.ProductId || ''}"
-									data-variant-id="${p.VariantId || ''}" data-sizename='${p.SizeName}		'>
+									data-variant-id="${p.VariantId || ''}" data-sizename='${p.SizeName}' data-taxrate='${p.TaxRate}'>
 									<h6 class="font-weight-semibold mb-0">
 										${escapeHtml(p.ProductName ?? 'Unnamed')}
 									</h6>
@@ -609,7 +665,9 @@
 							data-variant-id="${p.VariantId || ''}"
 							data-sizename="${p.SizeName || ''}"
 							data-product-name="${escapeHtml(p.ProductName ?? 'Unnamed')}"
-							data-price="${price}">
+							data-price="${price}"
+							data-taxrate="${p.TaxRate}"
+							>
 						Add
 					</button>`
 				: `<button class="btn btn-light btn-sm" disabled>Out</button>`;
@@ -663,6 +721,8 @@
 				VariantId: $btn.data('variant-id'),
 				SizeName: $btn.data('sizename'),
 				ProductName: $btn.data('product-name'),
+				TaxRate: $btn.data('taxrate'),
+
 				CurrentPrice: parseFloat($btn.data('price'))
 			};
 
@@ -678,7 +738,10 @@
 				VariantId: $tile.data('variant-id'),
 				SizeName: $tile.data('sizename'),
 				ProductName: $tile.find('h6').text().trim(),
-				CurrentPrice: parseFloat($tile.find('span').text().replace(/[^0-9.]/g, ''))
+				CurrentPrice: parseFloat($tile.find('span').text().replace(/[^0-9.]/g, '')),
+				TaxRate: $tile.data('taxrate')
+
+
 			};
 
 			// Use your existing function to add to invoice table
@@ -719,7 +782,7 @@
 			let incomingBarcode = String(result.BarCode); // ensure barcode is string
 
 			$('#invoiceTable tbody tr').each(function () {
-				const barcode = String($(this).find('td').eq(0).data('barcode')); // also as string
+				const barcode = String($(this).find('td').eq(0).data('barcode')); // barcode stored in first <td>
 
 				if (barcode === incomingBarcode) {
 					isDuplicate = true;
@@ -729,9 +792,18 @@
 					let newQty = currentQty + 1;
 					qtyInput.val(newQty);
 
-					// update line total
-					let price = parseFloat(result.CurrentPrice) || 0;
-					$(this).find('td').eq(4).text((price * newQty).toFixed(2));
+					// Get unit price and tax rate from row
+					let unitPrice = parseFloat($(this).find('.currentPrice').text()) || 0;
+					let taxRate = parseFloat($(this).find('.taxPercent').text()) || 0;
+
+					// Recalculate
+					let lineAmount = unitPrice * newQty;
+					let taxAmount = (lineAmount * taxRate) / 100;
+					let total = lineAmount + taxAmount;
+
+					// Update row cells
+					$(this).find('.taxAmount').text(taxAmount.toFixed(2));
+					$(this).find('.lineTotal').text(total.toFixed(2));
 
 					setTotalPrice();
 					return false; // break loop
@@ -832,38 +904,93 @@
 		function formatProductSelection(data) {
 			return data.text;
 		}
-		function appendRow(result,incomingBarcode){
+
+			function appendRow(result, incomingBarcode) {
+				// Parse numeric values safely
+				let unitPrice = parseFloat(result.CurrentPrice) || 0;
+				let taxRate = parseFloat(result.TaxRate) || 0;
+				let qty = 1; // default for new row
+				debugger
+				// Calculate amounts
+				let lineAmount = unitPrice * qty;
+				let taxAmount = (lineAmount * taxRate) / 100;
+				let total = lineAmount + taxAmount;
+
 				let row = `
-			<tr>
-				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
-					${result.ProductName}
-				</td>
-				<td>${result.SizeName}</td>
-				<td><input class='lineqty' type='number' min='1' step='1' value='1' style='max-width:50px;'/></td>
-				<td class='currentPrice'>${result.CurrentPrice}</td>
-				<td class='lineTotal text-center'>${(parseFloat(result.CurrentPrice) || 0).toFixed(2)}</td>
-				<td>
-					<div class="list-icons text-center">
-						<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}" class="list-icons-item text-danger-600 removeRow text-center"><i class="icon-trash"></i></a>
-					</div>
-				</td>
-			</tr>
-			`;
-			$('#invoiceTable tbody').append(row);
-		}
+					<tr>
+						<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+							${result.ProductName}
+						</td>
+						<td class="text-center">${result.SizeName}</td>
+						<td class="text-center">
+							<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+						</td>
+						<td class='currentPrice text-right'>${unitPrice.toFixed(2)}</td>
 
-		function setTotalPrice(){
+						<!-- tax-related columns -->
+						<td class='taxPercent text-right'>${taxRate.toFixed(2)}</td>
+						<td class='taxAmount text-right'>${taxAmount.toFixed(2)}</td>
 
-				let invoiceTotal = 0;
-			  $('.lineTotal').each(function () {
+						<!-- total with tax -->
+						<td class='lineTotal text-right'>${total.toFixed(2)}</td>
 
-				  const val = parseFloat($(this).text()) || 0;
-				  invoiceTotal += val;
-			  });
-			  // Display grand total
-			  $('#invoiceTotal').val(invoiceTotal.toFixed(2));
-			  (updateGrandTotal(invoiceTotal));
-		}
+						<td class="text-center">
+							<div class="list-icons">
+								<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
+								   class="list-icons-item text-danger-600 removeRow text-center">
+									<i class="icon-trash"></i>
+								</a>
+							</div>
+						</td>
+					</tr>
+				`;
+
+				$('#invoiceTable tbody').append(row);
+			}
+				function setTotalPrice() {
+		let subTotal = 0;
+		let totalTax = 0;
+
+		$('#invoiceTable tbody tr').each(function () {
+			let qty = parseFloat($(this).find('.lineqty').val()) || 0;
+			let unitPrice = parseFloat($(this).find('.currentPrice').text()) || 0;
+			let taxRate = parseFloat($(this).find('.taxPercent').text()) || 0;
+
+			let lineTotal = unitPrice * qty;
+			let taxAmount = (lineTotal * taxRate) / 100;
+
+			subTotal += lineTotal;
+			totalTax += taxAmount;
+		});
+
+		let grandTotal = subTotal + totalTax;
+
+		// discount (allow numeric input, default 0)
+		let discount = parseFloat($('#discount').val()) || 0;
+		if (discount > grandTotal) discount = grandTotal; // prevent negative payable
+
+		let payable = grandTotal - discount;
+
+		// Update UI
+		$('#subTotal').val(subTotal.toFixed(2));
+		$('#totalTax').val(totalTax.toFixed(2));
+		$('#grandTotal').val(grandTotal.toFixed(2));
+		$('#totalPayable').val(payable.toFixed(2));
+	}
+
+
+		// function setTotalPrice(){
+
+		// 		let invoiceTotal = 0;
+		// 	  $('.lineTotal').each(function () {
+
+		// 		  const val = parseFloat($(this).text()) || 0;
+		// 		  invoiceTotal += val;
+		// 	  });
+		// 	  // Display grand total
+		// 	  $('#invoiceTotal').val(invoiceTotal.toFixed(2));
+		// 	  (updateGrandTotal(invoiceTotal));
+		// }
 
 			function updateGrandTotal(invoiceTotal) {
 					const discountAmount = parseFloat($('#discount').val()) || 0;
@@ -890,8 +1017,8 @@
 					const totalPayable = subTotal + taxAmount;
 					$('#totalPayable').val(totalPayable.toFixed(2));
 			}
-	
-			$(document).on('input', '#cashRecieved', function () {
+
+		$(document).on('input', '#cashReceived', function () {
 			let payable = parseFloat($('#totalPayable').val()) || 0;
 			let cashRecived = parseFloat($(this).val());
 			// Get the unit price from the currentPrice td

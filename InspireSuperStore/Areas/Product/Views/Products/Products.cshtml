@@ -42,7 +42,7 @@
 
 		<div class="row">
 			<div class="col-md-4">
-				@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+				@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin) && AppDataUtility.SessionUser.Person.Branch.IsMasterBranch==true)
 				{
 					<select class="form-control">
 						<option>Select Branch</option>
