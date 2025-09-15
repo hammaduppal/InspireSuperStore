@@ -1,0 +1,252 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Add Employee";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">Add Employee</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+<div class="content">
+	<!-- Form validation -->
+	<div class="card shadow-5">
+
+		<div class="card-body">
+
+			<form id="addNewEmployee" class="form-validate-jquery " action="#">
+
+
+				<fieldset class="mb-3 ">
+					<legend class="text-uppercase font-size-sm font-weight-bold">Add Employee</legend>
+					<div class="row mb-3">
+
+						<div class="col-lg-6">
+							<select id="employeedepartment" class="form-control" required>
+								<option value="">Select Designation</option>
+								@foreach (var item in Model.EmployeeDepartments)
+								{
+									<option value="@item.EmployeeDepartmentId">
+										@item.Title
+									</option>
+								}
+							</select>
+						</div>
+						<div class="col-lg-6">
+							<select id="employeedesignation" class="form-control" required>
+								<option value="">Select Designation</option>
+								@foreach (var item in Model.EmployeeDesignations)
+								{
+									<option value="@item.Id">
+										@item.Title
+									</option>
+								}
+							</select>
+						</div>
+					</div>
+
+					
+
+					<div class="row">
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="FirstName" class="col-form-label col-lg-3">First Name <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<input type="text" id="FirstName" name="FirstName" class="form-control" required placeholder="First Name" />
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="LastName" class="col-form-label col-lg-3">Last Name <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<div class="form-group-feedback form-group-feedback-right">
+										<input type="text" id="LastName" name="LastName" class="form-control" required placeholder="Last Name" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row">
+
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="Mobile" class="col-form-label col-lg-3">Mobile <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<div class="form-group-feedback form-group-feedback-right">
+										<input type="text" id="Mobile" name="MobileNumber" class="form-control" required placeholder="Mobile" autocomplete="off" />
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="employeeCode" class="col-form-label col-lg-3">Employee Code <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<div class="form-group-feedback form-group-feedback-right">
+										<input type="text" id="employeeCode" name="employeeCode" class="form-control" autocomplete="off" required placeholder="Employee Code" />
+
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="Cnic" class="col-form-label col-lg-3">Employee CNIC <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<input type="text" id="Cnic" name="Cnic" class="form-control" required placeholder="Employee CNIC" autocomplete="off" />
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group row">
+								<label for="SocialSecurity" class="col-form-label col-lg-3">Social Security <span class="text-danger">*</span></label>
+								<div class="col-lg-9">
+									<div class="form-group-feedback form-group-feedback-right">
+										<input type="text" id="SocialSecurity" name="SocialSecurity" class="form-control" required autocomplete="off" placeholder="Social Security" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Lane Address One:</label>
+						<input id="addressOne" type="text" class="form-control" placeholder="Lane Address One" />
+					</div>
+					<div class="form-group">
+						<label>Lane Address Two:</label>
+						<input id="addressTwo" type="text" class="form-control" placeholder="Lane Address Two" />
+					</div>
+					<div class="row">
+						<div class="col-lg-6">
+							<div class="form-group">
+								<label>Near Famous Place:</label>
+								<input id="famousPlace" type="text" class="form-control" placeholder="Near Famous Place" />
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group">
+								<label>Area:</label>
+								<input id="area" type="text" class="form-control" placeholder="Area" />
+							</div>
+						</div>
+					</div>
+
+					@await Html.PartialAsync("~/Views/Shared/CountryStateCity.cshtml", Model)
+
+				</fieldset>
+
+
+				<div class="d-flex justify-content-end align-items-center">
+					<button type="reset" class="btn btn-light" id="reset">Reset <i class="icon-reload-alt ml-2"></i></button>
+					<button id="newuseraddBtn" type="submit" class="btn btn-primary ml-3">Submit <i class="icon-paperplane ml-2"></i></button>
+				</div>
+			</form>
+		</div>
+	</div>
+	<!-- /form validation -->
+	<div class="row">
+	</div>
+
+
+
+</div>
+<script>
+	$('#organization').change(async function(){
+		var oId = $(this).val();
+		var formData= {
+			OrganizationId:oId
+		}
+		var objectData={
+			data:formData,
+			url:'/AdminPanel/GetBranchesByOrganizationId'
+		}
+		const result = await Utility.RequestDataAjax(objectData);
+		debugger
+		console.log(result);
+		 $('#branch').empty();
+		 result.forEach(function(branch) {
+
+					$('#branch').append(`<option value="${branch.BranchId}">${branch.BranchName}</option>`);
+		 });
+	});
+</script>
+
+<script>
+	$(document).ready(function(){
+			$('#addNewEmployee').submit(async function(e){
+				e.preventDefault();
+				const validate = Utility.validateFormAndInputs('#addNewEmployee');
+				const isFormValid = validate();
+				if (isFormValid) {
+					Utility.SpinnerMessageParent('newuseraddBtn','Loading..');
+					var formData={
+						DepartmentId: $('#employeedepartment').val(),
+						DesignationId: $('#employeedesignation').val(),
+						EmployeeCode: $('#employeeCode').val(),
+
+
+						Password: $('#Password').val(),
+					Person:{
+						FirstName: $('#FirstName').val(),
+						LastName: $('#LastName').val(),
+						MobileNumber: $('#Mobile').val(),
+						Cnic: $('#Cnic').val(),
+						BranchId:$('#branch').val(),
+						SocialSecurity: $('#SocialSecurity').val(),
+						LaneAddress:[{
+							LaneAddressOne: $('#addressOne').val(),
+							LaneAddressTwo: $('#addressTwo').val(),
+							FamousPlace: $('#famousPlace').val(),
+							Area: $('#area').val(),
+							CityId: $('#city').val(),
+						}]
+					}
+
+					}
+
+
+					var objectData={
+					data:formData,
+					url:'/AdminPanel/AddNewEmployee'
+					}
+					debugger
+					const result = await Utility.RequestDataAjax(objectData);
+					Utility.StopSpinnerMessageParent('newuseraddBtn');
+					if(result.statusCode==='200'){
+					$('#reset').click();
+						Utility.successMessage(result.Message);
+					}
+					else if(result.statusCode==='201'){
+						Utility.infoMessage(result.Message);
+					}
+					else if(result.statusCode==='202'){
+						Utility.infoMessage(result.Message);
+					}
+					else{
+						Utility.failMessage(result.Message);
+					}
+				}
+			})
+
+	})
+</script>

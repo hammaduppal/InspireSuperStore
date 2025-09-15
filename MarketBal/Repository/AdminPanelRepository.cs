@@ -65,6 +65,83 @@ namespace MarketBal.Repository
             //var result = await _db.ExecuteQueryList<LoginUserVM>(query);
             //return result.ToList();
         }
+        public async Task<List<EmployeeVM>> GetEmployees()
+        {
+            var r = await _onedb.Employees
+
+      .Select(x => new EmployeeVM
+      {
+          EmployeeId = x.EmployeeId,
+          EmployeeCode = x.EmployeeCode,
+          IsSalePerson = x.IsSalePerson.Value,
+          IsActive = x.IsActive.Value,
+          CreatedOn = x.CreatedOn,
+          Person = new PersonVM
+          {
+              FirstName = x.Person.FirstName,
+              LastName = x.Person.LastName,
+              Email = x.Person.Email,
+              MobileNumber = x.Person.MobileNumber,
+              IsActive = x.IsActive,
+              CreatedOn = x.CreatedOn,
+              Branch = new BranchVM
+              {
+                  BranchId = x.Person.Branch.BranchId,
+                  BranchName = x.Person.Branch.BranchName,
+                  Organization = new OrganizationVM
+                  {
+                      OrganizationId = x.Person.Branch.Organization.OrganizationId,
+                      OrganizationName = x.Person.Branch.Organization.OrganizationName
+                  }
+              }
+          }
+      })
+      .ToListAsync();
+            return r;
+            //string query = $@"select  * from Hrm.LoginUsers l where l.Id !=1";
+            //var result = await _db.ExecuteQueryList<LoginUserVM>(query);
+            //return result.ToList();
+        }
+        public async Task<int> EmployeeIsSalePerson(EmployeeVM model)
+        {
+            var employee = await _onedb.Employees.Where(x => x.EmployeeId == model.EmployeeId).FirstOrDefaultAsync();
+            employee.IsSalePerson = model.IsSalePerson;
+           return await  _onedb.SaveChangesAsync();
+        }
+        public async Task<List<EmployeeDepartmentVM>> GetEmployeeDepartments()
+        {
+            return await _onedb.EmployeeDepartments.Select(x => new EmployeeDepartmentVM
+            {
+                EmployeeDepartmentId = x.EmployeeDepartmentId,
+                Title = x.Title
+            }).ToListAsync();
+        }
+        public async Task<List<EmployeeDesignationVM>> GetEmployeeDesignations()
+        {
+            return await _onedb.EmployeeDesignations.Select(x => new EmployeeDesignationVM
+            {
+                Id = x.Id,
+                Title = x.Title
+            }).ToListAsync();
+        }
+        public async Task<int> AddEmployeeDepartment(EmployeeDepartmentVM model)
+        {
+            int maxId = _onedb.EmployeeDepartments
+                  .Select(x => (int?)x.EmployeeDepartmentId)
+                  .Max() ?? 0;
+            var EmployeDepart = new EmployeeDepartment { Title = model.Title, EmployeeDepartmentId = maxId + 1 };
+            await _onedb.EmployeeDepartments.AddAsync(EmployeDepart);
+            return await _onedb.SaveChangesAsync();
+        }
+        public async Task<int> AddEmployeeDesignation(EmployeeDesignationVM model)
+        {
+            int maxId = _onedb.EmployeeDesignations
+                  .Select(x => (int?)x.Id)
+                  .Max() ?? 0;
+            var EmployeDepart = new EmployeeDesignation { Title = model.Title, Id= maxId + 1 };
+            await _onedb.EmployeeDesignations.AddAsync(EmployeDepart);
+            return await _onedb.SaveChangesAsync();
+        }
         public async Task<LoginUserVM> GetLoginUser(int Id)
         {
             //var rr = _onedb.LoginUsers.Where(x => x.Id == Id).Select(lu => new LoginUserVM
@@ -152,7 +229,7 @@ namespace MarketBal.Repository
 
         public async Task<List<RolesVM>> GetRoles()
         {
-            return await _onedb.Roles.Where(x=>x.Name!=UserRolesConstants.SuperAdmin).Select(r => new RolesVM
+            return await _onedb.Roles.Where(x => x.Name != UserRolesConstants.SuperAdmin).Select(r => new RolesVM
             {
                 Id = r.Id,
                 Name = r.Name,
@@ -358,7 +435,7 @@ namespace MarketBal.Repository
 
                 throw;
             }
-            
+
 
         }
 
@@ -405,6 +482,105 @@ namespace MarketBal.Repository
             return await _onedb.SaveChangesAsync();
         }
 
+        public async Task<int> AddNewEmployee(EmployeeVM model)
+        {
+            //if (_onedb.LoginUsers.Where(x => x.UserName == model.UserName).Any())
+            //{
+            //    var existingUser = await _onedb.LoginUsers.Include("Person").Where(x => x.UserName == model.UserName).FirstOrDefaultAsync();
+            //    if (existingUser != null)
+            //    {
+            //        return -3;
+            //    }
+            //    var existingPerson = await _onedb.Persons.Where(x => x.Cnic == model.Person.Cnic || x.MobileNumber == model.Person.MobileNumber).FirstOrDefaultAsync();
+
+            //    if (existingPerson != null)
+            //    {
+            //        return -4;
+            //    }
+            //}
+            try
+            {
+                int maxEmployeeId = _onedb.Employees.Any()
+                    ? _onedb.Employees.Max(x => x.EmployeeId)
+                    : 0;
+                int maxPersonId = _onedb.Persons.Any()
+                      ? _onedb.Persons.Max(x => x.Id)
+                      : 0;
+                int maxAddressId = _onedb.LaneAddresses.Any()
+                      ? _onedb.LaneAddresses.Max(x => x.AddressId)
+                      : 0;
+                var addone = model.Person.LaneAddress.FirstOrDefault();
+                var addressBilling = new LaneAddress
+                {
+                    AddressId = maxAddressId + 1,
+                    LaneAddressOne = addone.LaneAddressOne,
+                    LaneAddressTwo = addone.LaneAddressTwo,
+                    Area = addone.Area,
+                    FamousPlace = addone.FamousPlace,
+                    CityId = addone.CityId,
+                    AddressType = "Billing",
+
+
+                };
+                var addressShipping = new LaneAddress
+                {
+                    AddressId = maxAddressId + 2,
+                    LaneAddressOne = addone.LaneAddressOne,
+                    LaneAddressTwo = addone.LaneAddressTwo,
+                    Area = addone.Area,
+                    FamousPlace = addone.FamousPlace,
+                    CityId = addone.CityId,
+                    AddressType = "Shipping"
+                };
+
+                var addresses = new List<LaneAddress>();
+                addresses.Add(addressShipping);
+                addresses.Add(addressBilling);
+                var currentTime = DateTime.UtcNow;
+             
+                var newUser = new Employee
+                {
+                    EmployeeId = maxEmployeeId + 1,
+                    EmployeeCode = model.EmployeeCode,
+                    CreatedOn = currentTime,
+                    DepartmentId= model.DepartmentId,
+                    DesignationId= model.DesignationId,
+                    IsSalePerson=model.IsSalePerson,
+                    IsActive = true,
+                    Person = new Person
+                    {
+                        Id = maxPersonId + 1,
+                        Cnic = model.Person.Cnic,
+                        Email = "",
+                        SocialSecurity = model.Person.SocialSecurity,
+                        LastName = model.Person.LastName,
+                        FirstName = model.Person.FirstName,
+                        MobileNumber = model.Person.MobileNumber,
+                        LaneAddresses = addresses,
+                        BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
+                        CreatedOn = currentTime,
+                        ModifiedOn = currentTime,
+                        IsActive = true,
+                        IsDeleted = false,
+                        Createdby = AppDataUtility.SessionUser.Id
+
+
+                    }
+                };
+                _onedb.Employees.Add(newUser);
+
+                var result = _onedb.SaveChanges();
+                return result;
+
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
+
+
+        }
 
 
 
@@ -500,20 +676,20 @@ namespace MarketBal.Repository
         }
         public async Task<int> UpdateMasterBranch(Guid branchId, int organizationId, int isActive)
         {
-            
+
             string resetQuery = $"UPDATE Business.Branches SET IsMasterBranch = 0 WHERE OrganizationId = {organizationId}";
             await _db.ExecuteInsertQueryandParam(resetQuery);
 
             if (isActive == 1)
             {
-                
+
                 string updateQuery = $"UPDATE Business.Branches SET IsMasterBranch = 1 WHERE BranchId = '{branchId}'";
                 var result = await _db.ExecuteInsertQueryandParam(updateQuery);
                 return result > 0 ? 1 : 0;
             }
             else
             {
-                
+
                 string checkQuery = $"SELECT COUNT(*) FROM Business.Branches WHERE OrganizationId = {organizationId} AND IsMasterBranch = 1";
                 int activeCount = await _db.ExecuteInsertQueryandParam(checkQuery);
 
@@ -591,7 +767,7 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
             using var transaction = await _onedb.Database.BeginTransactionAsync();
             try
             {
-              //  var removed = await removeData();
+                //  var removed = await removeData();
                 var currentTime = DateTime.UtcNow;
                 Guid branchId = Guid.NewGuid();
 
@@ -601,7 +777,9 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                     var organization = new Organization
                     {
                         OrganizationName = model.BusinessName,
-                        CreatedOn = currentTime, IsActive=true, IsDeleted=false,
+                        CreatedOn = currentTime,
+                        IsActive = true,
+                        IsDeleted = false,
                         ModifiedOn = currentTime
                     };
 
@@ -1260,9 +1438,9 @@ VALUES
                 BranchId = x.BranchId,
                 BranchName = x.BranchName,
                 OrganizationName = x.Organization.OrganizationName,
-                OrganizationId=x.Organization.OrganizationId,
+                OrganizationId = x.Organization.OrganizationId,
                 BranchCode = x.BranchCode,
-                IsMasterBranch=x.IsMasterBranch 
+                IsMasterBranch = x.IsMasterBranch
 
             }).ToListAsync();
         }

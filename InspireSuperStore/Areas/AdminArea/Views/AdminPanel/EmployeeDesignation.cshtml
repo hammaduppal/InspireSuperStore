@@ -1,0 +1,93 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Employee Designations";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">Designation</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+
+	<div class="card shadow-5">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Designation</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<a id="adddesignation" href="/AdminPanel/Designations" class="btn btn-success ">Add Designations</a>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="table-responsive">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Designation Id</th>
+						<th>Designation Name</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var item in Model.EmployeeDesignations)
+					{
+						<tr>
+							<td>@item.Id</td>
+							<td>@item.Title</td>
+
+
+						</tr>
+
+					}
+				</tbody>
+			</table>
+
+		</div>
+	</div>
+
+
+</div>
+
+
+<!-- /content area -->
+<script>
+	$(document).ready(function(){
+	$('#adddesignation').click(async function(e){
+		e.preventDefault();
+		const form =await Utility.RequestAjax('/AdminPanel/_AddEmpoyeeDesignationForm')
+			$('.full-modal-title').html('Add Product');
+						$('#modal-body-horizontal').html(form);
+						$('.modal-title-horizontal').html('Add Employee Department');
+
+						$('#modal_form_horizontal').modal(
+						{
+						 backdrop: 'static',
+							keyboard: false
+						}
+						);
+	});
+
+	});
+</script>
