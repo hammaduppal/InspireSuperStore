@@ -169,19 +169,19 @@ namespace MarketBal.Repository.Account
                 model.BranchId = AppDataUtility.SessionUser.Person.BranchId;
                 insertQuery = $@"DECLARE @NewPersonId INT;
 
--- Get max PersonId and add 1 (handle null if table is empty)
-SELECT @NewPersonId = ISNULL(MAX(Id), 0) + 1
-FROM HRM.Persons;
+                    -- Get max PersonId and add 1 (handle null if table is empty)
+                    SELECT @NewPersonId = ISNULL(MAX(Id), 0) + 1
+                    FROM HRM.Persons;
 
-INSERT INTO HRM.Persons 
-(Id, FirstName, LastName, MobileNumber, Email, IsActive, CreatedOn, BranchId)
-OUTPUT INSERTED.Id
-VALUES 
-(@NewPersonId,@FirstName, @LastName, @MobileNumber, @Email, @IsActive, @CreatedOn, @BranchId) select 1
+                    INSERT INTO HRM.Persons 
+                    (Id, FirstName, LastName, MobileNumber, Email, IsActive, CreatedOn, BranchId)
+                    OUTPUT INSERTED.Id
+                    VALUES 
+                    (@NewPersonId,@FirstName, @LastName, @MobileNumber, @Email, @IsActive, @CreatedOn, @BranchId) select 1
 
 
 
-";
+                    ";
                 var personId = await _db.ExecuteQuery<int>
                     (insertQuery, model);
                 var parameters = new

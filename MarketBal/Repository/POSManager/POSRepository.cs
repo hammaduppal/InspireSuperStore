@@ -166,22 +166,140 @@ namespace MarketBal.Repository.POSManager
             }
         }
 
+        public async Task<int> SaveOrder([FromBody] OrderMasterVM model)
+        {
+            using (var transaction = await _onedb.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var commonParams = CommonParamHelper.GetCommonParams();
+
+                    // Generate Order Number
+                    var lastOrder = await _onedb.OrderMasters
+                        .OrderByDescending(i => i.CreatedDate)
+                        .FirstOrDefaultAsync();
+
+                    var orderPrefix = AppDataUtility.SystemPreferences.InvoicePrefix ?? "ORD";
+                    string newOrderNo = $"{orderPrefix}-001";
+
+                    if (lastOrder != null && !string.IsNullOrEmpty(lastOrder.OrderNo))
+                    {
+                        var lastNo = lastOrder.OrderNo.Split('-')[1];
+                        if (int.TryParse(lastNo, out int number))
+                        {
+                            newOrderNo = $"{orderPrefix}-{(number + 1).ToString("D3")}";
+                        }
+                    }
+
+                    // ---------- Calculations ----------
+                    decimal subTotal = model.OrderDetails.Sum(d => (d.UnitPrice ?? 0) * (d.Quantity ?? 0));
+                    decimal? totalTax = model.OrderDetails.Sum(d => ((d.TaxRate ?? 0) * ((d.UnitPrice ?? 0) * (d.Quantity ?? 0))) / 100);
+                    decimal discount = model.DiscountAmount ?? 0;
+                    decimal grandTotal = subTotal + (totalTax ?? 0) - discount;
+
+                    // ---------- Order Master ----------
+                    var orderMaster = new OrderMaster
+                    {
+                        OrderMasterId = Guid.NewGuid(),
+                        OrderNo = newOrderNo,
+                        OrderDate = commonParams.CreatedOn ?? DateTime.Now,
+
+                        ParentOrderId = model.ParentOrderId,
+
+                        CustomerId = (model.CustomerId.HasValue && model.CustomerId.Value != Guid.Empty)
+                                        ? model.CustomerId
+                                        : null,
+
+                        TotalAmount = subTotal,
+                        DiscountAmount = discount,
+                        TaxAmount = totalTax,
+                        GrandTotal = grandTotal,
+
+                        PaymentMethodId = model.PaymentMethodId,
+                        PaymentStatusId = model.PaymentStatusId ?? 1,
+                        ShippingTypeId = model.ShippingTypeId ?? 1,
+                        OrderSourceId = model.OrderSourceId ?? (int)AppConstants.InvoiceSource.POS,
+
+                        CustomerRemarks = model.CustomerRemarks,
+                        OfficeRemarks = model.OfficeRemarks,
+
+                        CreatedBy = model.CreatedBy ?? 1,
+                        CreatedDate = commonParams.CreatedOn ?? DateTime.Now,
+                        UpdatedBy = model.UpdatedBy,
+                        UpdatedDate = commonParams.CreatedOn ?? DateTime.Now,
+
+                        ServingTableId = (model.ServingTableId.HasValue && model.ServingTableId.Value != Guid.Empty)
+                                            ? model.ServingTableId
+                                            : null,
+
+                        EmployeeId = (model.EmployeeId.HasValue && model.EmployeeId.Value != 0)
+                                        ? model.EmployeeId
+                                        : null
+                    };
+
+                    _onedb.OrderMasters.Add(orderMaster);
+                    await _onedb.SaveChangesAsync();
+
+                    // ---------- Order Details ----------
+                    foreach (var detail in model.OrderDetails)
+                    {
+                        decimal lineTotal = (detail.UnitPrice ?? 0) * (detail.Quantity ?? 0);
+                        decimal taxAmount = ((detail.TaxRate ?? 0) * lineTotal) / 100;
+                        decimal lineTotalWithTax = lineTotal + taxAmount;
+
+                        var orderDetail = new OrderDetail
+                        {
+                            OrderDetailId = Guid.NewGuid(),
+                            OrderMasterId = orderMaster.OrderMasterId,
+                            ProductId = detail.ProductId,
+                            VariantId = detail.VariantId,
+
+                            Quantity = detail.Quantity,
+                            UnitPrice = detail.UnitPrice,
+                            Discount = detail.Discount ?? 0,
+                            TaxRate = detail.TaxRate,
+                            TaxAmount = taxAmount,
+                            LineTotal = lineTotal,
+                            LineTotalWithTax = lineTotalWithTax,
+                            Remarks = detail.Remarks ?? string.Empty,
+                            CreatedDate = DateTime.Now
+                        };
+
+                        _onedb.OrderDetails.Add(orderDetail);
+                    }
+
+                    await _onedb.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return 1;
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+        }
+
+
         public async Task<byte[]> GenerateInvoiceHTML(InvoiceMasterVM items)
         {
-            string companyName = "";
-            string companyAddress = "";
-            string companyContact = "";
-            string invoiceNo = "";
-            string invoiceDate = "";
-            string customerName = "";
-            string qrCodeBase64 = "";
-            decimal subTotal = 0;
-            decimal discount = 0;
-            decimal tax = 0;
-            decimal grandTotal = 0;
-            string footerMessage = "";
-            
-            var html = $@"
+            try
+            {
+                string companyName = "";
+                string companyAddress = "";
+                string companyContact = "";
+                string invoiceNo = "";
+                string invoiceDate = "";
+                string customerName = "";
+                string qrCodeBase64 = "";
+                decimal subTotal = 0;
+                decimal discount = 0;
+                decimal tax = 0;
+                decimal grandTotal = 0;
+                string footerMessage = "";
+
+                var html = $@"
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -201,10 +319,43 @@ namespace MarketBal.Repository.POSManager
                 </body>
                 </html>";
 
-            //var result = await new PdfPupetter().GeneratePdfFromHtml(html);
-            var result =await _pdfservice.GeneratePdfFromHtml(html) ;
-            //var result = PdfGenerator.GeneratePdf(html);
-            return result;
+                var result = await new PdfPupetter().GeneratePdfFromHtml(html);
+                //var result =await _pdfservice.GeneratePdfFromHtml(html) ;
+                //var result = PdfGenerator.GeneratePdf(html);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var html = $@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                 <meta charset='UTF-8'>
+                   <style>
+                {ReportHelper.GetCustomCSS()}
+                    </style>
+                </head>
+                <body>
+                <section style='width:80mm; margin:0 auto;'>
+                     <div class=""company-info"">
+                        <h2>My Company Name</h2>
+                        <p>123 Main St, City, Country</p>
+                        <p>Phone: +1234567890 | Email: info@company.com</p>
+<p>{ex.InnerException.Message}</p>
+<p>{ex.Message}</p>
+
+                    </div>
+                </section>
+                </body>
+                </html>";
+
+                var result = await new PdfPupetter().GeneratePdfFromHtml(html);
+                //var result =await _pdfservice.GeneratePdfFromHtml(html) ;
+                //var result = PdfGenerator.GeneratePdf(html);
+                return result;
+
+            }
+         
         }
      
     public enum SizeVM

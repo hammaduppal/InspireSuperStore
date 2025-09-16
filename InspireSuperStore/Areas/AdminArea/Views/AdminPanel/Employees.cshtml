@@ -80,7 +80,12 @@
 							<td>
 								@Html.CheckBox("IsSalePerson", item.IsSalePerson, new { @class = "form-input-styled activeUnactive", data_value = item.EmployeeId })
 
+								}
+								else
+								{
+									<input type="checkbox" />
 							
+								}
 							</td>
 							<td>
 								@if (item.IsActive.Value)

@@ -47,7 +47,7 @@
 			<div class="col-lg-2">
 				<div class="input-group">
 					<select id="salesPerson" class="form-control" required>
-						<option>Select Associate Person</option>
+						<option value="">Select Associate Person</option>
 						@foreach (var item in Model.Employees)
 						{
 							<option value="@item.EmployeeId">@item.EmployeeCode</option>
@@ -62,7 +62,7 @@
 			<div class="col-lg-2">
 				<div class="input-group">
 					<select id="servingTable" class="form-control" required>
-						<option> Select Table</option>
+						<option value=""> Select Table</option>
 						@foreach (var item in Model.ServingTables)
 						{
 							<option value="@item.ServingTableId">@item.TableName</option>
@@ -330,7 +330,7 @@
 					<div class="btn-group w-100">
 						<button type="button" class="btn btn-warning" style="flex-grow: 1;">Hold</button>
 						<button type="button" class="btn btn-danger" style="flex-grow: 1;">Cancel</button>
-						@if(AppDataUtility.SystemPreferences.IsRestaurantApplication)
+						@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
 						{
 							<button id="btn-submit-order" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">Place Order</button>
 
@@ -338,7 +338,7 @@
 						else
 						{
 							<button id="btn-submit-invoice" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">PAY</button>
-							
+
 						}
 					</div>
 				</div>
@@ -354,21 +354,18 @@
 
 </div>
 <script>
-	$(document).on('click', '#btn-submit-invoice', function () {
-		submitInvoice();
-	});
-	$(document).on('click', '#btn-submit-order', function () {
+		$(document).on('click', '#btn-submit-order', function () {
 		submitInvoice();
 	});
 
-	
+
 		function submitInvoice() {
 				const $rows = $('#invoiceTable tbody tr');
 				if ($rows.length === 0) {
 					alert('Please add at least one product.');
 					return;
 				}
-				debugger
+				
 				const cashReceived = parseFloat($('#cashReceived').val()) || 0;
 				const subTotal = parseFloat($('#subTotal').val()) || 0;
 				const totalTax = parseFloat($('#totalTax').val()) || 0;
@@ -381,6 +378,26 @@
 				const customerId = $('#customer').val() || null;
 				const paymentMethodId = $('#paymentMethod').val() || null;
 				const CASH_PAYMENT_ID = 1;
+				debugger
+				var isRestaurantApp = `@AppDataUtility.SystemPreferences.IsRestaurantApplication.ToString()`;
+				var isAffilatedInvoice = `@AppDataUtility.SystemPreferences.IsAffilatedInvoice.ToString()`;
+
+
+				if (isAffilatedInvoice) {
+					if (!salesPersonId) {
+						alert('Select Sale Person.');
+							return;
+					}
+
+				}
+				if (isRestaurantApp) {
+					if (!tableId) {
+						alert('Select Table.');
+							return;
+					}
+						
+				}
+
 
 				if (paymentMethodId == CASH_PAYMENT_ID) {
 					if (cashReceived < totalPayable) {
@@ -392,7 +409,7 @@
 				const items = [];
 				$rows.each(function () {
 					const $tr = $(this);
-					debugger
+					
 					const $firstTd = $tr.find('td').first();
 
 					const qty = parseFloat($tr.find('.lineqty').val()) || 0;
@@ -425,11 +442,11 @@
 					EmployeeId: salesPersonId,
 					ServingTableId: tableId,
 					CustomerId: customerId,
-					InvoiceDetails: items
+					OrderDetails: items
 				};
 
 				$.ajax({
-					url: '/POSManager/SaveInvoice',
+					url: '/POSManager/SaveMyAssOrder',
 					type: 'POST',
 					data: payload,
 
@@ -450,87 +467,7 @@
 				});
 		}
 
-			function submitOrder() {
-				const $rows = $('#invoiceTable tbody tr');
-				if ($rows.length === 0) {
-					alert('Please add at least one product.');
-					return;
-				}
-				debugger
-				const subTotal = parseFloat($('#subTotal').val()) || 0;
-				const totalTax = parseFloat($('#totalTax').val()) || 0;
-				const grandTotal = parseFloat($('#grandTotal').val()) || 0;
-				const totalPayable = parseFloat($('#totalPayable').val()) || 0;
-				const discount = parseFloat($('#discount').val()) || 0;
-
-				const salesPersonId = $('#salesPerson').val() || null;
-				const tableId = $('#servingTable').val() || null;
-				const customerId = $('#customer').val() || null;
-				const paymentMethodId = $('#paymentMethod').val() || null;
-
-				
-
-				const items = [];
-				$rows.each(function () {
-					const $tr = $(this);
-					debugger
-					const $firstTd = $tr.find('td').first();
-
-					const qty = parseFloat($tr.find('.lineqty').val()) || 0;
-					const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
-					const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
-					const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
-					const lineTotal = unitPrice * qty; // without tax
-					const lineTotalWithTax = lineTotal + taxAmount;
-
-					items.push({
-						ProductId: $firstTd.data('productid'),
-						VariantId: $firstTd.data('variantid'),
-						Quantity: qty,
-						UnitPrice: unitPrice,
-						TaxRate: taxRate,
-						TaxAmount: taxAmount,
-						LineTotal: lineTotal,
-						LineTotalWithTax: lineTotalWithTax
-					});
-				});
-
-				const payload = {
-					SubTotal: subTotal,
-					TotalTax: totalTax,
-					GrandTotal: grandTotal,
-					DiscountAmount: discount,
-					NetAmount: totalPayable, // after discount
-					CashReceived: cashReceived,
-					PaymentMethodId: paymentMethodId,
-					EmployeeId: salesPersonId,
-					ServingTableId: tableId,
-					CustomerId: customerId,
-					InvoiceDetails: items
-				};
-
-				$.ajax({
-					url: '/POSManager/SaveOrder',
-					type: 'POST',
-					data: payload,
-
-					xhrFields: {
-						responseType: 'blob'  // expecting PDF back
-					},
-					success: function (data) {
-						console.log('Hello Dumpling');
-
-						console.log(data);
-						var blob = new Blob([data], { type: "application/pdf" });
-						var url = URL.createObjectURL(blob);
-						window.open(url, "_blank");
-					},
-					error: function (xhr, status, error) {
-						alert("Error saving invoice: " + error);
-					}
-				});
-		}
-
+	
 
 
 	async function printInvoice(invoiceId) {
