@@ -47,6 +47,9 @@
 				<thead>
 					<tr>
 						<th>Name</th>
+						<th>Employee Designation</th>
+						<th>Employee Department</th>
+
 						<th>Employee Code</th>
 
 						<th>Branch Name</th>
@@ -54,6 +57,8 @@
 
 
 						<th>CreatedOn</th>
+						<th>Is Sale Person</th>
+
 						<th>Status</th>
 						<th>Manage</th>
 					</tr>
@@ -63,6 +68,9 @@
 					{
 						<tr>
 							<td>@item.Person.FirstName, @item.Person.LastName</td>
+							<td>@item.EmployeeDesignation.Title</td>
+							<td>@item.EmployeeDepartment.Title</td>
+
 							<td>@item.EmployeeCode</td>
 
 							<td><a href="#">@item.Person?.Branch?.BranchName</a></td>
@@ -88,9 +96,9 @@
 								}
 							</td>
 							<td class="text-center">
-@* 								<div class="list-icons">
-									<a href="/AdminPanel/EditUser/@item.EmployeeId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a>
-								</div> *@
+								<div class="list-icons">
+									<a  href="#" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a>
+								</div>
 							</td>
 						</tr>
 

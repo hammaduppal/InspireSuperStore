@@ -76,6 +76,14 @@ namespace MarketBal.Repository
           IsSalePerson = x.IsSalePerson.Value,
           IsActive = x.IsActive.Value,
           CreatedOn = x.CreatedOn,
+            EmployeeDepartment=new EmployeeDepartmentVM
+            {
+                 Title=x.Department.Title
+            },
+            EmployeeDesignation = new EmployeeDesignationVM
+            {
+                 Title=x.Designation.Title
+            },
           Person = new PersonVM
           {
               FirstName = x.Person.FirstName,
