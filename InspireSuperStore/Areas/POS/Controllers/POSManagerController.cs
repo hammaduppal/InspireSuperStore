@@ -45,20 +45,62 @@ namespace InspireSuperStore.Areas.POS.Controllers
             vm.PaymentMethods = await _assets.PaymentMethods();
             return View(vm);
         }
+
         public async Task<IActionResult> SaveInvoice(InvoiceMasterVM model)
         {
             //var result = await _posRepo.SaveInvoice(model);
-            var invoice = await _posRepo.GenerateInvoiceHTML(model);
-            if (invoice != null)
+            try
             {
-                return File(invoice, "application/pdf", "invoice.pdf");
+                var invoice = await _posRepo.GenerateInvoiceHTML(model);
+                if (invoice != null)
+                {
+                    return File(invoice, "application/pdf", "invoice.pdf");
+                }
+                else
+                {
+                    return Json(new { success = true, message = "Invoice saved successfully!" });
+
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return Json(new { success = true, message = "Invoice saved successfully!" });
+
+                return Json(new { success = true, message = ex.Message });
 
             }
+
         }
+
+        public async Task<IActionResult> CreateOrder()
+        {
+            vm.Departments = await _attrib.GetDepartment();
+            vm.Countries = await _admin.Countries();
+            vm.Customers = await _admin.Customers();
+            vm.ServingTables = await _assets.ServingTables();
+            vm.Employees = await _hrm.GetSaleStaff();
+            vm.PaymentMethods = await _assets.PaymentMethods();
+            return View(vm);
+        }
+        [HttpPost]
+        public async Task<IActionResult> SaveMyAssOrder(OrderMasterVM formData)
+        {
+             var result = await _posRepo.SaveOrder(formData);
+            try
+            {
+               // var invoice = await _posRepo.GenerateInvoiceHTML(model);
+                    return Json(new { success = true, message = "Invoice saved successfully!" });
+
+            }
+            catch (Exception ex)
+            {
+
+                return Json(new { success = true, message = ex.Message });
+
+            }
+
+        }
+
+        
         public async Task<IActionResult> PreviewInvoice()
         {
             return View();

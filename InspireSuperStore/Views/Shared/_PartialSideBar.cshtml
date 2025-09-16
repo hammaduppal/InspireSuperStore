@@ -23,7 +23,19 @@
 					<a href="#" class="nav-link "> <span><i class="fa fa-cash-register"></i> POS</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="Point of Sale">
-						<li class="nav-item"><a href="/POSManager/CreateInvoice" class="nav-link"><i class="fa fa-file-invoice-dollar"></i> Sale Invoice</a></li>
+						@if(AppDataUtility.SystemPreferences.IsRestaurantApplication)
+						{
+							<li class="nav-item"><a href="/POSManager/CreateOrder" class="nav-link"><i class="fa fa-file-invoice-dollar"></i> Create Order</a></li>
+							<li class="nav-item"><a href="/POSManager/Orders" class="nav-link"><i class="fa fa-file-invoice-dollar"></i> Order</a></li>
+
+						}
+						else
+						{
+							<li class="nav-item"><a href="/POSManager/CreateInvoice" class="nav-link"><i class="fa fa-file-invoice-dollar"></i> Sale Invoice</a></li>
+						}
+						
+						<li class="nav-item"><a href="/POSManager/Invoices" class="nav-link"><i class="fa fa-file-invoice-dollar"></i> Invoices</a></li>
+						
 					</ul>
 				</li>
 				<li class="nav-item nav-item-submenu">
@@ -70,9 +82,9 @@
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.PowerUser, UserRolesConstants.Purchase))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-truck "></i> <span>Collections</span></a>
+					<a href="#" class="nav-link "><i class="icon-collaboration"></i> <span>Collections</span></a>
 					<ul class="nav nav-group-sub" data-submenu-title="Collections">
-						<li class="nav-item"><a href="/collection/collections" class="nav-link"><i class="icon-store"></i>Collections</a></li>
+						<li class="nav-item"><a href="/collection/collections" class="nav-link"><i class="icon-collaboration "></i>Collections</a></li>
 						<li class="nav-item"><a href="/collection/addcollection" class="nav-link"><i class="icon-cart4"></i>Add Collection</a></li>
 
 					</ul>
@@ -93,21 +105,16 @@
 
 
 						}
-
-					</ul>
+						@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+						{
+							<li class="nav-item"><a href="/AdminPanel/BulkUpload" class="nav-link"><i class="icon-upload "></i>Bulk Upload</a></li>
+						}
+						</ul>
 				</li>
+				
+				
 			}
-			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
-			{
-				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="mi-settings"></i> <span>Data Manager</span></a>
-					<ul class="nav nav-group-sub" data-submenu-title="Data Manager">
-						<li class="nav-item"><a href="/AdminPanel/BulkUpload" class="nav-link"><i class="mi-person"></i>Bulk Upload</a></li>
-					
-
-					</ul>
-				</li>
-			}
+		
 
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin))
 			{
@@ -122,6 +129,18 @@
 				</li>
 			}
 
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-users4"></i> <span>Human Resources</span></a>
+					<ul class="nav nav-group-sub" data-submenu-title="Purchase Section">
+						<li class="nav-item"><a href="/AdminPanel/Employees" class="nav-link"><i class="icon-user-tie "></i>Empployee</a></li>
+						<li class="nav-item"><a href="/AdminPanel/AddEmployee" class="nav-link"><i class="icon-user-plus"></i>Add Empployee</a></li>
+						<li class="nav-item"><a href="/AdminPanel/EmployeeDepartments" class="nav-link"><i class="icon-safe"></i>Employee Departments</a></li>
+						<li class="nav-item"><a href="/AdminPanel/EmployeeDesignation" class="nav-link"><i class="icon-hat "></i>Designations</a></li>
+					</ul>
+				</li>
+			}
 
 		</ul>
 	</div>

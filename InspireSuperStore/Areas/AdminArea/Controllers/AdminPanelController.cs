@@ -38,6 +38,30 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
 
             return View(vm);
         }
+        public async Task<IActionResult> Employees()
+        {
+            vm.Employees = await _adminPanel.GetEmployees();
+
+            return View(vm);
+        }
+        public async Task<IActionResult> EmployeeIsSalePerson(EmployeeVM model)
+        {
+            var status = await _adminPanel.EmployeeIsSalePerson(model);
+
+            if (status > 0)
+            {
+                return Json(new { statusCode = "200", Message = "Record Save Successfully" });
+
+            }
+            else
+            {
+                return Json(new { statusCode = "300", Message = "Unable to Save Employee Departments" });
+
+
+            }
+        }
+        
+
         [HttpGet]
         [Route("/AdminPanel/EditUser/{Id}")]
         public async Task<IActionResult> EditUser(int Id)
@@ -79,6 +103,16 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             vm.Countries = await _adminPanel.Countries();
             return View(vm);
         }
+        public async Task<IActionResult> AddEmployee()
+        {
+            vm.EmployeeDesignations = await _adminPanel.GetEmployeeDesignations();
+            vm.EmployeeDepartments = await _adminPanel.GetEmployeeDepartments();
+
+            vm.Countries = await _adminPanel.Countries();
+            return View(vm);
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> AddNewUser(LoginUserVM formData)
         {
@@ -566,5 +600,69 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
             return Json(new { });
         }
 
+        public async Task<IActionResult> EmployeeDepartments()
+        {
+            vm.EmployeeDepartments =await _adminPanel.GetEmployeeDepartments();
+            return View(vm);
+        }
+        public IActionResult _AddEmployeeDepartment()
+        {
+            return View("/Views/Shared/_AddEmployeeDepartment.cshtml");
+        }
+        public async Task<IActionResult> AddEmployeeDepartment(EmployeeDepartmentVM model)
+        {
+            var status = await _adminPanel.AddEmployeeDepartment(model);
+            if(status>0)
+            {
+                return Json(new {statusCode="200",Message="Record Save Successfully" });
+
+            }
+            else
+            {
+                return Json(new { statusCode = "300", Message = "Unable to Save Employee Departments" });
+
+
+            }
+        }
+
+        public async Task<IActionResult> EmployeeDesignation()
+        {
+            vm.EmployeeDesignations = await _adminPanel.GetEmployeeDesignations();
+            return View(vm);
+        }
+        public IActionResult _AddEmpoyeeDesignationForm()
+        {
+            return PartialView();
+        }
+        public async Task<IActionResult> AddEmployeeDesignation(EmployeeDesignationVM model)
+        {
+            var status = await _adminPanel.AddEmployeeDesignation(model);
+            if (status > 0)
+            {
+                return Json(new { statusCode = "200", Message = "Record Save Successfully" });
+
+            }
+            else
+            {
+                return Json(new { statusCode = "300", Message = "Unable to Save Employee Departments" });
+
+
+            }
+        }
+        public async Task<IActionResult> AddNewEmployee(EmployeeVM model)
+        {
+            var status = await _adminPanel.AddNewEmployee(model);
+            if (status > 0)
+            {
+                return Json(new { statusCode = "200", Message = "Record Save Successfully" });
+
+            }
+            else
+            {
+                return Json(new { statusCode = "300", Message = "Unable to Save Employee Departments" });
+
+
+            }
+        }
     }
 }

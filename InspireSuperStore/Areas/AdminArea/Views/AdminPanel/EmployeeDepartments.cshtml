@@ -1,0 +1,93 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Employee Departments";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">Departments</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+
+	<div class="card shadow-5">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Departments</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<a id="addDepartment" href="/AdminPanel/AddDepartment" class="btn btn-success ">Add Department</a>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="table-responsive">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Department Id</th>
+						<th>Department Name</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var item in Model.EmployeeDepartments)
+					{
+						<tr>
+							<td>@item.EmployeeDepartmentId</td>
+							<td>@item.Title</td>
+
+
+						</tr>
+
+					}
+				</tbody>
+			</table>
+
+		</div>
+	</div>
+
+
+</div>
+
+
+<!-- /content area -->
+<script>
+	$(document).ready(function(){
+	$('#addDepartment').click(async function(e){
+		e.preventDefault();
+		const form =await Utility.RequestAjax('/AdminPanel/_AddEmployeeDepartment')
+			$('.full-modal-title').html('Add Product');
+						$('#modal-body-horizontal').html(form);
+						$('.modal-title-horizontal').html('Add Employee Department');
+
+						$('#modal_form_horizontal').modal(
+						{
+						 backdrop: 'static',
+							keyboard: false
+						}
+						);
+	});
+
+	});
+</script>

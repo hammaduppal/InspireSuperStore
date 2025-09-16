@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\chrome-win\**" />
+    <Content Remove="wwwroot\chrome-win\**" />
+    <EmbeddedResource Remove="wwwroot\chrome-win\**" />
+    <None Remove="wwwroot\chrome-win\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="Areas\AdminArea\Views\AdminPanel\StartupSettings.cshtml" />
   </ItemGroup>
 
