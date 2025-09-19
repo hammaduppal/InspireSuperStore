@@ -73,7 +73,16 @@
 							<td>@item.PaymentStatus.Name</td>
 
 							<td>@item.PaymentMethod.Name</td>
-							<td>@((AppConstants.OrderStatusEnum)item.OrderStatusId)</td>
+							<td>
+								<select class="form-control" name="OrderStatusId">
+									@foreach (AppConstants.OrderStatusEnum status in Enum.GetValues(typeof(AppConstants.OrderStatusEnum)))
+									{
+										<option value="@( (int)status )" @(item.OrderStatusId == (int)status ? "selected" : "")>
+											@status.ToString()
+										</option>
+									}
+								</select>
+							</td>
 
 
 							<td>@item.GrandTotal</td>
