@@ -5,6 +5,7 @@ using MainModels.Util;
 using MarketBal.Repository;
 using MarketBal.Repository.Account;
 using MarketBal.Repository.HRM;
+using MarketBal.Repository.OrderRP;
 using MarketBal.Repository.POSManager;
 using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Authorization;
@@ -16,7 +17,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
 {
     [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry + "," + UserRolesConstants.Product + "," + UserRolesConstants.Purchase)]
     [Area("OrderSection")]
-    [Route("OrderSection/[action]")]
+    [Route("OrderManager/[action]")]
     public class OrderManagerController : Controller
     {
         PagesViewModel vm = new PagesViewModel();
@@ -30,6 +31,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         private readonly POSRepository _posRepo;
         private readonly NotificationService _notificationServices;
         private readonly NotificationRepository _notificationRepository;
+        private readonly OrderRepository _orderRepo;
 
         public OrderManagerController(IConfiguration config, OneDb oneDb, NotificationService notificationServices)
         {
@@ -43,10 +45,12 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             _posRepo = new POSRepository(_config, _oneDb);
             _notificationServices = notificationServices;
             _notificationRepository = new NotificationRepository(_oneDb);
+            _orderRepo = new OrderRepository(_config, _oneDb);
         }
         public async Task<IActionResult> Orders()
         {
-            return View();
+            vm.OrderMaster  = await _orderRepo.GetOrders();
+            return View(vm);
         }
 
         public async Task<IActionResult> Order(Guid OrderId)
@@ -70,8 +74,8 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveMyAssOrder(OrderMasterVM formData)
         {
-            //  var result = await _posRepo.SaveOrder(formData);
-            var result = 1;
+              var result = await _posRepo.SaveOrder(formData);
+            
             var notification = new NotificationsDTO
             {
                 CreatedAt = DateTime.Now,
@@ -82,7 +86,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
 
             var orderparam = new OrderParam
             {
-                OrderId = Guid.NewGuid()//result.NewItemId
+                OrderId = result.NewItemId
             };
             var Notification = new NotificationsDTO
             {
@@ -96,7 +100,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             await _notificationServices.SendToRoleGroup("Sales", JsonConvert.SerializeObject(Notification));
             await _notificationRepository.SaveNotification(Notification);
             // var invoice = await _posRepo.GenerateInvoiceHTML(model);
-            if (result > 0)
+            if (result.StatusId > 0)
             {
                 return Json(new { statusCode = "200", Success = true, Message = "Order saved successfully!" });
 
