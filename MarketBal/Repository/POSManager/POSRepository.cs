@@ -20,6 +20,7 @@ namespace MarketBal.Repository.POSManager
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
         private readonly PdfService _pdfservice;
+
         public POSRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -165,8 +166,12 @@ namespace MarketBal.Repository.POSManager
                 }
             }
         }
-
-        public async Task<int> SaveOrder([FromBody] OrderMasterVM model)
+        public class SaveStatusVM
+        {
+            public int StatusId { get; set; }
+            public Guid NewItemId { get; set; }
+        }
+        public async Task<SaveStatusVM> SaveOrder(OrderMasterVM model)
         {
             using (var transaction = await _onedb.Database.BeginTransactionAsync())
             {
@@ -196,11 +201,11 @@ namespace MarketBal.Repository.POSManager
                     decimal? totalTax = model.OrderDetails.Sum(d => ((d.TaxRate ?? 0) * ((d.UnitPrice ?? 0) * (d.Quantity ?? 0))) / 100);
                     decimal discount = model.DiscountAmount ?? 0;
                     decimal grandTotal = subTotal + (totalTax ?? 0) - discount;
-
+                    Guid orderMasterId = Guid.NewGuid();
                     // ---------- Order Master ----------
                     var orderMaster = new OrderMaster
                     {
-                        OrderMasterId = Guid.NewGuid(),
+                        OrderMasterId = orderMasterId,
                         OrderNo = newOrderNo,
                         OrderDate = commonParams.CreatedOn ?? DateTime.Now,
 
@@ -216,7 +221,7 @@ namespace MarketBal.Repository.POSManager
                         GrandTotal = grandTotal,
 
                         PaymentMethodId = model.PaymentMethodId,
-                        PaymentStatusId = model.PaymentStatusId ?? 1,
+                        PaymentStatusId = model.PaymentStatusId ?? 2,
                         ShippingTypeId = model.ShippingTypeId ?? 1,
                         OrderSourceId = model.OrderSourceId ?? (int)AppConstants.InvoiceSource.POS,
 
@@ -271,7 +276,10 @@ namespace MarketBal.Repository.POSManager
                     await _onedb.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    return 1;
+                    return new SaveStatusVM
+                    {
+                         NewItemId=orderMasterId, StatusId=1
+                    };
                 }
                 catch (Exception)
                 {

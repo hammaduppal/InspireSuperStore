@@ -39,6 +39,9 @@
     <Folder Include="Areas\InvoiceArea\Views\" />
     <Folder Include="Areas\Notification\Models\" />
     <Folder Include="Areas\Notification\Views\" />
+    <Folder Include="Areas\OrderSection\Data\" />
+    <Folder Include="Areas\OrderSection\Models\" />
+    <Folder Include="Areas\OrderSection\Views\" />
     <Folder Include="Areas\POS\Data\" />
     <Folder Include="Areas\POS\Models\" />
     <Folder Include="Areas\Product\Data\" />

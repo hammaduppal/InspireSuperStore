@@ -1271,6 +1271,7 @@ VALUES
         }
         public async Task<SystemPreferencesVM> GetSystemPreferences()
         {
+            var branchId = AppDataUtility.SessionUser?.Person?.Branch?.BranchId ?? Guid.Empty;
             var result = await _onedb.SystemPreferences
 
                 .Select(x => new SystemPreferencesVM

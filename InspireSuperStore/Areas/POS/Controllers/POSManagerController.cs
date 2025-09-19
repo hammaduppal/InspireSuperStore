@@ -1,5 +1,7 @@
-﻿using MainModels.DTOModels;
+﻿using InspireSuperStore.Areas.Notification.Data;
+using MainModels.DTOModels;
 using MainModels.Models;
+using MainModels.Util;
 using MarketBal.Repository;
 using MarketBal.Repository.Account;
 using MarketBal.Repository.HRM;
@@ -7,6 +9,7 @@ using MarketBal.Repository.POSManager;
 using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace InspireSuperStore.Areas.POS.Controllers
 {
@@ -24,7 +27,10 @@ namespace InspireSuperStore.Areas.POS.Controllers
         private readonly AssetRepository _assets;
         private readonly HumanRespourceRepository _hrm;
         private readonly POSRepository _posRepo;
-        public POSManagerController(IConfiguration config, OneDb oneDb)
+        private readonly NotificationService _notificationServices;
+        private readonly NotificationRepository _notificationRepository;
+
+        public POSManagerController(IConfiguration config, OneDb oneDb, NotificationService notificationServices)
         {
             _config = config;
             _oneDb = oneDb;
@@ -34,6 +40,8 @@ namespace InspireSuperStore.Areas.POS.Controllers
             _assets = new AssetRepository(_config, _oneDb);
             _hrm = new HumanRespourceRepository(_config, _oneDb);
             _posRepo = new POSRepository(_config, _oneDb);
+            _notificationServices = notificationServices;
+            _notificationRepository = new NotificationRepository(_oneDb);
         }
         public async Task<IActionResult> CreateInvoice()
         {
@@ -45,7 +53,7 @@ namespace InspireSuperStore.Areas.POS.Controllers
             vm.PaymentMethods = await _assets.PaymentMethods();
             return View(vm);
         }
-
+       
         public async Task<IActionResult> SaveInvoice(InvoiceMasterVM model)
         {
             //var result = await _posRepo.SaveInvoice(model);
@@ -71,35 +79,7 @@ namespace InspireSuperStore.Areas.POS.Controllers
 
         }
 
-        public async Task<IActionResult> CreateOrder()
-        {
-            vm.Departments = await _attrib.GetDepartment();
-            vm.Countries = await _admin.Countries();
-            vm.Customers = await _admin.Customers();
-            vm.ServingTables = await _assets.ServingTables();
-            vm.Employees = await _hrm.GetSaleStaff();
-            vm.PaymentMethods = await _assets.PaymentMethods();
-            return View(vm);
-        }
-        [HttpPost]
-        public async Task<IActionResult> SaveMyAssOrder(OrderMasterVM formData)
-        {
-             var result = await _posRepo.SaveOrder(formData);
-            try
-            {
-               // var invoice = await _posRepo.GenerateInvoiceHTML(model);
-                    return Json(new { success = true, message = "Invoice saved successfully!" });
-
-            }
-            catch (Exception ex)
-            {
-
-                return Json(new { success = true, message = ex.Message });
-
-            }
-
-        }
-
+        
         
         public async Task<IActionResult> PreviewInvoice()
         {

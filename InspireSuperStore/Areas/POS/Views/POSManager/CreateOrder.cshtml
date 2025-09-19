@@ -31,9 +31,10 @@
 		<div class="col-lg-2">
 			<div class="input-group">
 				<select id="customer" class="form-control">
+					<option value="">Select Customer</option>
 					@foreach (var item in Model.Customers)
 					{
-						<option value="@item.CustomerId">@item.CustomerName + @item.Mobile </option>
+						<option value="@item.CustomerId">@item.Person?.FirstName @item.Person?.LastName @item?.CustomerCode</option>
 
 					}
 				</select>
@@ -399,12 +400,12 @@
 				}
 
 
-				if (paymentMethodId == CASH_PAYMENT_ID) {
-					if (cashReceived < totalPayable) {
-						alert('Cash received is less than payable total. Please collect full payment.');
-						return;
-					}
-				}
+				// if (paymentMethodId == CASH_PAYMENT_ID) {
+				// 	if (cashReceived < totalPayable) {
+				// 		alert('Cash received is less than payable total. Please collect full payment.');
+				// 		return;
+				// 	}
+				// }
 
 				const items = [];
 				$rows.each(function () {
@@ -444,22 +445,26 @@
 					CustomerId: customerId,
 					OrderDetails: items
 				};
-
+				Utility.SpinnerMessage('btn-submit-order');
 				$.ajax({
 					url: '/POSManager/SaveMyAssOrder',
 					type: 'POST',
 					data: payload,
 
-					xhrFields: {
-						responseType: 'blob'  // expecting PDF back
-					},
 					success: function (data) {
-						console.log('Hello Dumpling');
+				Utility.StopSpinnerMessage('btn-submit-order');
 
+						if(data.statusCode==="200")
+						{
+									Utility.successMessage(data.Message);
+
+						}
+						else{
+									Utility.failMessage(data.Message);
+
+						}
 						console.log(data);
-						var blob = new Blob([data], { type: "application/pdf" });
-						var url = URL.createObjectURL(blob);
-						window.open(url, "_blank");
+						
 					},
 					error: function (xhr, status, error) {
 						alert("Error saving invoice: " + error);

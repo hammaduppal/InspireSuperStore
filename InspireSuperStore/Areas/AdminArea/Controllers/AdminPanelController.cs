@@ -565,7 +565,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         
         public async Task<IActionResult> SystemPrefrences(CustomerVM model)
         {
-           vm.SystemPreferences = await _adminPanel.GetSystemPreferences();
+           //vm.SystemPreferences =  _adminPanel.GetSystemPreferences();
             vm.Organizations = await _adminPanel.GetOrganizations();
             vm.Branches= await _adminPanel.GetBranches();
             return View(vm);
@@ -577,7 +577,7 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         }
         public async Task<IActionResult> AccountPrefrences(CustomerVM model)
         {
-            vm.SystemPreferences = await _adminPanel.GetSystemPreferences();
+           // vm.SystemPreferences =  _adminPanel.GetSystemPreferences();
             vm.Organizations = await _adminPanel.GetOrganizations();
             vm.Branches = await _adminPanel.GetBranches();
             return View(vm);

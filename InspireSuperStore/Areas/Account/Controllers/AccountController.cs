@@ -1,4 +1,5 @@
-﻿using MainModels.DTOModels;
+﻿using InspireSuperStore.Areas.Notification.Data;
+using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository;
@@ -22,6 +23,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
         private readonly AESEncryption _aes;
         private readonly PagesViewModel vm = new PagesViewModel();
         private readonly AdminPanelRepository _admin;
+        private readonly NotificationRepository notificationRepository;
         private readonly OneDb _oneDb;
         private readonly HumanRespourceRepository _hrm;
         public AccountController(IConfiguration config, OneDb onedb)
@@ -32,11 +34,12 @@ namespace InspireSuperStore.Areas.Account.Controllers
             _aes = new AESEncryption();
             _admin = new AdminPanelRepository(_config, _oneDb);
             _hrm = new HumanRespourceRepository(_config, _oneDb);
+            notificationRepository = new NotificationRepository(_oneDb);
         }
         public async Task<IActionResult> Login(string? returnUrl = null)
         {
             //var result = await _admin.GetOrganizations();
-            
+
             //if (result.Count == 0)
             //{
             //    // Redirect to StartupSettings in AdminPanel controller
@@ -51,8 +54,20 @@ namespace InspireSuperStore.Areas.Account.Controllers
                 if (res != null)
                 {
                     await _login.SigninAsync(res, HttpContext);
-                    AppDataUtility.SessionUser = res;
-                 
+                    await LoginHandler(res);
+
+                    //AppDataUtility.SessionUser = res;
+                    //string[] rolesnames = res.Roles.Select(x => x.Name).ToArray();
+                    //bool isSuperAdmin = res.Roles.Any(r => r.Id == 1 && r.Name.Equals("superadmin", StringComparison.OrdinalIgnoreCase));
+                    //if (!isSuperAdmin)
+                    //{
+                    //    AppDataUtility.UserNotifications = await notificationRepository.GetGroupNotification(rolesnames);
+                    //}
+                    //else
+                    //{
+                    //    AppDataUtility.UserNotifications = new List<NotificationsDTO>(); // empty list for superadmin
+                    //}
+
                 }
             }
             TempData["ReturnURL"] = returnUrl;
@@ -82,6 +97,21 @@ namespace InspireSuperStore.Areas.Account.Controllers
 
             return isEncrypted;
         }
+        private async Task<int> LoginHandler(LoginUserVM res)
+        {
+            AppDataUtility.SessionUser = res;
+            string[] rolesnames = res.Roles.Select(x => x.Name).ToArray();
+            bool isSuperAdmin = res.Roles.Any(r => r.Id == 1 && r.Name.Equals("superadmin", StringComparison.OrdinalIgnoreCase));
+            if (!isSuperAdmin)
+            {
+                AppDataUtility.UserNotifications = await notificationRepository.GetGroupNotification(rolesnames);
+            }
+            else
+            {
+                AppDataUtility.UserNotifications = new List<NotificationsDTO>(); // empty list for superadmin
+            }
+            return 1;
+        }
         [HttpPost]
         public async Task<IActionResult> ValidateLogin(LoginUserVM formData)
         {
@@ -92,8 +122,19 @@ namespace InspireSuperStore.Areas.Account.Controllers
                 if (res != null)
                 {
                     await _login.SigninAsync(res, HttpContext);
-                   // res.Passwords = "";
-                    AppDataUtility.SessionUser = res;
+                    await LoginHandler(res);
+                    // res.Passwords = "";
+                    //AppDataUtility.SessionUser = res;
+                    //string[] rolesnames = res.Roles.Select(x => x.Name).ToArray();
+                    //bool isSuperAdmin = res.Roles.Any(r => r.Id == 1 && r.Name.Equals("superadmin", StringComparison.OrdinalIgnoreCase));
+                    //if (!isSuperAdmin)
+                    //{
+                    //    AppDataUtility.UserNotifications = await notificationRepository.GetGroupNotification(rolesnames);
+                    //}
+                    //else
+                    //{
+                    //    AppDataUtility.UserNotifications = new List<NotificationsDTO>(); // empty list for superadmin
+                    //}
                     //if (res.RoleName=="SuperAdmin")
                     //{
                     //    url = "/adminPanel";
@@ -137,15 +178,15 @@ namespace InspireSuperStore.Areas.Account.Controllers
             }
         }
 
-        public async Task< IActionResult> _AddCustomerForm()
+        public async Task<IActionResult> _AddCustomerForm()
         {
-            vm.Countries= await _admin.Countries();
+            vm.Countries = await _admin.Countries();
             return View(vm);
         }
         public async Task<IActionResult> AddNewCustomer(PersonVM model)
         {
             var result = await _login.AddCustomer(model);
-            return Json(new {statusCode="200", CustomerId=result });
+            return Json(new { statusCode = "200", CustomerId = result });
         }
 
 
@@ -202,8 +243,8 @@ namespace InspireSuperStore.Areas.Account.Controllers
                 return View();
             }
         }
-    
-    
-    
+
+
+
     }
 }

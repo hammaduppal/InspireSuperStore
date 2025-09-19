@@ -1,140 +1,210 @@
 ﻿@using MainModels.DTOModels
+@using MainModels.Util
+@using Newtonsoft.Json
 @model PagesViewModel
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>General Setup| Inspire Nation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    @await Html.PartialAsync("~/Views/Shared/_PartialHead.cshtml")
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>General Setup| Inspire Nation</title>
+	<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	@await Html.PartialAsync("~/Views/Shared/_PartialHead.cshtml")
 </head>
 <body class="navbar-top @PagesViewModel.ThemeSettings?.ToggleSideBar">
-    <partial name="/Views/Shared/_BsModal.cshtml" />
+	<partial name="/Views/Shared/_BsModal.cshtml" />
 
-    <div class="navbar navbar-expand-md navbar-dark bg-teal-400  navbar-static fixed-top">
-        @await Html.PartialAsync("~/Views/Shared/_PartialMainNavBar.cshtml")
+	<div class="navbar navbar-expand-md navbar-dark bg-teal-400  navbar-static fixed-top">
+		@await Html.PartialAsync("~/Views/Shared/_PartialMainNavBar.cshtml")
 
-    </div>
-    <div class="page-content">
-        <div class="sidebar sidebar-light sidebar-main sidebar-expand-md">
-            @await Html.PartialAsync("~/Views/Shared/_PartialSideBar.cshtml")
+	</div>
+	<div class="page-content">
+		<div class="sidebar sidebar-light sidebar-main sidebar-expand-md">
+			@await Html.PartialAsync("~/Views/Shared/_PartialSideBar.cshtml")
 
-        </div>
-        <div class="content-wrapper">
+		</div>
+		<div class="content-wrapper">
 
 
-            @RenderBody()
+			@RenderBody()
 
-            <!-- Footer -->
-            <partial name="/Views/Shared/_PartialFooter.cshtml" />
-            <!-- /footer -->
-        </div>
-    </div>
+			<!-- Footer -->
+			<partial name="/Views/Shared/_PartialFooter.cshtml" />
+			<!-- /footer -->
+		</div>
+	</div>
+	<audio id="newOrderSound" src="~/alarm.wav" preload="auto"></audio>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - InspireSuperStore - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script>
-         const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/notificationHub")
-        .withAutomaticReconnect() // <--- this enables default retry behavior
-        .configureLogging(signalR.LogLevel.Information)
-        .build();
-            
-        // Receive message handler
-        connection.on("ReceiveNotification", function (message) {
-            
-            console.log("Notification received:", message);
-            // Optionally show toast / append to DOM etc.
-        });
-                connection.start().then(function () {
-        }).catch(function (err) {
-            return console.error(err.toString());
-        });
-                connection.onreconnecting((error) => {
-            console.warn("SignalR connection lost. Attempting to reconnect...", error);
-            // Optionally show a message to the user
-        });
-                connection.onreconnected((connectionId) => {
-            // Optionally update UI or re-sync data
-        });
-           function sendTest() {
-            fetch('/Home/SendTestMessage', { method: 'POST' });
-        }
-    </script>
-        
-    <script>
-        $('#toggleSideBar').on('click',function(){
-             $.ajax({
-                url:'/Home/ToggleSideMenu/',
-                type:'POST',
-                success:function(e){
-                    console.log(e);
-                }
-            })
-        })
-                document.addEventListener('DOMContentLoaded', () => {
-                    
-          const currentPath = window.location.pathname.toLowerCase();
 
-          document.querySelectorAll('.nav-sidebar .nav-link').forEach(link => {
-            if (link.getAttribute('href').toLowerCase() === currentPath) {
-              link.classList.add('active');
+	<footer class="border-top footer text-muted">
+		<div class="container">
+			&copy; 2024 - InspireSuperStore - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+		</div>
+	</footer>
+	<script>
+		 const connection = new signalR.HubConnectionBuilder()
+		.withUrl("/notificationHub")
+		.withAutomaticReconnect() // <--- this enables default retry behavior
+		.configureLogging(signalR.LogLevel.Information)
+		.build();
 
-              let li = link.closest('.nav-item-submenu');
-              while (li) {
-                li.classList.add('nav-item-expanded', 'nav-item-open');
-                li = li.parentElement.closest('.nav-item-submenu');
-              }
-            }
-          });
-        });
+		connection.on("ReceiveNotification", function (messageJson) {
+			debugger
+			var message = JSON.parse(messageJson);
+			renderNotification(message, true); 
 
-     
-        //         $(document).ready(function () {
-        //     $('.sidebar .nav-link').each(function () {
-        //         var linkUrl = $(this).attr('href');
+					   playalarmnewOrder();
+			Utility.successMessage('New Order Recieved');
+		});
+		function renderNotification(message, prepend = false) {
+			var params = {};
+			try {
+				params = JSON.parse(message.Params || "{}");
+			} catch (e) {
+				console.warn("Invalid Params JSON:", message.Params);
+			}
 
-        //         if (window.location.pathname === linkUrl) {
-        //             $(this).addClass('active');
-        //             $(this).closest('.nav-item').addClass('active');
-        //             $(this).closest('.nav-group-sub').css('display','block');
+			var createdAt = new Date(message.CreatedAt);
 
-        //         }
-        //     });
-        //     $('.sidebar-main-toggle').click(function(e){
-        //         UnActiveSideBar();
-        //     });
-        //     function UnActiveSideBar(){
-        //               $('.sidebar .nav-link').each(function () {
-        //         var linkUrl = $(this).attr('href');
+			var li = `
+				<li class="media">
+					<div class="mr-3">
+						<a href="/PosManager/Order/${params.OrderId ?? ''}"
+						   class="btn bg-purple-300 rounded-round btn-icon">
+							<i class="icon-truck"></i>
+						</a>
+					</div>
+					<div class="media-body">
+						<div>
+							<strong>${message.GroupName}</strong> – ${message.Message ?? "New notification"}
+						</div>
+						<div class="text-muted font-size-sm">
+							${params.OrderNumber ?? "Order"} | ${params.CustomerName ?? ""}
+						</div>
+						<div class="font-size-sm text-muted mt-1">
+							${createdAt.toLocaleString("en-GB", {
+								day: "2-digit", month: "short", year: "numeric",
+								hour: "2-digit", minute: "2-digit"
+							})}
+						</div>
+					</div>
+				</li>
+			`;
 
-        //         if (window.location.pathname === linkUrl) {
-        //             $(this).removeClass('active');
-        //             $(this).closest('.nav-item').removeClass('active');
-        //             $(this).closest('.nav-group-sub').css('display','block');
+			var $list = $(".notificationList");
 
-        //         }
-        //     });
-        //     }
-        // });
-                $('#viewPassword').on('click', function (e) {
-            e.preventDefault();
-            var $passwordInput = $('#Password');
-            var inputType = $passwordInput.attr('type');
+			if ($list.find("li").length === 1 &&
+				$list.find("li .media-body").text().trim() === "No Notification") {
+				$list.empty();
+			}
 
-            if (inputType === 'password') {
-                $passwordInput.attr('type', 'text');
-                $(this).find('i').removeClass('icon-eye-blocked').addClass('icon-eye');
-            } else {
-                $passwordInput.attr('type', 'password');
-                $(this).find('i').removeClass('icon-eye').addClass('icon-eye-blocked');
-            }
-        });
-    </script>
+			if (prepend) {
+				$list.prepend(li);
+			} else {
+				$list.append(li);
+			}
+		}
+
+		var notifications = @Html.Raw(JsonConvert.SerializeObject(AppDataUtility.UserNotifications));
+		notifications.forEach(n => renderNotification(n));
+
+		
+		connection.start().then(function () {
+		}).catch(function (err) {
+			return console.error(err.toString());
+		});
+
+		connection.onreconnecting((error) => {
+			console.warn("SignalR connection lost. Attempting to reconnect...", error);
+			// Optionally show a message to the user
+		});
+			connection.onreconnected((connectionId) => {
+						// Optionally update UI or re-sync data
+			});
+		
+			function sendTest() {
+			  fetch('/Home/SendTestMessage', { method: 'POST' });
+			}
+		
+		function playalarmnewOrder() {
+					var audio = document.getElementById("newOrderSound");
+					if (audio) {
+						audio.currentTime = 0; // restart if already playing
+						audio.play().catch(err => console.warn("Autoplay blocked:", err));
+					}
+				}
+
+	</script>
+
+	<script>
+		$('#toggleSideBar').on('click',function(){
+			 $.ajax({
+				url:'/Home/ToggleSideMenu/',
+				type:'POST',
+				success:function(e){
+					console.log(e);
+				}
+			})
+		})
+				document.addEventListener('DOMContentLoaded', () => {
+
+		  const currentPath = window.location.pathname.toLowerCase();
+
+		  document.querySelectorAll('.nav-sidebar .nav-link').forEach(link => {
+			if (link.getAttribute('href').toLowerCase() === currentPath) {
+			  link.classList.add('active');
+
+			  let li = link.closest('.nav-item-submenu');
+			  while (li) {
+				li.classList.add('nav-item-expanded', 'nav-item-open');
+				li = li.parentElement.closest('.nav-item-submenu');
+			  }
+			}
+		  });
+		});
+
+
+		//         $(document).ready(function () {
+		//     $('.sidebar .nav-link').each(function () {
+		//         var linkUrl = $(this).attr('href');
+
+		//         if (window.location.pathname === linkUrl) {
+		//             $(this).addClass('active');
+		//             $(this).closest('.nav-item').addClass('active');
+		//             $(this).closest('.nav-group-sub').css('display','block');
+
+		//         }
+		//     });
+		//     $('.sidebar-main-toggle').click(function(e){
+		//         UnActiveSideBar();
+		//     });
+		//     function UnActiveSideBar(){
+		//               $('.sidebar .nav-link').each(function () {
+		//         var linkUrl = $(this).attr('href');
+
+		//         if (window.location.pathname === linkUrl) {
+		//             $(this).removeClass('active');
+		//             $(this).closest('.nav-item').removeClass('active');
+		//             $(this).closest('.nav-group-sub').css('display','block');
+
+		//         }
+		//     });
+		//     }
+		// });
+				$('#viewPassword').on('click', function (e) {
+			e.preventDefault();
+			var $passwordInput = $('#Password');
+			var inputType = $passwordInput.attr('type');
+
+			if (inputType === 'password') {
+				$passwordInput.attr('type', 'text');
+				$(this).find('i').removeClass('icon-eye-blocked').addClass('icon-eye');
+			} else {
+				$passwordInput.attr('type', 'password');
+				$(this).find('i').removeClass('icon-eye').addClass('icon-eye-blocked');
+			}
+		});
+	</script>
 </body>
 </html>

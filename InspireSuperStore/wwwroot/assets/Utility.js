@@ -227,9 +227,9 @@ const Utility = {
             return allValid;
         };
     },
-    SpinnerMessage: function (brothel, message) {
+    SpinnerMessage: function (targetId, message) {
         
-        const targetElement = document.getElementById(brothel);
+        const targetElement = document.getElementById(targetId);
         
         if (targetElement) {
             // Ensure the target element is relatively positioned for overlay
@@ -268,13 +268,13 @@ const Utility = {
             // Append the overlay to the target element
             targetElement.appendChild(overlay);
         } else {
-            console.error(`Element with ID "${brothel}" not found.`);
+            console.error(`Element with ID "${targetId}" not found.`);
         }
     },
 
-    StopSpinnerMessage: function (brothel) {
+    StopSpinnerMessage: function (targetId) {
         ;
-        const targetElement = document.getElementById(brothel);
+        const targetElement = document.getElementById(targetId);
 
         if (targetElement) {
             // Find the overlay within the target element
@@ -287,14 +287,14 @@ const Utility = {
                 console.error('No overlay found to remove.');
             }
         } else {
-            console.error(`Element with ID "${brothel}" not found.`);
+            console.error(`Element with ID "${targetId}" not found.`);
         }
     }
     ,
 
-    SpinnerMessageParent: function (brothel, message) {
+    SpinnerMessageParent: function (targetId, message) {
         ;
-        const targetElement = document.getElementById(brothel);
+        const targetElement = document.getElementById(targetId);
 
         if (targetElement) {
             // Find the closest parent with class 'card'
@@ -337,15 +337,15 @@ const Utility = {
                 // Append the overlay to the parent card
                 parentCard.appendChild(overlay);
             } else {
-                console.error(`Parent element with class "card" not found for ID "${brothel}".`);
+                console.error(`Parent element with class "card" not found for ID "${targetId}".`);
             }
         } else {
-            console.error(`Element with ID "${brothel}" not found.`);
+            console.error(`Element with ID "${targetId}" not found.`);
         }
     },
-    StopSpinnerMessageParent: function (brothel) {
+    StopSpinnerMessageParent: function (targetId) {
         ;
-        const targetElement = document.getElementById(brothel);
+        const targetElement = document.getElementById(targetId);
 
         if (targetElement) {
             // Find the closest parent with class 'card'
@@ -362,10 +362,10 @@ const Utility = {
                     console.error('No overlay found to remove.');
                 }
             } else {
-                console.error(`Parent element with class "card" not found for ID "${brothel}".`);
+                console.error(`Parent element with class "card" not found for ID "${targetId}".`);
             }
         } else {
-            console.error(`Element with ID "${brothel}" not found.`);
+            console.error(`Element with ID "${targetId}" not found.`);
         }
     },
 

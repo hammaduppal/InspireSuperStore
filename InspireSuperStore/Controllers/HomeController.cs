@@ -37,7 +37,7 @@ namespace InspireSuperStore.Controllers
             _hubContext = hubContext;
             var systemSettings = _config.GetSection("SystemSettings").Get<SystemSettings>();
 			var systemPref =  _admin.GetSystemPreferences();
-			AppDataUtility.SystemPreferences = systemPref.Result;
+			AppDataUtility.SystemPreferences = systemPref.GetAwaiter().GetResult();
 			PagesViewModel.SystemSettings = systemSettings;
 			if (PagesViewModel.ThemeSettings==null)
 			{
@@ -56,12 +56,15 @@ namespace InspireSuperStore.Controllers
 
 		public async Task<IActionResult> Index()
 		{
-			//var reu = await _notificationServices.NotifyOnlineUsersUpdated();
-			//await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Welcome! You are logged in.");
-
+			await _notificationServices.NotifyOnlineUsersUpdated();
+			await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Welcome! You are logged in.");
 			
-			//string message = "this is my message to send to admin@inspirenation.us";
-   //         await _hubContext.Clients.User("admin@inspirenation.us").SendAsync("ReceiveNotification", $"Private: {message}");
+
+			string message = "this is my message to send to admin@inspirenation.us";
+			await _hubContext.Clients.User("admin@inspirenation.us").SendAsync("ReceiveNotification", $"Private: {message}");
+
+            await _notificationServices.SendToRoleGroup("Sales", "New Order Recieved");
+
             return View();
 		}
 
