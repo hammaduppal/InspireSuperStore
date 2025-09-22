@@ -34,7 +34,7 @@
 
 				<div class="header-elements d-none">
 					<div class="d-flex justify-content-center">
-						<a id="addOrders" href="/AdminPanel/Orderss" class="btn btn-success ">Add Orderss</a>
+						<a id="addOrders" href="/OrderManager/CreateOrder" class="btn btn-success ">Add Orderss</a>
 
 					</div>
 				</div>
@@ -68,16 +68,16 @@
 
 						<tr>
 							<td>@count</td>
-							<td>@item.Customer.FirstName @item.Customer.LastName</td>
+							<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
 							<td>@item.OrderSource.SourceName</td>
 							<td>@item.PaymentStatus.Name</td>
 
 							<td>@item.PaymentMethod.Name</td>
 							<td>
-								<select class="form-control" name="OrderStatusId">
+								<select data-ordermasterid="@item.OrderMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
 									@foreach (AppConstants.OrderStatusEnum status in Enum.GetValues(typeof(AppConstants.OrderStatusEnum)))
 									{
-										<option value="@( (int)status )" @(item.OrderStatusId == (int)status ? "selected" : "")>
+										<option  value="@( (int)status )" @(item.OrderStatusId == (int)status ? "selected" : "")>
 											@status.ToString()
 										</option>
 									}
@@ -91,7 +91,7 @@
 							<td>
 
 								<div class="list-icons">
-									<a href="#" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
+									<a href="/PosManager/Order/@item.OrderMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
 									<a href="#" class="list-icons-item text-danger-600"><i class="icon-trash"></i></a> &nbsp;
 									<a href="#" class="list-icons-item text-success-600"><i class="icon-printer"></i></a>
 
@@ -115,20 +115,28 @@
 <!-- /content area -->
 <script>
 	$(document).ready(function(){
-	$('#addOrders').click(async function(e){
-		e.preventDefault();
-		const form =await Utility.RequestAjax('/AdminPanel/_AddEmpoyeeOrdersForm')
-			$('.full-modal-title').html('Add Product');
-						$('#modal-body-horizontal').html(form);
-						$('.modal-title-horizontal').html('Add Employee Department');
+		$('#orderStatusId').change(async function(){
+			var newstatusId = $(this).val();
+			var omid = $(this).attr('data-ordermasterid');
+	
+			const result = await Utility.RequestDataAjax({
+				url:'/OrderManager/UpdateOrderStatus',
+				data:{
+					OrderStatusId:newstatusId,
+					OrderMasterId:omid
+				}
+			})
+			if(result.statusCode==='200')
+			{
+			Utility.successMessage(result.Message);
 
-						$('#modal_form_horizontal').modal(
-						{
-						 backdrop: 'static',
-							keyboard: false
-						}
-						);
-	});
+			}
+			else{
+			Utility.failMessage(result.Message);
 
+			}
+
+		});
+	
 	});
 </script>

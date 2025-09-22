@@ -56,7 +56,7 @@ namespace InspireSuperStore.Areas.POS.Controllers
        
         public async Task<IActionResult> SaveInvoice(InvoiceMasterVM model)
         {
-            //var result = await _posRepo.SaveInvoice(model);
+            var result = await _posRepo.SaveInvoice(model);
             try
             {
                 var invoice = await _posRepo.GenerateInvoiceHTML(model);

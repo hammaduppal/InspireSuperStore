@@ -1,8 +1,943 @@
-﻿
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@using static MainModels.DTOModels.AppConstants
+@model PagesViewModel
 @{
-    ViewData["Title"] = "Order";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+	ViewData["Title"] = "Order";
+	Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Order</h1>
 
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+				<a href="/Purchase/SaleOrder" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Sale Order</a>
+
+				<span class="breadcrumb-item active">Edit Sales Order</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+<div class="page-header page-header-light">
+	<div class="row">
+		<!-- Barcode Input -->
+		<div class="col-md-3">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text"><i class="icon-barcode2"></i></span>
+				</div>
+				<input type="text" id="barCode" name="barCode" class="form-control" autocomplete="off" placeholder="Search BarCode........." />
+			</div>
+		</div>
+		<!-- Manual Search Input -->
+		<div class="col-md-3">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text"><i class="icon-search4"></i></span>
+				</div>
+				<div class="form-group-feedback form-group-feedback-right">
+					<select id="productSearch" style="width: 100%" class="form-control"></select>
+
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+
+</div>
+
+<div class="content">
+	<div class="">
+		<style>
+			#invoiceSummary * {
+				padding-top: 0 !important;
+				padding-bottom: 0 !important;
+			}
+		</style>
+		<div class="card" id="invoiceSummary">
+
+			<div class="card-body">
+				<style>
+					#invoice-section label,
+					#invoice-section .form-control {
+						margin: 0 !important;
+						padding: 2px 4px; /* Optional: tighter spacing */
+					}
+				</style>
+				<div id="invoice-section" class="row">
+					<div class="col-lg-3">
+						<div class="input-group">
+
+							<select id="customer" class="form-control">
+								<option value="@Model?.Order?.Customer?.CustomerId">@Model.Order?.Customer?.FirstName</option>
+								@foreach (var item in Model.Customers)
+								{
+									<option value="@item.CustomerId">@item.Person?.FirstName @item.Person?.LastName @item?.CustomerCode</option>
+
+								}
+							</select>
+
+							<div class="input-group-append">
+								<button id="addCustomer" class="btn btn-light" type="button"><i class="icon-user-plus"></i></button>
+							</div>
+						</div>
+					</div>
+					@if (AppDataUtility.SystemPreferences.IsAffilatedInvoice)
+					{
+						<div class="col-lg-2">
+							<label>Sale Person</label>
+
+							<select id="salesPerson" class="form-control" required>
+								<option value="@Model.Order?.Employee?.EmployeeId">@Model.Order?.Employee?.FirstName , @Model.Order?.Employee?.EmployeeCode </option>
+								@foreach (var item in Model.Employees)
+								{
+									<option value="@item?.EmployeeId">@item?.FirstName , @item?.EmployeeCode</option>
+								}
+							</select>
+						</div>
+					}
+
+					@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
+					{
+						<div class="col-lg-2">
+							<label>Serving Table</label>
+
+							<select id="servingTable" class="form-control" required>
+								<option value="@Model.Order?.ServingTable?.ServingTableId"> @Model.Order?.ServingTable?.TableName</option>
+								@foreach (var item in Model.ServingTables)
+								{
+									<option value="@item?.ServingTableId">@item?.TableName</option>
+								}
+							</select>
+						</div>
+					}
+
+					<div class="col-lg-2  text-center">
+						<label>Payment Method</label>
+						<select id="paymentMethod" class="form-control">
+							<option value="@Model.Order?.PaymentMethod?.PaymentMethodId">@Model.Order?.PaymentMethod?.Name</option>
+							@foreach (var item in Model.PaymentMethods)
+							{
+								<option value="@item?.PaymentMethodId">@item?.Name</option>
+							}
+						</select>
+					</div>
+
+					<div class="col-lg-1 text-center">
+						<label>Payment</label>
+						<input id="cashReceived" type="text" class="form-control text-center" />
+					</div>
+
+					<div class="col-lg-1  text-center">
+						<label>Balance</label>
+						<input id="balance" type="text" class="form-control text-right" />
+					</div>
+
+
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+	<!-- Invoice template -->
+	<div class="card shadow-5">
+		<div class="card-header bg-transparent header-elements-inline">
+			<input type="hidden" id="OrderMasterId" value="@Model.Order?.OrderMasterId" />
+			<div class="row">
+				<div class="col-sm-3">
+					<select id="status" name="status" class="form-control form-control-select2" data-placeholder="Select status">
+						@{
+							var selectedStatus = Model.Order?.OrderStatusId;
+						}
+						@foreach (AppConstants.OrderStatusEnum status in Enum.GetValues(typeof(AppConstants.OrderStatusEnum)))
+						{
+							<option value="@((int)status)" @(selectedStatus == (int)status ? "selected" : "")>
+								@status
+							</option>
+						}
+					</select>
+				</div>
+				<div class="col-sm-3">
+					<input type="text" readonly class="form-control" value="" />
+				</div>
+				<div class="col-sm-3">
+					<input type="text" value="@TimeHelper.GetFormattedTimeSpan(Model.Order.CreatedDate.Value)" readonly class="form-control" />
+				</div>
+				<div class="col-sm-3">
+					<select id="purchaseType" name="purchaseType" class="form-control form-control-select2" data-placeholder="Select status" disabled>
+						@{
+							var selectedType = Model.Order.OrderStatusId;
+						}
+						@foreach (OrderStatusEnum status in Enum.GetValues(typeof(OrderStatusEnum)))
+						{
+							<option value="@((int)status)" @(selectedType == (int)status ? "selected" : "")>
+								@status
+							</option>
+						}
+					</select>
+				</div>
+			</div>
+
+			<div class="header-elements">
+				<button type="button" class="btn btn-light btn-sm ml-3"><i class="icon-printer mr-2"></i> Print</button>
+			</div>
+		</div>
+
+
+
+		<div class="table-responsive">
+			<table id="invoiceTable" class="table table-lg">
+				<thead>
+					<tr>
+						<th class="text-center">BarCode</th>
+						<th class="text-center">Description</th>
+						<th class="text-center">Color</th>
+						<th class="text-center">Size</th>
+
+						<th class="text-center">Qty</th>
+
+						<th class="text-center">Unit Price</th>
+						<th class="text-center">Tax%age</th>
+
+						<th class="text-center">Tax Amounnt</th>
+						<th class="text-center">Line Total</th>
+						<th class="text-center">Manage</th>
+
+
+
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var item in Model.Order.OrderDetails)
+					{
+						<tr>
+							<td class="text-center"
+								data-productId="@item.ProductId"
+								data-variantId="@item?.Variant?.VariantId"
+								data-barcode="@item?.Variant?.BarCode">
+								@item?.Variant?.BarCode
+							</td>
+
+							<td class="text-center"
+								data-productId="@item.ProductId"
+								data-variantId="@item?.Variant?.VariantId"
+								data-barcode="@item?.Variant?.BarCode">
+								@item?.Variant?.ProductName
+								<br />
+								<span class="text-muted">@item?.Variant?.BrandName</span>
+							</td>
+
+							<td class="text-center">@item?.Variant?.ColorName</td>
+							<td class="text-center">@item?.Variant?.SizeName</td>
+
+							<td class="text-center">
+								<input class="lineqty text-center"
+									   type="number" min="1" step="1"
+									   value="@item?.Quantity"
+									   style="max-width:50px;" />
+							</td>
+
+							<td class="currentPrice text-center">@item?.UnitPrice?.ToString("0.00")</td>
+							<td class="taxPercent text-center">@item?.TaxRate?.ToString("0")</td>
+							<td class="taxAmount text-center">@item?.TaxAmount?.ToString("0.00")</td>
+
+							<td class="lineTotal text-center">@item?.LineTotalWithTax?.ToString("0.00")</td>
+
+							<td class="text-center">
+								<div class="list-icons">
+									<a href="#" data-variantId="@item?.VariantId" data-productId="@item?.ProductId"
+									   class="list-icons-item text-danger-600 removeRow text-center">
+										<i class="icon-trash"></i>
+									</a>
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+
+			</table>
+		</div>
+
+		<div class="card-body">
+			<div class="d-md-flex flex-md-wrap">
+				@* 	<div class="pt-2 mb-3">
+					<h6 class="mb-3">Authorized person</h6>
+					<div class="mb-3">
+						<img src="~/global_assets/images/signature.png" width="150" alt="">
+					</div>
+
+					<ul class="list-unstyled text-muted">
+						<li>Eugene Kopyov</li>
+						<li>2269 Elba Lane</li>
+						<li>Paris, France</li>
+						<li>888-555-2311</li>
+					</ul>
+				</div> *@
+
+				<div class="pt-2 mb-3 wmin-md-400 ml-auto">
+					<h6 class="mb-3">Total due</h6>
+					<div class="table-responsive">
+						<table class="table">
+							<tbody>
+								<tr>
+									<th>Sub Total:</th>
+									<td class="text-right" id="totalAmount">@Model.Order.TotalAmount</td>
+								</tr>
+								<tr>
+									<th>Total Tax:</th>
+									<td class="text-right" id="totalTax">@Model.Order.TaxAmount</td>
+								</tr>
+								<tr>
+									<th>Discount:</th>
+									<td class="text-center">
+										<input class="form-control" id="discount" type="number" min="0" step="0.01" value="@Model.Order.DiscountAmount" />
+									</td>
+								</tr>
+								<tr>
+									<th>Grand Total:</th>
+									<td class="text-right text-primary">
+										<h5 class="font-weight-semibold" id="grandTotal">@Model.Order.GrandTotal</h5>
+									</td>
+								</tr>
+								<tr>
+									<th>Payable:</th>
+									<td class="text-right text-success">
+										<h5 class="font-weight-semibold" id="totalPayable">@Model.Order.GrandTotal</h5>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+
+					</div>
+					<div class="btn-group w-100">
+						<button type="button" class="btn btn-warning" style="flex-grow: 1;">Hold</button>
+						<button type="button" class="btn btn-danger" style="flex-grow: 1;">Cancel</button>
+						@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
+						{
+							<button id="btn-submit-order" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">Place Order</button>
+
+						}
+						else
+						{
+							<button id="btn-submit-invoice" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">PAY</button>
+
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+
+		@* 	<div class="card-footer">
+			<span class="text-muted">Thank you for using Limitless. This invoice can be paid via PayPal, Bank transfer, Skrill or Payoneer. Payment is due within 30 days from the date of delivery. Late payment is possible, but with with a fee of 10% per month. Company registered in England and Wales #6893003, registered office: 3 Goodman Street, London E1 8BF, United Kingdom. Phone number: 888-555-2311</span>
+		</div> *@
+	</div>
+
+</div>
+
+<script>
+
+	$(document).on('click', '#btn-submit-order', function () {
+		UpdateOrder();
+	});
+
+	function UpdateOrder() {
+		const $rows = $('#invoiceTable tbody tr');
+		if ($rows.length === 0) {
+			alert('Please add at least one product.');
+			return;
+		}
+
+		const subTotal = parseFloat($('#totalAmount').text()) || 0;
+		const totalTax = parseFloat($('#totalTax').text()) || 0;
+		const grandTotal = parseFloat($('#grandTotal').text()) || 0;
+		const totalPayable = parseFloat($('#totalPayable').text()) || 0;
+		const discount = parseFloat($('#discount').val()) || 0;
+
+		const salesPersonId = $('#salesPerson').val() || null;
+		const tableId = $('#servingTable').val() || null;
+		const customerId = $('#customer').val() || null;
+		const paymentMethodId = $('#paymentMethod').val() || null;
+		const CASH_PAYMENT_ID = 1;
+
+		var isRestaurantApp = `@AppDataUtility.SystemPreferences.IsRestaurantApplication.ToString()`.toLowerCase() === "true";
+		var isAffilatedInvoice = `@AppDataUtility.SystemPreferences.IsAffilatedInvoice.ToString()`.toLowerCase() === "true";
+
+		if (isAffilatedInvoice && !salesPersonId) {
+			alert('Select Sale Person.');
+			return;
+		}
+
+		if (isRestaurantApp && !tableId) {
+			alert('Select Table.');
+			return;
+		}
+
+		const items = [];
+		$rows.each(function () {
+			const $tr = $(this);
+
+			const $firstTd = $tr.find('td').first();
+
+			const qty = parseFloat($tr.find('.lineqty').val()) || 0;
+			const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
+			const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
+			const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
+			const lineTotal = unitPrice * qty;
+			const lineTotalWithTax = lineTotal + taxAmount;
+
+			items.push({
+				OrderDetailId: $tr.data('orderdetailid') || null, // attach existing ID if available
+				ProductId: $firstTd.data('productid'),
+				VariantId: $firstTd.data('variantid'),
+				Quantity: qty,
+				UnitPrice: unitPrice,
+				TaxRate: taxRate,
+				TaxAmount: taxAmount,
+				LineTotal: lineTotal,
+				LineTotalWithTax: lineTotalWithTax
+			});
+		});
+
+		const payload = {
+			SubTotal: subTotal,
+			TotalTax: totalTax,
+			GrandTotal: grandTotal,
+			DiscountAmount: discount,
+			NetAmount: totalPayable,
+			PaymentMethodId: paymentMethodId,
+			EmployeeId: salesPersonId,
+			ServingTableId: tableId,
+			CustomerId: customerId,
+			OrderDetails: items
+		};
+
+		Utility.SpinnerMessage('btn-submit-order');
+		$.ajax({
+			url: '/OrderManager/UpdateOrder',
+			type: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify(payload), // send as JSON
+			success: function (data) {
+				Utility.StopSpinnerMessage('btn-submit-order');
+				if (data.statusCode === "200") {
+					Utility.successMessage(data.Message);
+				} else {
+					Utility.failMessage(data.Message);
+				}
+				console.log(data);
+			},
+			error: function (xhr, status, error) {
+				Utility.StopSpinnerMessage('btn-submit-order');
+				alert("Error saving invoice: " + error);
+			}
+		});
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	$('#addCustomer').on('click',async function () {
+		var result = await Utility.RequestAjax('/Account/_AddCustomerForm');
+		$('.modal-title-horizontal').html('Add New Customer');
+		$('#modal-body-horizontal').html(result);
+		$('#modal_form_horizontal').modal();
+	});
+		$(document).on('submit','#addNewCustomer',async function(e){
+		  e.preventDefault();
+			 var formData = {
+				FirstName: $('#firstName').val(),
+				LastName: $('#lastName').val(),
+				MobileNumber: $('#mobile').val(),
+				Email: $('#email').val(),
+				Address: $('#address').val(),
+				CityId: $('#city').val()
+			};
+
+			var objectData={
+				url:'/Account/AddNewCustomer',
+				data:formData,
+			}
+			var result =await Utility.RequestDataAjax(objectData);
+			if(result.statusCode==='200'){
+
+				$('#modal_form_horizontal').modal('hide');
+				var customers = await Utility.RequestAjax('/AdminPanel/GetCustomers');
+				var $select = $('#customers');
+				$select.empty();
+
+				// Populate new options
+				customers.forEach(function (item) {
+					var isSelected = item.CustomerId === result.CustomerId; // check if it's the newly added
+					var option = $('<option>', {
+						value: item.CustomerId,
+						text: item.CustomerName + ' ' + item.Mobile,
+						selected: isSelected
+					});
+					$select.append(option);
+				});
+
+			}
+		})
+
+</script>
+
+<script>
+	$(document).ready(function(){
+		var pstatusId=parseFloat($('#status').val());
+			var pmId=$('#OrderMasterId').val();
+			enableDisableType(pstatusId);
+		function enableDisableType(statusId){
+
+			if(statusId==2	)
+			{
+					$('#purchaseType').removeAttr('disabled');
+			}
+			else{
+					$('#purchaseType').attr('disabled', 'disabled');
+			}
+		}
+					$(document).on('change','#status',async function(e){
+					var id = parseFloat($(this).val());
+
+							$('#purchaseType').removeAttr('disabled');
+							if(id==2){
+									Utility.confirmBootBox('DO you want to Procced as Sale Order').then(async function(bootResult){
+											if (bootResult) {
+													const something =  await Utility.RequestDataAjax({
+														data:{
+																PurchaseType:3,
+																Status:2,
+															OrderMasterId:pmId},
+															url:'/Purchase/POChangeType'
+													});
+													if(something.statusCode==='200'){
+														Utility.successMessage(something.Message);
+														window.location.href='/Purchase/SaleOrder';
+													}
+													else{
+
+													}
+											} else {
+												console.log("User clicked NO");
+											}
+
+									});
+							}
+							else if(id==3){
+									const changePostatus =  await Utility.RequestDataAjax({
+														data:{
+																PurchaseType:1,
+															OrderMasterId:pmId},
+															url:'/Purchase/POChangeType'
+													});
+													if(changePostatus){
+														Utility.successMessage('Done');
+														window.location.href='/Purchase/SaleOrder';
+													}
+													else{
+
+													}
+							}
+							await Utility.RequestDataAjax({
+								data:{
+									Status:id,
+									OrderMasterId:pmId},
+								url:'/Purchase/POChangeStatus'
+							});
+							enableDisableType(id);
+				});
+
+				$(document).on('change','#purchaseType',async function(e){
+								var id = parseFloat($(this).val());
+
+
+							await Utility.RequestDataAjax({
+								data:{
+										PurchaseType:id,
+									OrderMasterId:pmId},
+									url:'/Purchase/POChangeType'
+							});
+				});
+
+				$(document).on('change','.qty', async function(e){
+					var newQty = $(this).val();
+					var pdId = $(this).attr('data-purchaseDetailId');
+					if(newQty==0){
+						$(this).val(1);
+					}
+					const updateQtyResult= Utility.RequestDataAjax({
+					data:{Qty:newQty,
+						OrderMasterId:pmId,
+						PurchaseDetailId:pdId
+						},
+						url:'/Purchase/POChangeQty'
+
+					});
+					Utility.successMessage('Result Updated');
+					debugger
+					 let $row = $(this).closest('tr');
+					 let unitPrice = parseFloat($row.find('.unitPrice').text()) || 0;
+					 let lineTotal = newQty * unitPrice;
+					$row.find('.lineTotal').text(lineTotal.toFixed(2));
+					  let totalAmount = 0;
+						$('.lineTotal').each(function () {
+							totalAmount += parseFloat($(this).text()) || 0;
+						});
+						  $('#totalAmount').text(totalAmount.toFixed(2));
+						  $('#grandTotal').text(totalAmount.toFixed(2));
+
+				});
+
+
+
+
+	});
+</script>
+<script>
+	$(document).ready(function(){
+		// $(document).on('click', '.product-add-btn', function () {
+		// 	const $btn = $(this);
+
+		// 	const productData = {
+		// 		BarCode: $btn.data('barcode'),
+		// 		ProductId: $btn.data('product-id'),
+		// 		VariantId: $btn.data('variant-id'),
+		// 		SizeName: $btn.data('sizename'),
+		// 		ProductName: $btn.data('product-name'),
+		// 		TaxRate: $btn.data('taxrate'),
+
+		// 		CurrentPrice: parseFloat($btn.data('price'))
+		// 	};
+
+		// 	appendProductToTable(productData);
+		// });
+		// $(document).on('click', '.product-tile', function () {
+		// 	const $tile = $(this);
+
+		// 	// Gather all product data from data attributes
+		// 	const productData = {
+		// 		BarCode: $tile.data('barcode'),
+		// 		ProductId: $tile.data('product-id'),
+		// 		VariantId: $tile.data('variant-id'),
+		// 		SizeName: $tile.data('sizename'),
+		// 		ProductName: $tile.find('h6').text().trim(),
+		// 		CurrentPrice: parseFloat($tile.find('span').text().replace(/[^0-9.]/g, '')),
+		// 		TaxRate: $tile.data('taxrate')
+
+
+		// 	};
+
+		// 	// Use your existing function to add to invoice table
+		// 	appendProductToTable(productData);
+		// });
+	
+		$('#barCode').focus();
+		  $(document).on('keydown', '#barCode', async function (e) {
+
+			  if (e.key === 'Enter') {
+					var barCode= $(this).val();
+
+					 const data = await Utility.RequestDataAjax( {
+					  data: { BarCode: barCode },
+					  url: '/Products/GetVariantbyBarCode'
+				  });
+
+				  if(data){
+					appendProductToTable(data);
+
+						$(this).focus();
+					$('#barCode').val('');
+
+				  } else
+				  {
+					alert('Product not found!');
+					$(this).val('');
+
+				  }
+
+				}
+		  });
+
+		function appendProductToTable(result) {
+			if (!result) return;
+
+			debugger
+			let isDuplicate = false;
+			let incomingBarcode = String(result.BarCode); // ensure barcode is string
+
+			$('#invoiceTable tbody tr').each(function () {
+				const barcode = String($(this).find('td').eq(0).data('barcode')); // barcode stored in first <td>
+				debugger
+				if (barcode === incomingBarcode) {
+					isDuplicate = true;
+
+					let qtyInput = $(this).find('td').eq(4).find('input');
+					let currentQty = parseFloat(qtyInput.val()) || 0;
+					let newQty = currentQty + 1;
+					qtyInput.val(newQty);
+
+					// Get unit price and tax rate from row
+					let unitPrice = parseFloat($(this).find('.currentPrice').text()) || 0;
+					let taxRate = parseFloat($(this).find('.taxPercent').text()) || 0;
+
+					// Recalculate
+					let lineAmount = unitPrice * newQty;
+					let taxAmount = (lineAmount * taxRate) / 100;
+					let total = lineAmount + taxAmount;
+
+					// Update row cells
+					$(this).find('.taxAmount').text(taxAmount.toFixed(2));
+					$(this).find('.lineTotal').text(total.toFixed(2));
+
+					setTotalPrice();
+					return false; // break loop
+				}
+			});
+
+			if (isDuplicate) {
+				return; // No need to append new row
+			}
+
+		appendRow(result,incomingBarcode);
+			setTotalPrice();
+		}
+
+			$(document).on('input', '.lineqty', function () {
+				let qty = parseFloat($(this).val()) || 0;
+				let row = $(this).closest('tr');
+
+				// Get the unit price and tax rate from the row
+				let unitPrice = parseFloat(row.find('.currentPrice').text()) || 0;
+				let taxRate = parseFloat(row.find('.taxPercent').text()) || 0;
+
+				// Calculate amounts
+				let lineTotal = unitPrice * qty;
+				let taxAmount = (lineTotal * taxRate) / 100;
+				let lineTotalWithTax = lineTotal + taxAmount;
+
+				// Update UI
+				row.find('.taxAmount').text(taxAmount.toFixed(2));
+				row.find('.lineTotal').text(lineTotal.toFixed(2));
+				row.find('.lineTotalWithTax').text(lineTotalWithTax.toFixed(2));
+
+				// Update overall invoice total
+				setTotalPrice();
+			});
+
+		$(document).on('input','#discount',function(){
+			setTotalPrice();
+		})
+
+
+
+
+		$('#productSearch').select2({
+			placeholder: 'Search product by name, size, color, material...',
+			minimumInputLength: 2,
+			ajax: {
+				url: '/Products/SearchProducts',
+				type: 'POST',
+				dataType: 'json',
+				delay: 300,
+				data: function (params) {
+					return {
+						SearchParams: params.term
+					};
+				},
+				processResults: function (data) {
+					// Expected: [{id, text, fullProductObject}]
+					return {
+						results: data.map(function (item) {
+							return {
+								id: item.BarCode, // or item.id
+								text: `${item.ProductName} - ${item.SizeName || ''} ${item.ColorName || ''} ${item.MaterialName || ''}`,
+								fullData: item
+							};
+						})
+					};
+				},
+				cache: true
+			},
+			templateResult: formatProductResult,
+			templateSelection: formatProductSelection
+		});
+
+		// On select, append to table
+		$('#productSearch').on('select2:select', function (e) {
+			const data = e.params.data;
+			appendProductToTable(data.fullData);
+			// Optionally clear
+			$(this).val(null).trigger('change');
+		});
+
+		function formatProductResult(data) {
+			if (data.loading) return data.text;
+			return $(`<div>
+				<strong>${data.text}</strong><br/>
+				<small>Price: ${data.fullData?.RetailPrice || 'N/A'}</small>
+			</div>`);
+		}
+
+
+		$(document).on('click','.removeRow',function(e){
+			e.preventDefault();
+				$(this).closest('tr').remove();
+				setTotalPrice();
+		})
+
+
+
+		function formatProductSelection(data) {
+			return data.text;
+		}
+
+		function appendRow(result, incomingBarcode) {
+		// -----------------------------
+		// Variables & calculations
+		// -----------------------------
+		let unitPrice = parseFloat(result.CurrentPrice) || 0;
+		let taxRate = parseFloat(result.TaxRate) || 0;
+		let qty = 1; // default for new row
+
+		let lineAmount = unitPrice * qty;
+		let taxAmount = (lineAmount * taxRate) / 100;
+		let total = lineAmount + taxAmount;
+
+		// Server-side flag injected into JS
+		let enableTax = @AppDataUtility.SystemPreferences.EnableTax.ToString().ToLower();
+		// true / false
+
+		let row = "";
+
+		// -----------------------------
+		// HTML structure
+		// -----------------------------
+		if (enableTax) {
+			// With tax columns
+			row = `
+				<tr>
+									<td class="text-center" data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+						${result.BarCode}
+					</td>
+					<td data-productId="${result.ProductId}" class="text-center" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+						${result.ProductName}
+					</td>
+					<td class="text-center">${result.ColorName}</td>
+
+					<td class="text-center">${result.SizeName}</td>
+					<td class="text-center">
+						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+					</td>
+					<td class='currentPrice text-center'>${unitPrice.toFixed(2)}</td>
+					<td class='taxPercent text-center'>${taxRate.toFixed(2)}</td>
+					<td class='taxAmount text-center'>${taxAmount.toFixed(2)}</td>
+					<td class='lineTotal text-center'>${total.toFixed(2)}</td>
+					<td class="text-center">
+						<div class="list-icons">
+							<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
+							   class="list-icons-item text-danger-600 removeRow text-center">
+							   <i class="icon-trash"></i>
+							</a>
+						</div>
+					</td>
+				</tr>`;
+		} else {
+			// Without tax columns
+			row = `
+				<tr>
+					<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+						${result.ProductName}
+					</td>
+					<td class="text-center">${result.SizeName}</td>
+					<td class="text-center">
+						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+					</td>
+					<td class='currentPrice text-right'>${unitPrice.toFixed(2)}</td>
+					<td class='lineTotal text-right'>${lineAmount.toFixed(2)}</td>
+					<td class="text-center">
+						<div class="list-icons">
+							<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
+							   class="list-icons-item text-danger-600 removeRow text-center">
+							   <i class="icon-trash"></i>
+							</a>
+						</div>
+					</td>
+				</tr>`;
+		}
+
+		// -----------------------------
+		// Append row
+		// -----------------------------
+		$('#invoiceTable tbody').append(row);
+	}
+
+
+		function setTotalPrice() {
+		let subTotal = 0;
+		let totalTax = 0;
+
+		$('#invoiceTable tbody tr').each(function () {
+			let qty = parseFloat($(this).find('.lineqty').val()) || 0;
+			let unitPrice = parseFloat($(this).find('.currentPrice').text()) || 0;
+			let taxRate = parseFloat($(this).find('.taxPercent').text()) || 0;
+
+			let lineTotal = unitPrice * qty;
+			let taxAmount = (lineTotal * taxRate) / 100;
+
+			subTotal += lineTotal;
+			totalTax += taxAmount;
+		});
+
+		let grandTotal = subTotal + totalTax;
+
+		// discount (allow numeric input, default 0)
+		let discount = parseFloat($('#discount').val()) || 0;
+		if (discount > grandTotal) discount = grandTotal; // prevent negative payable
+
+		let payable = grandTotal - discount;
+
+		// Update UI (use text for <td>, val for <input>)
+		$('#totalAmount').text(subTotal.toFixed(2));
+		$('#totalTax').text(totalTax.toFixed(2));
+		$('#grandTotal').text(grandTotal.toFixed(2));
+		$('#totalPayable').text(payable.toFixed(2));
+	}
+
+
+		$(document).on('input', '#cashReceived', function () {
+			let payable = parseFloat($('#totalPayable').val()) || 0;
+			let cashRecived = parseFloat($(this).val());
+			// Get the unit price from the currentPrice td
+			let balance =cashRecived - payable || 0;
+			balance = Math.floor(balance);
+			$('#balance').val(balance);
+		});
+
+	})
+</script>

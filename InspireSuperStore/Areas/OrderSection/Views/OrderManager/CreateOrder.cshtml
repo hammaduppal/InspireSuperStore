@@ -31,10 +31,9 @@
 		<div class="col-lg-2">
 			<div class="input-group">
 				<select id="customer" class="form-control">
-					<option value="">Select Customer</option>
 					@foreach (var item in Model.Customers)
 					{
-						<option value="@item.CustomerId">@item.Person?.FirstName @item.Person?.LastName @item?.CustomerCode</option>
+						<option value="@item.CustomerId">@item.CustomerName @item?.CustomerCode</option>
 
 					}
 				</select>
@@ -51,7 +50,7 @@
 						<option value="">Select Associate Person</option>
 						@foreach (var item in Model.Employees)
 						{
-							<option value="@item.EmployeeId">@item.EmployeeCode</option>
+							<option value="@item.EmployeeId">@item.FirstName , @item.EmployeeCode</option>
 						}
 					</select>
 				</div>
@@ -199,6 +198,8 @@
 			</div>
 		</div>
 	</div>
+	
+	
 	<div class="row">
 		<!-- Left Side: Dynamic Product Area (Grid / Search) -->
 		<div class="col-lg-7">
@@ -355,7 +356,7 @@
 
 </div>
 <script>
-		$(document).on('click', '#btn-submit-order', function () {
+	$(document).on('click', '#btn-submit-order', function () {
 		submitInvoice();
 	});
 
@@ -366,7 +367,7 @@
 					alert('Please add at least one product.');
 					return;
 				}
-				
+
 				const cashReceived = parseFloat($('#cashReceived').val()) || 0;
 				const subTotal = parseFloat($('#subTotal').val()) || 0;
 				const totalTax = parseFloat($('#totalTax').val()) || 0;
@@ -396,7 +397,7 @@
 						alert('Select Table.');
 							return;
 					}
-						
+
 				}
 
 
@@ -410,7 +411,7 @@
 				const items = [];
 				$rows.each(function () {
 					const $tr = $(this);
-					
+
 					const $firstTd = $tr.find('td').first();
 
 					const qty = parseFloat($tr.find('.lineqty').val()) || 0;
@@ -464,7 +465,7 @@
 
 						}
 						console.log(data);
-						
+
 					},
 					error: function (xhr, status, error) {
 						alert("Error saving invoice: " + error);
@@ -472,7 +473,7 @@
 				});
 		}
 
-	
+
 
 
 	async function printInvoice(invoiceId) {

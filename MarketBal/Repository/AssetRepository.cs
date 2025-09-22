@@ -36,7 +36,7 @@ namespace MarketBal.Repository
         }
         public async Task<List<PaymentMethodVM>> PaymentMethods()
         {
-            return await _onedb.PaymentMethods.Select(x => new PaymentMethodVM
+            return await _onedb.PaymentMethods.Where(x=>x.IsActive==true).Select(x => new PaymentMethodVM
             {
                 PaymentMethodId = x.PaymentMethodId,
                 Name = x.Name,

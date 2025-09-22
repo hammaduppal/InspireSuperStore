@@ -53,11 +53,22 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             return View(vm);
         }
 
-        public async Task<IActionResult> Order(Guid OrderId)
+        [HttpGet("/PosManager/Order/{orderMasterId:guid}")]
+        public async Task<IActionResult> Order(Guid orderMasterId)
         {
-            return View();
+            vm.Customers = await _admin.Customers();
+            vm.ServingTables = await _assets.ServingTables();
+            vm.Employees = await _hrm.GetSaleStaff();
+            vm.PaymentMethods = await _assets.PaymentMethods();
+
+            vm.Order = await _orderRepo.GetOrderById(orderMasterId);
+            return View(vm);
         }
 
+        public async Task<IActionResult> UpdateOrder(OrderMasterVM model)
+        {
+            return Json(new { });
+        }
 
         public async Task<IActionResult> CreateOrder()
         {
@@ -109,13 +120,11 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             {
                 return Json(new { statusCode = "300", Success = true, Message = "Unable to Save Order" });
             }
-
-
-
-
-
-
         }
 
+        public async Task <IActionResult> UpdateOrderStatus(OrderMasterVM model)
+        {
+           return APIResponseHelper.ResultResponse(this, await _orderRepo.UpdateOrderStatus(model.OrderStatusId, model.OrderMasterId));
+        }
     }
 }
