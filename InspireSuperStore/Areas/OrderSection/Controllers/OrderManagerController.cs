@@ -64,10 +64,11 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             vm.Order = await _orderRepo.GetOrderById(orderMasterId);
             return View(vm);
         }
-
+        [HttpPost]
         public async Task<IActionResult> UpdateOrder(OrderMasterVM model)
         {
-            return Json(new { });
+            var result = await _orderRepo.UpdateOrder(model);
+            return APIResponseHelper.ResultResponse(this, result);
         }
 
         public async Task<IActionResult> CreateOrder()
@@ -126,5 +127,14 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         {
            return APIResponseHelper.ResultResponse(this, await _orderRepo.UpdateOrderStatus(model.OrderStatusId, model.OrderMasterId));
         }
+
+        [HttpPost]
+        public async Task<IActionResult> OrderToInvoice(OrderMasterVM model)
+        {
+            var result = await _orderRepo.OrderToInvoice(model.OrderMasterId);
+            return APIResponseHelper.ResultResponse(this, 1);
+        }
+
+        
     }
 }

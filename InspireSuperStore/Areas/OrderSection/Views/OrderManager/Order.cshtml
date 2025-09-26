@@ -72,6 +72,7 @@
 						padding: 2px 4px; /* Optional: tighter spacing */
 					}
 				</style>
+
 				<div id="invoice-section" class="row">
 					<div class="col-lg-3">
 						<div class="input-group">
@@ -154,7 +155,7 @@
 			<input type="hidden" id="OrderMasterId" value="@Model.Order?.OrderMasterId" />
 			<div class="row">
 				<div class="col-sm-3">
-					<select id="status" name="status" class="form-control form-control-select2" data-placeholder="Select status">
+					<select id="orderStatus" name="status" class="form-control form-control-select2" data-placeholder="Select status">
 						@{
 							var selectedStatus = Model.Order?.OrderStatusId;
 						}
@@ -219,13 +220,14 @@
 				<tbody>
 					@foreach (var item in Model.Order.OrderDetails)
 					{
-						<tr>
+						<tr data-orderdetailid="@item.OrderDetailId">
 							<td class="text-center"
 								data-productId="@item.ProductId"
 								data-variantId="@item?.Variant?.VariantId"
 								data-barcode="@item?.Variant?.BarCode">
 								@item?.Variant?.BarCode
 							</td>
+
 
 							<td class="text-center"
 								data-productId="@item.ProductId"
@@ -289,7 +291,7 @@
 						<table class="table">
 							<tbody>
 								<tr>
-									<th>Sub Total:</th>
+									<th>Total Amount:</th>
 									<td class="text-right" id="totalAmount">@Model.Order.TotalAmount</td>
 								</tr>
 								<tr>
@@ -319,11 +321,10 @@
 
 					</div>
 					<div class="btn-group w-100">
-						<button type="button" class="btn btn-warning" style="flex-grow: 1;">Hold</button>
-						<button type="button" class="btn btn-danger" style="flex-grow: 1;">Cancel</button>
+						<button id="btn-submit-order" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">Update Order</button>
+						<button id="btn-submit-createInvoice" type="button" class="btn btn-primary btn-lg" style="flex-grow: 2;">Create Invoice</button>
 						@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
 						{
-							<button id="btn-submit-order" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">Place Order</button>
 
 						}
 						else
@@ -342,7 +343,18 @@
 	</div>
 
 </div>
-
+<script>
+	$('#btn-submit-createInvoice').click(async function(){
+			const orderMasterId = $('#OrderMasterId').val();
+		console.log(orderMasterId);
+		const result = await Utility.RequestDataAjax({
+			url:'/OrderManager/OrderToInvoice',
+			data:{
+				OrderMasterId:orderMasterId,
+			}
+		});
+	})
+</script>
 <script>
 
 	$(document).on('click', '#btn-submit-order', function () {
@@ -356,7 +368,7 @@
 			return;
 		}
 
-		const subTotal = parseFloat($('#totalAmount').text()) || 0;
+		const totalAmount = parseFloat($('#totalAmount').text()) || 0;
 		const totalTax = parseFloat($('#totalTax').text()) || 0;
 		const grandTotal = parseFloat($('#grandTotal').text()) || 0;
 		const totalPayable = parseFloat($('#totalPayable').text()) || 0;
@@ -366,7 +378,8 @@
 		const tableId = $('#servingTable').val() || null;
 		const customerId = $('#customer').val() || null;
 		const paymentMethodId = $('#paymentMethod').val() || null;
-		const CASH_PAYMENT_ID = 1;
+			const orderMasterId = $('#OrderMasterId').val();
+			const orderStatusId = $('#orderStatus').val();
 
 		var isRestaurantApp = `@AppDataUtility.SystemPreferences.IsRestaurantApplication.ToString()`.toLowerCase() === "true";
 		var isAffilatedInvoice = `@AppDataUtility.SystemPreferences.IsAffilatedInvoice.ToString()`.toLowerCase() === "true";
@@ -393,7 +406,6 @@
 			const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
 			const lineTotal = unitPrice * qty;
 			const lineTotalWithTax = lineTotal + taxAmount;
-
 			items.push({
 				OrderDetailId: $tr.data('orderdetailid') || null, // attach existing ID if available
 				ProductId: $firstTd.data('productid'),
@@ -407,9 +419,12 @@
 			});
 		});
 
+
 		const payload = {
-			SubTotal: subTotal,
+			OrderMasterId:orderMasterId,
+			TotalAmount: totalAmount,
 			TotalTax: totalTax,
+			OrderStatusId:orderStatusId,
 			GrandTotal: grandTotal,
 			DiscountAmount: discount,
 			NetAmount: totalPayable,
@@ -419,13 +434,13 @@
 			CustomerId: customerId,
 			OrderDetails: items
 		};
-
+		console.log(payload);
+		console.log(items);
 		Utility.SpinnerMessage('btn-submit-order');
 		$.ajax({
 			url: '/OrderManager/UpdateOrder',
 			type: 'POST',
-			contentType: 'application/json',
-			data: JSON.stringify(payload), // send as JSON
+			data: payload, // send as JSON
 			success: function (data) {
 				Utility.StopSpinnerMessage('btn-submit-order');
 				if (data.statusCode === "200") {
@@ -600,7 +615,7 @@
 
 					});
 					Utility.successMessage('Result Updated');
-					debugger
+
 					 let $row = $(this).closest('tr');
 					 let unitPrice = parseFloat($row.find('.unitPrice').text()) || 0;
 					 let lineTotal = newQty * unitPrice;
@@ -621,42 +636,7 @@
 </script>
 <script>
 	$(document).ready(function(){
-		// $(document).on('click', '.product-add-btn', function () {
-		// 	const $btn = $(this);
 
-		// 	const productData = {
-		// 		BarCode: $btn.data('barcode'),
-		// 		ProductId: $btn.data('product-id'),
-		// 		VariantId: $btn.data('variant-id'),
-		// 		SizeName: $btn.data('sizename'),
-		// 		ProductName: $btn.data('product-name'),
-		// 		TaxRate: $btn.data('taxrate'),
-
-		// 		CurrentPrice: parseFloat($btn.data('price'))
-		// 	};
-
-		// 	appendProductToTable(productData);
-		// });
-		// $(document).on('click', '.product-tile', function () {
-		// 	const $tile = $(this);
-
-		// 	// Gather all product data from data attributes
-		// 	const productData = {
-		// 		BarCode: $tile.data('barcode'),
-		// 		ProductId: $tile.data('product-id'),
-		// 		VariantId: $tile.data('variant-id'),
-		// 		SizeName: $tile.data('sizename'),
-		// 		ProductName: $tile.find('h6').text().trim(),
-		// 		CurrentPrice: parseFloat($tile.find('span').text().replace(/[^0-9.]/g, '')),
-		// 		TaxRate: $tile.data('taxrate')
-
-
-		// 	};
-
-		// 	// Use your existing function to add to invoice table
-		// 	appendProductToTable(productData);
-		// });
-	
 		$('#barCode').focus();
 		  $(document).on('keydown', '#barCode', async function (e) {
 
@@ -687,13 +667,13 @@
 		function appendProductToTable(result) {
 			if (!result) return;
 
-			debugger
+
 			let isDuplicate = false;
 			let incomingBarcode = String(result.BarCode); // ensure barcode is string
 
 			$('#invoiceTable tbody tr').each(function () {
 				const barcode = String($(this).find('td').eq(0).data('barcode')); // barcode stored in first <td>
-				debugger
+
 				if (barcode === incomingBarcode) {
 					isDuplicate = true;
 
@@ -841,7 +821,7 @@
 		if (enableTax) {
 			// With tax columns
 			row = `
-				<tr>
+				<tr  data-orderdetailid="">
 									<td class="text-center" data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
 						${result.BarCode}
 					</td>
@@ -899,7 +879,7 @@
 
 
 		function setTotalPrice() {
-		let subTotal = 0;
+		let totalAmount = 0;
 		let totalTax = 0;
 
 		$('#invoiceTable tbody tr').each(function () {
@@ -910,11 +890,11 @@
 			let lineTotal = unitPrice * qty;
 			let taxAmount = (lineTotal * taxRate) / 100;
 
-			subTotal += lineTotal;
+			totalAmount += lineTotal;
 			totalTax += taxAmount;
 		});
 
-		let grandTotal = subTotal + totalTax;
+		let grandTotal = totalAmount + totalTax;
 
 		// discount (allow numeric input, default 0)
 		let discount = parseFloat($('#discount').val()) || 0;
@@ -923,7 +903,7 @@
 		let payable = grandTotal - discount;
 
 		// Update UI (use text for <td>, val for <input>)
-		$('#totalAmount').text(subTotal.toFixed(2));
+		$('#totalAmount').text(totalAmount.toFixed(2));
 		$('#totalTax').text(totalTax.toFixed(2));
 		$('#grandTotal').text(grandTotal.toFixed(2));
 		$('#totalPayable').text(payable.toFixed(2));

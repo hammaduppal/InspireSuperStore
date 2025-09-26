@@ -40,8 +40,7 @@
 				</div>
 			</div>
 		</div>
-
-
+		
 		<div class="table-responsive">
 			<table class="table">
 				<thead>
@@ -77,7 +76,7 @@
 								<select data-ordermasterid="@item.OrderMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
 									@foreach (AppConstants.OrderStatusEnum status in Enum.GetValues(typeof(AppConstants.OrderStatusEnum)))
 									{
-										<option  value="@( (int)status )" @(item.OrderStatusId == (int)status ? "selected" : "")>
+										<option  value="@((int)status )" @(item.OrderStatusId == (int)status ? "selected" : "")>
 											@status.ToString()
 										</option>
 									}

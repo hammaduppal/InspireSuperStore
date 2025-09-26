@@ -150,7 +150,7 @@
 				<div id="invoice-section" class="row">
 					<div class="col-lg-1 text-center">
 						<label>Sub Total</label>
-						<input readonly id="subTotal" type="text" value="0.00" class="form-control text-center" />
+						<input readonly id="totalAmount" type="text" value="0.00" class="form-control text-center" />
 					</div>
 					@if (AppDataUtility.SystemPreferences.EnableTax)
 					{
@@ -370,7 +370,7 @@
 				}
 				debugger
 				const cashReceived = parseFloat($('#cashReceived').val()) || 0;
-				const subTotal = parseFloat($('#subTotal').val()) || 0;
+				const totalAmount = parseFloat($('#totalAmount').val()) || 0;
 				const totalTax = parseFloat($('#totalTax').val()) || 0;
 				const grandTotal = parseFloat($('#grandTotal').val()) || 0;
 				const totalPayable = parseFloat($('#totalPayable').val()) || 0;
@@ -415,7 +415,7 @@
 				});
 
 				const payload = {
-					SubTotal: subTotal,
+					TotalAmount: totalAmount,
 					TotalTax: totalTax,
 					GrandTotal: grandTotal,
 					DiscountAmount: discount,
@@ -457,7 +457,7 @@
 					return;
 				}
 				debugger
-				const subTotal = parseFloat($('#subTotal').val()) || 0;
+				const totalAmount = parseFloat($('#totalAmount').val()) || 0;
 				const totalTax = parseFloat($('#totalTax').val()) || 0;
 				const grandTotal = parseFloat($('#grandTotal').val()) || 0;
 				const totalPayable = parseFloat($('#totalPayable').val()) || 0;
@@ -496,7 +496,7 @@
 				});
 
 				const payload = {
-					SubTotal: subTotal,
+					TotalAmount: totalAmount,
 					TotalTax: totalTax,
 					GrandTotal: grandTotal,
 					DiscountAmount: discount,
@@ -1006,7 +1006,7 @@
 
 
 		function setTotalPrice() {
-		let subTotal = 0;
+		let totalAmount = 0;
 		let totalTax = 0;
 
 		$('#invoiceTable tbody tr').each(function () {
@@ -1017,11 +1017,11 @@
 			let lineTotal = unitPrice * qty;
 			let taxAmount = (lineTotal * taxRate) / 100;
 
-			subTotal += lineTotal;
+			totalAmount += lineTotal;
 			totalTax += taxAmount;
 		});
 
-		let grandTotal = subTotal + totalTax;
+		let grandTotal = totalAmount + totalTax;
 
 		// discount (allow numeric input, default 0)
 		let discount = parseFloat($('#discount').val()) || 0;
@@ -1030,7 +1030,7 @@
 		let payable = grandTotal - discount;
 
 		// Update UI
-		$('#subTotal').val(subTotal.toFixed(2));
+		$('#totalAmount').val(totalAmount.toFixed(2));
 		$('#totalTax').val(totalTax.toFixed(2));
 		$('#grandTotal').val(grandTotal.toFixed(2));
 		$('#totalPayable').val(payable.toFixed(2));
@@ -1052,10 +1052,10 @@
 
 			function updateGrandTotal(invoiceTotal) {
 					const discountAmount = parseFloat($('#discount').val()) || 0;
-					let subTotal = invoiceTotal - discountAmount;
+					let totalAmount = invoiceTotal - discountAmount;
 
 					// Set Grand Total before tax
-					$('#grandTotal').val(subTotal.toFixed(2));
+					$('#grandTotal').val(totalAmount.toFixed(2));
 
 					let taxPercent = 0;
 					let taxAmount = 0;
@@ -1064,15 +1064,15 @@
 					if ($('#tax').length > 0) {
 						taxPercent = parseFloat($('#tax').val()) || 0;
 						if (taxPercent > 0) {
-							taxAmount = (subTotal * taxPercent) / 100;
+							taxAmount = (totalAmount * taxPercent) / 100;
 						}
 					}
 
 					// Set Tax Amount
 					$('#totalTax').val(taxAmount.toFixed(2));
 
-					// Calculate Final Total Payable (SubTotal + Tax)
-					const totalPayable = subTotal + taxAmount;
+					// Calculate Final Total Payable (TotalAmount + Tax)
+					const totalPayable = totalAmount + taxAmount;
 					$('#totalPayable').val(totalPayable.toFixed(2));
 			}
 

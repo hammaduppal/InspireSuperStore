@@ -30,142 +30,143 @@ namespace MarketBal.Repository.POSManager
             _attrib = new AttributeRepository(_config);
             _pdfservice = new PdfService();
         }
-        public async Task<int> SaveInvoice([FromBody]InvoiceMasterVM model)
-        {
-            using (var transaction = await _onedb.Database.BeginTransactionAsync())
+            public async Task<int> SaveInvoice([FromBody]InvoiceMasterVM model)
             {
-                try
+                using (var transaction = await _onedb.Database.BeginTransactionAsync())
                 {
-                    var commonParams = CommonParamHelper.GetCommonParams();
-
-                    // Generate Invoice Number
-                    var lastInvoice = await _onedb.InvoiceMasters
-                        .OrderByDescending(i => i.CreatedDate)
-                        .FirstOrDefaultAsync();
-
-                    var invoicePrefix = AppDataUtility.SystemPreferences.InvoicePrefix;
-                    string newInvoiceNo = $"{invoicePrefix}-001";
-
-                    if (lastInvoice != null && !string.IsNullOrEmpty(lastInvoice.InvoiceNo))
+                    try
                     {
-                        var lastNo = lastInvoice.InvoiceNo.Split('-')[1];
-                        if (int.TryParse(lastNo, out int number))
+                        var commonParams = CommonParamHelper.GetCommonParams();
+
+                        // Generate Invoice Number
+                        var lastInvoice = await _onedb.InvoiceMasters
+                            .OrderByDescending(i => i.CreatedDate)
+                            .FirstOrDefaultAsync();
+
+                        var invoicePrefix = AppDataUtility.SystemPreferences.InvoicePrefix;
+                        string newInvoiceNo = $"{invoicePrefix}-001";
+
+                        if (lastInvoice != null && !string.IsNullOrEmpty(lastInvoice.InvoiceNo))
                         {
-                            newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
-                        }
-                    }
-
-                    // ---------- Calculations ----------
-                    decimal totalAmount = model.InvoiceDetails.Sum(d => d.UnitPrice * d.Quantity);
-                    decimal totalTax = model.InvoiceDetails.Sum(d => (d.TaxRate) * (d.UnitPrice * d.Quantity) / 100);
-                    decimal discount = model.DiscountAmount ?? 0;
-                    decimal grandTotal = totalAmount + totalTax - discount;
-
-                    // ---------- Invoice Master ----------
-                    var invoiceMaster = new InvoiceMaster
-                    {
-                        InvoiceMasterId = Guid.NewGuid(),
-                        InvoiceNo = newInvoiceNo,
-                        InvoiceDate = commonParams.CreatedOn ?? DateTime.Now,
-
-                        CustomerId = (model.CustomerId.HasValue && model.CustomerId.Value != Guid.Empty)
-                                        ? model.CustomerId
-                                        : null,
-
-                        TotalAmount = totalAmount,
-                        DiscountAmount = discount,
-                        TaxAmount = totalTax,
-                        GrandTotal = grandTotal,
-
-                        PaymentMethodId = model.PaymentMethodId,
-                        PaymentStatusId = 1,
-                        ShippingTypeId = 1,
-                        InvoiceSourceId = (int)AppConstants.InvoiceSource.POS,
-
-                        CustomerRemarks = model.CustomerRemarks,
-                        OfficeRemarks = model.OfficeRemarks,
-
-                        CreatedBy = 1,
-                        CreatedDate = commonParams.CreatedOn ?? DateTime.Now,
-                        UpdatedDate = commonParams.CreatedOn ?? DateTime.Now,
-
-                        ServingTableId = (model.ServingTableId.HasValue && model.ServingTableId.Value != Guid.Empty)
-                                            ? model.ServingTableId
-                                            : null,
-
-                        EmployeeId = (model.EmployeeId.HasValue && model.EmployeeId.Value != 0)
-                                        ? model.EmployeeId
-                                        : null
-                    };
-
-                    _onedb.InvoiceMasters.Add(invoiceMaster);
-                    await _onedb.SaveChangesAsync();
-
-                    // ---------- Invoice Details ----------
-                    foreach (var detail in model.InvoiceDetails)
-                    {
-                        decimal lineTotal = detail.UnitPrice * detail.Quantity;
-                        decimal taxAmount = (detail.TaxRate ) * lineTotal / 100;
-                        decimal lineTotalWithTax = lineTotal + taxAmount;
-
-                        var invoiceDetail = new InvoiceDetail
-                        {
-                            InvoiceDetailId = Guid.NewGuid(),
-                            InvoiceMasterId = invoiceMaster.InvoiceMasterId,
-                            ProductId = detail.ProductId,
-                            VariantId = (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
-                                            ? detail.VariantId
-                                            : null,
-
-                            Quantity = detail.Quantity,
-                            UnitPrice = detail.UnitPrice,
-                            Discount = detail.Discount ?? 0,
-                            TaxRate = detail.TaxRate ,
-                            TaxAmount = taxAmount,
-                            LineTotal = lineTotal,
-                            LineTotalWithTax = lineTotalWithTax,
-                            Remarks = detail.Remarks ?? string.Empty
-                        };
-
-                        _onedb.InvoiceDetails.Add(invoiceDetail);
-
-                        // ---------- Update Inventory ----------
-                        if (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
-                        {
-                            var branchstock = await _onedb.BranchStocks
-                                .FirstOrDefaultAsync(v =>
-                                    v.ProductVariantId == detail.VariantId &&
-                                    v.BranchId == AppDataUtility.SessionUser.Person.Branch.BranchId);
-
-                            if (branchstock != null)
+                            var lastNo = lastInvoice.InvoiceNo.Split('-')[1];
+                            if (int.TryParse(lastNo, out int number))
                             {
-                                branchstock.Qty -= detail.Quantity;
-                                _onedb.BranchStocks.Update(branchstock);
+                                newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
                             }
                         }
 
-                        var product = await _onedb.Products
-                            .FirstOrDefaultAsync(p => p.ProductId == detail.ProductId);
+                        // ---------- Calculations ----------
+                        decimal totalAmount = model.InvoiceDetails.Sum(d => d.UnitPrice * d.Quantity);
+                        decimal totalTax = model.InvoiceDetails.Sum(d => (d.TaxRate) * (d.UnitPrice * d.Quantity) / 100);
+                        decimal discount = model.DiscountAmount ?? 0;
+                        decimal grandTotal = totalAmount + totalTax - discount;
 
-                        if (product != null)
+                        // ---------- Invoice Master ----------
+                        var invoiceMaster = new InvoiceMaster
                         {
-                            product.Qoh -= detail.Quantity;
-                            _onedb.Products.Update(product);
+                            InvoiceMasterId = Guid.NewGuid(),
+                            InvoiceNo = newInvoiceNo,
+                            InvoiceDate = commonParams.CreatedOn ?? DateTime.Now,
+
+                            CustomerId = (model.CustomerId.HasValue && model.CustomerId.Value != Guid.Empty)
+                                            ? model.CustomerId
+                                            : null,
+
+                            TotalAmount = totalAmount,
+                            DiscountAmount = discount,
+                            TaxAmount = totalTax,
+                            GrandTotal = grandTotal,
+
+                            PaymentMethodId = model.PaymentMethodId,
+                            PaymentStatusId = 1,
+                            ShippingTypeId = 1,
+                            InvoiceSourceId = (int)AppConstants.InvoiceSource.POS,
+
+                            CustomerRemarks = model.CustomerRemarks,
+                            OfficeRemarks = model.OfficeRemarks,
+
+                            CreatedBy = 1,
+                            CreatedDate = commonParams.CreatedOn ?? DateTime.Now,
+                            UpdatedDate = commonParams.CreatedOn ?? DateTime.Now,
+
+                            ServingTableId = (model.ServingTableId.HasValue && model.ServingTableId.Value != Guid.Empty)
+                                                ? model.ServingTableId
+                                                : null,
+
+                            EmployeeId = (model.EmployeeId.HasValue && model.EmployeeId.Value != 0)
+                                            ? model.EmployeeId
+                                            : null
+                        };
+
+                        _onedb.InvoiceMasters.Add(invoiceMaster);
+                        await _onedb.SaveChangesAsync();
+
+                        // ---------- Invoice Details ----------
+                        foreach (var detail in model.InvoiceDetails)
+                        {
+                            decimal lineTotal = detail.UnitPrice * detail.Quantity;
+                            decimal taxAmount = (detail.TaxRate ) * lineTotal / 100;
+                            decimal lineTotalWithTax = lineTotal + taxAmount;
+
+                            var invoiceDetail = new InvoiceDetail
+                            {
+                                InvoiceDetailId = Guid.NewGuid(),
+                                InvoiceMasterId = invoiceMaster.InvoiceMasterId,
+                                ProductId = detail.ProductId,
+                                VariantId = (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
+                                                ? detail.VariantId
+                                                : null,
+
+                                Quantity = detail.Quantity,
+                                UnitPrice = detail.UnitPrice,
+                                Discount = detail.Discount ?? 0,
+                                TaxRate = detail.TaxRate ,
+                                TaxAmount = taxAmount,
+                                LineTotal = lineTotal,
+                                LineTotalWithTax = lineTotalWithTax,
+                                Remarks = detail.Remarks ?? string.Empty
+                            };
+
+                            _onedb.InvoiceDetails.Add(invoiceDetail);
+
+                            // ---------- Update Inventory ----------
+                            if (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
+                            {
+                                var branchstock = await _onedb.BranchStocks
+                                    .FirstOrDefaultAsync(v =>
+                                        v.ProductVariantId == detail.VariantId &&
+                                        v.BranchId == AppDataUtility.SessionUser.Person.Branch.BranchId);
+
+                                if (branchstock != null)
+                                {
+                                    branchstock.Qty -= detail.Quantity;
+                                    _onedb.BranchStocks.Update(branchstock);
+                                }
+                            }
+
+                            var product = await _onedb.Products
+                                .FirstOrDefaultAsync(p => p.ProductId == detail.ProductId);
+
+                            if (product != null)
+                            {
+                                product.Qoh -= detail.Quantity;
+                                _onedb.Products.Update(product);
+                            }
                         }
+
+                        await _onedb.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        return 1;
                     }
-
-                    await _onedb.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    return 1;
-                }
-                catch (Exception)
-                {
-                    await transaction.RollbackAsync();
-                    throw;
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
                 }
             }
-        }
+        
         public class SaveStatusVM
         {
             public int StatusId { get; set; }
