@@ -1,0 +1,128 @@
+﻿@using MarketBal.Helper
+
+@{
+    ViewData["Title"] = "PreviewInvoice";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        margin: 0;
+        padding: 0;
+    }
+
+    .invoice-container {
+        width: 80mm;
+        margin: auto;
+        padding: 10px;
+    }
+
+    .company-info {
+        text-align: center;
+    }
+
+    .invoice-header {
+        margin-top: 10px;
+        border-bottom: 1px solid #000;
+        padding-bottom: 5px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    th, td {
+        border-bottom: 1px solid #ddd;
+        padding: 4px;
+        text-align: left;
+    }
+
+    th {
+        text-align: left;
+    }
+
+    .totals {
+        margin-top: 10px;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 10px;
+        color: #555;
+    }
+
+    .barcode {
+        margin-top: 5px;
+        text-align: center;
+    }
+</style>
+@{
+    var result = GenerateQR.GenerateBarCode("INV-001");
+}
+<div class="invoice-container">
+    <!-- Company Info -->
+    <div class="company-info">
+        <h2>My Company Name</h2>
+        <p>123 Main St, City, Country</p>
+        <p>Phone: +1234567890 | Email: info@company.com</p>
+    </div>
+
+    <!-- Invoice Header -->
+    <div class="invoice-header">
+        <p>Invoice No: INV-001</p>
+        <p>Date: 2025-08-18 14:30</p>
+        <p>Sales Person: John Doe</p>
+        <p>Table: Table 5</p>
+        <div class="barcode">
+            <img width="50" height="50" src="@result" alt="QR Code" />
+
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Variant</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Espresso</td>
+                <td>Small</td>
+                <td>2</td>
+                <td>2.50</td>
+                <td>5.00</td>
+            </tr>
+            <tr>
+                <td>Latte</td>
+                <td>Medium</td>
+                <td>1</td>
+                <td>4.00</td>
+                <td>4.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="totals">
+        <p>Subtotal: 9.00</p>
+        <p>Discount: 0.00</p>
+        <p>Tax: 0.90</p>
+        <p><strong>Grand Total: 9.90</strong></p>
+        <p>Payment Method: Cash</p>
+    </div>
+
+    <!-- Footer Message -->
+    <div class="footer">
+        Thank you for your business! Warranty & returns subject to company policy.
+    </div>
+</div>

@@ -43,5 +43,14 @@ namespace MarketBal.Repository
 
             }).ToListAsync();
         }
+        public async Task<List<PaymentStatusVM>> PaymentStatuses()
+        {
+            return await _onedb.PaymentStatuses.Where(x => x.IsActive == true).Select(x => new PaymentStatusVM
+            {
+                PaymentStatusId = x.PaymentStatusId,
+                Name = x.Name,
+
+            }).ToListAsync();
+        }
     }
 }

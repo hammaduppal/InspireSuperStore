@@ -43,47 +43,7 @@ namespace InspireSuperStore.Areas.POS.Controllers
             _notificationServices = notificationServices;
             _notificationRepository = new NotificationRepository(_oneDb);
         }
-        public async Task<IActionResult> CreateInvoice()
-        {
-            vm.Departments = await _attrib.GetDepartment();
-            vm.Countries = await _admin.Countries();
-            vm.Customers = await _admin.Customers();
-            vm.ServingTables = await _assets.ServingTables();
-            vm.Employees = await _hrm.GetSaleStaff();
-            vm.PaymentMethods = await _assets.PaymentMethods();
-            return View(vm);
-        }
-       
-        public async Task<IActionResult> SaveInvoice(InvoiceMasterVM model)
-        {
-            var result = await _posRepo.SaveInvoice(model);
-            try
-            {
-                var invoice = await _posRepo.GenerateInvoiceHTML(model);
-                if (invoice != null)
-                {
-                    return File(invoice, "application/pdf", "invoice.pdf");
-                }
-                else
-                {
-                    return Json(new { success = true, message = "Invoice saved successfully!" });
-
-                }
-            }
-            catch (Exception ex)
-            {
-
-                return Json(new { success = true, message = ex.Message });
-
-            }
-
-        }
-
-        
-        
-        public async Task<IActionResult> PreviewInvoice()
-        {
-            return View();
-        }
+      
+    
     }
 }

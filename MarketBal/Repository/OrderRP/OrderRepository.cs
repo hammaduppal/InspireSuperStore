@@ -89,6 +89,7 @@ namespace MarketBal.Repository.OrderRP
             }
 
         }
+        
         public async Task<OrderMasterVM> GetOrderById(Guid orderMasterId)
         {
             try
@@ -291,7 +292,7 @@ namespace MarketBal.Repository.OrderRP
             return await _onedb.SaveChangesAsync();
         }
 
-        public async Task<int> OrderToInvoice(Guid OmId)
+        public async Task<InvoiceMaster> OrderToInvoice(Guid OmId)
         {
             try
             {
@@ -335,7 +336,7 @@ namespace MarketBal.Repository.OrderRP
                 // 3. Call existing SaveInvoice
                 return await _pOSRepository.SaveInvoice(invoiceModel);
             }
-            catch (Exception ex)
+            catch (Exception )
             {
 
                 throw;

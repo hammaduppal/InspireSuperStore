@@ -714,20 +714,20 @@ ORDER BY p.ProductName";
 
             if (!isPaginated)
             {
-                // Get top 5 products (example: by CreatedDate descending)
+              
                 result.TopProducts = await query
-                    .OrderByDescending(p => p.CreatedOn) // adjust field as needed
+                    .OrderByDescending(p => p.CreatedOn) 
                     .Take(5)
                     .ToListAsync();
 
-                // Get all products in this subcategory
+              
                 result.AllProducts = await query.ToListAsync();
             }
             else
             {
-                // Paginate only
+                
                 result.AllProducts = await query
-                    .OrderByDescending(p => p.CreatedOn) // adjust field as needed
+                    .OrderByDescending(p => p.CreatedOn)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();

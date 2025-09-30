@@ -47,13 +47,14 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             _notificationRepository = new NotificationRepository(_oneDb);
             _orderRepo = new OrderRepository(_config, _oneDb);
         }
+
         public async Task<IActionResult> Orders()
         {
-            vm.OrderMaster  = await _orderRepo.GetOrders();
+            vm.OrderMaster = await _orderRepo.GetOrders();
             return View(vm);
         }
 
-        [HttpGet("/PosManager/Order/{orderMasterId:guid}")]
+        [HttpGet("/OrderManager/Order/{orderMasterId:guid}")]
         public async Task<IActionResult> Order(Guid orderMasterId)
         {
             vm.Customers = await _admin.Customers();
@@ -86,8 +87,8 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveMyAssOrder(OrderMasterVM formData)
         {
-              var result = await _posRepo.SaveOrder(formData);
-            
+            var result = await _posRepo.SaveOrder(formData);
+
             var notification = new NotificationsDTO
             {
                 CreatedAt = DateTime.Now,
@@ -123,9 +124,9 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             }
         }
 
-        public async Task <IActionResult> UpdateOrderStatus(OrderMasterVM model)
+        public async Task<IActionResult> UpdateOrderStatus(OrderMasterVM model)
         {
-           return APIResponseHelper.ResultResponse(this, await _orderRepo.UpdateOrderStatus(model.OrderStatusId, model.OrderMasterId));
+            return APIResponseHelper.ResultResponse(this, await _orderRepo.UpdateOrderStatus(model.OrderStatusId, model.OrderMasterId));
         }
 
         [HttpPost]
@@ -135,6 +136,6 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             return APIResponseHelper.ResultResponse(this, 1);
         }
 
-        
+
     }
 }

@@ -1,0 +1,1118 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@model PagesViewModel
+@{
+	ViewData["Title"] = "CreateInvoice";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="page-header page-header-light">
+	<div class="row">
+		<!-- Barcode Input -->
+		<div class="col-md-3">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text"><i class="icon-barcode2"></i></span>
+				</div>
+				<input type="text" id="barCode" name="barCode" class="form-control" autocomplete="off" placeholder="Search BarCode........." />
+			</div>
+		</div>
+		<!-- Manual Search Input -->
+		<div class="col-md-3">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text"><i class="icon-search4"></i></span>
+				</div>
+				<div class="form-group-feedback form-group-feedback-right">
+					<select id="productSearch" style="width: 100%" class="form-control"></select>
+
+				</div>
+			</div>
+		</div>
+		<div class="col-lg-2">
+			<div class="input-group">
+				<select id="customer" class="form-control">
+					@foreach (var item in Model.Customers)
+					{
+						<option value="@item.CustomerId">@item.CustomerName + @item.Mobile </option>
+
+					}
+				</select>
+				<div class="input-group-append">
+					<button id="addCustomer" class="btn btn-light" type="button"><i class="icon-user-plus"></i></button>
+				</div>
+			</div>
+		</div>
+		@if (AppDataUtility.SystemPreferences.IsAffilatedInvoice)
+		{
+			<div class="col-lg-2">
+				<div class="input-group">
+					<select id="salesPerson" class="form-control" required>
+						@foreach (var item in Model.Employees)
+						{
+							<option value="@item.EmployeeId">@item.EmployeeCode</option>
+						}
+					</select>
+				</div>
+			</div>
+		}
+
+		@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
+		{
+			<div class="col-lg-2">
+				<div class="input-group">
+					<select id="servingTable" class="form-control" required>
+						@foreach (var item in Model.ServingTables)
+						{
+							<option value="@item.ServingTableId">@item.TableName</option>
+						}
+					</select>
+				</div>
+			</div>
+		}
+
+	</div>
+
+	<script>
+		$('#addCustomer').on('click',async function () {
+			var result = await Utility.RequestAjax('/Account/_AddCustomerForm');
+			$('.modal-title-horizontal').html('Add New Customer');
+			$('#modal-body-horizontal').html(result);
+			$('#modal_form_horizontal').modal();
+		});
+			$(document).on('submit','#addNewCustomer',async function(e){
+			  e.preventDefault();
+				 var formData = {
+					FirstName: $('#firstName').val(),
+					LastName: $('#lastName').val(),
+					MobileNumber: $('#mobile').val(),
+					Email: $('#email').val(),
+					Address: $('#address').val(),
+					CityId: $('#city').val()
+				};
+
+				var objectData={
+					url:'/Account/AddNewCustomer',
+					data:formData,
+				}
+				var result =await Utility.RequestDataAjax(objectData);
+				if(result.statusCode==='200'){
+
+					$('#modal_form_horizontal').modal('hide');
+					var customers = await Utility.RequestAjax('/AdminPanel/GetCustomers');
+					var $select = $('#customers');
+					$select.empty();
+
+					// Populate new options
+					customers.forEach(function (item) {
+						var isSelected = item.CustomerId === result.CustomerId; // check if it's the newly added
+						var option = $('<option>', {
+							value: item.CustomerId,
+							text: item.CustomerName + ' ' + item.Mobile,
+							selected: isSelected
+						});
+						$select.append(option);
+					});
+
+				}
+			})
+
+	</script>
+
+
+</div>
+
+
+
+<div class="content">
+
+
+
+
+	<div class="">
+		<style>
+			#invoiceSummary * {
+				padding-top: 0 !important;
+				padding-bottom: 0 !important;
+			}
+		</style>
+		<div class="card" id="invoiceSummary">
+
+			<div class="card-body">
+				<style>
+					#invoice-section label,
+					#invoice-section .form-control {
+						margin: 0 !important;
+						padding: 2px 4px; /* Optional: tighter spacing */
+					}
+				</style>
+				<div id="invoice-section" class="row">
+					<div class="col-lg-1 text-center">
+						<label>Sub Total</label>
+						<input readonly id="totalAmount" type="text" value="0.00" class="form-control text-center" />
+					</div>
+					@if (AppDataUtility.SystemPreferences.EnableTax)
+					{
+						<div class="col-lg-1 text-center">
+							<label>Total Tax</label>
+							<input readonly id="totalTax" type="text" value="0.00" class="form-control text-center" />
+						</div>
+					}
+					<div class="col-lg-1 text-center">
+						<label style="font-weight:700;">Grand Total</label>
+						<input readonly id="grandTotal" type="text" value="0.00" class="form-control text-center" />
+					</div>
+
+					<div class="col-lg-1 text-center">
+						<label>Discount</label>
+						<input id="discount" type="text" class="form-control text-center" />
+					</div>
+
+					<div class="col-lg-1 text-center">
+						<label style="font-weight:700;">Payable</label>
+						<input readonly id="totalPayable" type="text" value="0.00" class="form-control text-center" />
+					</div>
+
+					<div class="col-lg-1 text-center">
+						<label>Payment</label>
+						<input id="cashReceived" type="text" class="form-control text-center" />
+					</div>
+
+					<div class="col-lg-1  text-center">
+						<label>Balance</label>
+						<input id="balance" type="text" class="form-control text-right" />
+					</div>
+
+					<div class="col-lg-2  text-center">
+						<label>Payment Method</label>
+						<select id="paymentMethod" class="form-control">
+							@foreach (var item in Model.PaymentMethods)
+							{
+								<option value="@item.PaymentMethodId">@item.Name</option>
+							}
+						</select>
+					</div>
+					<div class="col-lg-2  text-center">
+						<label>Payment Status</label>
+						<select id="paymentStatusId" class="form-control">
+							@foreach (var item in Model.PaymentStatuses)
+							{
+								<option value="@item.PaymentStatusId">@item.Name</option>
+							}
+						</select>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<!-- Left Side: Dynamic Product Area (Grid / Search) -->
+		<div class="col-lg-7">
+			<div class="card h-100">
+				<!-- Navigation for Grid/Search -->
+				<div class="card-header">
+					<ul class="nav nav-tabs nav-tabs-solid card-header-tabs">
+						<li class="nav-item"><a href="#pos-grid" class="nav-link active" data-toggle="tab">Product Grid</a></li>
+						<li class="nav-item"><a href="#pos-search-results" class="nav-link" data-toggle="tab">Search Results</a></li>
+					</ul>
+				</div>
+
+				<!-- Tab content -->
+				<div class="tab-content card-body">
+					<!-- Product Grid Pane -->
+					<button id="backbtn">Back</button>
+
+					<div class="tab-pane fade show active" id="pos-grid" style="max-height: 50vh; overflow-y: auto;">
+						<div class="mb-2">
+							@if (Model.Departments != null)
+							{
+								<div id="dcs" class="row g-2">
+									@foreach (var item in Model.Departments)
+									{
+										<div class="col-md-3 col-sm-6 pt-1">
+											<button data-depid="@item.DepartmentId"
+													class="btn btn-primary depBtn w-100">
+												@item.DepartmentName
+											</button>
+										</div>
+									}
+								</div>
+							}
+
+
+
+						</div>
+						<div id="topfiveProducts" class="row">
+						</div>
+
+					</div>
+
+					<!-- Search Results Pane (Initially Hidden) -->
+					<div class="tab-pane fade" id="pos-search-results" style="max-height: 50vh; overflow-y: auto; overflow-x:auto">
+						<div class="table-responsive">
+							<table id="searchResultTable" class="table table-hover">
+								<thead>
+									<tr>
+										<th>Product</th>
+										<th>SKU</th>
+										<th class="text-center">Stock</th>
+										<th class="text-right">Price</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+
+				</div>
+			</div>
+
+		</div>
+		<!-- /left side -->
+		<!-- /left side -->
+		<!-- Right Side: Bill & Actions with new class -->
+		<div class="col-lg-5 pos-fixed-sidebar">
+			<!--
+			PASTE YOUR ENTIRE RIGHT-SIDE HTML HERE
+			(The code you provided in your prompt)
+			-->
+			<div class="card h-100 d-flex flex-column">
+				<style>
+					/* Apply only to invoiceTable */
+					#invoiceTable tr,
+					#invoiceTable td,
+					#invoiceTable th {
+						padding: 0 !important;
+					}
+				</style>
+
+				<div class="card-body border-top">
+					<div id="invoiceRowSection" class="table-responsive " style="max-height:22vh;min-height:22vh;overflow-x:auto">
+						<table id="invoiceTable" class="table table-border-dashed">
+							<thead>
+								<tr>
+									<th class="text-center">Name</th>
+									<th class="text-center">Size</th>
+									<th class="text-center">Qty</th>
+									<th class="text-center">Price</th>
+
+									<!-- shorter tax labels -->
+									@if (AppDataUtility.SystemPreferences.EnableTax)
+									{
+										<th class="text-center">Tax %</th>
+										<th class="text-center">Tax Amt</th>
+
+									}
+
+									<th class="text-center">Total</th>
+									<th class="text-center">Manage</th>
+								</tr>
+
+
+							</thead>
+							<tbody>
+								<!-- Cart items will be added here -->
+
+							</tbody>
+						</table>
+					</div>
+
+				</div>
+
+				<!-- Numpad & Final Actions -->
+				<div class="card-footer bg-white">
+					<div class="row no-gutters text-center mb-0">
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">1</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">2</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">3</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block font-weight-bold">Qty</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">4</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">5</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">6</button></div>
+						<div class="col-3 p-1"><button class="btn btn-info btn-block">Disc</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">7</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">8</button></div>
+						<div class="col-3 p-1"><button class="btn btn-light btn-block">9</button></div>
+						<div class="col-3 p-1"><button class="btn btn-danger btn-block"><i class="icon-arrow-left8"></i></button></div>
+						<div class="col-6 p-1"><button class="btn btn-light btn-block">0</button></div>
+						<div class="col-6 p-1"><button class="btn btn-light btn-block">.</button></div>
+					</div>
+					<div class="row">
+					</div>
+					<div class="btn-group w-100">
+						<button type="button" class="btn btn-warning" style="flex-grow: 1;">Hold</button>
+						<button type="button" class="btn btn-danger" style="flex-grow: 1;">Cancel</button>
+						@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
+						{
+							<button id="btn-submit-order" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">Place Order</button>
+
+						}
+						else
+						{
+							<button id="btn-submit-invoice" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">PAY</button>
+
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /right side -->
+
+
+
+
+	</div>
+
+
+</div>
+<script>
+	$(document).on('click', '#btn-submit-invoice', function () {
+		submitInvoice();
+	});
+	$(document).on('click', '#btn-submit-order', function () {
+		submitInvoice();
+	});
+
+
+		function submitInvoice() {
+				const $rows = $('#invoiceTable tbody tr');
+				if ($rows.length === 0) {
+					alert('Please add at least one product.');
+					return;
+				}
+				const cashReceived = parseFloat($('#cashReceived').val()) || 0;
+				const totalAmount = parseFloat($('#totalAmount').val()) || 0;
+				const totalTax = parseFloat($('#totalTax').val()) || 0;
+				const grandTotal = parseFloat($('#grandTotal').val()) || 0;
+				const totalPayable = parseFloat($('#totalPayable').val()) || 0;
+				const discount = parseFloat($('#discount').val()) || 0;
+
+				const salesPersonId = $('#salesPerson').val() || null;
+				const tableId = $('#servingTable').val() || null;
+				const customerId = $('#customer').val() || null;
+				const paymentMethodId = $('#paymentMethod').val() || null;
+				const paymentStatusId = parseFloat($('#paymentStatusId').val()) || null;
+				debugger
+
+				console.log(paymentStatusId);
+				
+				const CASH_PAYMENT_ID = 1;
+				const Payment_Status_Id= 1;
+
+				if (paymentMethodId == CASH_PAYMENT_ID && paymentStatusId===Payment_Status_Id) {
+					if (cashReceived < totalPayable) {
+						alert('Cash received is less than payable total. Please collect full payment.');
+						return;
+					}
+				}
+
+				const items = [];
+				$rows.each(function () {
+					const $tr = $(this);
+					debugger
+					const $firstTd = $tr.find('td').first();
+
+					const qty = parseFloat($tr.find('.lineqty').val()) || 0;
+					const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
+					const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
+					const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
+					const lineTotal = unitPrice * qty; // without tax
+					const lineTotalWithTax = lineTotal + taxAmount;
+
+					items.push({
+						ProductId: $firstTd.data('productid'),
+						VariantId: $firstTd.data('variantid'),
+						Quantity: qty,
+						UnitPrice: unitPrice,
+						TaxRate: taxRate,
+						TaxAmount: taxAmount,
+						LineTotal: lineTotal,
+						LineTotalWithTax: lineTotalWithTax
+					});
+				});
+
+				const payload = {
+					TotalAmount: totalAmount,
+					TotalTax: totalTax,
+					GrandTotal: grandTotal,
+					DiscountAmount: discount,
+					NetAmount: totalPayable, // after discount
+					CashReceived: cashReceived,
+					PaymentMethodId: paymentMethodId,
+					EmployeeId: salesPersonId,
+					ServingTableId: tableId,
+					CustomerId: customerId,
+					PaymentStatusId:paymentStatusId,
+					InvoiceDetails: items
+				};
+
+				$.ajax({
+					url: '/InvoiceManager/SaveInvoice',
+					type: 'POST',
+					data: payload,
+
+					xhrFields: {
+						responseType: 'blob'  // expecting PDF back
+					},
+					success: function (data) {
+						console.log('Hello Dumpling');
+
+						console.log(data);
+						var blob = new Blob([data], { type: "application/pdf" });
+						var url = URL.createObjectURL(blob);
+						window.open(url, "_blank");
+					},
+					error: function (xhr, status, error) {
+						alert("Error saving invoice: " + error);
+					}
+				});
+		}
+
+			function submitOrder() {
+				const $rows = $('#invoiceTable tbody tr');
+				if ($rows.length === 0) {
+					alert('Please add at least one product.');
+					return;
+				}
+				debugger
+				const totalAmount = parseFloat($('#totalAmount').val()) || 0;
+				const totalTax = parseFloat($('#totalTax').val()) || 0;
+				const grandTotal = parseFloat($('#grandTotal').val()) || 0;
+				const totalPayable = parseFloat($('#totalPayable').val()) || 0;
+				const discount = parseFloat($('#discount').val()) || 0;
+
+				const salesPersonId = $('#salesPerson').val() || null;
+				const tableId = $('#servingTable').val() || null;
+				const customerId = $('#customer').val() || null;
+				const paymentMethodId = $('#paymentMethod').val() || null;
+
+
+
+				const items = [];
+				$rows.each(function () {
+					const $tr = $(this);
+					debugger
+					const $firstTd = $tr.find('td').first();
+
+					const qty = parseFloat($tr.find('.lineqty').val()) || 0;
+					const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
+					const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
+					const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
+					const lineTotal = unitPrice * qty; // without tax
+					const lineTotalWithTax = lineTotal + taxAmount;
+
+					items.push({
+						ProductId: $firstTd.data('productid'),
+						VariantId: $firstTd.data('variantid'),
+						Quantity: qty,
+						UnitPrice: unitPrice,
+						TaxRate: taxRate,
+						TaxAmount: taxAmount,
+						LineTotal: lineTotal,
+						LineTotalWithTax: lineTotalWithTax
+					});
+				});
+
+				const payload = {
+					TotalAmount: totalAmount,
+					TotalTax: totalTax,
+					GrandTotal: grandTotal,
+					DiscountAmount: discount,
+					NetAmount: totalPayable, // after discount
+					CashReceived: cashReceived,
+					PaymentMethodId: paymentMethodId,
+					EmployeeId: salesPersonId,
+					ServingTableId: tableId,
+					CustomerId: customerId,
+					InvoiceDetails: items
+				};
+
+				$.ajax({
+					url: '/InvoiceManager/SaveOrder',
+					type: 'POST',
+					data: payload,
+
+					xhrFields: {
+						responseType: 'blob'  // expecting PDF back
+					},
+					success: function (data) {
+						console.log('Hello Dumpling');
+
+						console.log(data);
+						var blob = new Blob([data], { type: "application/pdf" });
+						var url = URL.createObjectURL(blob);
+						window.open(url, "_blank");
+					},
+					error: function (xhr, status, error) {
+						alert("Error saving invoice: " + error);
+					}
+				});
+		}
+
+
+
+	async function printInvoice(invoiceId) {
+		try {
+			// Connect to QZ Tray
+			await qz.websocket.connect();
+
+			// Fetch invoice HTML from server
+			const response = await fetch(`/Invoices/GetInvoiceHtml?invoiceId=${invoiceId}`);
+			const html = await response.text();
+
+			// Configure printer (replace with your printer name)
+			const config = qz.configs.create("Your Printer Name");
+
+			// Prepare print data
+			const data = [{
+				type: 'html',
+				format: 'plain',
+				data: html
+			}];
+
+			// Send to printer silently
+			await qz.print(config, data);
+
+			console.log("Invoice printed successfully!");
+		} catch (err) {
+			console.error("Print error:", err);
+		} finally {
+			qz.websocket.disconnect();
+		}
+	}
+
+</script>
+
+<script>
+	$(document).on('click', '.depBtn', async function () {
+			var departmentId = $(this).data('depid');
+			var categories = await Utility.RequestDataAjax({
+				url:'/AttributeManager/GetCategorybyDepartment',
+				data:{
+					DepartmentId:departmentId
+				}
+			})
+			var html = '';
+					if (categories && categories.length > 0) {
+						categories.forEach(function (cat) {
+						html += `
+	<div class="col-md-3 col-sm-6 pt-1">
+		<button type="button"
+				class="btn btn-success catBtn w-100"
+				data-catid="${cat.CategoryId}">
+			${cat.CategoryName}
+		</button>
+	</div>`;
+
+						});
+					} else {
+						html = '<p>No categories found.</p>';
+					}
+					// Replace department buttons with category buttons
+					$('#dcs').html(html);
+
+	});
+	$(document).on('click', '.catBtn', async function () {
+			var categoryId = $(this).data('catid');
+			var subcategories = await Utility.RequestDataAjax({
+				url:'/AttributeManager/GetSubCategorybyCategory',
+				data:{
+					CategoryId:categoryId
+				}
+			})
+			var html = '';
+					if (subcategories && subcategories.length > 0) {
+						subcategories.forEach(function (cat) {
+							html += `
+							<div class="col-md-3 col-sm-6 pt-1">
+							<button type="button" class="btn btn-danger subcatBtn w-100" data-subcatid="${cat.SubCategoryId}">
+										${cat.SubCategoryName}
+						   </button> </div>`;
+						});
+					} else {
+						html = '<p>No SubCategories found.</p>';
+					}
+					// Replace department buttons with category buttons
+					$('#dcs').html(html);
+
+	});
+
+	$(document).on('click', '.subcatBtn', async function () {
+			var subcategoryId = $(this).data('subcatid');
+			var getsubcatProducts = await Utility.RequestDataAjax({
+				url:'/Products/GetProductBySubCategoryId',
+				data:{
+					SubCategoryId:subcategoryId
+				}
+			})
+
+			renderTopFiveProducts(getsubcatProducts.TopProducts);
+			renderAllProducts(getsubcatProducts.AllProducts);
+
+	});
+
+	function renderTopFiveProducts(topProducts) {
+				const $wrap = $('#topfiveProducts');
+
+				if (!Array.isArray(topProducts) || topProducts.length === 0) {
+				$wrap.html('<div class="col-12 text-muted">No top products found.</div>');
+				return;
+				}
+
+				const html = topProducts.slice(0, 5).map(p => {
+				const price =
+					(p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0);
+				const priceText = Number(price).toLocaleString(undefined, {
+					minimumFractionDigits: 2,
+					maximumFractionDigits: 2
+				});
+
+				return `
+								<div class="col-md-3 mb-3">
+								<div class="card card-body text-center p-2 h-100 product-tile"
+									style="cursor: pointer;"
+									data-barcode="${p.BarCode || ''}"
+									data-product-id="${p.ProductId || ''}"
+									data-variant-id="${p.VariantId || ''}" data-sizename='${p.SizeName}' data-taxrate='${p.TaxRate}'>
+									<h6 class="font-weight-semibold mb-0">
+										${escapeHtml(p.ProductName ?? 'Unnamed')}
+									</h6>
+									<span class="text-muted">$${priceText}</span>
+								</div>
+							</div>
+							`;
+				}).join('');
+
+				$wrap.html(html);
+	}
+
+	function renderAllProducts(allProducts) {
+		const $tbody = $('#searchResultTable tbody');
+
+		if (!Array.isArray(allProducts) || allProducts.length === 0) {
+			$tbody.html('<tr><td colspan="5" class="text-muted text-center">No products found.</td></tr>');
+			return;
+		}
+
+		const rows = allProducts.map(p => {
+			const stock = p.QoH ?? 0; // quantity on hand
+			const price = p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0;
+			const priceText = Number(price).toLocaleString(undefined, {
+				minimumFractionDigits: 2,
+				maximumFractionDigits: 2
+			});
+
+			// Stock level color
+			let stockClass = 'text-success';
+			if (stock === 0) stockClass = 'text-danger';
+			else if (stock < 20) stockClass = 'text-warning';
+
+			// Button now has all product data
+			const buttonHtml = stock > 0
+				? `<button class="btn btn-primary btn-sm product-add-btn"
+							data-barcode="${p.BarCode || ''}"
+							data-product-id="${p.ProductId || ''}"
+							data-variant-id="${p.VariantId || ''}"
+							data-sizename="${p.SizeName || ''}"
+							data-product-name="${escapeHtml(p.ProductName ?? 'Unnamed')}"
+							data-price="${price}"
+							data-taxrate="${p.TaxRate}"
+							>
+						Add
+					</button>`
+				: `<button class="btn btn-light btn-sm" disabled>Out</button>`;
+
+			return `
+				<tr>
+					<td><div class="font-weight-semibold">${escapeHtml(p.ProductName ?? 'Unnamed')}</div></td>
+					<td>${escapeHtml(p.BarCode ?? '')}</td>
+					<td class="text-center ${stockClass} font-weight-bold">${stock}</td>
+					<td class="text-right">$${priceText}</td>
+					<td class="text-center">${buttonHtml}</td>
+				</tr>
+			`;
+		}).join('');
+
+		$tbody.html(rows);
+	}
+
+
+	function escapeHtml(str) {
+		return String(str).replace(/[&<>"'`=\/]/g, s =>
+		({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s])
+		);
+	}
+
+	$(document).on('click', '#backbtn', async function () {
+			var departments = await Utility.RequestDataAjax({url:'/AttributeManager/GetDepartments'})
+			var html = '';
+				if (departments && departments.length > 0) {
+				departments.forEach(function (cat) {
+					html += ` <div class="col-md-3 col-sm-6 pt-1"><button type="button" class="btn btn-primary w-100 depBtn" data-depid="${cat.DepartmentId}">
+								${cat.DepartmentName}
+					</button></div>`;
+				});
+			} else {
+				html = '<p>No Departments found.</p>';
+			}
+			// Replace department buttons with category buttons
+			$('#dcs').html(html);
+		});
+</script>
+
+<script>
+	$(document).ready(function(){
+		$(document).on('click', '.product-add-btn', function () {
+			const $btn = $(this);
+
+			const productData = {
+				BarCode: $btn.data('barcode'),
+				ProductId: $btn.data('product-id'),
+				VariantId: $btn.data('variant-id'),
+				SizeName: $btn.data('sizename'),
+				ProductName: $btn.data('product-name'),
+				TaxRate: $btn.data('taxrate'),
+
+				CurrentPrice: parseFloat($btn.data('price'))
+			};
+
+			appendProductToTable(productData);
+		});
+		$(document).on('click', '.product-tile', function () {
+			const $tile = $(this);
+
+			// Gather all product data from data attributes
+			const productData = {
+				BarCode: $tile.data('barcode'),
+				ProductId: $tile.data('product-id'),
+				VariantId: $tile.data('variant-id'),
+				SizeName: $tile.data('sizename'),
+				ProductName: $tile.find('h6').text().trim(),
+				CurrentPrice: parseFloat($tile.find('span').text().replace(/[^0-9.]/g, '')),
+				TaxRate: $tile.data('taxrate')
+
+
+			};
+
+			// Use your existing function to add to invoice table
+			appendProductToTable(productData);
+		});
+		$('#barCode').focus();
+		  $(document).on('keydown', '#barCode', async function (e) {
+
+			  if (e.key === 'Enter') {
+					var barCode= $(this).val();
+
+					 const data = await Utility.RequestDataAjax( {
+					  data: { BarCode: barCode },
+					  url: '/Products/GetVariantbyBarCode'
+				  });
+
+				  if(data){
+					appendProductToTable(data);
+
+						$(this).focus();
+					$('#barCode').val('');
+
+				  } else
+				  {
+					alert('Product not found!');
+					$(this).val('');
+
+				  }
+
+				}
+		  });
+
+		function appendProductToTable(result) {
+			if (!result) return;
+
+
+			let isDuplicate = false;
+			let incomingBarcode = String(result.BarCode); // ensure barcode is string
+
+			$('#invoiceTable tbody tr').each(function () {
+				const barcode = String($(this).find('td').eq(0).data('barcode')); // barcode stored in first <td>
+
+				if (barcode === incomingBarcode) {
+					isDuplicate = true;
+
+					let qtyInput = $(this).find('td').eq(2).find('input');
+					let currentQty = parseFloat(qtyInput.val()) || 0;
+					let newQty = currentQty + 1;
+					qtyInput.val(newQty);
+
+					// Get unit price and tax rate from row
+					let unitPrice = parseFloat($(this).find('.currentPrice').text()) || 0;
+					let taxRate = parseFloat($(this).find('.taxPercent').text()) || 0;
+
+					// Recalculate
+					let lineAmount = unitPrice * newQty;
+					let taxAmount = (lineAmount * taxRate) / 100;
+					let total = lineAmount + taxAmount;
+
+					// Update row cells
+					$(this).find('.taxAmount').text(taxAmount.toFixed(2));
+					$(this).find('.lineTotal').text(total.toFixed(2));
+
+					setTotalPrice();
+					return false; // break loop
+				}
+			});
+
+			if (isDuplicate) {
+				return; // No need to append new row
+			}
+
+		appendRow(result,incomingBarcode);
+			setTotalPrice();
+			scrollInvoiceTableToBottom();
+		}
+
+		$(document).on('input', '.lineqty', function () {
+			let qty = parseFloat($(this).val()) || 0;
+			let row = $(this).closest('tr');
+
+			// Get the unit price from the currentPrice td
+			let unitPrice = parseFloat(row.find('.currentPrice').text()) || 0;
+
+			// Calculate the new line total
+			let lineTotal = unitPrice * qty;
+
+			// Update the line total cell
+			row.find('.lineTotal').text(lineTotal.toFixed(2));
+
+			// Update overall invoice total
+			setTotalPrice();
+		});
+		$(document).on('input','#discount',function(){
+			setTotalPrice();
+		})
+			function scrollInvoiceTableToBottom() {
+				let container = $('#invoiceRowSection');
+			 container.scrollTop(container[0].scrollHeight);
+			}
+
+
+
+		$('#productSearch').select2({
+			placeholder: 'Search product by name, size, color, material...',
+			minimumInputLength: 2,
+			ajax: {
+				url: '/Products/SearchProducts',
+				type: 'POST',
+				dataType: 'json',
+				delay: 300,
+				data: function (params) {
+					return {
+						SearchParams: params.term
+					};
+				},
+				processResults: function (data) {
+					// Expected: [{id, text, fullProductObject}]
+					return {
+						results: data.map(function (item) {
+							return {
+								id: item.BarCode, // or item.id
+								text: `${item.ProductName} - ${item.SizeName || ''} ${item.ColorName || ''} ${item.MaterialName || ''}`,
+								fullData: item
+							};
+						})
+					};
+				},
+				cache: true
+			},
+			templateResult: formatProductResult,
+			templateSelection: formatProductSelection
+		});
+
+		// On select, append to table
+		$('#productSearch').on('select2:select', function (e) {
+			const data = e.params.data;
+			appendProductToTable(data.fullData);
+			// Optionally clear
+			$(this).val(null).trigger('change');
+		});
+
+		function formatProductResult(data) {
+			if (data.loading) return data.text;
+			return $(`<div>
+				<strong>${data.text}</strong><br/>
+				<small>Price: ${data.fullData?.RetailPrice || 'N/A'}</small>
+			</div>`);
+		}
+
+
+		$(document).on('click','.removeRow',function(e){
+			e.preventDefault();
+				$(this).closest('tr').remove();
+				setTotalPrice();
+		})
+
+
+
+		function formatProductSelection(data) {
+			return data.text;
+		}
+
+		function appendRow(result, incomingBarcode) {
+		// -----------------------------
+		// Variables & calculations
+		// -----------------------------
+		let unitPrice = parseFloat(result.CurrentPrice) || 0;
+		let taxRate = parseFloat(result.TaxRate) || 0;
+		let qty = 1; // default for new row
+
+		let lineAmount = unitPrice * qty;
+		let taxAmount = (lineAmount * taxRate) / 100;
+		let total = lineAmount + taxAmount;
+
+		// Server-side flag injected into JS
+		let enableTax = @AppDataUtility.SystemPreferences.EnableTax.ToString().ToLower();
+		// true / false
+
+		let row = "";
+
+		// -----------------------------
+		// HTML structure
+		// -----------------------------
+		if (enableTax) {
+			// With tax columns
+			row = `
+				<tr>
+					<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+						${result.ProductName}
+					</td>
+					<td class="text-center">${result.SizeName}</td>
+					<td class="text-center">
+						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+					</td>
+					<td class='currentPrice text-right'>${unitPrice.toFixed(2)}</td>
+					<td class='taxPercent text-right'>${taxRate.toFixed(2)}</td>
+					<td class='taxAmount text-right'>${taxAmount.toFixed(2)}</td>
+					<td class='lineTotal text-right'>${total.toFixed(2)}</td>
+					<td class="text-center">
+						<div class="list-icons">
+							<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
+							   class="list-icons-item text-danger-600 removeRow text-center">
+							   <i class="icon-trash"></i>
+							</a>
+						</div>
+					</td>
+				</tr>`;
+		} else {
+			// Without tax columns
+			row = `
+				<tr>
+					<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+						${result.ProductName}
+					</td>
+					<td class="text-center">${result.SizeName}</td>
+					<td class="text-center">
+						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+					</td>
+					<td class='currentPrice text-right'>${unitPrice.toFixed(2)}</td>
+					<td class='lineTotal text-right'>${lineAmount.toFixed(2)}</td>
+					<td class="text-center">
+						<div class="list-icons">
+							<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
+							   class="list-icons-item text-danger-600 removeRow text-center">
+							   <i class="icon-trash"></i>
+							</a>
+						</div>
+					</td>
+				</tr>`;
+		}
+
+		// -----------------------------
+		// Append row
+		// -----------------------------
+		$('#invoiceTable tbody').append(row);
+	}
+
+
+		function setTotalPrice() {
+		let totalAmount = 0;
+		let totalTax = 0;
+
+		$('#invoiceTable tbody tr').each(function () {
+			let qty = parseFloat($(this).find('.lineqty').val()) || 0;
+			let unitPrice = parseFloat($(this).find('.currentPrice').text()) || 0;
+			let taxRate = parseFloat($(this).find('.taxPercent').text()) || 0;
+
+			let lineTotal = unitPrice * qty;
+			let taxAmount = (lineTotal * taxRate) / 100;
+
+			totalAmount += lineTotal;
+			totalTax += taxAmount;
+		});
+
+		let grandTotal = totalAmount + totalTax;
+
+		// discount (allow numeric input, default 0)
+		let discount = parseFloat($('#discount').val()) || 0;
+		if (discount > grandTotal) discount = grandTotal; // prevent negative payable
+
+		let payable = grandTotal - discount;
+
+		// Update UI
+		$('#totalAmount').val(totalAmount.toFixed(2));
+		$('#totalTax').val(totalTax.toFixed(2));
+		$('#grandTotal').val(grandTotal.toFixed(2));
+		$('#totalPayable').val(payable.toFixed(2));
+	}
+
+
+		// function setTotalPrice(){
+
+		// 		let invoiceTotal = 0;
+		// 	  $('.lineTotal').each(function () {
+
+		// 		  const val = parseFloat($(this).text()) || 0;
+		// 		  invoiceTotal += val;
+		// 	  });
+		// 	  // Display grand total
+		// 	  $('#invoiceTotal').val(invoiceTotal.toFixed(2));
+		// 	  (updateGrandTotal(invoiceTotal));
+		// }
+
+			function updateGrandTotal(invoiceTotal) {
+					const discountAmount = parseFloat($('#discount').val()) || 0;
+					let totalAmount = invoiceTotal - discountAmount;
+
+					// Set Grand Total before tax
+					$('#grandTotal').val(totalAmount.toFixed(2));
+
+					let taxPercent = 0;
+					let taxAmount = 0;
+
+					// Check if tax field exists and has a value
+					if ($('#tax').length > 0) {
+						taxPercent = parseFloat($('#tax').val()) || 0;
+						if (taxPercent > 0) {
+							taxAmount = (totalAmount * taxPercent) / 100;
+						}
+					}
+
+					// Set Tax Amount
+					$('#totalTax').val(taxAmount.toFixed(2));
+
+					// Calculate Final Total Payable (TotalAmount + Tax)
+					const totalPayable = totalAmount + taxAmount;
+					$('#totalPayable').val(totalPayable.toFixed(2));
+			}
+
+		$(document).on('input', '#cashReceived', function () {
+			let payable = parseFloat($('#totalPayable').val()) || 0;
+			let cashRecived = parseFloat($(this).val());
+			// Get the unit price from the currentPrice td
+			let balance =cashRecived - payable || 0;
+			balance = Math.floor(balance);
+			$('#balance').val(balance);
+		});
+
+	})
+</script>
