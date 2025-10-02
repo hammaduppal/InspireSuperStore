@@ -27,7 +27,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         private readonly OneDb _oneDb;
         private readonly AssetRepository _assets;
         private readonly HumanRespourceRepository _hrm;
-        private readonly POSRepository _posRepo;
+       // private readonly POSRepository _posRepo;
         private readonly NotificationService _notificationServices;
         private readonly NotificationRepository _notificationRepository;
         private readonly OrderRepository _orderRepo;
@@ -41,7 +41,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             _admin = new AdminPanelRepository(_config, _oneDb);
             _assets = new AssetRepository(_config, _oneDb);
             _hrm = new HumanRespourceRepository(_config, _oneDb);
-            _posRepo = new POSRepository(_config, _oneDb);
+            //_posRepo = new POSRepository(_config, _oneDb);
             _notificationServices = notificationServices;
             _notificationRepository = new NotificationRepository(_oneDb);
             _orderRepo = new OrderRepository(_config, _oneDb);
@@ -61,10 +61,10 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         }
         public async Task<IActionResult> SaveInvoice(InvoiceMasterVM model)
         {
-            var result = await _posRepo.SaveInvoice(model);
+            var result = await _invoicesRepo.SaveInvoice(model);
             try
             {
-                var invoice = await _posRepo.GenerateInvoiceHTML(result);
+                var invoice = await _invoicesRepo.GenerateInvoiceHTML(result);
                 if (invoice != null)
                 {
                     return File(invoice, "application/pdf", "invoice.pdf");

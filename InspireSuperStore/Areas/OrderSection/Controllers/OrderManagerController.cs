@@ -83,11 +83,10 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             return View(vm);
         }
 
-
         [HttpPost]
         public async Task<IActionResult> SaveMyAssOrder(OrderMasterVM formData)
         {
-            var result = await _posRepo.SaveOrder(formData);
+            var result = await _orderRepo.SaveOrder(formData);
 
             var notification = new NotificationsDTO
             {

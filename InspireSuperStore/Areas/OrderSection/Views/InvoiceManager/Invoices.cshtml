@@ -92,8 +92,7 @@
 
 								<div class="list-icons">
 									<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
-									<a href="#" class="list-icons-item text-danger-600"><i class="icon-trash"></i></a> &nbsp;
-									<a href="#" class="list-icons-item text-success-600"><i class="icon-printer"></i></a>
+									<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
 
 
 								</div>
@@ -115,6 +114,42 @@
 <!-- /content area -->
 <script>
 	$(document).ready(function(){
+
+		$('.printInvoice').click(function(e){
+			e.preventDefault();
+			var invoiceId = $(this).attr('data-invoiceid');
+			var data={
+				InvoiceMasterId:invoiceId
+			}
+				$.ajax({
+					url: '/InvoiceManager/DuplicateInvoice',
+					type: 'POST',
+					data: payload,
+
+					xhrFields: {
+						responseType: 'blob'  // expecting PDF back
+					},
+					success: function (data) {
+						console.log('Hello Dumpling');
+
+						console.log(data);
+						var blob = new Blob([data], { type: "application/pdf" });
+						var url = URL.createObjectURL(blob);
+						window.open(url, "_blank");
+					},
+					error: function (xhr, status, error) {
+						alert("Error saving invoice: " + error);
+					}
+				});
+		})
+
+
+
+
+
+
+
+
 		$('#orderStatusId').change(async function(){
 			var newstatusId = $(this).val();
 			var omid = $(this).attr('data-ordermasterid');
