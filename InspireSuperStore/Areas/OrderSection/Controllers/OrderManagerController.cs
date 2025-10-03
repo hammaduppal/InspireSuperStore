@@ -47,17 +47,30 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             _notificationRepository = new NotificationRepository(_oneDb);
             _orderRepo = new OrderRepository(_config, _oneDb);
         }
+
         public async Task<IActionResult> Orders()
         {
-            vm.OrderMaster  = await _orderRepo.GetOrders();
+            vm.OrderMaster = await _orderRepo.GetOrders();
             return View(vm);
         }
 
-        public async Task<IActionResult> Order(Guid OrderId)
+        [HttpGet("/OrderManager/Order/{orderMasterId:guid}")]
+        public async Task<IActionResult> Order(Guid orderMasterId)
         {
-            return View();
-        }
+            vm.Customers = await _admin.Customers();
+            vm.ServingTables = await _assets.ServingTables();
+            vm.Employees = await _hrm.GetSaleStaff();
+            vm.PaymentMethods = await _assets.PaymentMethods();
 
+            vm.Order = await _orderRepo.GetOrderById(orderMasterId);
+            return View(vm);
+        }
+        [HttpPost]
+        public async Task<IActionResult> UpdateOrder(OrderMasterVM model)
+        {
+            var result = await _orderRepo.UpdateOrder(model);
+            return APIResponseHelper.ResultResponse(this, result);
+        }
 
         public async Task<IActionResult> CreateOrder()
         {
@@ -70,12 +83,11 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             return View(vm);
         }
 
-
         [HttpPost]
         public async Task<IActionResult> SaveMyAssOrder(OrderMasterVM formData)
         {
-              var result = await _posRepo.SaveOrder(formData);
-            
+            var result = await _orderRepo.SaveOrder(formData);
+
             var notification = new NotificationsDTO
             {
                 CreatedAt = DateTime.Now,
@@ -109,13 +121,20 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             {
                 return Json(new { statusCode = "300", Success = true, Message = "Unable to Save Order" });
             }
-
-
-
-
-
-
         }
+
+        public async Task<IActionResult> UpdateOrderStatus(OrderMasterVM model)
+        {
+            return APIResponseHelper.ResultResponse(this, await _orderRepo.UpdateOrderStatus(model.OrderStatusId, model.OrderMasterId));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> OrderToInvoice(OrderMasterVM model)
+        {
+            var result = await _orderRepo.OrderToInvoice(model.OrderMasterId);
+            return APIResponseHelper.ResultResponse(this, 1);
+        }
+
 
     }
 }

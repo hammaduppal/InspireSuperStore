@@ -1,8 +1,5 @@
 ﻿using QRCoder;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Formats.Png;
-using System.IO;
+
 namespace MarketBal.Helper
 {
     public class GenerateQR
@@ -17,6 +14,6 @@ namespace MarketBal.Helper
             var base64 = Convert.ToBase64String(qrBytes);
             return $"data:image/png;base64,{base64}";
         }
-
+ 
     }
 }

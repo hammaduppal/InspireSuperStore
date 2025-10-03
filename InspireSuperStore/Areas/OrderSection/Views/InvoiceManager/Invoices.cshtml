@@ -2,7 +2,7 @@
 @using MainModels.Util
 @model PagesViewModel
 @{
-	ViewData["Title"] = "Orders";
+	ViewData["Title"] = "Invoices";
 	Layout = "~/Views/Shared/_Layout.cshtml";
 	int count = 1;
 }
@@ -40,7 +40,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<div class="table-responsive">
 			<table class="table">
 				<thead>
@@ -52,47 +52,47 @@
 						<th>Payment Status</th>
 						<th>Payment Method</th>
 						<th>Order Status</th>
+						<th>Total Tax</th>
+
 						<th>Grand Total</th>
 						<th>Order Date</th>
 
-						<th>Parent Id</th>
 						<th>Manage</th>
 
 
 					</tr>
 				</thead>
 				<tbody>
-					@foreach (var item in Model.OrderMaster)
+					@foreach (var item in Model.Invoices)
 					{
 
 						<tr>
 							<td>@count</td>
 							<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
-							<td>@item.OrderSource.SourceName</td>
-							<td>@item.PaymentStatus.Name</td>
+							<td>@item?.InvoiceSource?.SourceName</td>
+							<td>@item?.PaymentStatus?.Name</td>
 
 							<td>@item.PaymentMethod.Name</td>
 							<td>
-								<select data-ordermasterid="@item.OrderMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
-									@foreach (AppConstants.OrderStatusEnum status in Enum.GetValues(typeof(AppConstants.OrderStatusEnum)))
+								<select data-ordermasterid="@item.InvoiceMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
+									@foreach (AppConstants.PaymentStatus status in Enum.GetValues(typeof(AppConstants.PaymentStatus)))
 									{
-										<option  value="@((int)status )" @(item.OrderStatusId == (int)status ? "selected" : "")>
+										<option value="@((int)status)" @(item.InvoiceStatusId == (int)status ? "selected" : "")>
 											@status.ToString()
 										</option>
 									}
 								</select>
 							</td>
+							<td>@item.TotalTax</td>
 
 
 							<td>@item.GrandTotal</td>
-							<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate.Value)</td>
-							<td>@item.ParentOrderId</td>
+							<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate)</td>
 							<td>
 
 								<div class="list-icons">
-									<a href="/OrderManager/Order/@item.OrderMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
-									<a href="#" class="list-icons-item text-danger-600"><i class="icon-trash"></i></a> &nbsp;
-									<a href="#" class="list-icons-item text-success-600"><i class="icon-printer"></i></a>
+									<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
+									<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
 
 
 								</div>
@@ -114,10 +114,46 @@
 <!-- /content area -->
 <script>
 	$(document).ready(function(){
+
+		$('.printInvoice').click(function(e){
+			e.preventDefault();
+			var invoiceId = $(this).attr('data-invoiceid');
+			var payload={
+				InvoiceMasterId:invoiceId
+			}
+				$.ajax({
+					url: '/InvoiceManager/GetDuplicateInvoice',
+					type: 'POST',
+					data: payload,
+
+					xhrFields: {
+						responseType: 'blob'  // expecting PDF back
+					},
+					success: function (data) {
+						console.log('Hello Dumpling');
+
+						console.log(data);
+						var blob = new Blob([data], { type: "application/pdf" });
+						var url = URL.createObjectURL(blob);
+						window.open(url, "_blank");
+					},
+					error: function (xhr, status, error) {
+						alert("Error saving invoice: " + error);
+					}
+				});
+		})
+
+
+
+
+
+
+
+
 		$('#orderStatusId').change(async function(){
 			var newstatusId = $(this).val();
 			var omid = $(this).attr('data-ordermasterid');
-	
+
 			const result = await Utility.RequestDataAjax({
 				url:'/OrderManager/UpdateOrderStatus',
 				data:{
@@ -136,6 +172,6 @@
 			}
 
 		});
-	
+
 	});
 </script>

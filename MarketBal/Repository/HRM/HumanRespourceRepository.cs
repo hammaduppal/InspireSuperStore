@@ -25,7 +25,7 @@ namespace MarketBal.Repository.HRM
         {
             return await _onedb.Employees.Where(x=>x.IsSalePerson==true).Select(x => new EmployeeVM
             {
-                EmployeeCode = x.EmployeeCode,
+                EmployeeCode = x.EmployeeCode, FirstName= x.Person.FirstName, LastName = x.Person.LastName,
                 EmployeeId = x.EmployeeId,
                 IsSalePerson = x.IsSalePerson,
 
