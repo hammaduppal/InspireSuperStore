@@ -11,6 +11,7 @@ using MarketBal.Repository.POSManager;
 using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ZXing;
 
 namespace InspireSuperStore.Areas.OrderSection.Controllers
 {
@@ -27,7 +28,6 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         private readonly OneDb _oneDb;
         private readonly AssetRepository _assets;
         private readonly HumanRespourceRepository _hrm;
-       // private readonly POSRepository _posRepo;
         private readonly NotificationService _notificationServices;
         private readonly NotificationRepository _notificationRepository;
         private readonly OrderRepository _orderRepo;
@@ -41,13 +41,16 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             _admin = new AdminPanelRepository(_config, _oneDb);
             _assets = new AssetRepository(_config, _oneDb);
             _hrm = new HumanRespourceRepository(_config, _oneDb);
-            //_posRepo = new POSRepository(_config, _oneDb);
             _notificationServices = notificationServices;
             _notificationRepository = new NotificationRepository(_oneDb);
             _orderRepo = new OrderRepository(_config, _oneDb);
             _invoicesRepo = new InvoiceRepository(_config, _oneDb);
         }
-
+        public async Task<IActionResult> Invoices()
+        {
+            vm.Invoices = await _invoicesRepo.GetInvoices();
+            return View(vm);
+        }
         public async Task<IActionResult> CreateInvoice()
         {
             vm.Departments = await _attrib.GetDepartment();
@@ -80,10 +83,15 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             }
         }
 
-        public async Task<IActionResult> Invoices()
+        public async Task<IActionResult> GetDuplicateInvoice(InvoiceMasterVM model)
         {
-            vm.Invoices = await _invoicesRepo.GetInvoices();
-            return View(vm);
+            var result = await _invoicesRepo.GetInvoiceById(model.InvoiceMasterId);
+
+            var invoice = await _invoicesRepo.GenerateInvoiceHTML(result);
+
+            return File(invoice, "application/pdf", "invoice.pdf");
+
+           
         }
 
         public async Task<IActionResult> PreviewInvoice()

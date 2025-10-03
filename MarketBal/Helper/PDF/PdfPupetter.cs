@@ -45,9 +45,11 @@ namespace MarketBal.Helper.PDF
                             "--kiosk-printing"
                         }
                 };
-
                 using var browser = await Puppeteer.LaunchAsync(launchOptions);
                 using var page = await browser.NewPageAsync();
+                var contentHeightPx = await page.EvaluateFunctionAsync<int>("() => document.body.scrollHeight");
+                var contentHeightMm = contentHeightPx / 3.78;
+                pdfOptions.Height = $"{contentHeightMm}mm";
 
                 await page.SetContentAsync(htmlContent, new NavigationOptions
                 {

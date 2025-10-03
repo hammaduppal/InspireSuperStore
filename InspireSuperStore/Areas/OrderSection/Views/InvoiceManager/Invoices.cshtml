@@ -118,11 +118,11 @@
 		$('.printInvoice').click(function(e){
 			e.preventDefault();
 			var invoiceId = $(this).attr('data-invoiceid');
-			var data={
+			var payload={
 				InvoiceMasterId:invoiceId
 			}
 				$.ajax({
-					url: '/InvoiceManager/DuplicateInvoice',
+					url: '/InvoiceManager/GetDuplicateInvoice',
 					type: 'POST',
 					data: payload,
 

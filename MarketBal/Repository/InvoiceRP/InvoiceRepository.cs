@@ -39,7 +39,7 @@ namespace MarketBal.Repository.InvoiceRP
                 {
                     InvoiceMasterId = x.InvoiceMasterId,
                     InvoiceNo = x.InvoiceNo,
-                    GrandTotal = x.GrandTotal,
+                    GrandTotal = x.GrandTotal.Value,
                     CustomerId = x.CustomerId,
                     DiscountAmount = x.DiscountAmount,
                     TaxAmount = x.TaxAmount,
@@ -78,9 +78,9 @@ namespace MarketBal.Repository.InvoiceRP
                         PaymentMethodId = x.PaymentMethod.PaymentMethodId,
                         Name = x.PaymentMethod.Name
                     },
-                    InvoiceDate = x.InvoiceDate,
+                    InvoiceDate = x.InvoiceDate.Value,
                     CreatedBy = x.CreatedBy,
-                    CreatedDate = x.CreatedDate,
+                    CreatedDate = x.CreatedDate.Value,
                 }).ToListAsync();
 
                 return model;
@@ -231,8 +231,26 @@ namespace MarketBal.Repository.InvoiceRP
             }
         }
 
-      
-       
+      public async Task<InvoiceMaster> GetInvoiceById(Guid invoiceId)
+        {
+            try
+            {
+                var model = await _onedb.InvoiceMasters
+                    .Include(i => i.Customer).ThenInclude(c => c.Person)
+                    .Include(i => i.Employee).ThenInclude(e => e.Person)
+                    .Include(i => i.PaymentMethod)
+                    .Include(i => i.PaymentStatus)
+                    .Include(i => i.ServingTable)
+                    .Include(i => i.InvoiceDetails).ThenInclude(d => d.Product).ThenInclude(p => p.Brand)
+                    .FirstOrDefaultAsync(i => i.InvoiceMasterId == invoiceId);
+                return model;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
 
         public async Task<byte[]> GenerateInvoiceHTML(InvoiceMaster model)
         {
