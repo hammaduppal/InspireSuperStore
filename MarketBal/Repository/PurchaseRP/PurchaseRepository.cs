@@ -298,6 +298,48 @@ namespace MarketBal.Repository.PurchaseRP
             master.ModifiedOn = DateTime.UtcNow;
 
             await _onedb.SaveChangesAsync();
+            var journalEntry = new JournalEntry
+            {
+                JournalEntryId = Guid.NewGuid(),
+                EntryDate = DateTime.UtcNow,
+                ReferenceNumber = master.PurchaseNumber,
+                BranchId = branchId.Value,
+                Description = $"GRN posted for Purchase #{master.PurchaseNumber}",
+                CreatedBy = master.Createdby,
+                CreatedAt = DateTime.UtcNow
+            };
+            _onedb.JournalEntries.Add(journalEntry);
+            
+            _onedb.JournalLines.Add(new JournalLine
+            {
+                JournalLineId = Guid.NewGuid(),
+                JournalEntryId = journalEntry.JournalEntryId,
+                CoaId = 7, // from ChartOfAccounts (Inventory)
+                Debit = master.TotalAmount ?? 0M,
+                Credit = 0,
+                Description = "Inventory increased by GRN"
+            });
+            if (master.TaxAmount > 0)
+            {
+                _onedb.JournalLines.Add(new JournalLine
+                {
+                   JournalLineId= Guid.NewGuid(),
+                    JournalEntryId = journalEntry.JournalEntryId,
+                    CoaId = 39, // Purchase Tax Account
+                    Debit = master.TaxAmount ?? 0M,
+                    Credit = 0,
+                    Description = "Input Tax on Purchase"
+                });
+            }
+            _onedb.JournalLines.Add(new JournalLine
+            {
+                JournalLineId = Guid.NewGuid(),
+                JournalEntryId = journalEntry.JournalEntryId,
+                CoaId = 13, // Supplier's account in COA
+                Debit = 0,
+                Credit = master.GrandTotal ?? 0M,
+                Description = "Accounts Payable for Purchase"
+            });
             return 1;
         }
 
