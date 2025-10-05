@@ -5,6 +5,7 @@ using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Helper;
 using MarketBal.Helper.PDF.OMS.Data.Repositories.PDFGenerate;
+using MarketBal.Repository.HRM;
 using MarketBal.Repository.POSManager;
 using MarketBal.Repository.Products;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,7 @@ namespace MarketBal.Repository.InvoiceRP
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
         private readonly POSRepository _pOSRepository;
+        private readonly HumanRespourceRepository   _hrmRepository;
         public InvoiceRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -29,6 +31,7 @@ namespace MarketBal.Repository.InvoiceRP
             _onedb = oneDb;
             _attrib = new AttributeRepository(_config);
             _pOSRepository = new POSRepository(_config, _onedb);
+            _hrmRepository = new HumanRespourceRepository(_config, _onedb);
         }
 
         public async Task<List<InvoiceMasterVM>> GetInvoices()
@@ -218,9 +221,68 @@ namespace MarketBal.Repository.InvoiceRP
                         }
                     }
 
+                 var customer = await _hrmRepository.GetCustomer(invoiceMaster.CustomerId.Value);
+                    var journalEntry = new JournalEntry
+                    {
+                        JournalEntryId = Guid.NewGuid(),
+                        EntryDate = commonParams.CreatedOn.Value,
+                        ReferenceNumber = invoiceMaster.InvoiceNo,
+                        Description = "Sales to " + customer.Person?.FirstName + customer.CustomerCode,
+                        BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
+                        CreatedBy = AppDataUtility.SessionUser.Id,
+                        CreatedAt = commonParams.CreatedOn.Value,
+                        SourceModule = "Sales", EntryNumber=invoiceMaster.InvoiceNo,
+                    };
+                    await _onedb.JournalEntries.AddAsync(journalEntry);
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = 6,
+                        Description = "Accounts Receivable",
+                        Debit = invoiceMaster.GrandTotal,
+                        Credit = 0,
+
+                    });
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = 15,
+                        Description = "Sales Income",
+                        Debit = 0,
+                        Credit = invoiceMaster.TotalAmount,
+                    });
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = 15,
+                        Description = "Tax Payable (Output VAT)",
+                        Debit = 0,
+                        Credit = invoiceMaster.TaxAmount,
+                    });
+                    var cost = await GetCostofGoods(model.InvoiceDetails.Where(i => i.VariantId.HasValue).Select(i => i.VariantId.Value).ToList());
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = 15,
+                        Description = "COGS",
+                        Debit = cost,
+                        Credit = 0,
+                    });
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = 15,
+                        Description = "Inventory",
+                        Debit = 0,
+                        Credit = cost,
+                    });
                     await _onedb.SaveChangesAsync();
                     await transaction.CommitAsync();
-
                     return invoiceMaster;
                 }
                 catch (Exception)
@@ -231,7 +293,7 @@ namespace MarketBal.Repository.InvoiceRP
             }
         }
 
-      public async Task<InvoiceMaster> GetInvoiceById(Guid invoiceId)
+        public async Task<InvoiceMaster> GetInvoiceById(Guid invoiceId)
         {
             try
             {
@@ -403,5 +465,28 @@ namespace MarketBal.Repository.InvoiceRP
 
         }
 
+        public async Task<decimal> GetCostofGoods(List<Guid> variantIds)
+        {
+            try
+            {
+                decimal totalCost = 0;
+                foreach (var variantId in variantIds)
+                {
+                    var variant = await _onedb.BranchStocks
+
+                        .FirstOrDefaultAsync(v => v.ProductVariantId == variantId && v.BranchId == AppDataUtility.SessionUser.Person.Branch.BranchId);
+                    if (variant != null)
+                    {
+                        totalCost += variant.Cost.Value;
+                    }
+                }
+                return totalCost;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("Error calculating cost of goods", ex);
+            }
+
+        }
     }
 }
