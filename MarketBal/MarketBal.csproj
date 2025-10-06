@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Repositories\MainModels\MainModels\MainModels.csproj" />
+    <ProjectReference Include="..\..\..\..\Desktop\MainModels-master\MainModels\MainModels.csproj" />
   </ItemGroup>
 
 </Project>
