@@ -14,6 +14,7 @@ namespace MarketBal.Repository.AccountingRP
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly DapperContext _dap;
+        private readonly AccountsReceivableRepository _accountsReceivableRepository;
         public JournalsRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -21,6 +22,7 @@ namespace MarketBal.Repository.AccountingRP
             _api = new ApiMethods();
             _onedb = oneDb;
             _dap = new DapperContext(_config);
+            _accountsReceivableRepository = new AccountsReceivableRepository(_config, _onedb);
         }
         public async Task<int> AddInvoiceJournals(InvoiceMaster invoiceMaster, bool isCash, Customer customer, decimal cost)
         {
@@ -73,6 +75,7 @@ namespace MarketBal.Repository.AccountingRP
                         ReferenceType = "Invoice",
                         ReferenceId = invoiceMaster.InvoiceMasterId
                     });
+                    await _accountsReceivableRepository.AddCreditSale(invoiceMaster, customer, journalEntry);
                 }
 
                 // -----------------------------------------------------------

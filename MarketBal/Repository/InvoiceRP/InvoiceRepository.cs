@@ -124,7 +124,7 @@ namespace MarketBal.Repository.InvoiceRP
                             newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
                         }
                     }
-
+                  
                     // ---------- Calculations ----------
                     decimal totalAmount = model.InvoiceDetails.Sum(d => d.UnitPrice * d.Quantity);
                     decimal totalTax = model.InvoiceDetails.Sum(d => (d.TaxRate) * (d.UnitPrice * d.Quantity) / 100);
@@ -167,8 +167,16 @@ namespace MarketBal.Repository.InvoiceRP
                                         ? model.EmployeeId
                                         : null
                     };
+                    if (model.PaymentStatusId == 1)
+                    {
+                        invoiceMaster.DueDate = commonParams.CreatedOn?.Date;
 
-                    _onedb.InvoiceMasters.Add(invoiceMaster);
+                    }
+                    else
+                    {
+                        invoiceMaster.DueDate = model.DueDate;
+                    }
+                        _onedb.InvoiceMasters.Add(invoiceMaster);
                     await _onedb.SaveChangesAsync();
 
                     // ---------- Invoice Details ----------
@@ -290,22 +298,21 @@ namespace MarketBal.Repository.InvoiceRP
                 <section style='width:80mm; margin:0 auto;'>
                      <div class='company-info'>
 <p>
-    <img width='250px' height='20px' src='{GenerateBarCode.GenerateBarcode("INV-1111")}' alt='QR Code' />
+    <img width='250px' height='20px' src='{GenerateBarCode.GenerateBarcode(model.InvoiceMasterId.ToString())}' alt='QR Code' />
 </p>
                       <div class='row align-items-center text-center'>
         <!-- Logo -->
         <div class='col-3'>
-          	<img src=""/global_assets/images/logo_dark.png"" />
+          	<img src='~/global_assets/images/logo_dark.png' />
         </div>
 
-        <!-- Company Name -->
         <div class='col-9'>
             <h3 style='font-size:14px; margin:0;'>
                 {@AppDataUtility.SystemPreferences.CompanyName}
             </h3>
         </div>
     </div>
-                        <p>123 Main St, City, Country</p>
+                        <p>{AppDataUtility.SystemPreferences.CompanyName}</p>
                         <p>Phone: +1234567890 | Email: info@company.com</p>
 
 
