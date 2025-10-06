@@ -43,7 +43,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Desktop\MainModels-master\MainModels\MainModels.csproj" />
+    <ProjectReference Include="..\..\..\Repositories\MainModels\MainModels\MainModels.csproj" />
     <ProjectReference Include="..\MarketBal\MarketBal.csproj" />
   </ItemGroup>
 
