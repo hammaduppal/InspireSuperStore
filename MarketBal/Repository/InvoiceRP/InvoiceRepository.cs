@@ -5,6 +5,7 @@ using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Helper;
 using MarketBal.Helper.PDF.OMS.Data.Repositories.PDFGenerate;
+using MarketBal.Repository.AccountingRP;
 using MarketBal.Repository.HRM;
 using MarketBal.Repository.POSManager;
 using MarketBal.Repository.Products;
@@ -23,6 +24,7 @@ namespace MarketBal.Repository.InvoiceRP
         private readonly AttributeRepository _attrib;
         private readonly POSRepository _pOSRepository;
         private readonly HumanRespourceRepository   _hrmRepository;
+        private readonly JournalsRepository _journalRepo;
         public InvoiceRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -32,6 +34,7 @@ namespace MarketBal.Repository.InvoiceRP
             _attrib = new AttributeRepository(_config);
             _pOSRepository = new POSRepository(_config, _onedb);
             _hrmRepository = new HumanRespourceRepository(_config, _onedb);
+            _journalRepo = new JournalsRepository(_config, _onedb);
         }
 
         public async Task<List<InvoiceMasterVM>> GetInvoices()
@@ -220,67 +223,15 @@ namespace MarketBal.Repository.InvoiceRP
                             _onedb.Products.Update(product);
                         }
                     }
+                    bool isCashINvoice = false;
+                    if (invoiceMaster.PaymentStatusId==1)
+                    {
+                        isCashINvoice = true;
+                    }
 
                  var customer = await _hrmRepository.GetCustomer(invoiceMaster.CustomerId.Value);
-                    var journalEntry = new JournalEntry
-                    {
-                        JournalEntryId = Guid.NewGuid(),
-                        EntryDate = commonParams.CreatedOn.Value,
-                        ReferenceNumber = invoiceMaster.InvoiceNo,
-                        Description = "Sales to " + customer.Person?.FirstName + customer.CustomerCode,
-                        BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
-                        CreatedBy = AppDataUtility.SessionUser.Id,
-                        CreatedAt = commonParams.CreatedOn.Value,
-                        SourceModule = "Sales", EntryNumber=invoiceMaster.InvoiceNo,
-                    };
-                    await _onedb.JournalEntries.AddAsync(journalEntry);
-                    await _onedb.JournalLines.AddAsync(new JournalLine
-                    {
-                        JournalLineId = Guid.NewGuid(),
-                        JournalEntryId = journalEntry.JournalEntryId,
-                        CoaId = 6,
-                        Description = "Accounts Receivable",
-                        Debit = invoiceMaster.GrandTotal,
-                        Credit = 0,
-
-                    });
-                    await _onedb.JournalLines.AddAsync(new JournalLine
-                    {
-                        JournalLineId = Guid.NewGuid(),
-                        JournalEntryId = journalEntry.JournalEntryId,
-                        CoaId = 15,
-                        Description = "Sales Income",
-                        Debit = 0,
-                        Credit = invoiceMaster.TotalAmount,
-                    });
-                    await _onedb.JournalLines.AddAsync(new JournalLine
-                    {
-                        JournalLineId = Guid.NewGuid(),
-                        JournalEntryId = journalEntry.JournalEntryId,
-                        CoaId = 15,
-                        Description = "Tax Payable (Output VAT)",
-                        Debit = 0,
-                        Credit = invoiceMaster.TaxAmount,
-                    });
-                    var cost = await GetCostofGoods(model.InvoiceDetails.Where(i => i.VariantId.HasValue).Select(i => i.VariantId.Value).ToList());
-                    await _onedb.JournalLines.AddAsync(new JournalLine
-                    {
-                        JournalLineId = Guid.NewGuid(),
-                        JournalEntryId = journalEntry.JournalEntryId,
-                        CoaId = 15,
-                        Description = "COGS",
-                        Debit = cost,
-                        Credit = 0,
-                    });
-                    await _onedb.JournalLines.AddAsync(new JournalLine
-                    {
-                        JournalLineId = Guid.NewGuid(),
-                        JournalEntryId = journalEntry.JournalEntryId,
-                        CoaId = 15,
-                        Description = "Inventory",
-                        Debit = 0,
-                        Credit = cost,
-                    });
+                var cost = await GetCostofGoods(model.InvoiceDetails.Where(i => i.VariantId.HasValue).Select(i => i.VariantId.Value).ToList());
+               var tesla =  await _journalRepo.AddInvoiceJournals(invoiceMaster, isCashINvoice, customer, cost);
                     await _onedb.SaveChangesAsync();
                     await transaction.CommitAsync();
                     return invoiceMaster;
