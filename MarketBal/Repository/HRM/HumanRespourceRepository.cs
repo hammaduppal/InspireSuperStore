@@ -31,5 +31,15 @@ namespace MarketBal.Repository.HRM
 
             }).ToListAsync();
         }
+
+        public async Task<Customer> GetCustomer(Guid CustomerId)
+        {
+            return await _onedb.Customers.Include(x=>x.Person).FirstOrDefaultAsync(x => x.CustomerId == CustomerId && x.IsDeleted == false && x.IsActive==true);
+        }
+
+        public async Task<List<Customer>> GetAllActiveCustomers()
+        {
+            return await _onedb.Customers.Include(x => x.Person).Where(x => x.IsDeleted == false && x.IsActive == true).ToListAsync();
+        }
     }
 }

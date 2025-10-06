@@ -5,6 +5,8 @@ using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Helper;
 using MarketBal.Helper.PDF.OMS.Data.Repositories.PDFGenerate;
+using MarketBal.Repository.AccountingRP;
+using MarketBal.Repository.HRM;
 using MarketBal.Repository.POSManager;
 using MarketBal.Repository.Products;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +23,8 @@ namespace MarketBal.Repository.InvoiceRP
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
         private readonly POSRepository _pOSRepository;
+        private readonly HumanRespourceRepository   _hrmRepository;
+        private readonly JournalsRepository _journalRepo;
         public InvoiceRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -29,6 +33,8 @@ namespace MarketBal.Repository.InvoiceRP
             _onedb = oneDb;
             _attrib = new AttributeRepository(_config);
             _pOSRepository = new POSRepository(_config, _onedb);
+            _hrmRepository = new HumanRespourceRepository(_config, _onedb);
+            _journalRepo = new JournalsRepository(_config, _onedb);
         }
 
         public async Task<List<InvoiceMasterVM>> GetInvoices()
@@ -118,7 +124,7 @@ namespace MarketBal.Repository.InvoiceRP
                             newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
                         }
                     }
-
+                  
                     // ---------- Calculations ----------
                     decimal totalAmount = model.InvoiceDetails.Sum(d => d.UnitPrice * d.Quantity);
                     decimal totalTax = model.InvoiceDetails.Sum(d => (d.TaxRate) * (d.UnitPrice * d.Quantity) / 100);
@@ -161,8 +167,16 @@ namespace MarketBal.Repository.InvoiceRP
                                         ? model.EmployeeId
                                         : null
                     };
+                    if (model.PaymentStatusId == 1)
+                    {
+                        invoiceMaster.DueDate = commonParams.CreatedOn?.Date;
 
-                    _onedb.InvoiceMasters.Add(invoiceMaster);
+                    }
+                    else
+                    {
+                        invoiceMaster.DueDate = model.DueDate;
+                    }
+                        _onedb.InvoiceMasters.Add(invoiceMaster);
                     await _onedb.SaveChangesAsync();
 
                     // ---------- Invoice Details ----------
@@ -217,10 +231,17 @@ namespace MarketBal.Repository.InvoiceRP
                             _onedb.Products.Update(product);
                         }
                     }
+                    bool isCashINvoice = false;
+                    if (invoiceMaster.PaymentStatusId==1)
+                    {
+                        isCashINvoice = true;
+                    }
 
+                 var customer = await _hrmRepository.GetCustomer(invoiceMaster.CustomerId.Value);
+                var cost = await GetCostofGoods(model.InvoiceDetails.Where(i => i.VariantId.HasValue).Select(i => i.VariantId.Value).ToList());
+               var tesla =  await _journalRepo.AddInvoiceJournals(invoiceMaster, isCashINvoice, customer, cost);
                     await _onedb.SaveChangesAsync();
                     await transaction.CommitAsync();
-
                     return invoiceMaster;
                 }
                 catch (Exception)
@@ -231,7 +252,7 @@ namespace MarketBal.Repository.InvoiceRP
             }
         }
 
-      public async Task<InvoiceMaster> GetInvoiceById(Guid invoiceId)
+        public async Task<InvoiceMaster> GetInvoiceById(Guid invoiceId)
         {
             try
             {
@@ -277,22 +298,21 @@ namespace MarketBal.Repository.InvoiceRP
                 <section style='width:80mm; margin:0 auto;'>
                      <div class='company-info'>
 <p>
-    <img width='250px' height='20px' src='{GenerateBarCode.GenerateBarcode("INV-1111")}' alt='QR Code' />
+    <img width='250px' height='20px' src='{GenerateBarCode.GenerateBarcode(model.InvoiceMasterId.ToString())}' alt='QR Code' />
 </p>
                       <div class='row align-items-center text-center'>
         <!-- Logo -->
         <div class='col-3'>
-          	<img src=""/global_assets/images/logo_dark.png"" />
+          	<img src='~/global_assets/images/logo_dark.png' />
         </div>
 
-        <!-- Company Name -->
         <div class='col-9'>
             <h3 style='font-size:14px; margin:0;'>
                 {@AppDataUtility.SystemPreferences.CompanyName}
             </h3>
         </div>
     </div>
-                        <p>123 Main St, City, Country</p>
+                        <p>{AppDataUtility.SystemPreferences.CompanyName}</p>
                         <p>Phone: +1234567890 | Email: info@company.com</p>
 
 
@@ -403,5 +423,28 @@ namespace MarketBal.Repository.InvoiceRP
 
         }
 
+        public async Task<decimal> GetCostofGoods(List<Guid> variantIds)
+        {
+            try
+            {
+                decimal totalCost = 0;
+                foreach (var variantId in variantIds)
+                {
+                    var variant = await _onedb.BranchStocks
+
+                        .FirstOrDefaultAsync(v => v.ProductVariantId == variantId && v.BranchId == AppDataUtility.SessionUser.Person.Branch.BranchId);
+                    if (variant != null)
+                    {
+                        totalCost += variant.Cost.Value;
+                    }
+                }
+                return totalCost;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("Error calculating cost of goods", ex);
+            }
+
+        }
     }
 }
