@@ -1,8 +1,147 @@
-﻿
+﻿@using MainModels.DTOModels
+@model PagesViewModel
 @{
     ViewData["Title"] = "ChartOfAccounts";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>ChartOfAccounts</h1>
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
 
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+				<span class="breadcrumb-item active">Chart of Accounts</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+
+
+<div class="content">
+
+	<style>
+		.coa-tree, .coa-tree ul {
+			list-style: none;
+			margin: 0;
+			padding-left: 1rem;
+			border-left: 1px dashed rgba(0,0,0,0.08);
+		}
+
+		.coa-node {
+			margin: .25rem 0;
+			font-size: 1.1rem;
+		}
+
+		.coa-label {
+			cursor: pointer;
+			display: inline-block;
+			padding: 2px 6px;
+		}
+
+		.coa-tree li.collapsed > ul {
+			display: none;
+		}
+
+		/* tiny icon before folder/leaf */
+		.coa-label::before {
+			content: "▸";
+			display: inline-block;
+			width: 18px;
+			font-size: 1.2rem;
+			transform-origin: center;
+			transition: transform .12s ease;
+		}
+
+		.coa-node:not(.collapsed) > .coa-label::before {
+			transform: rotate(90deg);
+		}
+
+		.coa-node:not(:has(ul)) > .coa-label::before {
+			content: "";
+		}
+		/* no icon for leaves (if browser supports :has) */
+
+	</style>
+
+	<div class="row">
+		<div class="col-md-12">
+
+			<!-- Default unordered list markup -->
+			<div class="card">
+				<div class="card-header header-elements-inline">
+					<h6 class="card-title">Chart of Accounts</h6>
+					<div class="header-elements">
+						<div class="list-icons">
+							<a class="list-icons-item" data-action="collapse"></a>
+							<a class="list-icons-item" data-action="reload"></a>
+							
+						</div>
+					</div>
+				</div>
+			
+				<div class="card-body">
+					<div class="tree-default card card-body border-left-info border-left-2 shadow-0 rounded-left-0">
+
+						<div class="coa-tree-wrap">
+							<div class="coa-tree-buttons" style="margin-bottom: 10px;">
+								<button id="expandAll">Expand All</button>
+								<button id="collapseAll">Collapse All</button>
+							</div>
+							<ul class="coa-tree">
+								@foreach (var root in Model.ChartofAccounts)
+								{
+									@await Html.PartialAsync("_ChartNode", root)
+								}
+							</ul>
+						</div>
+						
+
+					</div>
+				</div>
+			</div>
+			<!-- /default unordered list markup -->
+
+		</div>
+
+	
+	</div>
+
+
+</div>
+<!-- /content area -->
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		// collapse all nodes that have children initially
+		document.querySelectorAll('.coa-tree li').forEach(function(li) {
+			if (li.querySelector('ul')) li.classList.add('collapsed');
+		});
+
+		// use event delegation for toggling individual nodes
+		document.querySelector('.coa-tree-wrap').addEventListener('click', function (e) {
+			var lbl = e.target.closest('.coa-label');
+			if (!lbl) return;
+			var li = lbl.closest('li');
+			if (!li) return;
+			if (li.querySelector('ul')) li.classList.toggle('collapsed');
+		});
+
+		// Expand All
+		document.getElementById('expandAll').addEventListener('click', function () {
+			document.querySelectorAll('.coa-tree li').forEach(function(li) {
+				if (li.querySelector('ul')) li.classList.remove('collapsed');
+			});
+		});
+
+		// Collapse All
+		document.getElementById('collapseAll').addEventListener('click', function () {
+			document.querySelectorAll('.coa-tree li').forEach(function(li) {
+				if (li.querySelector('ul')) li.classList.add('collapsed');
+			});
+		});
+	});
+</script>

@@ -1,6 +1,7 @@
 ﻿using MainModels;
 using MainModels.DTOModels;
 using MainModels.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace MarketBal.Repository.AccountingRP
 {
@@ -23,9 +24,41 @@ namespace MarketBal.Repository.AccountingRP
         {
             try
             {
-                var query = "SELECT * FROM ChartOfAccounts WHERE IsActive = 1 ORDER BY AccountNumber";
-                var result = await _db.GetDataListWithQueryAndParam<ChartOfAccountVM>(query);
-                return result.ToList();
+                var allAccounts = await _onedb.ChartOfAccounts
+             .Select(x => new ChartOfAccountVM
+             {
+                 CoaId = x.CoaId,
+                 AccountCode = x.AccountCode,
+                 AccountName = x.AccountName,
+                 AccountType = x.AccountType,
+                 ParentCoaId = x.ParentCoaId,
+                 IsActive = x.IsActive,
+                 CreatedAt = x.CreatedAt,
+             })
+             .ToListAsync();
+
+                // 2️⃣ Recursive build
+                List<ChartOfAccountVM> BuildTree(List<ChartOfAccountVM> all, int? parentId)
+                {
+                    return all
+                        .Where(x => x.ParentCoaId == parentId)
+                        .Select(x => new ChartOfAccountVM
+                        {
+                            CoaId = x.CoaId,
+                            AccountCode = x.AccountCode,
+                            AccountName = x.AccountName,
+                            AccountType = x.AccountType,
+                            ParentCoaId = x.ParentCoaId,
+                            IsActive = x.IsActive,
+                            CreatedAt = x.CreatedAt,
+                            Children = BuildTree(all, x.CoaId) // recursion here 🔁
+                        })
+                        .ToList();
+                }
+
+                // 3️⃣ Start recursion from root (ParentCoaId == null)
+                return BuildTree(allAccounts, null);
+
             }
             catch (Exception ex)
             {

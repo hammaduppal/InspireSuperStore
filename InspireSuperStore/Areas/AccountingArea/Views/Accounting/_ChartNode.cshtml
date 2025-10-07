@@ -1,0 +1,17 @@
+﻿@using MainModels.DTOModels
+@model ChartOfAccountVM
+
+<li class="coa-node">
+    <span class="coa-label">@Model.AccountCode &nbsp; @Model.AccountName</span>
+
+    @* if this node has children, render them recursively *@
+    @if (Model.Children != null && Model.Children.Any())
+    {
+        <ul>
+            @foreach (var child in Model.Children)
+            {
+                @await Html.PartialAsync("_ChartNode", child)
+            }
+        </ul>
+    }
+</li>

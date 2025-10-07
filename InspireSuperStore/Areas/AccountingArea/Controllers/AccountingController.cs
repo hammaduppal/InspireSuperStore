@@ -1,4 +1,5 @@
-﻿using MainModels.Models;
+﻿using MainModels.DTOModels;
+using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository.AccountingRP;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +12,7 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
     [Route("[controller]/[action]")]
     public class AccountingController : Controller
     {
+        PagesViewModel vm = new PagesViewModel();
         private readonly ILogger<AccountingController> _logger;
         private readonly IConfiguration _configuration;
         private readonly JournalsRepository _journalRepo;
@@ -26,8 +28,8 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
         }
         public async Task<IActionResult> ChartOfAccounts()
         {
-            var chartOfAccounts = await _chartOfAccountRepo.GetAllChartOfAccounts();
-            return View(chartOfAccounts);
+            vm.ChartofAccounts = await _chartOfAccountRepo.GetAllChartOfAccounts();
+            return View(vm);
         }
 
 
