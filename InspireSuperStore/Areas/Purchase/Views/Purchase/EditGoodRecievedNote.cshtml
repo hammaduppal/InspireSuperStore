@@ -61,7 +61,7 @@
 						@{
 							var selectedType = Model.PurchaseMaster.PurchaseType ?? (int)PurchaseType.Requisition;
 						}
-						@foreach (PurchaseType status in Enum.GetValues(typeof(RequisitionTypes)))
+						@foreach (PurchaseType status in Enum.GetValues(typeof(PurchaseType)))
 						{
 							<option value="@((int)status)" @(selectedType == (int)status ? "selected" : "")>
 								@status

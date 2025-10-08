@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MarketBal.Repository.PurchaseRP
 {
-    public class PurchaseRepository 
+    public class PurchaseRepository
     {
         private readonly IConfiguration _config;
         private readonly DBManager _db;
@@ -25,9 +25,9 @@ namespace MarketBal.Repository.PurchaseRP
             _dap = new DapperContext(_config);
         }
 
-     
-       //Save As Requisition
-    
+
+        //Save As Requisition
+
         public async Task<int> SavePurchase(PurchaseDataDto model)
         {
             var groupedItems = model.Items
@@ -53,7 +53,7 @@ namespace MarketBal.Repository.PurchaseRP
                     BranchId = commonParams.BranchId,
                     PurchaseDate = commonParams.CreatedOn,
                     IsActive = commonParams.IsActive,
-                    GrandTotal = model.GrandTotal ,
+                    GrandTotal = model.GrandTotal,
                     DiscountAmount = model.Discount,
                     PurchaseMasterId = pmId,
                     SupplierId = model.SupplierId,
@@ -90,13 +90,13 @@ namespace MarketBal.Repository.PurchaseRP
 
                 throw;
             }
-            
+
         }
-       //Get Single Requisition
-       public async Task<PurchaseMasterVM> GetSingleRequisition(Guid Id,AppConstants.PurchaseType purchaseType)
+        //Get Single Requisition
+        public async Task<PurchaseMasterVM> GetSingleRequisition(Guid Id, AppConstants.PurchaseType purchaseType)
         {
             var purchase = await _onedb.PurchaseMasters
-                .Where(pm => pm.PurchaseMasterId == Id&& pm.PurchaseType==(int)purchaseType)
+                .Where(pm => pm.PurchaseMasterId == Id && pm.PurchaseType == (int)purchaseType)
                 .Select(pm => new PurchaseMasterVM
                 {
                     PurchaseMasterId = pm.PurchaseMasterId,
@@ -121,7 +121,7 @@ namespace MarketBal.Repository.PurchaseRP
                         UnitPrice = pd.UnitPrice,
                         TotalPrice = pd.TotalPrice,
                         LineTotal = pd.LineTotal,
-                        VariantId=pd.VariantId,
+                        VariantId = pd.VariantId,
                         ProductVariant = new ProductVariantVM
                         {
                             VariantId = Guid.Parse(pd.VariantId.ToString()),
@@ -172,7 +172,7 @@ namespace MarketBal.Repository.PurchaseRP
                 Createdby = p.Createdby,
                 ModifiedOn = p.ModifiedOn,
                 BranchId = p.BranchId,
-                SupplierBusinessName=p.Supplier.SupplierBusinessName
+                SupplierBusinessName = p.Supplier.SupplierBusinessName
             }).ToListAsync();
         }
 
@@ -190,7 +190,7 @@ namespace MarketBal.Repository.PurchaseRP
             result.Qty = model.Qty;
             await _onedb.SaveChangesAsync();
             var purchaseMaster = await _onedb.PurchaseMasters
-            .Include(x => x.PurchaseDetails) 
+            .Include(x => x.PurchaseDetails)
             .FirstOrDefaultAsync(x => x.PurchaseMasterId == model.PurchaseMasterId);
 
             if (purchaseMaster != null)
@@ -203,7 +203,7 @@ namespace MarketBal.Repository.PurchaseRP
         }
         public async Task<int> UpdatePOSTATUS(PurchaseMasterVM model)
         {
-            var result =await _onedb.PurchaseMasters.Where(x => x.PurchaseMasterId == model.PurchaseMasterId).FirstOrDefaultAsync();
+            var result = await _onedb.PurchaseMasters.Where(x => x.PurchaseMasterId == model.PurchaseMasterId).FirstOrDefaultAsync();
             result.Status = model.Status;
             return await _onedb.SaveChangesAsync();
         }
@@ -317,14 +317,14 @@ namespace MarketBal.Repository.PurchaseRP
                 var journalEntry = new JournalEntry
                 {
                     JournalEntryId = Guid.NewGuid(),
-                    EntryDate = DateTime.UtcNow, 
-                    EntryNumber=newJournalEntry,
+                    EntryDate = DateTime.UtcNow,
+                    EntryNumber = newJournalEntry,
                     ReferenceNumber = master.PurchaseNumber,
                     BranchId = branchId.Value,
                     Description = $"GRN posted for Purchase #{master.PurchaseNumber}",
                     CreatedBy = master.Createdby,
                     CreatedAt = DateTime.UtcNow,
-                    SourceModule="Purchase"
+                    SourceModule = "Purchase"
                 };
                 _onedb.JournalEntries.Add(journalEntry);
 
@@ -358,6 +358,21 @@ namespace MarketBal.Repository.PurchaseRP
                     Credit = master.GrandTotal ?? 0M,
                     Description = "Accounts Payable for Purchase"
                 });
+                _onedb.AccountPayables.Add(new AccountPayable
+                {
+                    Apid = Guid.NewGuid(),
+                    Amount = master.GrandTotal.Value,
+                    PaidAmount = 0,
+                    Balance = master.GrandTotal,
+                    JournalEntryId = journalEntry.JournalEntryId,
+                    BranchId = master.BranchId.Value,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = AppDataUtility.SessionUser.Id,
+                    DueDate = DateTime.Now,
+                    PurchaseId = master.PurchaseMasterId,
+                    SupplierId = master.SupplierId.Value,
+                    Status = AppConstants.PaymentStatus.Pending.ToString(),
+                });
                 _onedb.SaveChanges();
             }
             catch (Exception ex)
@@ -365,7 +380,7 @@ namespace MarketBal.Repository.PurchaseRP
 
                 throw;
             }
-           
+
             return 1;
         }
 

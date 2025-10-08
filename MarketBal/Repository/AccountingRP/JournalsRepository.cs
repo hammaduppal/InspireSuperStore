@@ -2,6 +2,7 @@
 using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
+using Microsoft.EntityFrameworkCore;
 using static MainModels.DTOModels.AppConstants;
 using static MainModels.Util.CommonParamHelper;
 
@@ -40,7 +41,7 @@ namespace MarketBal.Repository.AccountingRP
                     CreatedBy = AppDataUtility.SessionUser.Id,
                     CreatedAt = commonParams.CreatedOn.Value,
                     SourceModule = "Sales",
-                    EntryNumber = invoiceMaster.InvoiceNo
+                    EntryNumber = await GetNewJournalNumber()
                 };
 
                 await _onedb.JournalEntries.AddAsync(journalEntry);
@@ -58,7 +59,9 @@ namespace MarketBal.Repository.AccountingRP
                         CoaId = CoaAccounts.Cash, // 🔸 replace with your actual COA ID for Cash
                         Description = "Cash Sale",
                         Debit = invoiceMaster.GrandTotal,
-                        Credit = 0, ReferenceType="Invoice", ReferenceId=invoiceMaster.InvoiceMasterId
+                        Credit = 0,
+                        ReferenceType = "Invoice",
+                        ReferenceId = invoiceMaster.InvoiceMasterId
                     });
                 }
                 else
@@ -151,6 +154,23 @@ namespace MarketBal.Repository.AccountingRP
             }
         }
 
+        public async Task<string> GetNewJournalNumber()
+        {
+            var lastJournal = await _onedb.JournalEntries
+                    .OrderByDescending(i => i.CreatedAt)
+                    .FirstOrDefaultAsync();
+            var invoicePrefix = "JV";
+            string newJournalEntry = $"{invoicePrefix}-001";
 
+            if (lastJournal != null && !string.IsNullOrEmpty(lastJournal.EntryNumber))
+            {
+                var lastNo = lastJournal.EntryNumber.Split('-')[1];
+                if (int.TryParse(lastNo, out int number))
+                {
+                    newJournalEntry = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
+                }
+            }
+            return newJournalEntry;
+        }
     }
 }

@@ -1,0 +1,106 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Receivables";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+	int count = 1;
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+				<span class="breadcrumb-item active">Accounts Receiveable</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+<!-- Content area -->
+<div class="content">
+
+	<!-- Invoice archive -->
+	<div class="card shadow-5">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Receivables</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<table class="table table-lg invoice-archive">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Customer Name</th>
+					<th>Customer Code</th>
+					<th>Status</th>
+					<th>Due Date</th>
+					<th>Total Amount</th>
+					<th>Total Received</th>
+					<th>Total Balance</th>
+
+					<th class="text-center">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+
+				@foreach (var item in Model.AccountReceiables)
+				{
+					
+						<tr class="bg-light">
+							<td>@count</td>
+							<td>
+								<h6 class="mb-0">
+									@item.CustomerName
+								</h6>
+							</td>
+							<td>
+								@item.CustomerCode
+							</td>
+							<td>
+								@item.Status
+
+							</td>
+							<td>
+								@item?.DueDate
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.Amount </h6>
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.ReceivedAmount </h6>
+							</td>
+							<td>
+								<h6 class="mb-0 font-weight-bold">@item?.Balance </h6>
+							</td>
+							<td class="text-center">
+								<div class="list-icons list-icons-extended">
+								<a href="/Accounting/ReceivablesCustomers?CustomerId=@item?.CustomerId" class="list-icons-item"><i class="icon-file-plus"></i></a>
+								<a href="/Accounting/ReceiveCash?CustomerId=@item?.CustomerId" class="list-icons-item"><i class="mi-attach-money"></i></a>
+
+
+								</div>
+							</td>
+						</tr>
+					
+					
+				}
+			</tbody>
+		</table>
+	</div>
+	<!-- /invoice archive -->
+
+</div>
+<!-- /content area -->

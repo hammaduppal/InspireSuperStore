@@ -141,8 +141,10 @@
 					</ul>
 				</li>
 			}
-			<li class="nav-item nav-item-submenu">
-				<a href="#" class="nav-link"><i class="mi-account-balance-wallet"></i> <span>Accounting</span></a>
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Accounts))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link"><i class="mi-account-balance-wallet"></i> <span>Accounting</span></a>
 
 				<ul class="nav nav-group-sub" data-submenu-title="Accounting Section">
 
@@ -166,7 +168,7 @@
 					<li class="nav-item nav-item-submenu">
 						<a href="#" class="nav-link"><i class="mi-attach-money"></i> Accounts Receivable</a>
 						<ul class="nav nav-group-sub">
-							<li class="nav-item"><a href="/Accounting/Receivables/Customers" class="nav-link"><i class="mi-people"></i> Credit Customers</a></li>
+							<li class="nav-item"><a href="/Accounting/Receivables" class="nav-link"><i class="mi-people"></i> Credit Customers</a></li>
 							<li class="nav-item"><a href="/Accounting/Receivables/Invoices" class="nav-link"><i class="mi-receipt"></i> Customer Invoices</a></li>
 							<li class="nav-item"><a href="/Accounting/Receivables/Payments" class="nav-link"><i class="mi-payment"></i> Receive Payments</a></li>
 							<li class="nav-item"><a href="/Accounting/Receivables/Statements" class="nav-link"><i class="mi-description"></i> Customer Statements</a></li>
@@ -198,7 +200,7 @@
 
 				</ul>
 			</li>
-
+			}
 		</ul>
 	</div>
 	<!-- /main navigation -->
