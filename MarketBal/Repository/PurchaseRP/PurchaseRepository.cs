@@ -5,6 +5,7 @@ using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Helper;
+using MarketBal.Repository.AccountingRP;
 using Microsoft.EntityFrameworkCore;
 
 namespace MarketBal.Repository.PurchaseRP
@@ -16,6 +17,7 @@ namespace MarketBal.Repository.PurchaseRP
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly DapperContext _dap;
+        private readonly JournalsRepository _journalRepo;
         public PurchaseRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -23,6 +25,7 @@ namespace MarketBal.Repository.PurchaseRP
             _api = new ApiMethods();
             _onedb = oneDb;
             _dap = new DapperContext(_config);
+            _journalRepo = new JournalsRepository(_config, oneDb);
         }
 
 
@@ -300,80 +303,7 @@ namespace MarketBal.Repository.PurchaseRP
             await _onedb.SaveChangesAsync();
             try
             {
-                var lastJournal = await _onedb.JournalEntries
-                     .OrderByDescending(i => i.CreatedAt)
-                     .FirstOrDefaultAsync();
-                var invoicePrefix = "JV";
-                string newJournalEntry = $"{invoicePrefix}-001";
-
-                if (lastJournal != null && !string.IsNullOrEmpty(lastJournal.EntryNumber))
-                {
-                    var lastNo = lastJournal.EntryNumber.Split('-')[1];
-                    if (int.TryParse(lastNo, out int number))
-                    {
-                        newJournalEntry = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
-                    }
-                }
-                var journalEntry = new JournalEntry
-                {
-                    JournalEntryId = Guid.NewGuid(),
-                    EntryDate = DateTime.UtcNow,
-                    EntryNumber = newJournalEntry,
-                    ReferenceNumber = master.PurchaseNumber,
-                    BranchId = branchId.Value,
-                    Description = $"GRN posted for Purchase #{master.PurchaseNumber}",
-                    CreatedBy = master.Createdby,
-                    CreatedAt = DateTime.UtcNow,
-                    SourceModule = "Purchase"
-                };
-                _onedb.JournalEntries.Add(journalEntry);
-
-                _onedb.JournalLines.Add(new JournalLine
-                {
-                    JournalLineId = Guid.NewGuid(),
-                    JournalEntryId = journalEntry.JournalEntryId,
-                    CoaId = 7, // from ChartOfAccounts (Inventory)
-                    Debit = master.TotalAmount ?? 0M,
-                    Credit = 0,
-                    Description = "Inventory increased by GRN"
-                });
-                if (master.TaxAmount > 0)
-                {
-                    _onedb.JournalLines.Add(new JournalLine
-                    {
-                        JournalLineId = Guid.NewGuid(),
-                        JournalEntryId = journalEntry.JournalEntryId,
-                        CoaId = 39, // Purchase Tax Account
-                        Debit = master.TaxAmount ?? 0M,
-                        Credit = 0,
-                        Description = "Input Tax on Purchase"
-                    });
-                }
-                _onedb.JournalLines.Add(new JournalLine
-                {
-                    JournalLineId = Guid.NewGuid(),
-                    JournalEntryId = journalEntry.JournalEntryId,
-                    CoaId = 13, // Supplier's account in COA
-                    Debit = 0,
-                    Credit = master.GrandTotal ?? 0M,
-                    Description = "Accounts Payable for Purchase"
-                });
-                _onedb.AccountPayables.Add(new AccountPayable
-                {
-                    Apid = Guid.NewGuid(),
-                    Amount = master.GrandTotal.Value,
-                    PaidAmount = 0,
-                    Balance = master.GrandTotal,
-                    JournalEntryId = journalEntry.JournalEntryId,
-                    BranchId = master.BranchId.Value,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = AppDataUtility.SessionUser.Id,
-                    DueDate = DateTime.Now,
-                    PurchaseId = master.PurchaseMasterId,
-                    SupplierId = master.SupplierId.Value,
-                    Status = AppConstants.PaymentStatus.Pending.ToString(),
-                });
-                _onedb.SaveChanges();
+                await _journalRepo.AddPurchasejournals(master);
             }
             catch (Exception ex)
             {

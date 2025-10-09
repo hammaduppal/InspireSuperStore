@@ -1,0 +1,85 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+    ViewData["Title"] = "JournalEntries";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+	int count = 1;
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+				<span class="breadcrumb-item active">Journal Entries</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+	<!-- Invoice archive -->
+	<div class="card shadow-5">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Journal Enteries</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+					</div>
+				</div>
+			</div>
+		</div>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Entry #</th>
+                    <th>Date</th>
+                    <th>Reference</th>
+                    <th>Description</th>
+                    <th>Module</th>
+                    <th>Total Debit</th>
+                    <th>Total Credit</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in Model.JournalEnteries.OrderBy(x=>x.EntryNumber))
+                {
+                    <tr class="table-primary">
+                        <td>@entry.EntryNumber</td>
+                        <td>@entry.EntryDate.ToShortDateString()</td>
+                        <td>@entry.ReferenceNumber</td>
+                        <td>@entry.Description</td>
+                        <td>@entry.SourceModule</td>
+                        <td>@entry.TotalDebit</td>
+                        <td>@entry.TotalCredit</td>
+                    </tr>
+
+                    @foreach (var line in entry.JournalLines)
+                    {
+                        <tr>
+                            <td></td>
+                            <td colspan="2">@line.AccountCode - @line.AccountName</td>
+                            <td>@line.Description</td>
+                            <td></td>
+                            <td>@line.Debit</td>
+                            <td>@line.Credit</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+	</div>
+	<!-- /invoice archive -->
+
+</div>
+<!-- /content area -->

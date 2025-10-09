@@ -2,8 +2,8 @@
 @using MainModels.Util
 @model PagesViewModel
 @{
-	ViewData["Title"] = "Receivables";
-	Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Payables";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 	int count = 1;
 }
 
@@ -13,7 +13,7 @@
 		<div class="d-flex">
 			<div class="breadcrumb">
 				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
-				<span class="breadcrumb-item active">Accounts Receiveable</span>
+				<span class="breadcrumb-item active">Accounts Payables</span>
 			</div>
 
 			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
@@ -22,7 +22,6 @@
 
 
 </div>
-
 <!-- Content area -->
 <div class="content">
 
@@ -34,7 +33,6 @@
 
 				<div class="header-elements d-none">
 					<div class="d-flex justify-content-center">
-						
 					</div>
 				</div>
 			</div>
@@ -45,7 +43,6 @@
 				<tr>
 					<th>#</th>
 					<th>Customer Name</th>
-					<th>Customer Code</th>
 					<th>Status</th>
 					<th>Due Date</th>
 					<th>Total Amount</th>
@@ -57,45 +54,43 @@
 			</thead>
 			<tbody>
 
-				@foreach (var item in Model.AccountReceiables)
+				@foreach (var item in Model.AccountPayables)
 				{
-					
-						<tr class="bg-light">
-							<td>@count</td>
-							<td>
-								<h6 class="mb-0">
-									@item.CustomerName
-								</h6>
-							</td>
-							<td>
-								@item.CustomerCode
-							</td>
-							<td>
-								@item.Status
 
-							</td>
-							<td>
-								@item?.DueDate
-							</td>
-							<td>
-								<h6 class="mb-0 font-weight-bold">@item?.Amount </h6>
-							</td>
-							<td>
-								<h6 class="mb-0 font-weight-bold">@item?.ReceivedAmount </h6>
-							</td>
-							<td>
-								<h6 class="mb-0 font-weight-bold">@item?.Balance </h6>
-							</td>
-							<td class="text-center">
-								<div class="list-icons list-icons-extended">
-								<a href="/Accounting/PayAblesSuppliers?CustomerId=@item?.CustomerId" class="list-icons-item"><i class="icon-file-plus"></i></a>
+					<tr class="bg-light">
+						<td>@count</td>
+						<td>
+							<h6 class="mb-0">
+								@item.SupplierBusinessName
+							</h6>
+						</td>
+						
+						<td>
+							@item.Status
+
+						</td>
+						<td>
+							@item?.DueDate
+						</td>
+						<td>
+							<h6 class="mb-0 font-weight-bold">@item?.Amount </h6>
+						</td>
+						<td>
+							<h6 class="mb-0 font-weight-bold">@item?.PaidAmount </h6>
+						</td>
+						<td>
+							<h6 class="mb-0 font-weight-bold">@item?.Balance </h6>
+						</td>
+						<td class="text-center">
+							<div class="list-icons list-icons-extended">
+								<a href="/Accounting/PayablesSuppliers?SupplierId=@item?.SupplierId" class="list-icons-item"><i class="icon-file-plus"></i></a>
 
 
-								</div>
-							</td>
-						</tr>
-					
-					
+							</div>
+						</td>
+					</tr>
+
+
 				}
 			</tbody>
 		</table>

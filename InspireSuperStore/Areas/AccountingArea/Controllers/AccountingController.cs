@@ -19,6 +19,7 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
         private readonly JournalsRepository _journalRepo;
         private readonly ChartOfAccountRepo _chartOfAccountRepo;
         private readonly AccountsReceivableRepository _accountreceivable;
+        private readonly AccountPayableRP _accountPayableRP;
         private readonly OneDb _onedb;
         public AccountingController(ILogger<AccountingController> logger, IConfiguration configuration, OneDb onedb)
         {
@@ -28,6 +29,7 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
             _accountreceivable = new AccountsReceivableRepository(_configuration, _onedb);
             _journalRepo = new JournalsRepository(_configuration, _onedb);
             _chartOfAccountRepo = new ChartOfAccountRepo(_configuration, _onedb);
+            _accountPayableRP = new AccountPayableRP(_configuration, _onedb);
         }
         public async Task<IActionResult> ChartOfAccounts()
         {
@@ -108,7 +110,7 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
                     SourceModule = "AR Payment",
                     CreatedBy = AppDataUtility.SessionUser.Id,
                     CreatedAt = DateTime.UtcNow,
-                    EntryNumber= newVoucherNumber
+                    EntryNumber = newVoucherNumber
                 };
                 _onedb.JournalEntries.Add(journalEntry);
 
@@ -117,7 +119,7 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
                 {
                     JournalLineId = Guid.NewGuid(),
                     JournalEntryId = journalEntry.JournalEntryId,
-                    CoaId = AppConstants.CoaAccounts.Cash,
+                    CoaId = AppConstants.CoaAccounts.CashOnHand,
                     Description = "Cash received",
                     Debit = amount,
                     Credit = 0
@@ -154,10 +156,139 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
             }
         }
 
-        //public IActionResult JournalEntries()
-        //{
-        //    return View();
-        //}
+
+        #region Payables
+        public async Task<IActionResult> Payables()
+        {
+            vm.AccountPayables = await _accountPayableRP.GetPayAbles();
+            return View(vm);
+        }
+
+        public async Task<IActionResult> PayablesSuppliers(int SupplierId)
+        {
+            vm.AccountPayables = await _accountPayableRP.PayableToSupplier(SupplierId);
+            return View(vm);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PayPayment(Guid apId, int supplierId, decimal amount)
+        {
+            try
+            {
+
+
+                if (amount <= 0) return Json(new { success = false, message = "Invalid amount" });
+
+                var ap = await _onedb.AccountPayables.FirstOrDefaultAsync(a => a.Apid == apId && a.SupplierId == supplierId);
+                if (ap == null) return Json(new { success = false, message = "Receivable record not found" });
+
+                // Update AP
+                ap.PaidAmount = (ap.PaidAmount ?? 0M) + amount;
+                var invoice = _onedb.PurchaseMasters.Where(x => x.PurchaseMasterId == ap.PurchaseId).FirstOrDefault();
+
+                // update status
+                if (ap.PaidAmount >= ap.Amount)
+                {
+                    ap.Status = AppConstants.PaymentStatus.Paid.ToString();
+
+                    // Also update linked invoice (fully paid)
+                    if (invoice != null)
+                    {
+                        invoice.Status = (int)AppConstants.PaymentStatus.Paid;
+                    }
+                }
+                else if (ap.PaidAmount > 0)
+                {
+                    ap.Status = AppConstants.PaymentStatus.PartiallyPaid.ToString();
+
+                    // Invoice partially paid
+                    if (invoice != null)
+                    {
+                        invoice.Status = (int)AppConstants.PaymentStatus.PartiallyPaid;
+                    }
+                }
+                else
+                {
+                    ap.Status = AppConstants.PaymentStatus.Pending.ToString();
+
+                    // Invoice still unpaid
+                    if (invoice != null)
+                    {
+                        invoice.Status = (int)AppConstants.PaymentStatus.Pending;
+                    }
+                }
+                // Save AP first (so we have latest balance)
+                await _onedb.SaveChangesAsync();
+                var newVoucherNumber = await _journalRepo.GetNewJournalNumber();
+                // Create Journal Entry and JournalLines (use your accounting repo/service ideally)
+                var journalEntry = new JournalEntry
+                {
+                    JournalEntryId = Guid.NewGuid(),
+                    EntryDate = DateTime.UtcNow,
+                    ReferenceNumber = invoice.PurchaseNumber,
+                    Description = $"Payment made for Purchase Invoice {invoice.PurchaseNumber}",
+                    BranchId = ap.BranchId,
+                    SourceModule = "AP Payment",
+                    CreatedBy = AppDataUtility.SessionUser.Id,
+                    CreatedAt = DateTime.UtcNow,
+                    EntryNumber = newVoucherNumber
+                };
+                _onedb.JournalEntries.Add(journalEntry);
+
+                // Debit: Cash/Bank (use a mapped COA id for Cash)
+                _onedb.JournalLines.Add(new JournalLine
+                {
+                    JournalLineId = Guid.NewGuid(),
+                    JournalEntryId = journalEntry.JournalEntryId,
+                    CoaId = AppConstants.CoaAccounts.AccountsPayable, // 👈 Payable COA
+                    Description = $"Payment against Supplier {ap.SupplierId}",
+                    Debit = amount,
+                    Credit = 0
+                });
+
+                // Credit: Cash/Bank (outflow of funds)
+                _onedb.JournalLines.Add(new JournalLine
+                {
+                    JournalLineId = Guid.NewGuid(),
+                    JournalEntryId = journalEntry.JournalEntryId,
+                    CoaId = AppConstants.CoaAccounts.CashOnHand, // or Bank if paid via bank
+                    Description = "Cash/Bank payment made",
+                    Debit = 0,
+                    Credit = amount
+                });
+
+
+                await _onedb.SaveChangesAsync();
+
+                var newBalance = ap.Amount - ap.PaidAmount;
+
+                return Json(new
+                {
+                    success = true,
+                    newBalance = newBalance,
+                    status = ap.Status,
+                    receivedAmount = ap.PaidAmount,
+                    totalAmount = ap.Amount
+                });
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
+
+
+
+        #endregion
+        public async Task<IActionResult> JournalEntries()
+        {
+            vm.JournalEnteries = await _journalRepo.GetAllJournalEntries();
+            return View(vm);
+        }
 
 
 

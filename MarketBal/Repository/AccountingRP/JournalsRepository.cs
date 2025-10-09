@@ -16,6 +16,7 @@ namespace MarketBal.Repository.AccountingRP
         private readonly OneDb _onedb;
         private readonly DapperContext _dap;
         private readonly AccountsReceivableRepository _accountsReceivableRepository;
+        private readonly AccountPayableRP _accountPayable;
         public JournalsRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -24,6 +25,7 @@ namespace MarketBal.Repository.AccountingRP
             _onedb = oneDb;
             _dap = new DapperContext(_config);
             _accountsReceivableRepository = new AccountsReceivableRepository(_config, _onedb);
+            _accountPayable = new AccountPayableRP(_config, _onedb);
         }
         public async Task<int> AddInvoiceJournals(InvoiceMaster invoiceMaster, bool isCash, Customer customer, decimal cost)
         {
@@ -56,7 +58,7 @@ namespace MarketBal.Repository.AccountingRP
                     {
                         JournalLineId = Guid.NewGuid(),
                         JournalEntryId = journalEntry.JournalEntryId,
-                        CoaId = CoaAccounts.Cash, // 🔸 replace with your actual COA ID for Cash
+                        CoaId = CoaAccounts.CashOnHand, // 🔸 replace with your actual COA ID for Cash
                         Description = "Cash Sale",
                         Debit = invoiceMaster.GrandTotal,
                         Credit = 0,
@@ -88,7 +90,7 @@ namespace MarketBal.Repository.AccountingRP
                 {
                     JournalLineId = Guid.NewGuid(),
                     JournalEntryId = journalEntry.JournalEntryId,
-                    CoaId = CoaAccounts.SalesRevenue, // 🔸 your Sales Income COA ID
+                    CoaId = CoaAccounts.SalesIncome, // 🔸 your Sales Income COA ID
                     Description = "Sales Revenue",
                     Debit = 0,
                     Credit = invoiceMaster.TotalAmount,
@@ -105,7 +107,7 @@ namespace MarketBal.Repository.AccountingRP
                     {
                         JournalLineId = Guid.NewGuid(),
                         JournalEntryId = journalEntry.JournalEntryId,
-                        CoaId = CoaAccounts.OutputTaxPayable, // 🔸 your Output VAT COA ID
+                        CoaId = CoaAccounts.TaxesPayable, // 🔸 your Output VAT COA ID
                         Description = "Output VAT Payable",
                         Debit = 0,
                         Credit = invoiceMaster.TaxAmount,
@@ -147,12 +149,108 @@ namespace MarketBal.Repository.AccountingRP
                 await _onedb.SaveChangesAsync();
                 return 1;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Optional: log ex.Message
                 throw;
             }
         }
+
+        public async Task<int> AddPurchasejournals(PurchaseMaster master)
+        {
+            var journalEntry = new JournalEntry
+            {
+                JournalEntryId = Guid.NewGuid(),
+                EntryDate = DateTime.UtcNow,
+                EntryNumber = await GetNewJournalNumber(),
+                ReferenceNumber = master.PurchaseNumber,
+                BranchId = master.BranchId.Value,
+                Description = $"GRN posted for Purchase #{master.PurchaseNumber}",
+                CreatedBy = master.Createdby,
+                CreatedAt = DateTime.UtcNow,
+                SourceModule = "Purchase"
+            };
+            _onedb.JournalEntries.Add(journalEntry);
+
+            _onedb.JournalLines.Add(new JournalLine
+            {
+                JournalLineId = Guid.NewGuid(),
+                JournalEntryId = journalEntry.JournalEntryId,
+                CoaId = 7, // from ChartOfAccounts (Inventory)
+                Debit = master.TotalAmount ?? 0M,
+                Credit = 0,
+                Description = "Inventory increased by GRN"
+            });
+            if (AppDataUtility.SystemPreferences.EnableTax && master.TaxAmount > 0)
+            {
+                _onedb.JournalLines.Add(new JournalLine
+                {
+                    JournalLineId = Guid.NewGuid(),
+                    JournalEntryId = journalEntry.JournalEntryId,
+                    CoaId = 39, // Purchase Tax Account
+                    Debit = master.TaxAmount ?? 0M,
+                    Credit = 0,
+                    Description = "Input Tax on Purchase"
+                });
+            }
+            _onedb.JournalLines.Add(new JournalLine
+            {
+                JournalLineId = Guid.NewGuid(),
+                JournalEntryId = journalEntry.JournalEntryId,
+                CoaId = 13, // Supplier's account in COA
+                Debit = 0,
+                Credit = master.GrandTotal ?? 0M,
+                Description = "Accounts Payable for Purchase"
+            });
+            _onedb.SaveChanges();
+            await _accountPayable.AddCreditPurchase(master, journalEntry);
+
+            return 1;
+        }
+
+        public async Task<List<JournalEntryVM>> GetAllJournalEntries()
+        {
+            var data = await _onedb.JournalEntries
+                .Include(e => e.JournalLines)
+                .ThenInclude(l => l.Coa) // Assuming JournalLine has navigation property 'Coa'
+                .Select(e => new JournalEntryVM
+                {
+                    JournalEntryId = e.JournalEntryId,
+                    EntryNumber = e.EntryNumber,
+                    EntryDate = e.EntryDate,
+                    ReferenceNumber = e.ReferenceNumber,
+                    Description = e.Description,
+                    SourceModule = e.SourceModule,
+                    //BranchName = e.Branch != null ? e.Branch.BranchName : "—",
+                    CreatedBy = e.CreatedBy,
+                    TotalDebit = e.JournalLines.Sum(l => l.Debit),
+                    TotalCredit = e.JournalLines.Sum(l => l.Credit),
+
+                    JournalLines = e.JournalLines.Select(l => new JournalLineVM
+                    {
+                        JournalLineId = l.JournalLineId,
+                        AccountName = l.Coa.AccountName,
+                        AccountCode = l.Coa.AccountCode,
+                        Description = l.Description,
+                        Debit = l.Debit,
+                        Credit = l.Credit
+                    }).ToList()
+                })
+                .OrderByDescending(e => e.EntryDate)
+                .ToListAsync();
+
+            return data;
+        }
+
+
+
+
+
+
+
+
+
+
 
         public async Task<string> GetNewJournalNumber()
         {
@@ -172,5 +270,6 @@ namespace MarketBal.Repository.AccountingRP
             }
             return newJournalEntry;
         }
+
     }
 }
