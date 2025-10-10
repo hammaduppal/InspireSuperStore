@@ -1,4 +1,5 @@
-﻿using MainModels.DTOModels;
+﻿using System.Threading.Tasks;
+using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository.AccountingRP;
@@ -291,12 +292,38 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
         }
 
 
+        public IActionResult TrialBalance()
+        {
+
+            return View(vm);
+        }
+
+        public async Task<IActionResult> _GetTrialBalance(DateTime? fromDate, DateTime? toDate)
+        {
+            vm.TrialBalances = await _chartOfAccountRepo.GetTrialBalances(fromDate, toDate);
+            ViewBag.FromDate = fromDate.Value.ToShortDateString();
+            ViewBag.ToDate = toDate.Value.ToShortDateString();
+
+            return View(vm);
+        }
 
 
-        //public IActionResult Receivables_Invoices()
-        //{
-        //    return View();
-        //}
+        public async Task<IActionResult> Ledger()
+        {
+            vm.ChartofAccounts = await _chartOfAccountRepo.GetChildChartOfAccounts();
+            return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetLedger(int coaId, DateTime? from, DateTime? to)
+        {
+            var ledger = await _chartOfAccountRepo.GetLedger(coaId, from, to);
+            return Json(ledger);
+        }
+
+
+
+
 
         //public IActionResult Receivables_Payments()
         //{

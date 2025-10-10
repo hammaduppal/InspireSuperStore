@@ -1,0 +1,38 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+    ViewData["Title"] = "TrialBalance";
+    Layout = null;
+    int count = 1;
+}
+
+<h4>Trial Balance (@ViewBag.FromDate - @ViewBag.ToDate)</h4>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Account Code</th>
+            <th>Account Name</th>
+            <th>Type</th>
+            <th class="text-end">Debit</th>
+            <th class="text-end">Credit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.TrialBalances)
+        {
+            <tr>
+                <td>@item.AccountCode</td>
+                <td>@item.AccountName</td>
+                <td>@item.AccountType</td>
+                <td class="text-end">@item.TotalDebit.ToString("N2")</td>
+                <td class="text-end">@item.TotalCredit.ToString("N2")</td>
+            </tr>
+        }
+
+        <tr class="fw-bold bg-light">
+            <td colspan="3" class="text-end">TOTAL</td>
+            <td class="text-end">@Model.TrialBalances.Sum(x => x.TotalDebit).ToString("N2")</td>
+            <td class="text-end">@Model.TrialBalances.Sum(x => x.TotalCredit).ToString("N2")</td>
+        </tr>
+    </tbody>
+</table>

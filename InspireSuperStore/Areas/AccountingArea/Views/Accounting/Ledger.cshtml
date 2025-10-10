@@ -1,0 +1,119 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Ledger";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+				<span class="breadcrumb-item active">Ledgers</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+<!-- Content area -->
+<div class="content">
+
+	<!-- Invoice archive -->
+	<div class="card shadow-5">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Ledger</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<hr />
+
+		<div class="container mt-4">
+			<h4>Ledger</h4>
+			<div class="row mb-3">
+				<div class="col-md-3">
+					<label>Account</label>
+					<select id="coaId" class="form-select">
+						<option value="">-- Select Account --</option>
+						@foreach (var item in Model.ChartofAccounts)
+						{
+							<option value="@item.CoaId">@item.AccountCode @item.AccountName </option>
+						}
+					</select>
+				</div>
+				<div class="col-md-3">
+					<label>From</label>
+					<input type="date" id="fromDate" class="form-control" />
+				</div>
+				<div class="col-md-3">
+					<label>To</label>
+					<input type="date" id="toDate" class="form-control" />
+				</div>
+				<div class="col-md-3">
+					<label>&nbsp;</label><br />
+					<button class="btn btn-primary w-100" id="btnSearch">Search</button>
+				</div>
+			</div>
+
+			<div id="ledgerTable"></div>
+		</div>
+
+	</div>
+	<!-- /invoice archive -->
+
+</div>
+<!-- /content area -->
+<script>
+	$('#btnSearch').click(function () {
+		let coaId = $('#coaId').val();
+		let from = $('#fromDate').val();
+		let to = $('#toDate').val();
+
+		if (!coaId) {
+			alert('Please select an account');
+			return;
+		}
+
+		$.ajax({
+			url: '/Accounting/GetLedger',
+			data: { coaId: coaId, from: from, to: to },
+			success: function (data) {
+				let html = `<table class="table table-bordered">
+					<thead>
+						<tr>
+							<th>Date</th>
+							<th>Description</th>
+							<th>Reference</th>
+							<th class="text-end">Debit</th>
+							<th class="text-end">Credit</th>
+							<th class="text-end">Balance</th>
+						</tr>
+					</thead><tbody>`;
+
+				data.forEach(x => {
+					html += `<tr>
+						<td>${x.EntryDate.split('T')[0]}</td>
+						<td>${x.Description || ''}</td>
+						<td>${x.ReferenceNumber || ''}</td>
+						<td class="text-end">${x.Debit.toFixed(2)}</td>
+						<td class="text-end">${x.Credit.toFixed(2)}</td>
+						<td class="text-end">${x.RunningBalance.toFixed(2)}</td>
+					</tr>`;
+				});
+
+				html += '</tbody></table>';
+				$('#ledgerTable').html(html);
+			}
+		});
+	});
+</script>

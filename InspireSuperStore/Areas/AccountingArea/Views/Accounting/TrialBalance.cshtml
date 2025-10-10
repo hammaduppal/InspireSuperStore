@@ -1,0 +1,127 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+    ViewData["Title"] = "TrialBalance";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+	int count = 1;
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+				<span class="breadcrumb-item active">Trial Balances</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+<!-- Content area -->
+<div class="content">
+
+	<!-- Invoice archive -->
+	<div class="card shadow-5">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Trial Balance</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<div class="row g-2 align-items-end">
+							<div class="col-auto">
+								<label>From</label>
+								<input id="fromDate" class="form-control" type="date" />
+							</div>
+							<div class="col-auto">
+								<label>To</label>
+								<input id="toDate" class="form-control" type="date" />
+							</div>
+							<div class="col-auto">
+								<button id="btnLoad" class="btn btn-primary">Run</button>
+							</div>
+							<div class="col-auto">
+								<button id="btnExport" class="btn btn-outline-secondary">Export CSV</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<hr />
+
+		<div id="tbContainer">
+			<!-- Partial will be injected here -->
+			<div class="text-muted p-3">Select a date range and click <strong>Run</strong>.</div>
+		</div>
+    </div>
+	<!-- /invoice archive -->
+
+</div>
+<!-- /content area -->
+
+<script>
+    $(function () {
+        var $btn = $('#btnLoad');
+        var svcUrl = '@Url.Action("_GetTrialBalance", "Accounting", new { area = "AccountingArea" })';
+
+        function loadTrialBalance() {
+            var from = $('#fromDate').val();
+            var to = $('#toDate').val();
+
+            if (!from || !to) {
+                alert('Please select both From and To dates.');
+                return;
+            }
+
+            $btn.prop('disabled', true).text('Loading...');
+            $('#tbContainer').html('<div class="text-center p-3">Loading...</div>');
+
+            $.get(svcUrl, { fromDate: from, toDate: to })
+                .done(function (html) {
+                    $('#tbContainer').html(html);
+                })
+                .fail(function () {
+                    $('#tbContainer').html('<div class="text-danger p-3">Error loading report. Try again.</div>');
+                })
+                .always(function () {
+                    $btn.prop('disabled', false).text('Run');
+                });
+        }
+
+        // set defaults: first day of month -> today
+        var today = new Date().toISOString().slice(0,10);
+        $('#toDate').val(today);
+        var firstOfMonth = today.slice(0,8) + '01';
+        $('#fromDate').val(firstOfMonth);
+
+        // wire button
+        $btn.on('click', loadTrialBalance);
+
+        // optional: auto-run once on load
+        loadTrialBalance();
+
+        // Export CSV (simple client-side conversion)
+        $('#btnExport').on('click', function () {
+            var rows = [];
+            $('#tbContainer table tbody tr').each(function () {
+                var cols = $(this).find('td').map(function () { return $(this).text().trim(); }).get();
+                if (cols.length) rows.push(cols.join(','));
+            });
+            if (!rows.length) { alert('No data to export'); return; }
+            var csv = 'Account Code,Account Name,Type,Debit,Credit\\n' + rows.join('\\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'TrialBalance.csv';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        });
+    });
+</script>
