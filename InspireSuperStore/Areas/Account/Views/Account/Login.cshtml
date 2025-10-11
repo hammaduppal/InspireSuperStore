@@ -39,91 +39,286 @@
 <body>
 	@await Html.PartialAsync("~/Views/Shared/_PartialAlerts.cshtml")
 	<style>
-		/* Custom styles for the login container */
-		.login-container {
+		/* Base container */
+		.login-page {
+			display: flex;
+			height: 100vh;
+			overflow: hidden;
+			position: relative;
+		}
+
+		/* Fixed right form panel */
+		.login-form-panel {
 			position: fixed;
 			top: 0;
 			right: 0;
 			width: 40%;
 			height: 100%;
-			background-color: #f5f5f5; /* Adjust background color as needed */
-			box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1); /* Optional shadow for design */
+			background: #fff;
 			display: flex;
-			justify-content: center;
 			align-items: center;
-			z-index: 1000; /* Ensure it's on top */
+			justify-content: center;
+			box-shadow: -6px 0 40px rgba(0, 0, 0, 0.1);
+			z-index: 3;
 		}
 
-		.login-form {
-			width: 100%; /* Adjust form width */
-			max-width: 400px;
+		.login-form-wrapper {
+			width: 100%;
+			max-width: 420px;
+			padding: 40px;
+		}
+
+		/* Left side background with text */
+		.login-image-panel {
+			flex: 1;
+			background-image: url('~/global_assets/images/login-bg.jpg');
+			background-size: cover;
+			background-position: center;
+			position: relative;
+			color: #fff;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+			.login-image-panel::before {
+				content: '';
+				position: absolute;
+				inset: 0;
+				background: rgba(0, 0, 0, 0.35);
+			}
+
+		.login-image-content {
+			position: relative;
+			z-index: 2;
+			max-width: 500px;
+			padding: 40px;
+			text-align: left;
+		}
+
+			.login-image-content h1 {
+				font-weight: 700;
+				font-size: 2.25rem;
+				margin-bottom: 0.75rem;
+			}
+
+			.login-image-content p {
+				font-size: 1.05rem;
+				opacity: 0.9;
+			}
+
+		/* Mobile / Tablet view */
+		@@media (max-width: 991.98px) {
+			.login-page
+
+		{
+			flex-direction: column;
+			height: auto;
+			overflow: visible;
+		}
+
+		.login-image-panel {
+			order: 1;
+			width: 100%;
+			height: auto;
+			padding: 40px 20px;
+			background-position: center;
+			background-attachment: fixed;
+		}
+
+		.login-form-panel {
+			position: relative;
+			order: 2;
+			width: 100%;
+			height: auto;
+			box-shadow: none;
+			background: #fff;
+		}
+
+		.login-form-wrapper {
+			padding: 20px 25px 40px;
+		}
+
+		.login-image-content {
+			text-align: center;
+			color: #fff;
+			padding: 20px;
+		}
+
+			.login-image-content h1 {
+				font-size: 1.75rem;
+			}
+
+			.login-image-content p {
+				font-size: 0.95rem;
+			}
+
+		}
+
+		.login-card {
+			border: 0;
+			border-radius: 8px;
+			box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
 		}
 	</style>
-	<!-- Page content -->
 	<div class="page-content login-cover ">
-		<div class="login-container">
+		<div class="login-page">
+			<style>
+				.changing-text {
+					font-weight: 700;
+					font-size: 1.6rem;
+					display: inline-block;
+					transition: color 0.5s ease;
+					opacity: 0;
+				}
 
-			<!-- Form -->
-			<form id="form-login" class="modal-body needs-validation card" novalidate action="">
-				<div class="text-center mb-3">
-					<i class="icon-reading icon-2x text-slate-300 border-slate-300 border-3 rounded-round p-3 mb-3 mt-1"></i>
-					<h5 class="mb-0">Login to your account</h5>
-					<span class="d-block text-muted">Your credentials</span>
+				.fade-in {
+					animation: fadeIn 0.8s ease forwards;
+				}
+
+				@@keyframes fadeIn {
+					0%
+
+				{
+					opacity: 0;
+					transform: translateY(10px);
+				}
+
+				100% {
+					opacity: 1;
+					transform: translateY(0);
+				}
+
+				}
+
+				/* optional – to make it pop a bit more */
+				.login-image-content p {
+					font-size: 1.2rem;
+					color: #fff;
+					margin-top: 1rem;
+				}
+
+				.login-image-content span {
+					text-shadow: 0 0 8px rgba(0,0,0,0.2);
+				}
+			</style>
+			<!-- Left Image Panel (Text + Branding) -->
+			<div class="login-image-panel">
+				<div class="login-image-content">
+					<h1>Welcome to Inspire Nation</h1>
+					<p>
+						Manage your
+						<span id="changing-text" class="changing-text"></span>
+					</p>
+					<div class="mt-3">
+						<a href="#" class="btn btn-outline-light btn-sm mr-2">About Us</a>
+						<a href="#" class="btn btn-light btn-sm">Contact</a>
+					</div>
 				</div>
+			</div>
+			<script>
+				document.addEventListener("DOMContentLoaded", function () {
+					const words = [
+						{ text: "Inventory", color: "#42A5F5" },   // blue
+						{ text: "Accounts", color: "#66BB6A" },   // green
+						{ text: "Cash Flow", color: "#FFA726" },  // orange
+						{ text: "Suppliers", color: "#AB47BC" },  // purple
+						{ text: "Sales", color: "#EC407A" },      // pink
+						{ text: "Employees", color: "#26C6DA" },  // teal
+						{ text: "Assets", color: "#FF7043" }      // coral
+					];
 
-				<div class="form-group form-group-feedback form-group-feedback-left">
-					<input id="login-Email" type="email" class="form-control" placeholder="Login Email" required />
-					<div class="valid-feedback">
-						Looks good!
-					</div>
-					<div class="invalid-feedback">
-						Some Issue Found
-					</div>
-					<div class="form-control-feedback">
-						<i class="icon-user text-muted"></i>
-					</div>
+					const span = document.getElementById("changing-text");
+					let index = 0;
+
+					function changeWord() {
+						const { text, color } = words[index];
+						span.style.color = color;
+						span.classList.remove("fade-in");
+						void span.offsetWidth; // restart animation
+						span.textContent = text;
+						span.classList.add("fade-in");
+						index = (index + 1) % words.length;
+					}
+
+					changeWord();
+					setInterval(changeWord, 2000); // change every 2 seconds
+				});
+			</script>
+			<!-- Fixed Right Form Panel -->
+			<div class="login-form-panel">
+				<div class="login-form-wrapper">
+					<form id="form-login" class="needs-validation card login-card" novalidate action="">
+						<div class="card-body">
+							<div class="text-center mb-3">
+								<i class="icon-reading icon-2x text-slate-500 border-slate-300 border-3 rounded-round p-3 mb-3 mt-1"></i>
+								<h5 class="mb-0">Sign in to your account</h5>
+								<span class="d-block text-muted">Enter your credentials below</span>
+							</div>
+
+							<div class="form-group form-group-feedback form-group-feedback-left">
+								<input id="login-Email" name="email" type="email" class="form-control" placeholder="Email" required />
+								<div class="valid-feedback">Looks good!</div>
+								<div class="invalid-feedback">Please enter a valid email.</div>
+								<div class="form-control-feedback"><i class="icon-user text-muted"></i></div>
+							</div>
+
+							<div class="form-group form-group-feedback form-group-feedback-left">
+								<input id="login-Password" name="password" type="password" class="form-control" placeholder="Password" required />
+								<div class="valid-feedback">Looks good!</div>
+								<div class="invalid-feedback">Password is required.</div>
+								<div class="form-control-feedback"><i class="icon-lock2 text-muted"></i></div>
+							</div>
+
+							<div class="form-group d-flex align-items-center">
+								<div class="form-check mb-0">
+									<label class="form-check-label">
+										<input id="login-Remember" type="checkbox" name="remember" class="form-input-styled" data-fouc>
+										Remember me
+									</label>
+								</div>
+								<a href="#" class="ml-auto">Forgot password?</a>
+							</div>
+
+							<div class="form-group">
+								<button id="signinBtn" type="submit" class="btn btn-primary btn-block">
+									Sign in <i class="icon-circle-right2 ml-2"></i>
+								</button>
+							</div>
+
+							<div id="passwordMessage" class="form-group p-0 m-0 form-group-feedback-left"></div>
+
+							<div class="text-center mt-3 small text-muted">
+								Don't have an account? <a href="#">Create one</a>
+							</div>
+						</div>
+					</form>
 				</div>
-
-				<div class="form-group form-group-feedback form-group-feedback-left">
-					<input id="login-Password" type="password" class="form-control" placeholder="Password" required />
-					<div class="valid-feedback">
-						Looks good!
-					</div>
-					<div class="invalid-feedback">
-						Some Issue Found
-					</div>
-					<div class="form-control-feedback">
-						<i class="icon-lock2 text-muted"></i>
-					</div>
-				</div>
-
-				<div class="form-group d-flex align-items-center">
-					<div class="form-check mb-0">
-						<label class="form-check-label">
-							<input id="login-Remember" type="checkbox" name="remember" class="form-input-styled" data-fouc>
-							Remember
-						</label>
-					</div>
-
-					<a href="#" class="ml-auto">Forgot password?</a>
-				</div>
-
-				<div class="form-group">
-					<button id="signinBtn" type="submit" class="btn btn-primary btn-block">Sign in <i class="icon-circle-right2 ml-2"></i></button>
-				</div>
-				<div id="passwordMessage" class="form-group form-group-feedback p-0 m-0 form-group-feedback-left"></div>
-
-
-
-
-			</form>
-			<!-- /form -->
+			</div>
 		</div>
 
 
 	</div>
 	<!-- /page content -->
+	<script>
+		// Set year in footer
+		document.getElementById('year')?.textContent = new Date().getFullYear();
 
+		// Bootstrap validation script
+		(function () {
+			'use strict';
+			var forms = document.getElementsByClassName('needs-validation');
+			Array.prototype.forEach.call(forms, function (form) {
+				form.addEventListener('submit', function (event) {
+					if (form.checkValidity() === false) {
+						event.preventDefault();
+						event.stopPropagation();
+					}
+					form.classList.add('was-validated');
+				}, false);
+			});
+		})();
+	</script>
 	<script>
 		$(document).ready(function () {
 

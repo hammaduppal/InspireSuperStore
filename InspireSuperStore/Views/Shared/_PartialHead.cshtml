@@ -1,4 +1,31 @@
 ﻿
+<style id="theme-preload-style">
+    /* Prevent blink by hiding until color applied */
+    body {
+        visibility: hidden;
+    }
+</style>
+
+<script>
+    (function() {
+        const color = localStorage.getItem('themeColor');
+        const prefix = 'bg-';
+        const navbar = document.querySelector('.navbar');
+        const sidebar = document.querySelector('.sidebar');
+
+        if (color && navbar && sidebar) {
+            navbar.className = navbar.className.replace(/\bbg-\S+/g, '') + ' ' + prefix + color;
+            sidebar.className = sidebar.className.replace(/\bbg-\S+/g, '') + ' ' + prefix + color;
+        }
+
+        // Show page now that theme is applied
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('theme-preload-style')?.remove();
+            document.body.style.visibility = 'visible';
+        });
+    })();
+</script>
+
 
 <link href="~/global_assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />

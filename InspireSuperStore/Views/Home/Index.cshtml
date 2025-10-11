@@ -5,51 +5,159 @@
 }
 
 
-<!-- Page header -->
 <div class="page-header page-header-light">
 	<div class="page-header-content header-elements-md-inline">
-		<div class="page-title d-flex">
-			<h4><i class="icon-arrow-left52 mr-2"></i> <span class="font-weight-semibold">Dashboard</span> </h4>
-		</div>
 
-		<div class="header-elements d-none">
-			<div class="d-flex justify-content-center">
-				@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
-				{
-					<a href="#" class="btn btn-link btn-float font-size-sm font-weight-semibold text-default">
-						<i class="icon-bars-alt text-pink-300"></i>
-						<span>Statistics</span>
-					</a>
-					<a href="#" class="btn btn-link btn-float font-size-sm font-weight-semibold text-default">
-						<i class="icon-calculator text-pink-300"></i>
-						<span>Invoices</span>
-					</a>
-					<a href="#" class="btn btn-link btn-float font-size-sm font-weight-semibold text-default">
-						<i class="icon-calendar5 text-pink-300"></i>
-						<span>Schedule</span>
-					</a>
-				}
-			</div>
-		</div>
-	</div>
-
-	<div class="breadcrumb-line breadcrumb-line-light header-elements-md-inline">
 		<div class="d-flex">
 			<div class="breadcrumb">
 				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
 			</div>
 
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+			<div class="header-elements d-none">
+				<div id="MessageBox" class="col-lg-12"></div>
+			</div>
 		</div>
-
-		<div class="header-elements d-none">
-			<div id="MessageBox" class="col-lg-12"></div>
-		</div>
-
 	</div>
+
+
 </div>
-<!-- /page header -->
-<!-- Content area -->
+
 <div class="content">
+
+	<div class="row">
+		@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin) || CheckPermissions.HasAnyRole(UserRolesConstants.POSUser))
+		{
+			<div class="col-1">
+				<a href="/InvoiceManager/CreateInvoice" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/poscounter.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Sale</div>
+					</div>
+				</a>
+			</div>
+			<div class="col-1">
+				<a href="/InvoiceManager/Invoices" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/invoices.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Invoices</div>
+					</div>
+				</a>
+			</div>
+		}
+
+		@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.DataEntry, UserRolesConstants.Product))
+		{
+			<div class="col-1">
+				<a href="/Products/Products" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/inventory.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Inventory</div>
+					</div>
+				</a>
+			</div>
+			<div class="col-1">
+				<a href="/AttributeManager/DCSManager" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/masterdata.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Data</div>
+					</div>
+				</a>
+			</div>
+		}
+		@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin,UserRolesConstants.Purchase))
+		{
+			<div class="col-1">
+				<a href="/Purchase/AddRequisitionForm" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/purchase.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Purchase</div>
+					</div>
+				</a>
+			</div>
+			<div class="col-1">
+				<a href="/Purchase/GoodReceivedNote" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/grn.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">GRN</div>
+					</div>
+				</a>
+			</div>
+
+		}
+
+		@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin) || CheckPermissions.HasAnyRole(UserRolesConstants.Purchase))
+		{
+			<div class="col-1">
+				<a href="/Supplier/Suppliers" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/supplierslist.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Suppliers</div>
+					</div>
+				</a>
+			</div>
+			<div class="col-1">
+				<a href="/collection/collections" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/colection.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Collection</div>
+					</div>
+				</a>
+			</div>
+
+			<div class="col-1">
+				<a href="/Accounting/ChartOfAccounts" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/coa.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">COA</div>
+					</div>
+				</a>
+			</div>
+			<div class="col-1">
+				<a href="/Accounting/JournalEntries" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/journalentry.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Journals</div>
+					</div>
+				</a>
+			</div>
+			<div class="col-1">
+				<a href="/InvoiceManager/CreateInvoice" class="text-Accounting/Ledger-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/ledgers.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Ledgers</div>
+					</div>
+				</a>
+			</div>
+			<div class="col-1">
+				<a href="/Accounting/Receivables" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/receivable.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Rcvable</div>
+					</div>
+				</a>
+			</div>
+			<div class="col-1">
+				<a href="/Accounting/Payables" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/payables.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Payables</div>
+					</div>
+				</a>
+			</div>
+			<div class="col-1">
+				<a href="/AdminPanel/LoginUser" class="text-decoration-none">
+					<div class="card shadow-sm border-0 p-2 text-center" style="background-color: #fce4ec; border-radius: 10px;">
+						<img src="~/assets/img/icons/loginusers.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+						<div class="small text-dark fw-semibold">Users</div>
+					</div>
+				</a>
+			</div>
+		}
+	</div>
+
+
 
 	@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin))
 	{
@@ -137,9 +245,9 @@
 		</div>
 
 	}
-	
-	
-	
+
+
+
 	@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
 	{
 		<div class="row">

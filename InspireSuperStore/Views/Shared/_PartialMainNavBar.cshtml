@@ -3,7 +3,7 @@
 @using MarketBal.Helper
 <div class="navbar-brand">
 	<a href="/" class="d-inline-block">
-		<img src="/global_assets/images/ecomlogo.png" alt="Inspire E-Comm" />
+		<img src="/assets/img/logo/logo_main.jpg"  alt="Inspire E-Comm" />
 	</a>
 </div>
 
@@ -40,6 +40,35 @@
 	}
 
 	<ul class="navbar-nav ml-md-auto">
+		<li class="nav-item dropdown">
+			<a href="#" class="navbar-nav-link dropdown-toggle" data-toggle="dropdown">
+				<i class="icon-paint-format mr-2"></i>
+				Theme
+			</a>
+
+			<div class="dropdown-menu dropdown-menu-right dropdown-content wmin-md-250">
+				<div class="dropdown-content-body p-2">
+					<div class="row no-gutters text-center">
+
+						@{
+							var themes = new[] {  "blue", "green", "teal", "purple", "orange", "danger", "dark","light" };
+							foreach (var color in themes)
+							{
+								<div class="col-3">
+									<a href="#" class="d-block ripple-dark rounded p-2" onclick="changeTheme('@color')">
+										<div class="rounded-circle mx-auto mb-1 bg-@color" style="width:30px; height:30px;"></div>
+										<div class="font-size-xs text-uppercase">@color</div>
+									</a>
+								</div>
+							}
+						}
+
+					</div>
+				</div>
+			</div>
+		</li>
+
+		
 		<li class="nav-item dropdown">
 			<a href="#" class="navbar-nav-link  dropdown-toggle" data-toggle="dropdown">
 				<i class="icon-make-group mr-2"></i>

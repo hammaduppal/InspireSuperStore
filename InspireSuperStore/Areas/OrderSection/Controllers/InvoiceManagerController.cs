@@ -63,7 +63,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             return View(vm);
         }
         public async Task<IActionResult> SaveInvoice(InvoiceMasterVM model)
-        {
+            {
             var result = await _invoicesRepo.SaveInvoice(model);
             try
             {
