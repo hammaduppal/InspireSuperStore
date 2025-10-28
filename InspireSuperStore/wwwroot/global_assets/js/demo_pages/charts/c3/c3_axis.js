@@ -104,6 +104,49 @@ var С3Axis = function() {
             });
         }
 
+
+
+        //document.addEventListener('DOMContentLoaded', function () {
+        //    var chartElement = document.getElementById('c3-axis-tick-culling');
+        //    if (!chartElement) return;
+
+        //    // Fetch dynamic data from backend
+        //    fetch('/api/dashboard/sales-monthly')
+        //        .then(res => res.json())
+        //        .then(data => {
+        //            // Prepare C3.js format
+        //            const labels = ['x'].concat(data.map(d => 'Month ' + d.month));
+        //            const values = ['Sales'].concat(data.map(d => d.totalSales));
+
+        //            var chart = c3.generate({
+        //                bindto: chartElement,
+        //                size: { height: 400 },
+        //                data: {
+        //                    x: 'x',
+        //                    columns: [labels, values],
+        //                    type: 'line'
+        //                },
+        //                color: {
+        //                    pattern: ['#FF5722']
+        //                },
+        //                axis: {
+        //                    x: {
+        //                        type: 'category',
+        //                        tick: {
+        //                            culling: { max: 4 }
+        //                        }
+        //                    }
+        //                }
+        //            });
+
+        //            // Handle sidebar toggle (resizes chart)
+        //            $('.sidebar-control').on('click', function () {
+        //                chart.resize();
+        //            });
+        //        })
+        //        .catch(err => console.error('Error loading chart data', err));
+        //});
+
         // Axis tick culling
         if(axis_tick_culling_element) {
 
@@ -113,7 +156,7 @@ var С3Axis = function() {
                 size: { height: 400 },
                 data: {
                     columns: [
-                        ['sample', 30, 200, 100, 400, 150, 250, 30, 200, 100, 400, 150, 250, 30, 200, 100, 400, 150, 250, 200, 100, 400, 150, 250]
+                        ['Invoice Monthly', 30, 200, 100, 400, 150, 250, 30, 200, 100, 400, 150, 250, 30, 200, 100, 400, 150, 250, 200, 100, 400, 150, 250]
                     ]
                 },
                 color: {
@@ -143,7 +186,7 @@ var С3Axis = function() {
             // Generate chart
             var axis_tick_rotation = c3.generate({
                 bindto: axis_tick_rotation_element,
-                size: { height: 400 },
+                size: { height: 250 },
                 data: {
                     x : 'x',
                     columns: [

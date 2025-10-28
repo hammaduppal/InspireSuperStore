@@ -285,6 +285,7 @@
 
 				</div>
 			</div>
+			
 			<div class="col-sm-4 col-xl-3">
 				<div class="card card-body bg-danger-400 has-bg-image shadow-3">
 					<div class="media">
@@ -316,6 +317,7 @@
 					</div>
 				</div>
 			</div>
+		
 			<div class="col-sm-4 col-xl-3">
 				<div class="card card-body bg-blue-800 has-bg-image shadow-3">
 					<div class="media">
@@ -336,6 +338,174 @@
 
 	}
 
+	@if (CheckPermissions.HasAnyRole(UserRolesConstants.POSUser,UserRolesConstants.DataEntry))
+	{
+		<div class="row">
 
+			<div class="col-sm-4 col-xl-3">
+				<div class="card card-body bg-blue-400 has-bg-image shadow-3">
+
+					<div class="media">
+						<div class="media-body">
+							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
+							<span class="text-uppercase font-size-xs">Total Invoices</span>
+						</div>
+						<a href="/InvoiceManager/Invoices" class="text-white">
+							<div class="ml-3 align-self-center">
+								<i class="icon-cube2 icon-3x opacity-75"></i>
+							</div>
+						</a>
+					</div>
+
+
+				</div>
+			</div>
+
+			<div class="col-sm-4 col-xl-3">
+				<div class="card card-body bg-danger-400 has-bg-image shadow-3">
+					<div class="media">
+						<div class="media-body">
+							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
+							<span class="text-uppercase font-size-xs">Total Variants</span>
+						</div>
+						<a href="/Products/Products" class="text-white">
+							<div class="ml-3 align-self-center">
+								<i class="icon-bag icon-3x opacity-75"></i>
+							</div>
+						</a>
+					</div>
+				</div>
+			</div>
+
+		
+		</div>
+
+	}
+	@if (CheckPermissions.HasAnyRole(UserRolesConstants.Accounts, UserRolesConstants.Purchase))
+	{
+		<div class="row">
+
+			<div class="col-sm-4 col-xl-3">
+				<div class="card card-body bg-blue-400 has-bg-image shadow-3">
+
+					<div class="media">
+						<div class="media-body">
+							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
+							<span class="text-uppercase font-size-xs">Total Invoices</span>
+						</div>
+						<a href="/Purchase/Requisitions" class="text-white">
+							<div class="ml-3 align-self-center">
+								<i class="icon-cube2 icon-3x opacity-75"></i>
+							</div>
+						</a>
+					</div>
+
+
+				</div>
+			</div>
+
+			<div class="col-sm-4 col-xl-3">
+				<div class="card card-body bg-danger-400 has-bg-image shadow-3">
+					<div class="media">
+						<div class="media-body">
+							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
+							<span class="text-uppercase font-size-xs">Total Variants</span>
+						</div>
+						<a href="/Accounting/JournalEntries" class="text-white">
+							<div class="ml-3 align-self-center">
+								<i class="icon-bag icon-3x opacity-75"></i>
+							</div>
+						</a>
+					</div>
+				</div>
+			</div>
+
+
+		</div>
+
+	}
+
+	<!-- Pies -->
+	<div class="row">
+		<div class="col-md-6">
+			<div class="card">
+				<div class="card-header header-elements-inline">
+					<h5 class="card-title">Basic pie chart</h5>
+					<div class="header-elements">
+						<div class="list-icons">
+							<a class="list-icons-item" data-action="collapse"></a>
+							<a class="list-icons-item" data-action="reload"></a>
+							<a class="list-icons-item" data-action="remove"></a>
+						</div>
+					</div>
+				</div>
+
+				<div class="card-body">
+					<div class="chart-container text-center">
+						<div class="d-inline-block" id="c3-pie-chart"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<div class="card">
+				<div class="card-header header-elements-inline">
+					<h5 class="card-title">Basic donut chart</h5>
+					<div class="header-elements">
+						<div class="list-icons">
+							<a class="list-icons-item" data-action="collapse"></a>
+							<a class="list-icons-item" data-action="reload"></a>
+							<a class="list-icons-item" data-action="remove"></a>
+						</div>
+					</div>
+				</div>
+
+				<div class="card-body">
+					<div class="chart-container text-center">
+						<div class="d-inline-block" id="c3-donut-chart"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- /pies -->
+	<div class="row">
+		<div class="col-md-6">
+			<div class="card w-100">
+				<div class="card-header header-elements-inline">
+					<h5 class="card-title">Invoice</h5>
+					<div class="header-elements">
+						<div class="list-icons">
+						</div>
+					</div>
+				</div>
+
+				<div class="card-body">
+					<div class="chart-container" style="width: 100%;">
+						<div class="chart" id="c3-axis-tick-rotation" style="width:100%; min-height:300px;"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-6">
+			<div class="card w-100">
+				<div class="card-header header-elements-inline">
+					<h5 class="card-title">Invoice</h5>
+					<div class="header-elements">
+						<div class="list-icons">
+						</div>
+					</div>
+				</div>
+
+				<div class="card-body">
+					<div class="chart-container" style="width: 100%;">
+						<div class="chart" id="c3-axis-tick-rotation" style="width:100%; min-height:300px;"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
 </div>
 <!-- /content area -->

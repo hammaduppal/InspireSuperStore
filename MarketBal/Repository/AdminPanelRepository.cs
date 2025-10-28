@@ -777,7 +777,7 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
             {
                 //  var removed = await removeData();
                 var currentTime = DateTime.UtcNow;
-                Guid branchId = Guid.NewGuid();
+                //Guid branchId = Guid.NewGuid();
 
                 // Only proceed if tables are empty
                 if (!_onedb.Organizations.Any() && !_onedb.LoginUsers.Any())
@@ -797,14 +797,14 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                     var businessType = _onedb.BusinessEntityTypes.Where(x => x.BusinessEntityTypeId == model.BusinessEntity).FirstOrDefault();
                     var getOrganization = _onedb.Organizations.ToList();
                     var singleOrganization = getOrganization.FirstOrDefault();
-                    var branch = new Branch
-                    {
-                        BranchId = branchId,
-                        BranchName = model.BranchName,
-                        OrganizationId = singleOrganization.OrganizationId,
+                    //var branch = new Branch
+                    //{
+                    //    BranchId = branchId,
+                    //    BranchName = model.BranchName,
+                    //    OrganizationId = singleOrganization.OrganizationId,
 
-                    };
-                    await _onedb.Branches.AddAsync(branch);
+                    //};
+                    //await _onedb.Branches.AddAsync(branch);
 
                     var loginUser = new LoginUser
                     {
@@ -817,19 +817,19 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                     };
                     await _onedb.LoginUsers.AddAsync(loginUser);
 
-                    var role = new Role
-                    {
-                        Id = 1,
-                        Name = "SuperAdmin",
-                        IsActive = true
-                    };
-                    await _onedb.Roles.AddAsync(role);
+                    //var role = new Role
+                    //{
+                    //    Id = 1,
+                    //    Name = "SuperAdmin",
+                    //    IsActive = true
+                    //};
+                    //await _onedb.Roles.AddAsync(role);
 
                     var assignedRole = new AssignedRole
                     {
                         Id = 1,
                         LoginId = loginUser.Id,
-                        RoleId = role.Id,
+                        RoleId = 1,
                         CreatedOn = currentTime,
                         ModifiedOn = currentTime,
                         IsActive = true,
@@ -837,21 +837,21 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                     };
                     await _onedb.AssignedRoles.AddAsync(assignedRole);
 
-                    var assignedBranch = new UserAssignedBranch
-                    {
-                        LoginUserId = loginUser.Id,
-                        BranchId = branchId,
-                        IsActive = true,
-                        IsDeleted = false,
-                        CreatedOn = currentTime,
-                        ModifiedOn = currentTime
-                    };
-                    await _onedb.UserAssignedBranches.AddAsync(assignedBranch);
+                    //var assignedBranch = new UserAssignedBranch
+                    //{
+                    //    LoginUserId = loginUser.Id,
+                    //    BranchId = branchId,
+                    //    IsActive = true,
+                    //    IsDeleted = false,
+                    //    CreatedOn = currentTime,
+                    //    ModifiedOn = currentTime
+                    //};
+                    //await _onedb.UserAssignedBranches.AddAsync(assignedBranch);
 
                     // Save all together
                     await _onedb.SaveChangesAsync();
                     await transaction.CommitAsync();
-                    await InsertSeedData();
+                   // await InsertSeedData();
                     return true;
                 }
 

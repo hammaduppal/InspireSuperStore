@@ -38,13 +38,13 @@ namespace InspireSuperStore.Areas.Account.Controllers
         }
         public async Task<IActionResult> Login(string? returnUrl = null)
         {
-            //var result = await _admin.GetOrganizations();
+            var result = await _admin.GetOrganizations();
 
-            //if (result.Count == 0)
-            //{
-            //    // Redirect to StartupSettings in AdminPanel controller
-            //    return RedirectToAction("StartupSettings", "Account");
-            //}
+            if (result.Count == 0)
+            {
+                // Redirect to StartupSettings in AdminPanel controller
+                return RedirectToAction("StartupSettings", "Account");
+            }
             if (CheckEncryption(returnUrl))
             {
                 string base64 = Uri.UnescapeDataString(returnUrl);
