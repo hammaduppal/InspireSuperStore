@@ -154,6 +154,18 @@
 																</select>
 															</div>
 														</div>
+														<div class="col-md-6">
+															<div class="form-group">
+																<label>Brand Model</label>
+																<select disabled id="brandModel" data-placeholder="Enter 'Brand Model'" class="form-control select-minimum" data-fouc>
+																	<option value="@Model.Product.BrandModelId">@Model.Product.ModelName</option>
+
+																	<optgroup label="Brand Models">
+																		
+																	</optgroup>
+																</select>
+															</div>
+														</div>
 													</div>
 												</fieldset>
 												<div>
@@ -201,6 +213,9 @@
 
 
 </div>
+<script>
+
+</script>
 <!-- /content area -->
 <script>
 	$('#productDescTab').click(function(){
@@ -214,7 +229,7 @@
 
 	$('#unlockForm').submit(async function(e){
 		e.preventDefault();
-		debugger
+		
 		var formData={
 			UnlockKey: encrypt($('#unlockPassword').val())
 		}
@@ -224,7 +239,7 @@
 		}
 		const result = await Utility.RequestDataAjax(objectData);
 		if(result.statusCode==='200'){
-			$('#dep, #cat, #subcat,#uom,#brand').removeAttr('disabled');
+			$('#dep, #cat, #subcat,#uom,#brand,#brandModel').removeAttr('disabled');
 			$('#modal-unlock').modal('hide');
 					 Utility.successMessage(result.Message);
 
@@ -240,7 +255,7 @@
 			var id= `@Model.Product.ProductId`;
 			$('#descForm').submit(async function(e){
 					e.preventDefault();
-					debugger
+					
 					Utility.SpinnerMessageParent('descFormSubmitBtn','Loading..');
 					var formData = {
 					ProductName: $('#productName').val(),
@@ -248,7 +263,8 @@
 					ProductId:id,
 					SubCategoryId: $('#subcat').val(),
 					UOMId: $('#uom').val(),
-					BrandId: $('#brand').val()
+					BrandId: $('#brand').val(),
+					BrandModelId:$('#brandModel').val()
 				 };
 				 var objectData={
 					 data:formData,
@@ -267,7 +283,7 @@
 			});
 				$('#dep').change(async function(e){
 					
-				debugger
+				
 					var depId = $(this).val();
 						var formData={
 							DepartmentId :depId
@@ -277,7 +293,7 @@
 							url:'/AttributeManager/GetCategorybyDepartment'
 						}
 						const result = await Utility.RequestDataAjax(objectData);
-						debugger
+						
 							$('#cat').empty();
 							$('#subcat').empty();
 							$('#cat').append(`<option>Select Category</option>`);
@@ -288,9 +304,10 @@
 				
 				
 				});
-					$('#cat').change(async function(e){
+					
+				$('#cat').change(async function(e){
 
-				debugger
+				
 					var catid = $(this).val();
 						var formData={
 							CategoryId :catid
@@ -300,7 +317,7 @@
 							url:'/AttributeManager/GetSubCategorybyCategory'
 						}
 						const result = await Utility.RequestDataAjax(objectData);
-						debugger
+						
 							$('#subcat').empty();
 							$('#subcat').append(`<option>Select Sub Category</option>`);
 								  result.forEach(function(subcat) {
@@ -310,6 +327,39 @@
 
 
 				});
+				
+				$('#brand').change(async function () {
+		var brandId = $(this).val();
+
+		// Always clear the dropdown first
+		$('#brandModel').empty();
+		$('#brandModel').append('<option value="">Select Model</option>');
+
+		if (!brandId) return; // Stop if no brand is selected
+
+		var formData = { BrandId: brandId };
+		var objectData = {
+			data: formData,
+			url: '/AttributeManager/BrandModel'
+		};
+
+		try {
+			var result = await Utility.RequestDataAjax(objectData);
+
+			if (result && result.length > 0) {
+				$.each(result, function (i, item) {
+					$('#brandModel').append(
+						`<option value="${item.BrandModelId}">${item.ModelName}</option>`
+					);
+				});
+			} else {
+				$('#brandModel').append('<option value="">No models found</option>');
+			}
+		} catch (error) {
+			console.error('Error loading brand models:', error);
+			$('#brandModel').append('<option value="">Error loading models</option>');
+		}
+	});
 
 
 

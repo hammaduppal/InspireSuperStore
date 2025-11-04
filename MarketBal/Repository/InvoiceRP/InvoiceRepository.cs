@@ -31,7 +31,7 @@ namespace MarketBal.Repository.InvoiceRP
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config);
+            _attrib = new AttributeRepository(_config,_onedb);
             _pOSRepository = new POSRepository(_config, _onedb);
             _hrmRepository = new HumanRespourceRepository(_config, _onedb);
             _journalRepo = new JournalsRepository(_config, _onedb);

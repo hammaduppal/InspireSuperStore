@@ -104,7 +104,19 @@
 								</div>
 
 							</div>
+							<div class="col-md-6">
+								<div class="form-group">
+									<div class="input-group">
+										<select id="brandModel" class="form-control" required>
+											<option value=""> Select Model</option>
 
+										</select>
+
+
+									</div>
+								</div>
+
+							</div>
 
 
 						</div>
@@ -112,7 +124,41 @@
 					</fieldset>
 				</div>
 
+				<script>
+					$('#brand').change(async function () {
+						var brandId = $(this).val();
 
+						// Always clear the dropdown first
+						$('#brandModel').empty();
+						$('#brandModel').append('<option value="">Select Model</option>');
+
+						if (!brandId) return; // Stop if no brand is selected
+
+						var formData = { BrandId: brandId };
+						var objectData = {
+							data: formData,
+							url: '/AttributeManager/BrandModel'
+						};
+
+						try {
+							var result = await Utility.RequestDataAjax(objectData);
+
+							if (result && result.length > 0) {
+								$.each(result, function (i, item) {
+									$('#brandModel').append(
+										`<option value="${item.BrandModelId}">${item.ModelName}</option>`
+									);
+								});
+							} else {
+								$('#brandModel').append('<option value="">No models found</option>');
+							}
+						} catch (error) {
+							console.error('Error loading brand models:', error);
+							$('#brandModel').append('<option value="">Error loading models</option>');
+						}
+					});
+
+				</script>
 			</div>
 
 			<div class="text-right">
@@ -138,7 +184,8 @@
 						ProductDescription:$('#description').val(),
 						SubCategoryId:$('#subcat').val(),
 						Uomid:$('#uom').val(),
-						BrandId:$('#brand').val()
+						BrandId:$('#brand').val(),
+						BrandModelId:$('#brandModel').val()
 
 					}
 					debugger
@@ -263,5 +310,6 @@
 
 
 		})
+
 	})
 </script>

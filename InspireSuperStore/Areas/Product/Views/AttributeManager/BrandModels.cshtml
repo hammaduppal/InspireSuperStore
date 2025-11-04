@@ -1,0 +1,94 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Brand Models";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="page-header-content header-elements-md-inline">
+
+		<div class="d-flex">
+			<div class="breadcrumb">
+				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+				<span class="breadcrumb-item active">Brand Models</span>
+			</div>
+
+			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+		</div>
+	</div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+
+	<div class="card shadow-5">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Brand Models</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<a id="AddBrandModel" href="/AttributeManager/AddBrandModel" class="btn btn-success ">Add Brand Model</a>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="table-responsive">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Brand Model Id</th>
+						<th>Brand Name</th>
+
+						<th>Model Name</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var item in Model.BrandModels)
+					{
+						<tr>
+							<td>@item.BrandModelId</td>
+							<td>@item.Brand.BrandName</td>
+							<td>@item.ModelName</td>
+
+						</tr>
+					}
+				</tbody>
+			</table>
+
+		</div>
+	</div>
+
+
+</div>
+
+
+<!-- /content area -->
+<script>
+	$(document).ready(function(){
+	$('#AddBrandModel').click(async function(e){
+		e.preventDefault();
+		const form =await Utility.RequestAjax('/AttributeManager/_AddBrandModel')
+			$('.full-modal-title').html('Add Product');
+						$('#modal-body-horizontal').html(form);
+						$('.modal-title-horizontal').html('Add Employee Brand Model');
+
+						$('#modal_form_horizontal').modal(
+						{
+						 backdrop: 'static',
+							keyboard: false
+						}
+						);
+	});
+
+	});
+</script>

@@ -381,6 +381,7 @@
 		</div>
 
 	}
+	
 	@if (CheckPermissions.HasAnyRole(UserRolesConstants.Accounts, UserRolesConstants.Purchase))
 	{
 		<div class="row">
@@ -425,87 +426,80 @@
 
 	}
 
-	<!-- Pies -->
-	<div class="row">
-		<div class="col-md-6">
-			<div class="card">
-				<div class="card-header header-elements-inline">
-					<h5 class="card-title">Basic pie chart</h5>
-					<div class="header-elements">
-						<div class="list-icons">
-							<a class="list-icons-item" data-action="collapse"></a>
-							<a class="list-icons-item" data-action="reload"></a>
-							<a class="list-icons-item" data-action="remove"></a>
+	
+	@if (CheckPermissions.HasAnyRole(UserRolesConstants.Accounts, UserRolesConstants.Purchase,UserRolesConstants.Admin))
+	{
+		<div class="row">
+			<div class="col-md-6">
+				<div class="card">
+					<div class="card-header header-elements-inline">
+						<h5 class="card-title">Basic pie chart</h5>
+					
+					</div>
+
+					<div class="card-body">
+						<div class="chart-container text-center">
+							<div class="d-inline-block" id="c3-pie-chart"></div>
 						</div>
 					</div>
 				</div>
+			</div>
 
-				<div class="card-body">
-					<div class="chart-container text-center">
-						<div class="d-inline-block" id="c3-pie-chart"></div>
+			<div class="col-md-6">
+				<div class="card">
+					<div class="card-header header-elements-inline">
+						<h5 class="card-title">Basic donut chart</h5>
+						
+					</div>
+
+					<div class="card-body">
+						<div class="chart-container text-center">
+							<div class="d-inline-block" id="c3-donut-chart"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /pies -->
+		<div class="row">
+			<div class="col-md-6">
+				<div class="card w-100">
+					<div class="card-header header-elements-inline">
+						<h5 class="card-title">Invoice</h5>
+						<div class="header-elements">
+							<div class="list-icons">
+							</div>
+						</div>
+					</div>
+
+					<div class="card-body">
+						<div class="chart-container" style="width: 100%;">
+							<div class="chart" id="c3-axis-tick-rotation" style="width:100%; min-height:300px;"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="card w-100">
+					<div class="card-header header-elements-inline">
+						<h5 class="card-title">Invoice</h5>
+						<div class="header-elements">
+							<div class="list-icons">
+							</div>
+						</div>
+					</div>
+
+					<div class="card-body">
+						<div class="chart-container" style="width: 100%;">
+							<div class="chart" id="c3-axis-labels" style="width:100%; min-height:300px;"></div>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="col-md-6">
-			<div class="card">
-				<div class="card-header header-elements-inline">
-					<h5 class="card-title">Basic donut chart</h5>
-					<div class="header-elements">
-						<div class="list-icons">
-							<a class="list-icons-item" data-action="collapse"></a>
-							<a class="list-icons-item" data-action="reload"></a>
-							<a class="list-icons-item" data-action="remove"></a>
-						</div>
-					</div>
-				</div>
-
-				<div class="card-body">
-					<div class="chart-container text-center">
-						<div class="d-inline-block" id="c3-donut-chart"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!-- /pies -->
-	<div class="row">
-		<div class="col-md-6">
-			<div class="card w-100">
-				<div class="card-header header-elements-inline">
-					<h5 class="card-title">Invoice</h5>
-					<div class="header-elements">
-						<div class="list-icons">
-						</div>
-					</div>
-				</div>
-
-				<div class="card-body">
-					<div class="chart-container" style="width: 100%;">
-						<div class="chart" id="c3-axis-tick-rotation" style="width:100%; min-height:300px;"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-6">
-			<div class="card w-100">
-				<div class="card-header header-elements-inline">
-					<h5 class="card-title">Invoice</h5>
-					<div class="header-elements">
-						<div class="list-icons">
-						</div>
-					</div>
-				</div>
-
-				<div class="card-body">
-					<div class="chart-container" style="width: 100%;">
-						<div class="chart" id="c3-axis-tick-rotation" style="width:100%; min-height:300px;"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	</div>
+	}
+	
 </div>
+
 <!-- /content area -->

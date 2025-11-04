@@ -1,4 +1,5 @@
 ﻿using MainModels.DTOModels;
+using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository.DCS;
 using MarketBal.Repository.Products;
@@ -9,17 +10,19 @@ namespace InspireSuperStore.Areas.Product.Controllers
 {
     [Area("Product")]
     [Route("[controller]/[action]")]
-    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry + "," + UserRolesConstants.Product + "," + UserRolesConstants.Purchase )]
+    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry + "," + UserRolesConstants.Product + "," + UserRolesConstants.Purchase)]
 
     public class AttributeManagerController : Controller
     {
         private readonly IConfiguration _config;
         private readonly AttributeRepository _attrib;
+        private readonly OneDb _oneDb;
         private readonly PagesViewModel vm = new PagesViewModel();
-        public AttributeManagerController(IConfiguration config)
+        public AttributeManagerController(IConfiguration config, OneDb onedb)
         {
             _config = config;
-            _attrib = new AttributeRepository(_config);
+            _oneDb = onedb;
+            _attrib = new AttributeRepository(_config, _oneDb);
         }
         public async Task<IActionResult> DCSManager()
         {
@@ -47,7 +50,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
                 return Json(new { statusCode = "400" });
             }
         }
-       
+
         public async Task<IActionResult> _GetAddCategoryForm()
         {
             vm.Departments = await _attrib.GetDepartment();
@@ -71,7 +74,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
                 return Json(new { statusCode = "400" });
             }
         }
-        
+
         public async Task<IActionResult> _GetAddSubCategoryForm()
         {
             vm.Departments = await _attrib.GetDepartment();
@@ -96,7 +99,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             }
         }
 
-      
+
         public async Task<IActionResult> _GetAddColorForm()
         {
             return PartialView();
@@ -141,7 +144,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
                 return Json(new { statusCode = "400" });
             }
         }
-        
+
         public async Task<IActionResult> _GetAddUOMForm()
         {
             return PartialView();
@@ -163,7 +166,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
                 return Json(new { statusCode = "400" });
             }
         }
-        
+
         public async Task<IActionResult> _GetAddSubUOMForm()
         {
             vm.UOMs = await _attrib.GetUOM();
@@ -234,9 +237,40 @@ namespace InspireSuperStore.Areas.Product.Controllers
             }
         }
 
+        public async Task<IActionResult> BrandModels()
+        {
+            vm.BrandModels = await _attrib.GetBrandModels();
+            return View(vm);
+        }
+        public async Task<IActionResult> BrandModel(BrandVM model)
+        {
+            var brandModels= await _attrib.GetBrandModel(model.BrandId);
+            return Json(brandModels);
+        }
+        public async Task<IActionResult> _AddBrandModel()
+        {
+            vm.Brands = await _attrib.GetBrands();
+            return PartialView(vm);
+        }
+        public async Task<IActionResult> AddBrandModel(BrandModelVM model)
+        {
+            var result = await _attrib.AddBrandModel(model);
+            if (result == 1)
+            {
+                return Json(new { statusCode = "200", Message = "Record Saved Successfully" });
+            }
+            else if (result == -1)
+            {
+                return Json(new { statusCode = "300", Message = "Already Exists" });
+            }
+            else
+            {
+                return Json(new { statusCode = "400" });
+            }
+        }
 
         #region CRUDS
-       
+
         #endregion
 
 

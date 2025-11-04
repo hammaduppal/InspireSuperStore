@@ -230,8 +230,7 @@
 									@foreach (var item in Model.Departments)
 									{
 										<div class="col-md-3 col-sm-6 pt-1">
-											<button data-depid="@item.DepartmentId"
-													class="btn btn-primary depBtn w-100">
+											<button data-depid="@item.DepartmentId" class="btn btn-primary depBtn w-100">
 												@item.DepartmentName
 											</button>
 										</div>
@@ -324,7 +323,7 @@
 
 				<!-- Numpad & Final Actions -->
 				<div class="card-footer bg-white">
-					<div class="row no-gutters text-center mb-0">
+					@* <div class="row no-gutters text-center mb-0">
 						<div class="col-3 p-1"><button class="btn btn-light btn-block">1</button></div>
 						<div class="col-3 p-1"><button class="btn btn-light btn-block">2</button></div>
 						<div class="col-3 p-1"><button class="btn btn-light btn-block">3</button></div>
@@ -339,11 +338,11 @@
 						<div class="col-3 p-1"><button class="btn btn-danger btn-block"><i class="icon-arrow-left8"></i></button></div>
 						<div class="col-6 p-1"><button class="btn btn-light btn-block">0</button></div>
 						<div class="col-6 p-1"><button class="btn btn-light btn-block">.</button></div>
-					</div>
+					</div> *@
 					<div class="row">
 					</div>
 					<div class="btn-group w-100">
-						<button type="button" class="btn btn-warning" style="flex-grow: 1;">Hold</button>
+						<button id="btn-submit-hold" type="button" class="btn btn-warning" style="flex-grow: 1;">Hold</button>
 						<button type="button" class="btn btn-danger" style="flex-grow: 1;">Cancel</button>
 						@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
 						{
@@ -369,219 +368,227 @@
 
 </div>
 <script>
+	
+
 	$(document).on('click', '#btn-submit-invoice', function () {
 		submitInvoice();
 	});
+		
+	$(document).on('click', '#btn-submit-hold', function () {
+		holdInvoice();
+	});
+
 	$(document).on('click', '#btn-submit-order', function () {
 		submitInvoice();
 	});
 
+	function holdInvoice(){
+		alert('Test');
+	}
 
-		function submitInvoice() {
-				const $rows = $('#invoiceTable tbody tr');
-				if ($rows.length === 0) {
-					alert('Please add at least one product.');
-					return;
-				}
-				const cashReceived = parseFloat($('#cashReceived').val()) || 0;
-				const totalAmount = parseFloat($('#totalAmount').val()) || 0;
-				const totalTax = parseFloat($('#totalTax').val()) || 0;
-				const grandTotal = parseFloat($('#grandTotal').val()) || 0;
-				const totalPayable = parseFloat($('#totalPayable').val()) || 0;
-				const discount = parseFloat($('#discount').val()) || 0;
+	function submitInvoice() {
+			const $rows = $('#invoiceTable tbody tr');
+			if ($rows.length === 0) {
+				alert('Please add at least one product.');
+				return;
+			}
+			const cashReceived = parseFloat($('#cashReceived').val()) || 0;
+			const totalAmount = parseFloat($('#totalAmount').val()) || 0;
+			const totalTax = parseFloat($('#totalTax').val()) || 0;
+			const grandTotal = parseFloat($('#grandTotal').val()) || 0;
+			const totalPayable = parseFloat($('#totalPayable').val()) || 0;
+			const discount = parseFloat($('#discount').val()) || 0;
 
-				const salesPersonId = $('#salesPerson').val() || null;
-				const tableId = $('#servingTable').val() || null;
-				const customerId = $('#customer').val() || null;
-				const paymentMethodId = $('#paymentMethod').val() || null;
-				const paymentStatusId = parseFloat($('#paymentStatusId').val()) || null;
-				debugger
+			const salesPersonId = $('#salesPerson').val() || null;
+			const tableId = $('#servingTable').val() || null;
+			const customerId = $('#customer').val() || null;
+			const paymentMethodId = $('#paymentMethod').val() || null;
+			const paymentStatusId = parseFloat($('#paymentStatusId').val()) || null;
+			debugger
 
-				console.log(paymentStatusId);
+			console.log(paymentStatusId);
 				
-				const CASH_PAYMENT_ID = 1;
-				const Payment_Status_Id= 1;
+			const CASH_PAYMENT_ID = 1;
+			const Payment_Status_Id= 1;
 
-				if (paymentMethodId == CASH_PAYMENT_ID && paymentStatusId===Payment_Status_Id) {
-					if (cashReceived < totalPayable) {
-						alert('Cash received is less than payable total. Please collect full payment.');
-						return;
-					}
-				}
-
-				const items = [];
-				$rows.each(function () {
-					const $tr = $(this);
-					debugger
-					const $firstTd = $tr.find('td').first();
-
-					const qty = parseFloat($tr.find('.lineqty').val()) || 0;
-					const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
-					const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
-					const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
-					const lineTotal = unitPrice * qty; // without tax
-					const lineTotalWithTax = lineTotal + taxAmount;
-
-					items.push({
-						ProductId: $firstTd.data('productid'),
-						VariantId: $firstTd.data('variantid'),
-						Quantity: qty,
-						UnitPrice: unitPrice,
-						TaxRate: taxRate,
-						TaxAmount: taxAmount,
-						LineTotal: lineTotal,
-						LineTotalWithTax: lineTotalWithTax
-					});
-				});
-
-				const payload = {
-					TotalAmount: totalAmount,
-					TotalTax: totalTax,
-					GrandTotal: grandTotal,
-					DiscountAmount: discount,
-					NetAmount: totalPayable, // after discount
-					CashReceived: cashReceived,
-					PaymentMethodId: paymentMethodId,
-					EmployeeId: salesPersonId,
-					ServingTableId: tableId,
-					CustomerId: customerId,
-					PaymentStatusId:paymentStatusId,
-					InvoiceDetails: items
-				};
-
-				$.ajax({
-					url: '/InvoiceManager/SaveInvoice',
-					type: 'POST',
-					data: payload,
-
-					xhrFields: {
-						responseType: 'blob'  // expecting PDF back
-					},
-					success: function (data) {
-						console.log('Hello Dumpling');
-
-						console.log(data);
-						var blob = new Blob([data], { type: "application/pdf" });
-						var url = URL.createObjectURL(blob);
-						window.open(url, "_blank");
-					},
-					error: function (xhr, status, error) {
-						alert("Error saving invoice: " + error);
-					}
-				});
-		}
-
-			function submitOrder() {
-				const $rows = $('#invoiceTable tbody tr');
-				if ($rows.length === 0) {
-					alert('Please add at least one product.');
+			if (paymentMethodId == CASH_PAYMENT_ID && paymentStatusId===Payment_Status_Id) {
+				if (cashReceived < totalPayable) {
+					alert('Cash received is less than payable total. Please collect full payment.');
 					return;
 				}
+			}
+
+			const items = [];
+			$rows.each(function () {
+				const $tr = $(this);
 				debugger
-				const totalAmount = parseFloat($('#totalAmount').val()) || 0;
-				const totalTax = parseFloat($('#totalTax').val()) || 0;
-				const grandTotal = parseFloat($('#grandTotal').val()) || 0;
-				const totalPayable = parseFloat($('#totalPayable').val()) || 0;
-				const discount = parseFloat($('#discount').val()) || 0;
+				const $firstTd = $tr.find('td').first();
 
-				const salesPersonId = $('#salesPerson').val() || null;
-				const tableId = $('#servingTable').val() || null;
-				const customerId = $('#customer').val() || null;
-				const paymentMethodId = $('#paymentMethod').val() || null;
+				const qty = parseFloat($tr.find('.lineqty').val()) || 0;
+				const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
+				const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
+				const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
+				const lineTotal = unitPrice * qty; // without tax
+				const lineTotalWithTax = lineTotal + taxAmount;
 
-
-
-				const items = [];
-				$rows.each(function () {
-					const $tr = $(this);
-					debugger
-					const $firstTd = $tr.find('td').first();
-
-					const qty = parseFloat($tr.find('.lineqty').val()) || 0;
-					const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
-					const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
-					const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
-					const lineTotal = unitPrice * qty; // without tax
-					const lineTotalWithTax = lineTotal + taxAmount;
-
-					items.push({
-						ProductId: $firstTd.data('productid'),
-						VariantId: $firstTd.data('variantid'),
-						Quantity: qty,
-						UnitPrice: unitPrice,
-						TaxRate: taxRate,
-						TaxAmount: taxAmount,
-						LineTotal: lineTotal,
-						LineTotalWithTax: lineTotalWithTax
-					});
+				items.push({
+					ProductId: $firstTd.data('productid'),
+					VariantId: $firstTd.data('variantid'),
+					Quantity: qty,
+					UnitPrice: unitPrice,
+					TaxRate: taxRate,
+					TaxAmount: taxAmount,
+					LineTotal: lineTotal,
+					LineTotalWithTax: lineTotalWithTax
 				});
+			});
 
-				const payload = {
-					TotalAmount: totalAmount,
-					TotalTax: totalTax,
-					GrandTotal: grandTotal,
-					DiscountAmount: discount,
-					NetAmount: totalPayable, // after discount
-					CashReceived: cashReceived,
-					PaymentMethodId: paymentMethodId,
-					EmployeeId: salesPersonId,
-					ServingTableId: tableId,
-					CustomerId: customerId,
-					InvoiceDetails: items
-				};
+			const payload = {
+				TotalAmount: totalAmount,
+				TotalTax: totalTax,
+				GrandTotal: grandTotal,
+				DiscountAmount: discount,
+				NetAmount: totalPayable, // after discount
+				CashReceived: cashReceived,
+				PaymentMethodId: paymentMethodId,
+				EmployeeId: salesPersonId,
+				ServingTableId: tableId,
+				CustomerId: customerId,
+				PaymentStatusId:paymentStatusId,
+				InvoiceDetails: items
+			};
 
-				$.ajax({
-					url: '/InvoiceManager/SaveOrder',
-					type: 'POST',
-					data: payload,
+			$.ajax({
+				url: '/InvoiceManager/SaveInvoice',
+				type: 'POST',
+				data: payload,
 
-					xhrFields: {
-						responseType: 'blob'  // expecting PDF back
-					},
-					success: function (data) {
-						console.log('Hello Dumpling');
+				xhrFields: {
+					responseType: 'blob'  // expecting PDF back
+				},
+				success: function (data) {
+					console.log('Hello Dumpling');
 
-						console.log(data);
-						var blob = new Blob([data], { type: "application/pdf" });
-						var url = URL.createObjectURL(blob);
-						window.open(url, "_blank");
-					},
-					error: function (xhr, status, error) {
-						alert("Error saving invoice: " + error);
-					}
+					console.log(data);
+					var blob = new Blob([data], { type: "application/pdf" });
+					var url = URL.createObjectURL(blob);
+					window.open(url, "_blank");
+				},
+				error: function (xhr, status, error) {
+					alert("Error saving invoice: " + error);
+				}
+			});
+	}
+
+	function submitOrder() {
+			const $rows = $('#invoiceTable tbody tr');
+			if ($rows.length === 0) {
+				alert('Please add at least one product.');
+				return;
+			}
+			debugger
+			const totalAmount = parseFloat($('#totalAmount').val()) || 0;
+			const totalTax = parseFloat($('#totalTax').val()) || 0;
+			const grandTotal = parseFloat($('#grandTotal').val()) || 0;
+			const totalPayable = parseFloat($('#totalPayable').val()) || 0;
+			const discount = parseFloat($('#discount').val()) || 0;
+
+			const salesPersonId = $('#salesPerson').val() || null;
+			const tableId = $('#servingTable').val() || null;
+			const customerId = $('#customer').val() || null;
+			const paymentMethodId = $('#paymentMethod').val() || null;
+
+
+
+			const items = [];
+			$rows.each(function () {
+				const $tr = $(this);
+				debugger
+				const $firstTd = $tr.find('td').first();
+
+				const qty = parseFloat($tr.find('.lineqty').val()) || 0;
+				const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
+				const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
+				const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
+				const lineTotal = unitPrice * qty; // without tax
+				const lineTotalWithTax = lineTotal + taxAmount;
+
+				items.push({
+					ProductId: $firstTd.data('productid'),
+					VariantId: $firstTd.data('variantid'),
+					Quantity: qty,
+					UnitPrice: unitPrice,
+					TaxRate: taxRate,
+					TaxAmount: taxAmount,
+					LineTotal: lineTotal,
+					LineTotalWithTax: lineTotalWithTax
 				});
-		}
+			});
 
+			const payload = {
+				TotalAmount: totalAmount,
+				TotalTax: totalTax,
+				GrandTotal: grandTotal,
+				DiscountAmount: discount,
+				NetAmount: totalPayable, // after discount
+				CashReceived: cashReceived,
+				PaymentMethodId: paymentMethodId,
+				EmployeeId: salesPersonId,
+				ServingTableId: tableId,
+				CustomerId: customerId,
+				InvoiceDetails: items
+			};
 
+			$.ajax({
+				url: '/InvoiceManager/SaveOrder',
+				type: 'POST',
+				data: payload,
+
+				xhrFields: {
+					responseType: 'blob'  // expecting PDF back
+				},
+				success: function (data) {
+					console.log('Hello Dumpling');
+
+					console.log(data);
+					var blob = new Blob([data], { type: "application/pdf" });
+					var url = URL.createObjectURL(blob);
+					window.open(url, "_blank");
+				},
+				error: function (xhr, status, error) {
+					alert("Error saving invoice: " + error);
+				}
+			});
+	}
 
 	async function printInvoice(invoiceId) {
-		try {
-			// Connect to QZ Tray
-			await qz.websocket.connect();
+	try {
+		// Connect to QZ Tray
+		await qz.websocket.connect();
 
-			// Fetch invoice HTML from server
-			const response = await fetch(`/Invoices/GetInvoiceHtml?invoiceId=${invoiceId}`);
-			const html = await response.text();
+		// Fetch invoice HTML from server
+		const response = await fetch(`/Invoices/GetInvoiceHtml?invoiceId=${invoiceId}`);
+		const html = await response.text();
 
-			// Configure printer (replace with your printer name)
-			const config = qz.configs.create("Your Printer Name");
+		// Configure printer (replace with your printer name)
+		const config = qz.configs.create("Your Printer Name");
 
-			// Prepare print data
-			const data = [{
-				type: 'html',
-				format: 'plain',
-				data: html
-			}];
+		// Prepare print data
+		const data = [{
+			type: 'html',
+			format: 'plain',
+			data: html
+		}];
 
-			// Send to printer silently
-			await qz.print(config, data);
+		// Send to printer silently
+		await qz.print(config, data);
 
-			console.log("Invoice printed successfully!");
-		} catch (err) {
-			console.error("Print error:", err);
-		} finally {
-			qz.websocket.disconnect();
-		}
+		console.log("Invoice printed successfully!");
+	} catch (err) {
+		console.error("Print error:", err);
+	} finally {
+		qz.websocket.disconnect();
+	}
 	}
 
 </script>

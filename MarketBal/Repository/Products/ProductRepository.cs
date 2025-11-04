@@ -132,11 +132,11 @@ namespace MarketBal.Repository.Products
         DECLARE @NewProductId UNIQUEIDENTIFIER = NEWID();
 
         INSERT INTO INV.Products (
-            ProductId, ProductName, ProductDescription, SubCategoryId, BranchId,
+            ProductId, ProductName, ProductDescription, SubCategoryId, BranchId,BrandModelId,
             CreatedOn, Createdby, ModifiedOn, IsActive, IsDeleted, ProductSlug, UOMId,BrandId,OrganizationId
         )
         VALUES (
-            @NewProductId, @ProductName, @ProductDescription, @SubCategoryId, @BranchId,
+            @NewProductId, @ProductName, @ProductDescription, @SubCategoryId, @BranchId,@BrandModelId,
             @CreatedOn, @CreatedBy, @ModifiedOn, 1, 0, @ProductSlug, @UOMId,@BrandId,@OrganizationId
         );
 
@@ -151,6 +151,7 @@ namespace MarketBal.Repository.Products
                 product.ProductDescription,
                 product.SubCategoryId,
                 commonParams.BranchId,
+                product.BrandModelId,
                 commonParams.CreatedOn,
                 commonParams.CreatedBy,
                 commonParams.ModifiedOn,
@@ -166,12 +167,13 @@ namespace MarketBal.Repository.Products
 
         public async Task<ProductVM> GetProduct(Guid ProductId)
         {
-            string query = $@"select p.ProductId,p.ProductName,uom.UOMName,p.UOMId,p.ProductDescription, sc.SubCategoryId,sc.SubCategoryName,c.CategoryName, d.DepartmentName,p.ProductSlug, ppimg.ImageUrl 
+            string query = $@"select p.ProductId, bm.BrandModelId, bm.ModelName, p.ProductName,uom.UOMName,p.UOMId,p.ProductDescription, sc.SubCategoryId,sc.SubCategoryName,c.CategoryName, d.DepartmentName,p.ProductSlug, ppimg.ImageUrl 
     ,b.BrandId,b.BrandName
 from Inv.Products p 
 LEFT JOIN INV.SubCategory sc on p.SubCategoryId = sc.SubCategoryId 
 LEFT JOIN INV.Categories c on sc.CategoryId =c.CategoryId 
 LEFT JOIN Inv.Departments d on c.DepartmentId=d.DepartmentId 
+LEFT JOIN INv.BrandModels bm on p.BrandModelId = bm.BrandModelId
 Left JOIN INV.Brands b on p.BrandId = b.BrandId
  LEFT JOIN INV.UOM uom on p.UOMId = uom.UOMId
 LEFT JOIN Inv.ProductImages ppimg on p.Productid = ppimg.ProductId and ppimg.IsDefault = 1
@@ -196,7 +198,8 @@ LEFT JOIN Inv.ProductImages ppimg on p.Productid = ppimg.ProductId and ppimg.IsD
                 ProductDescription = @ProductDescription ,
                 SubCategoryId = @SubCategoryId ,
                 BrandId=@BrandId,
-                UOMId=@UOMId
+                UOMId=@UOMId,
+                BrandModelId=@BrandModelId
                 where ProductId=@ProductId
             select 1
                 "
@@ -211,6 +214,7 @@ LEFT JOIN Inv.ProductImages ppimg on p.Productid = ppimg.ProductId and ppimg.IsD
                 vm.BrandId,
                 vm.UOMId,
                 vm.ProductId,
+                vm.BrandModelId,
             };
 
 
@@ -426,7 +430,7 @@ WHERE pv.ProductId = @ProductId  AND bs.BranchId = @BranchId
                         RetailPrice = masterStock.RetailPrice,
                         PromotionPrice = masterStock.PromotionPrice,
                         Cost = masterStock.Cost,
-                       
+
                     }
                 );
                 return 2; // existing record updated
@@ -648,7 +652,7 @@ ORDER BY p.ProductName";
             var result = await _db.GetDataListWithQueryAndParam<ProductVariantVM>(query, param);
             return UpdateCurrentPrice(result.ToList());
         }
-      
+
         public class SearchTopProductResult
         {
             public List<ProductVariantVM> TopProducts { get; set; } = new();
@@ -677,14 +681,14 @@ ORDER BY p.ProductName";
              // If branchStock is null use sensible fallbacks
              QoH = branchStock != null ? branchStock.Qty : 0M,
              Cost = branchStock != null ? branchStock.Cost : 0M,
-             SalesPrice = branchStock != null ? branchStock.SalePrice :0M,
-             PromotionPrice = branchStock != null ? branchStock.PromotionPrice  :0M,
+             SalesPrice = branchStock != null ? branchStock.SalePrice : 0M,
+             PromotionPrice = branchStock != null ? branchStock.PromotionPrice : 0M,
              RetailPrice = branchStock != null ? branchStock.RetailPrice : 0M,
 
              BarCode = pv.BarCode,
              MinQty = pv.MinQty,
              MaxQty = pv.MaxQty,
-             TaxRate=pv.TaxSlab.Rate,
+             TaxRate = pv.TaxSlab.Rate,
              LastPurchase = pv.LastPurchase,
              CreatedOn = pv.CreatedOn,
              Createdby = pv.Createdby,
@@ -714,18 +718,18 @@ ORDER BY p.ProductName";
 
             if (!isPaginated)
             {
-              
+
                 result.TopProducts = await query
-                    .OrderByDescending(p => p.CreatedOn) 
+                    .OrderByDescending(p => p.CreatedOn)
                     .Take(5)
                     .ToListAsync();
 
-              
+
                 result.AllProducts = await query.ToListAsync();
             }
             else
             {
-                
+
                 result.AllProducts = await query
                     .OrderByDescending(p => p.CreatedOn)
                     .Skip((page - 1) * pageSize)
@@ -925,7 +929,8 @@ Update INV.ProductVariants set VariantImageId = @VariantImageId where VariantId 
                 var result = await _db.ExecuteQuery<int>(query, param);
                 return result;
 
-            }else if (model.DataType == "QuantityPerUnit" || model.DataType ==  "MinQty" || model.DataType == "MaxQty")
+            }
+            else if (model.DataType == "QuantityPerUnit" || model.DataType == "MinQty" || model.DataType == "MaxQty")
             {
                 query = $@"
                     UPDATE INV.ProductVariants set {model.DataType} = {model.Value} where VariantId = '{model.VariantId}' AND BranchId = '{AppDataUtility.SessionUser.Person.Branch.BranchId}'";

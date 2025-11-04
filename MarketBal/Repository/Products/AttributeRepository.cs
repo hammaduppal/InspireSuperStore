@@ -1,7 +1,9 @@
 ﻿using MainModels;
 using MainModels.DTOModels;
+using MainModels.Models;
 using MainModels.Util;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace MarketBal.Repository.Products
 {
@@ -9,10 +11,12 @@ namespace MarketBal.Repository.Products
     {
         private readonly IConfiguration _config;
         private readonly DBManager _db;
-        public AttributeRepository(IConfiguration config)
+        private readonly OneDb _onedb;
+        public AttributeRepository(IConfiguration config,OneDb onedb)
         {
             _config = config;
             _db = new DBManager(_config);
+            _onedb = onedb;
         }
         public async Task<int> AddDepartment(DepartmentVM model)
         {
@@ -402,6 +406,50 @@ namespace MarketBal.Repository.Products
             string query = $@"select BrandId,BrandName from Inv.Brands where IsActive =1";
             var result = await _db.ExecuteQueryList<BrandVM>(query);
             return result.ToList();
+        }
+        public async Task<List<BrandModelVM>> GetBrandModels()
+        {
+            return await _onedb.BrandModels.Select(x => new BrandModelVM
+            {
+                 BrandModelId= x.BrandModelId,
+                 ModelName = x.ModelName,
+                 Brand =new BrandVM
+                 {
+                      BrandId= x.Brand.BrandId,
+                      BrandName=x.Brand.BrandName
+                 }
+            }).ToListAsync();
+        }
+        public async Task<List<BrandModelVM>> GetBrandModel(Guid brandId)
+        {
+            return await _onedb.BrandModels.Where(x=>x.BrandId==brandId).Select(x => new BrandModelVM
+            {
+                BrandModelId = x.BrandModelId,
+                ModelName = x.ModelName
+               
+            }).ToListAsync();
+        }
+        public async Task<int> AddBrandModel(BrandModelVM model)
+        {
+            bool exists = await _onedb.BrandModels
+                .AnyAsync(x => x.BrandId == model.BrandId &&
+                               x.ModelName.ToLower() == model.ModelName.ToLower());
+
+            if (exists)
+            {
+                return -1; 
+            }
+
+            var entity = new BrandModel
+            {
+                BrandId = model.BrandId,
+                ModelName = model.ModelName.Trim(),
+                IsActive = true,
+                CreatedOn = DateTime.UtcNow
+            };
+
+            await _onedb.BrandModels.AddAsync(entity);
+            return await _onedb.SaveChangesAsync();
         }
 
         #region DCS

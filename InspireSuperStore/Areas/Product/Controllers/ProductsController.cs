@@ -34,7 +34,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             _config = config;
             _product = new ProductRepository(_config, oneDb);
             _dcs = new DCSRepository(_config);
-            _attrib = new AttributeRepository(_config);
+            _attrib = new AttributeRepository(_config,oneDb);
             _file = new FileRepository();
             _admin = new AdminPanelRepository(_config, oneDb);
             _system =new SystemRepository(_config, oneDb);
@@ -67,6 +67,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             vm.Departments = await _attrib.GetDepartment();
             vm.UOMs = await _attrib.GetUOM();
             vm.Brands = await _attrib.GetBrands();
+            
             return PartialView(vm);
         }
         public async Task<IActionResult> AddProduct(ProductVM product)

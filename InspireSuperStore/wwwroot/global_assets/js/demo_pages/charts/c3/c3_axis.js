@@ -190,8 +190,8 @@ var С3Axis = function() {
                 data: {
                     x : 'x',
                     columns: [
-                        ['x', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-                        ['pv', 90, 100, 140, 200, 100, 400, 90, 100, 140, 200, 100, 400],
+                        ['x', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        ['Sales Chart', 90, 100, 140, 200, 100, 400, 90, 100, 140, 200, 100, 400],
                     ],
                     type: 'bar'
                 },
@@ -226,7 +226,7 @@ var С3Axis = function() {
             // Generate chart
             var axis_labels = c3.generate({
                 bindto: axis_labels_element,
-                size: { height: 400 },
+                size: { height: 250 },
                 data: {
                     columns: [
                         ['sample', 30, 200, 100, 400, 150, 250],

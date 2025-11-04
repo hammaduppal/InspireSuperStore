@@ -19,7 +19,7 @@ namespace MarketBal.Repository.HRM
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config);
+            _attrib = new AttributeRepository(_config,_onedb);
         }
         public async Task<List<EmployeeVM>> GetSaleStaff()
         {

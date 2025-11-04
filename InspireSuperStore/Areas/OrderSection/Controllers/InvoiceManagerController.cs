@@ -36,7 +36,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         {
             _config = config;
             _oneDb = oneDb;
-            _attrib = new AttributeRepository(_config);
+            _attrib = new AttributeRepository(_config,_oneDb);
             _account = new AccountRepository(_config);
             _admin = new AdminPanelRepository(_config, _oneDb);
             _assets = new AssetRepository(_config, _oneDb);
