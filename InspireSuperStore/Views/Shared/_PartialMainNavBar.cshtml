@@ -27,7 +27,14 @@
 
 	<span class="navbar-text ml-md-3">
 		<span class="badge badge-mark border-orange-300 mr-2"></span>
-		@GreetingHelper.GetGreeting()
+		@if(string.IsNullOrEmpty(AppDataUtility.SessionUser.WelcomeMessage))
+		{
+			@GreetingHelper.GetGreeting();
+		}
+		else
+		{
+			@AppDataUtility.SessionUser.WelcomeMessage;
+		}
 	</span>
 	&nbsp;&nbsp;&nbsp; 
 	@if (AppDataUtility.SessionUser.Person != null)

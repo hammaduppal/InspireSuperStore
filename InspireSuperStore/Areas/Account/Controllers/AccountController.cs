@@ -99,6 +99,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
         }
         private async Task<int> LoginHandler(LoginUserVM res)
         {
+            res.WelcomeMessage = GreetingHelper.GetGreeting();
             AppDataUtility.SessionUser = res;
             string[] rolesnames = res.Roles.Select(x => x.Name).ToArray();
             bool isSuperAdmin = res.Roles.Any(r => r.Id == 1 && r.Name.Equals("superadmin", StringComparison.OrdinalIgnoreCase));

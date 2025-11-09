@@ -23,7 +23,7 @@ namespace MarketBal.Repository.InvoiceRP
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
         private readonly POSRepository _pOSRepository;
-        private readonly HumanRespourceRepository   _hrmRepository;
+        private readonly HumanRespourceRepository _hrmRepository;
         private readonly JournalsRepository _journalRepo;
         public InvoiceRepository(IConfiguration config, OneDb oneDb)
         {
@@ -31,7 +31,7 @@ namespace MarketBal.Repository.InvoiceRP
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config,_onedb);
+            _attrib = new AttributeRepository(_config, _onedb);
             _pOSRepository = new POSRepository(_config, _onedb);
             _hrmRepository = new HumanRespourceRepository(_config, _onedb);
             _journalRepo = new JournalsRepository(_config, _onedb);
@@ -124,7 +124,7 @@ namespace MarketBal.Repository.InvoiceRP
                             newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
                         }
                     }
-                  
+
                     // ---------- Calculations ----------
                     decimal totalAmount = model.InvoiceDetails.Sum(d => d.UnitPrice * d.Quantity);
                     decimal totalTax = model.InvoiceDetails.Sum(d => (d.TaxRate) * (d.UnitPrice * d.Quantity) / 100);
@@ -176,7 +176,7 @@ namespace MarketBal.Repository.InvoiceRP
                     {
                         invoiceMaster.DueDate = model.DueDate;
                     }
-                        _onedb.InvoiceMasters.Add(invoiceMaster);
+                    _onedb.InvoiceMasters.Add(invoiceMaster);
                     await _onedb.SaveChangesAsync();
 
                     // ---------- Invoice Details ----------
@@ -232,14 +232,20 @@ namespace MarketBal.Repository.InvoiceRP
                         }
                     }
                     bool isCashINvoice = false;
-                    if (invoiceMaster.PaymentStatusId==1)
+                    if (invoiceMaster.PaymentStatusId == 1)
                     {
                         isCashINvoice = true;
                     }
 
-                 var customer = await _hrmRepository.GetCustomer(invoiceMaster.CustomerId.Value);
-                var cost = await GetCostofGoods(model.InvoiceDetails.Where(i => i.VariantId.HasValue).Select(i => i.VariantId.Value).ToList());
-               var tesla =  await _journalRepo.AddInvoiceJournals(invoiceMaster, isCashINvoice, customer, cost);
+                    var customer = await _hrmRepository.GetCustomer(invoiceMaster.CustomerId.Value);
+                    var cost = await GetCostofGoods(
+                        model.InvoiceDetails.Select(x => new InvoiceDetail
+                        {
+                            VariantId = x.VariantId,
+                            Quantity = x.Quantity
+                        }).ToList());
+
+                    var tesla = await _journalRepo.AddInvoiceJournals(invoiceMaster, isCashINvoice, customer, cost);
                     await _onedb.SaveChangesAsync();
                     await transaction.CommitAsync();
                     return invoiceMaster;
@@ -423,28 +429,45 @@ namespace MarketBal.Repository.InvoiceRP
 
         }
 
-        public async Task<decimal> GetCostofGoods(List<Guid> variantIds)
+        public async Task<decimal> GetCostofGoods(List<InvoiceDetail> invoiceDetails)
         {
             try
             {
-                decimal totalCost = 0;
-                foreach (var variantId in variantIds)
-                {
-                    var variant = await _onedb.BranchStocks
+                var branchId = AppDataUtility.SessionUser.Person.Branch.BranchId;
 
-                        .FirstOrDefaultAsync(v => v.ProductVariantId == variantId && v.BranchId == AppDataUtility.SessionUser.Person.Branch.BranchId);
-                    if (variant != null)
-                    {
-                        totalCost += variant.Cost.Value;
-                    }
-                }
+                // Filter valid items
+                var validItems = invoiceDetails
+                    .Where(i => i.VariantId.HasValue && i.Quantity > 0)
+                    .ToList();
+
+                if (!validItems.Any())
+                    return 0m;
+
+                var variantIds = validItems.Select(i => i.VariantId.Value).Distinct().ToList();
+
+                // Single DB call for all variants in this branch
+                var stocks = await _onedb.BranchStocks
+                    .Where(v => variantIds.Contains(v.ProductVariantId.Value) && v.BranchId == branchId)
+                    .Select(v => new { v.ProductVariantId, v.Cost })
+                    .ToListAsync();
+
+                // Map variants to their cost
+                var costLookup = stocks.ToDictionary(x => x.ProductVariantId, x => x.Cost ?? 0m);
+
+                // Multiply cost * quantity
+                decimal totalCost = validItems.Sum(i =>
+                    costLookup.TryGetValue(i.VariantId.Value, out decimal unitCost)
+                        ? unitCost * i.Quantity
+                        : 0m
+                );
+
                 return totalCost;
             }
             catch (Exception ex)
             {
                 throw new ApplicationException("Error calculating cost of goods", ex);
             }
-
         }
+
     }
 }

@@ -6,9 +6,11 @@
 
 	<!-- Main navigation -->
 	<div class="card card-sidebar-mobile">
+		<input type="text" id="searchmenu" placeholder="Search...." class="form-control pt-2 mt-2"/>
 		<ul class="nav nav-sidebar" data-nav-type="accordion">
 
 			<!-- Main -->
+
 			<li class="nav-item">
 				<a href="/" class="nav-link ">
 					<i class="icon-home4 text-primary-300"></i>
@@ -141,7 +143,7 @@
 				</li>
 			}
 
-			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin,UserRolesConstants.Accounts))
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Accounts))
 			{
 				<li class="nav-item nav-item-submenu">
 					<a href="#" class="nav-link "><i class="icon-users4 text-success-300"></i> <span>Human Resources</span></a>
@@ -187,8 +189,10 @@
 						<li class="nav-item nav-item-submenu">
 							<a href="#" class="nav-link"><i class="mi-attach-money"></i> Accounts Receivable</a>
 							<ul class="nav nav-group-sub">
-								<li class="nav-item"><a href="#" class="nav-link"><i class="mi-people"></i> Credit Customers</a></li>
-								<li class="nav-item"><a href="/Accounting/Receivables/Invoices" class="nav-link disabled"><i class="mi-receipt"></i> Customer Invoices <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span> </a></li>
+								<li class="nav-item"><a href="/Accounting/Receivables" class="nav-link"><i class="mi-receipt"></i> Receivables</a></li>
+
+								<li class="nav-item"><a href="#" class="nav-link disabled"><i class="mi-people"></i> Credit Customers <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span> </a></li>
+
 								<li class="nav-item"><a href="/Accounting/Receivables/Payments" class="nav-link disabled"><i class="mi-payment"></i> Receive Payments <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
 								<li class="nav-item"><a href="/Accounting/Receivables/Statements" class="nav-link disabled"><i class="mi-description"></i> Customer Statements <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
 							</ul>
@@ -198,7 +202,7 @@
 						<li class="nav-item nav-item-submenu">
 							<a href="#" class="nav-link"><i class="mi-shopping-cart"></i> Accounts Payable</a>
 							<ul class="nav nav-group-sub">
-								<li class="nav-item"><a href="/Accounting/Payables" class="nav-link"><i class="mi-people"></i> Credit Suppliers</a></li>
+								<li class="nav-item"><a href="/Accounting/Payables" class="nav-link"><i class="mi-people"></i> Payables</a></li>
 
 								<li class="nav-item"><a href="/Accounting/Payables/Suppliers" class="nav-link disabled"><i class="mi-people-outline"></i> Supplier List</a></li>
 								<li class="nav-item"><a href="/Accounting/Payables/Bills" class="nav-link disabled"><i class="mi-receipt"></i> Supplier Bills <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
@@ -228,4 +232,68 @@
 	<!-- /main navigation -->
 
 </div>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		const searchInput = document.getElementById("searchmenu");
+		const submenus = document.querySelectorAll(".nav-item-submenu");
 
+		searchInput.addEventListener("keyup", function () {
+			const filter = this.value.toLowerCase().trim();
+			const allItems = document.querySelectorAll(".nav-sidebar .nav-item");
+
+			// reset all visibility
+			allItems.forEach(item => item.style.display = "");
+
+			if (filter === "") {
+				// collapse all submenus
+				submenus.forEach(submenu => {
+					submenu.classList.remove("nav-item-open");
+					const subGroup = submenu.querySelector(".nav-group-sub");
+					if (subGroup) subGroup.style.display = "none";
+				});
+				return;
+			}
+
+			submenus.forEach(submenu => {
+				let matchFound = false;
+
+				const mainLink = submenu.querySelector(".nav-link"); // ✅ fixed selector
+				const subLinks = submenu.querySelectorAll(".nav-group-sub .nav-item");
+
+				// check parent link text
+				if (mainLink && mainLink.textContent.toLowerCase().includes(filter)) {
+					matchFound = true;
+				}
+
+				// check sub links
+				subLinks.forEach(sub => {
+					const linkText = sub.textContent.toLowerCase();
+					if (linkText.includes(filter)) {
+						matchFound = true;
+						sub.style.display = "";
+					} else {
+						sub.style.display = "none";
+					}
+				});
+
+				// toggle submenu visibility
+				const subGroup = submenu.querySelector(".nav-group-sub");
+				if (matchFound) {
+					submenu.classList.add("nav-item-open");
+					if (subGroup) subGroup.style.display = "block";
+					submenu.style.display = "";
+				} else {
+					submenu.classList.remove("nav-item-open");
+					if (subGroup) subGroup.style.display = "none";
+					submenu.style.display = "none";
+				}
+			});
+
+			// handle top-level items (like Dashboard)
+			document.querySelectorAll(".nav-sidebar > .nav-item:not(.nav-item-submenu)").forEach(item => {
+				const text = item.textContent.toLowerCase();
+				item.style.display = text.includes(filter) ? "" : "none";
+			});
+		});
+	});
+</script>
