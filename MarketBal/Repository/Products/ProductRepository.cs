@@ -529,7 +529,7 @@ JOIN System.TaxSlabs ts on pv.TaxSlabId = ts.TaxSlabId
                         result.CurrentPrice = result.RetailPrice;
                         break;
                     case (int)AppConstants.EnumPriceFormat.SalesPrice:
-                        result.CurrentPrice = result.SalesPrice;
+                        result.CurrentPrice = result.SalePrice;
                         break;
                     case (int)AppConstants.EnumPriceFormat.PromotionPrice:
                         result.CurrentPrice = result.PromotionPrice;
@@ -681,7 +681,7 @@ ORDER BY p.ProductName";
              // If branchStock is null use sensible fallbacks
              QoH = branchStock != null ? branchStock.Qty : 0M,
              Cost = branchStock != null ? branchStock.Cost : 0M,
-             SalesPrice = branchStock != null ? branchStock.SalePrice : 0M,
+             SalePrice = branchStock != null ? branchStock.SalePrice : 0M,
              PromotionPrice = branchStock != null ? branchStock.PromotionPrice : 0M,
              RetailPrice = branchStock != null ? branchStock.RetailPrice : 0M,
 
@@ -836,7 +836,7 @@ END
                 model.ProductId,
                 model.Cost,
                 model.BarCode,
-                model.SalesPrice,
+                model.SalePrice,
                 model.PromotionPrice,
                 model.RetailPrice,
                 model.SubUomid,
@@ -960,7 +960,7 @@ Update INV.ProductVariants set VariantImageId = @VariantImageId where VariantId 
                 }
                 else if (item.PriceFormat == (int)AppConstants.EnumPriceFormat.SalesPrice)
                 {
-                    item.CurrentPrice = item.SalesPrice;
+                    item.CurrentPrice = item.SalePrice;
                 }
                 else if (item.PriceFormat == (int)AppConstants.EnumPriceFormat.PromotionPrice)
                 {

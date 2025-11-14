@@ -9,6 +9,7 @@ using MarketBal.Repository.SystemRP;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
+using PuppeteerSharp;
 using static MainModels.DTOModels.AppConstants;
 
 namespace InspireSuperStore.Areas.Product.Controllers
@@ -27,17 +28,19 @@ namespace InspireSuperStore.Areas.Product.Controllers
         private readonly OneDb oneDb;
         private readonly AdminPanelRepository _admin;
         private readonly SystemRepository _system;
-        public ProductsController(IConfiguration config, OneDb oneDb)
+        private readonly IDataRepository _datarepo;
+        public ProductsController(IConfiguration config, OneDb oneDb,IDataRepository data)
         {
             this.oneDb = oneDb;
 
             _config = config;
             _product = new ProductRepository(_config, oneDb);
             _dcs = new DCSRepository(_config);
-            _attrib = new AttributeRepository(_config,oneDb);
+            _attrib = new AttributeRepository(_config, oneDb);
             _file = new FileRepository();
             _admin = new AdminPanelRepository(_config, oneDb);
-            _system =new SystemRepository(_config, oneDb);
+            _system = new SystemRepository(_config, oneDb);
+            _datarepo = data;
         }
         public async Task<IActionResult> Products()
         {
@@ -67,7 +70,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             vm.Departments = await _attrib.GetDepartment();
             vm.UOMs = await _attrib.GetUOM();
             vm.Brands = await _attrib.GetBrands();
-            
+
             return PartialView(vm);
         }
         public async Task<IActionResult> AddProduct(ProductVM product)
@@ -78,10 +81,16 @@ namespace InspireSuperStore.Areas.Product.Controllers
                 return Json(new { statusCode = "300" });
 
             }
-
+            product.ProductDescription = await _datarepo.AnalyzeTextAsync(product.ProductName);
             var result = await _product.AddProduct(product);
 
             return Json(new { statusCode = "200", ProductId = result });
+        }
+        public async Task<IActionResult> CreateDescriptionPrompt(ProductVM product)
+        {
+            var resulttext = await _datarepo.AnalyzeTextAsync(product.ProductName);
+
+            return Json(new { statusCode = 200, Prompt =resulttext});
         }
         [HttpGet]
         public async Task<IActionResult> EditProduct(Guid productId)
@@ -90,7 +99,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             vm.Departments = await _attrib.GetDepartment();
             vm.Brands = await _attrib.GetBrands();
             vm.UOMs = await _attrib.GetUOM();
-            
+
             vm.Product = product;
             vm.Permission = PermissionHelper.Permissions().Where(x => x.URL == "/Product/Products" && x.Module == ModuleList.Product.ToString() && x.Feature == ModuleList.Category.ToString() && x.UserId == 2).FirstOrDefault(); ;
 
@@ -179,8 +188,8 @@ namespace InspireSuperStore.Areas.Product.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveVariantBranches(ProductVariantVM model)
         {
-            var res =await _product.AddProductVariantBranch(model);
-            return Json(new {Message="Branch Stock Updated Successfully!" });
+            var res = await _product.AddProductVariantBranch(model);
+            return Json(new { Message = "Branch Stock Updated Successfully!" });
         }
         [HttpPost]
         public async Task<IActionResult> AddProductVariant(ProductVariantVM model)

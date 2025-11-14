@@ -5,6 +5,7 @@ using MainModels.Util;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Mscc.GenerativeAI;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -73,6 +74,10 @@ builder.Services.AddAuthentication(cookieScheme).AddCookie(cookieScheme, options
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddScoped<NotificationService>();
+var apiKey = builder.Configuration.GetValue<string>("SystemSettings:GeminiAIKey");
+builder.Services.AddSingleton(new GoogleAI(apiKey));
+builder.Services.AddScoped<GeminiAIRepository>();
+builder.Services.AddScoped<IDataRepository, DataRepository>();
 var app = builder.Build();
 
 

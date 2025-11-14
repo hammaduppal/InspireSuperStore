@@ -39,10 +39,10 @@
 				<div class="card-body">
 					<ul class="nav nav-pills nav-justified">
 						<li id="productDescTab" class="nav-item"><a href="#productPill" class="nav-link active" data-toggle="tab">ProductDetails  </a></li>
-						@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin,UserRolesConstants.Product,UserRolesConstants.PowerUser,UserRolesConstants.Purchase))
+						@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Product, UserRolesConstants.PowerUser, UserRolesConstants.Purchase))
 						{
-						<li id="imageTab" class="nav-item"><a href="#imagePill" data-value="@Model.Product.ProductId" class="nav-link" data-toggle="tab">Images </a></li>
-						<li data-uomId="@Model.Product.UOMId" id="variantsTab" class="nav-item"><a href="#variantPill" class="nav-link" data-toggle="tab">Variants </a></li>
+							<li id="imageTab" class="nav-item"><a href="#imagePill" data-value="@Model.Product.ProductId" class="nav-link" data-toggle="tab">Images </a></li>
+							<li data-uomId="@Model.Product.UOMId" id="variantsTab" class="nav-item"><a href="#variantPill" class="nav-link" data-toggle="tab">Variants </a></li>
 
 						}
 					</ul>
@@ -65,22 +65,24 @@
 
 													<div class="form-group">
 														<label>Product Description</label>
+
+														<button id="regenerate"><i class="fa fa-refresh"></i></button>
 														<textarea id="description" class="form-control" placeholder="Product Description" required> @Model.Product.ProductDescription</textarea>
 													</div>
-													
-														<div class="row">
-															<div class="col-md-11">
-															</div>
-															<div class="col-md-1">
-																<a id="unlockbtn" href="/Unlock"> <i class="icon-file-locked"></i></a>
 
-															</div>
+													<div class="row">
+														<div class="col-md-11">
 														</div>
-													
-												
+														<div class="col-md-1">
+															<a id="unlockbtn" href="/Unlock"> <i class="icon-file-locked"></i></a>
+
+														</div>
+													</div>
+
+
 													<div class="row">
 
-														
+
 
 														<div class="col-md-6">
 															<div class="form-group">
@@ -91,7 +93,6 @@
 																		@foreach (var item in Model.Departments)
 																		{
 																			<option value="@item.DepartmentId">@item.DepartmentName</option>
-
 																		}
 																	</optgroup>
 																</select>
@@ -129,7 +130,7 @@
 															<div class="form-group">
 																<label>UOM Name</label>
 																<select disabled id="uom" data-placeholder="Enter 'cat'" class="form-control select-minimum" data-fouc>
-															
+
 																	<option value="@Model.Product.UOMId">@Model.Product.UOMName</option>
 																	<optgroup label="UOM">
 																		@foreach (var item in Model.UOMs)
@@ -161,7 +162,7 @@
 																	<option value="@Model.Product.BrandModelId">@Model.Product.ModelName</option>
 
 																	<optgroup label="Brand Models">
-																		
+
 																	</optgroup>
 																</select>
 															</div>
@@ -218,6 +219,21 @@
 </script>
 <!-- /content area -->
 <script>
+	$(document).ready(function(){
+			 $('#description').summernote();
+			 $('#regenerate').click(async function(e){
+				 e.preventDefault();
+				 var productName = $('#productName').val();
+				 var objectData={
+					 url:'/Products/CreateDescriptionPrompt',
+					 data:{
+						 ProductName:productName
+					 }
+				 }
+				 const result = await Utility.RequestDataAjax(objectData);
+				 $('#description').summernote('code', result.Prompt);
+			 });
+	});
 	$('#productDescTab').click(function(){
 		location.reload();
 	})
@@ -229,7 +245,7 @@
 
 	$('#unlockForm').submit(async function(e){
 		e.preventDefault();
-		
+
 		var formData={
 			UnlockKey: encrypt($('#unlockPassword').val())
 		}
@@ -248,18 +264,19 @@
 				 Utility.failMessage(result.Message);
 		}
 		console.log(formData);
-		
+
 
 	});
 	$(document).ready(function(e){
 			var id= `@Model.Product.ProductId`;
 			$('#descForm').submit(async function(e){
 					e.preventDefault();
-					
+		var desc = $('#description').summernote();
+
 					Utility.SpinnerMessageParent('descFormSubmitBtn','Loading..');
 					var formData = {
 					ProductName: $('#productName').val(),
-					ProductDescription: $('#description').val().trim(),
+					ProductDescription:desc.summernote('code'),
 					ProductId:id,
 					SubCategoryId: $('#subcat').val(),
 					UOMId: $('#uom').val(),
@@ -282,8 +299,8 @@
 			   console.log(formData);
 			});
 				$('#dep').change(async function(e){
-					
-				
+
+
 					var depId = $(this).val();
 						var formData={
 							DepartmentId :depId
@@ -293,21 +310,21 @@
 							url:'/AttributeManager/GetCategorybyDepartment'
 						}
 						const result = await Utility.RequestDataAjax(objectData);
-						
+
 							$('#cat').empty();
 							$('#subcat').empty();
 							$('#cat').append(`<option>Select Category</option>`);
 								  result.forEach(function(cat) {
 										$('#cat').append(`<option value="${cat.CategoryId}">${cat.CategoryName}</option>`);
 								  });
-					
-				
-				
+
+
+
 				});
-					
+
 				$('#cat').change(async function(e){
 
-				
+
 					var catid = $(this).val();
 						var formData={
 							CategoryId :catid
@@ -317,7 +334,7 @@
 							url:'/AttributeManager/GetSubCategorybyCategory'
 						}
 						const result = await Utility.RequestDataAjax(objectData);
-						
+
 							$('#subcat').empty();
 							$('#subcat').append(`<option>Select Sub Category</option>`);
 								  result.forEach(function(subcat) {
@@ -327,7 +344,7 @@
 
 
 				});
-				
+
 				$('#brand').change(async function () {
 		var brandId = $(this).val();
 
