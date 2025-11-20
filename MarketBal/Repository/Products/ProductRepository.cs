@@ -748,38 +748,7 @@ ORDER BY p.ProductName";
 
         public async Task<int> AddProductVariant(ProductVariantVM model)
         {
-            //            string query = $@"
-            //Declare @VariantId uniqueidentifier = NewId()
-            //                    INSERT INTO Inv.ProductVariants (VariantId,MaterialId,ColorId,SizeId,ProductId,Cost,BarCode,SalesPrice,PromotionPrice,RetailPrice,UOMId,SubUOMId,QuantityPerUnit,IsSerial,MinQty,MaxQty,CreatedOn,Createdby,ModifiedOn,IsActive,IsDeleted,BranchId) 
-            //                                        VALUES (@VariantId,@MaterialId,@ColorId,@SizeId,@ProductId,@Cost,@BarCode,@SalesPrice,@PromotionPrice,@RetailPrice,@UOMId,@SubUOMId,@QuantityPerUnit,@IsSerial,@MinQty,@MaxQty,@CreatedOn,@CreatedBy,@ModifiedOn,@IsActive,@IsDeleted,@BranchId);
-            //select @VariantId
-            //                            ";
-            //            string query = $@"DECLARE @VariantId UNIQUEIDENTIFIER = NEWID();
-
-            //                    IF EXISTS (
-            //                        SELECT 1 FROM Inv.ProductVariants WHERE BarCode = @BarCode AND IsDeleted = 0
-            //                    )
-            //                    BEGIN
-            //                        SELECT -1 AS Result;
-            //                    END
-            //                    ELSE
-            //                    BEGIN
-            //                        INSERT INTO Inv.ProductVariants (
-            //                            VariantId, MaterialId, ColorId, SizeId, ProductId,
-            //                            Cost, BarCode, SalesPrice, PromotionPrice, RetailPrice,
-            //                             SubUOMId, QuantityPerUnit, IsSerial, MinQty,
-            //                            MaxQty, CreatedOn, CreatedBy, ModifiedOn, IsActive, IsDeleted, BranchId,OrganizationId
-            //                        )
-            //                        VALUES (
-            //                            @VariantId, @MaterialId, @ColorId, @SizeId, @ProductId,
-            //                            @Cost, @BarCode, @SalesPrice, @PromotionPrice, @RetailPrice,
-            //                             @SubUOMId, @QuantityPerUnit, @IsSerial, @MinQty,
-            //                            @MaxQty, @CreatedOn, @CreatedBy, @ModifiedOn, @IsActive, @IsDeleted, @BranchId,@OrganizationId
-            //                        );
-
-            //                        SELECT 300 AS Result;
-            //                    END
-            //";
+            
             string query = @"
 DECLARE @VariantId UNIQUEIDENTIFIER = NEWID();
 
@@ -816,7 +785,7 @@ INSERT INTO Inv.BranchStock (
     IsActive, IsDeleted, CreatedOn, CreatedBy
 )
 VALUES (
-    @BranchStockId, @VariantId, @BranchId, @SalesPrice, @RetailPrice, @PromotionPrice, @Cost, 
+    @BranchStockId, @VariantId, @BranchId, @SalePrice, @RetailPrice, @PromotionPrice, @Cost, 
     @IsActive, @IsDeleted, @CreatedOn, @CreatedBy
 );
 

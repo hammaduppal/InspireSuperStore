@@ -116,11 +116,11 @@ namespace MarketBal.Repository.Products
                         BEGIN
                             INSERT INTO INV.SubCategory (
                                 SubCategoryId, SubCategoryName, CategoryId, IsDeleted, 
-                                IsActive, CreatedBy, CreatedOn, ModifiedOn,SubCategorySlug
+                                IsActive, CreatedBy, CreatedOn, ModifiedOn,SubCategorySlug,HarmonizedSystemCode
                             )
                             VALUES (
                                 NEWID(), @SubCategoryName, @CategoryId, @IsDeleted, 
-                                @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@SubCategorySlug
+                                @IsActive, @CreatedBy, @CreatedOn, @ModifiedOn,@SubCategorySlug,@HarmonizedSystemCode
                             );
 
                             SELECT 1 AS Result;
@@ -137,7 +137,8 @@ namespace MarketBal.Repository.Products
                 commonParams.CreatedBy,
                 commonParams.CreatedOn,
                 commonParams.ModifiedOn,
-                SubCategorySlug
+                SubCategorySlug,
+                model.HarmonizedSystemCode
             };
             return await _db.ExecuteQuery<int>(query, param);
         }

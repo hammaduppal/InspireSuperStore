@@ -258,6 +258,11 @@ namespace MarketBal.Repository.InvoiceRP
             }
         }
 
+        public async Task<string> SendInvoicetoFBR()
+        {
+            var res = await _api.PostMethodNew("FBR/SendInvoice", "", "", "");
+            return "";
+        }
         public async Task<InvoiceMaster> GetInvoiceById(Guid invoiceId)
         {
             try
