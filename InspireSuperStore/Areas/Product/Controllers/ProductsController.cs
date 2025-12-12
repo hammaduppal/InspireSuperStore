@@ -73,6 +73,14 @@ namespace InspireSuperStore.Areas.Product.Controllers
 
             return PartialView(vm);
         }
+        public async Task<IActionResult> _AddServiceForm()
+        {
+            vm.Departments = await _attrib.GetDepartment();
+            vm.UOMs = await _attrib.GetUOM();
+            vm.Brands = await _attrib.GetBrands();
+
+            return PartialView(vm);
+        }
         public async Task<IActionResult> AddProduct(ProductVM product)
         {
 
@@ -82,10 +90,25 @@ namespace InspireSuperStore.Areas.Product.Controllers
 
             }
             product.ProductDescription = await _datarepo.AnalyzeTextAsync(product.ProductName);
-            var result = await _product.AddProduct(product);
+            var result = await _product.AddProduct(product,ProductType.PhysicalInventory);
 
             return Json(new { statusCode = "200", ProductId = result });
         }
+        public async Task<IActionResult> AddService(ProductVM product)
+        {
+
+            if (product.BrandId == null || product.SubCategoryId == null)
+            {
+                return Json(new { statusCode = "300" });
+
+            }
+            var result = await _product.AddProduct(product,ProductType.ServiceInventory);
+
+            return Json(new { statusCode = "200", ProductId = result });
+        }
+
+
+
         public async Task<IActionResult> CreateDescriptionPrompt(ProductVM product)
         {
             var resulttext = await _datarepo.AnalyzeTextAsync(product.ProductName);

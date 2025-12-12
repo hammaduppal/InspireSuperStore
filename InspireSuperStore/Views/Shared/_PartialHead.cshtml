@@ -1,6 +1,6 @@
 ﻿
 <style id="theme-preload-style">
-    /* Prevent blink by hiding until color applied */
+  
     body {
         visibility: hidden;
     }
@@ -18,7 +18,7 @@
             sidebar.className = sidebar.className.replace(/\bbg-\S+/g, '') + ' ' + prefix + color;
         }
 
-        // Show page now that theme is applied
+       
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('theme-preload-style')?.remove();
             document.body.style.visibility = 'visible';
@@ -28,9 +28,7 @@
 
 
 <link href="~/global_assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link href="~/global_assets/css/icons/material/icons.css" rel="stylesheet" type="text/css">
-<link href="~/global_assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css">
 <link href="~/assets/css/bootstrap.css" rel="stylesheet" />
 <link href="~/assets/css/bootstrap_limitless.css" rel="stylesheet" type="text/css">
 <link href="~/assets/css/layout.css" rel="stylesheet" />
@@ -39,8 +37,7 @@
 <link href="~/assets/css/customstyles.css" rel="stylesheet" />
 <link href="~/assets/custom/datatables.css" rel="stylesheet" />
 
-<!-- /global stylesheets -->
-<!-- Core JS files -->
+
 <script src="~/global_assets/js/main/jquery.min.js"></script>
 <script src="~/assets/custom/datatables.min.js"></script>
 
@@ -82,4 +79,3 @@
 <script src="~/global_assets/js/demo_pages/form_dual_listboxes.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
-<!-- /theme JS files -->

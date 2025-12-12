@@ -41,6 +41,50 @@ namespace MarketBal.Repository.AccountingRP
             await _onedb.AccountReceivables.AddAsync(ar);
             return await _onedb.SaveChangesAsync();
         }
+        public async Task<int> ReverseCreditSale(InvoiceMaster invoice, JournalEntry reversalEntry)
+        {
+            // 1️⃣ Fetch the original A/R entry
+            var originalAR = await _onedb.AccountReceivables
+                .FirstOrDefaultAsync(x => x.InvoiceId == invoice.InvoiceMasterId);
+
+            if (originalAR == null)
+                return 0;   
+            var reversalAR = new AccountReceivable
+            {
+                Arid = Guid.NewGuid(),
+                CustomerId = originalAR.CustomerId,
+                InvoiceId = invoice.InvoiceMasterId,
+                JournalEntryId = reversalEntry.JournalEntryId,
+
+                // Reverse the amounts
+                Amount = -originalAR.Amount,
+                ReceivedAmount = 0,
+                Balance = 0,    // after reversal customer owes nothing
+
+                // Mark reversal
+                Status = AppConstants.PaymentStatus.Cancelled.ToString(),
+
+                // Optional (you can store reason in invoice.CancelReason)
+                DueDate = originalAR.DueDate,
+
+                BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
+                CreatedBy = AppDataUtility.SessionUser.Id,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // 3️⃣ Update the original A/R entry (mark as reversed/cancelled)
+            originalAR.Status = AppConstants.PaymentStatus.Cancelled.ToString();
+            originalAR.Balance = 0;
+
+            _onedb.AccountReceivables.Update(originalAR);
+
+            // 4️⃣ Insert the reversing A/R entry
+            await _onedb.AccountReceivables.AddAsync(reversalAR);
+
+            return await _onedb.SaveChangesAsync();
+        }
+
+
         public async Task<List<AccountReceivableVM>> GetReceivables()
         {
             var result = await _onedb.AccountReceivables.Where(x => x.Status != AppConstants.PaymentStatus.Paid.ToString())

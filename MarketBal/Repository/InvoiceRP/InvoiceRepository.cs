@@ -12,6 +12,7 @@ using MarketBal.Repository.Products;
 using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
 using PuppeteerSharp.Media;
+using static MainModels.DTOModels.AppConstants;
 
 namespace MarketBal.Repository.InvoiceRP
 {
@@ -25,6 +26,7 @@ namespace MarketBal.Repository.InvoiceRP
         private readonly POSRepository _pOSRepository;
         private readonly HumanRespourceRepository _hrmRepository;
         private readonly JournalsRepository _journalRepo;
+        private readonly AccountsReceivableRepository _accountsReceivableRepository ;
         public InvoiceRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -35,6 +37,7 @@ namespace MarketBal.Repository.InvoiceRP
             _pOSRepository = new POSRepository(_config, _onedb);
             _hrmRepository = new HumanRespourceRepository(_config, _onedb);
             _journalRepo = new JournalsRepository(_config, _onedb);
+            _accountsReceivableRepository = new AccountsReceivableRepository(_config, _onedb);
         }
 
         public async Task<List<InvoiceMasterVM>> GetInvoices()
@@ -49,6 +52,7 @@ namespace MarketBal.Repository.InvoiceRP
                     CustomerId = x.CustomerId,
                     DiscountAmount = x.DiscountAmount,
                     TaxAmount = x.TaxAmount,
+                    PaymentStatusId=x.PaymentStatusId.Value,
                     PaymentMethodId = x.PaymentMethodId.Value,
                     PaymentStatus = x.PaymentStatus == null ? null : new PaymentStatusVM
                     {
@@ -236,6 +240,7 @@ namespace MarketBal.Repository.InvoiceRP
                     {
                         isCashINvoice = true;
                     }
+                    
 
                     var customer = await _hrmRepository.GetCustomer(invoiceMaster.CustomerId.Value);
                     var cost = await GetCostofGoods(
@@ -244,13 +249,150 @@ namespace MarketBal.Repository.InvoiceRP
                             VariantId = x.VariantId,
                             Quantity = x.Quantity
                         }).ToList());
+                    var productIds = model.InvoiceDetails.Select(x => x.ProductId).ToList();
 
-                    var tesla = await _journalRepo.AddInvoiceJournals(invoiceMaster, isCashINvoice, customer, cost);
+                    bool isServiceInvoice= await _onedb.Products
+                        .AnyAsync(p => productIds.Contains(p.ProductId) && p.ProductType == 2);
+                    int revenueAccount = isServiceInvoice
+                    ? CoaAccounts.ServiceIncome
+                    : CoaAccounts.SalesIncome;
+                    if (isServiceInvoice)
+                    {
+                        await _journalRepo.AddServiceInvoiceJournals(invoiceMaster, isCashINvoice, customer);
+                    }
+                    else
+                    {
+                        await _journalRepo.AddInvoiceJournals(invoiceMaster, isCashINvoice, customer, cost);
+                    }
+
+                   // var tesla = await _journalRepo.AddInvoiceJournals(invoiceMaster, isCashINvoice, customer, cost);
                     await _onedb.SaveChangesAsync();
                     await transaction.CommitAsync();
                     return invoiceMaster;
                 }
                 catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+        }
+
+        public async Task<bool> CancelInvoice(Guid invoiceId, string reason)
+        {
+            using (var transaction = await _onedb.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var invoice = await _onedb.InvoiceMasters
+                        .Include(x => x.InvoiceDetails)
+                        .FirstOrDefaultAsync(x => x.InvoiceMasterId == invoiceId);
+
+                    if (invoice == null)
+                        throw new Exception("Invoice not found.");
+
+                    //if (invoice.IsCancelled)
+                    //    throw new Exception("Invoice is already cancelled.");
+
+                    // ---------------------------
+                    // 1️⃣ Mark Invoice as Cancelled
+                    // ---------------------------
+                    
+                    invoice.IsCancelled = true;
+                    invoice.CanceledDate= DateTime.Now;
+                    invoice.PaymentStatusId = (int)AppConstants.PaymentStatus.Cancelled;
+                    _onedb.InvoiceMasters.Update(invoice);
+
+                    // ---------------------------
+                    // 2️⃣ Restore Inventory
+                    // ---------------------------
+                    foreach (var detail in invoice.InvoiceDetails)
+                    {
+                        // Variant stock
+                        if (detail.VariantId.HasValue && detail.VariantId != Guid.Empty)
+                        {
+                            var branchStock = await _onedb.BranchStocks
+                                .FirstOrDefaultAsync(s =>
+                                    s.ProductVariantId == detail.VariantId &&
+                                    s.BranchId == AppDataUtility.SessionUser.Person.Branch.BranchId);
+
+                            if (branchStock != null)
+                            {
+                                branchStock.Qty += detail.Quantity;
+                                _onedb.BranchStocks.Update(branchStock);
+                            }
+                        }
+
+                        // Product stock (QOH)
+                        var product = await _onedb.Products
+                            .FirstOrDefaultAsync(p => p.ProductId == detail.ProductId);
+
+                        if (product != null)
+                        {
+                            product.Qoh += detail.Quantity;
+                            _onedb.Products.Update(product);
+                        }
+                    }
+
+                    // ---------------------------
+                    // 3️⃣ Reverse Journal Entries
+                    // ---------------------------
+
+                    var originalEntry = await _onedb.JournalEntries
+                        .Include(x => x.JournalLines)
+                        .FirstOrDefaultAsync(x =>
+                            x.ReferenceNumber == invoice.InvoiceNo &&
+                            x.SourceModule == "Sales");
+
+                    if (originalEntry == null)
+                        throw new Exception("Original journal entry not found!");
+
+                    // Create reversal journal entry
+                    var reversalEntry = new JournalEntry
+                    {
+                        JournalEntryId = Guid.NewGuid(),
+                        EntryDate = DateTime.Now,
+                        ReferenceNumber = invoice.InvoiceNo + "-REV",
+                        Description = $"Reversal of Invoice {invoice.InvoiceNo} Journal Entry number: {originalEntry.JournalEntryId}",
+                        BranchId = originalEntry.BranchId,
+                        CreatedBy = AppDataUtility.SessionUser.Id,
+                        CreatedAt = DateTime.Now,
+                        SourceModule = "Sales-Reversal",
+                        EntryNumber = await _journalRepo.GetNewJournalNumber(),
+                    };
+
+                    await _onedb.JournalEntries.AddAsync(reversalEntry);
+
+                    // Reverse each journal line
+                    foreach (var line in originalEntry.JournalLines)
+                    {
+                        await _onedb.JournalLines.AddAsync(new JournalLine
+                        {
+                            JournalLineId = Guid.NewGuid(),
+                            JournalEntryId = reversalEntry.JournalEntryId,
+                            CoaId = line.CoaId,
+                            Description = "Reversal - " + line.Description,
+                            Debit = line.Credit,
+                            Credit = line.Debit,
+                            ReferenceType = "Invoice-Reversal",
+                            ReferenceId = invoice.InvoiceMasterId
+                        });
+                    }
+
+                    // ---------------------------
+                    // 4️⃣ Update A/R if credit invoice
+                    // ---------------------------
+                    if (invoice.PaymentStatusId != 1) // 1 = Cash
+                    {
+                        await _accountsReceivableRepository.ReverseCreditSale(invoice, reversalEntry);
+                    }
+
+                    await _onedb.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return true;
+                }
+                catch
                 {
                     await transaction.RollbackAsync();
                     throw;
@@ -288,6 +430,29 @@ namespace MarketBal.Repository.InvoiceRP
         {
             try
             {
+                string imageUrl = AppDataUtility.SystemPreferences.CompanyLogoUrl;
+                string base64Logo = "";
+
+                if (!string.IsNullOrEmpty(imageUrl))
+                {
+                    using (var client = new HttpClient())
+                    {
+                        var bytes = await client.GetByteArrayAsync(imageUrl);
+                        var base64 = Convert.ToBase64String(bytes);
+
+                        // detect file extension (fallback: png)
+                        string ext = Path.GetExtension(imageUrl)?.ToLower() switch
+                        {
+                            ".jpg" or ".jpeg" => "jpeg",
+                            ".gif" => "gif",
+                            ".bmp" => "bmp",
+                            _ => "png"
+                        };
+
+                        base64Logo = $"data:image/{ext};base64,{base64}";
+                    }
+                }
+
                 StringBuilder sb = new StringBuilder();
                 foreach (var item in model.InvoiceDetails)
                 {
@@ -308,13 +473,13 @@ namespace MarketBal.Repository.InvoiceRP
                 <body>
                 <section style='width:80mm; margin:0 auto;'>
                      <div class='company-info'>
-<p>
-    <img width='250px' height='20px' src='{GenerateBarCode.GenerateBarcode(model.InvoiceMasterId.ToString())}' alt='QR Code' />
-</p>
+                <p>
+                    <img width='250px' height='20px' src='{GenerateBarCode.GenerateBarcode(model.InvoiceMasterId.ToString())}' alt='QR Code' />
+                </p>
                       <div class='row align-items-center text-center'>
         <!-- Logo -->
         <div class='col-3'>
-          	<img src='~/global_assets/images/logo_dark.png' />
+          	<img src={base64Logo}' />
         </div>
 
         <div class='col-9'>

@@ -5,7 +5,7 @@
 	ViewData["Title"] = "CreateInvoice";
 	Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<div class="page-header page-header-light">
+<div class="page-header page-header-light pt-2 mt-2">
 	<div class="row">
 		<!-- Barcode Input -->
 		<div class="col-md-3">
@@ -148,7 +148,7 @@
 				<div id="invoice-section" class="row">
 					<div class="col-lg-1 text-center">
 						<label>Sub Total</label>
-						<input readonly id="totalAmount" type="text" value="0.00" class="form-control text-center" />
+						<input readonly id="totalAmount" onchange="Utility.validateNumericValue(this, 2)" type="text" value="0.00" class="form-control text-center" />
 					</div>
 					@if (AppDataUtility.SystemPreferences.EnableTax)
 					{
@@ -164,7 +164,7 @@
 
 					<div class="col-lg-1 text-center">
 						<label>Discount</label>
-						<input id="discount" type="text" class="form-control text-center" />
+						<input id="discount" onchange="Utility.validateNumericValue(this, 2)" type="text" class="form-control text-center" />
 					</div>
 
 					<div class="col-lg-1 text-center">
@@ -289,7 +289,7 @@
 				</style>
 
 				<div class="card-body border-top">
-					<div id="invoiceRowSection" class="table-responsive " style="max-height:22vh;min-height:22vh;overflow-x:auto">
+					<div id="invoiceRowSection" class="table-responsive " style="max-height:50vh;min-height:50vh;overflow-x:auto">
 						<table id="invoiceTable" class="table table-border-dashed">
 							<thead>
 								<tr>
@@ -342,8 +342,7 @@
 					<div class="row">
 					</div>
 					<div class="btn-group w-100">
-						<button id="btn-submit-hold" type="button" class="btn btn-warning" style="flex-grow: 1;">Hold</button>
-						<button type="button" class="btn btn-danger" style="flex-grow: 1;">Cancel</button>
+						<button id="btn-submit-hold" type="button" class="btn btn-warning" style="flex-grow: 1;">Hold/UnHold </button>
 						@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
 						{
 							<button id="btn-submit-order" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">Place Order</button>
@@ -367,26 +366,35 @@
 
 
 </div>
+<div class="modal fade" id="heldInvoicesModal" tabindex="-1" role="dialog" aria-labelledby="heldInvoicesModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="heldInvoicesModalLabel">Held Invoices</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body" id="heldInvoicesList">
+				<!-- List will be rendered here -->
+			</div>
+		</div>
+	</div>
+</div>
 <script>
-	
+	$(document).ready(function(){
+		setTotalPrice();
+			
 
-	$(document).on('click', '#btn-submit-invoice', function () {
-		submitInvoice();
-	});
+		$(document).on('click', '#btn-submit-invoice', function () {
+			submitInvoice();
+		});
 		
-	$(document).on('click', '#btn-submit-hold', function () {
-		holdInvoice();
-	});
+		// $(document).on('click', '#btn-submit-hold', function () {
+		// 	holdInvoice();
+		// });
 
-	$(document).on('click', '#btn-submit-order', function () {
-		submitInvoice();
-	});
-
-	function holdInvoice(){
-		alert('Test');
-	}
-
-	function submitInvoice() {
+			function submitInvoice() {
 			const $rows = $('#invoiceTable tbody tr');
 			if ($rows.length === 0) {
 				alert('Please add at least one product.');
@@ -404,9 +412,7 @@
 			const customerId = $('#customer').val() || null;
 			const paymentMethodId = $('#paymentMethod').val() || null;
 			const paymentStatusId = parseFloat($('#paymentStatusId').val()) || null;
-			debugger
-
-			console.log(paymentStatusId);
+		
 				
 			const CASH_PAYMENT_ID = 1;
 			const Payment_Status_Id= 1;
@@ -421,11 +427,11 @@
 			const items = [];
 			$rows.each(function () {
 				const $tr = $(this);
-				debugger
+				
 				const $firstTd = $tr.find('td').first();
 
 				const qty = parseFloat($tr.find('.lineqty').val()) || 0;
-				const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
+				const unitPrice = parseFloat($tr.find('.currentPrice').val()) || 0;
 				const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
 				const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
 				const lineTotal = unitPrice * qty; // without tax
@@ -457,6 +463,7 @@
 				PaymentStatusId:paymentStatusId,
 				InvoiceDetails: items
 			};
+			Utility.startSpinner('#btn-submit-invoice','Saving Invoice');
 
 			$.ajax({
 				url: '/InvoiceManager/SaveInvoice',
@@ -467,311 +474,431 @@
 					responseType: 'blob'  // expecting PDF back
 				},
 				success: function (data) {
-					console.log('Hello Dumpling');
-
-					console.log(data);
+						$('#invoiceTable tbody').empty();
+						setTotalPrice();
 					var blob = new Blob([data], { type: "application/pdf" });
 					var url = URL.createObjectURL(blob);
 					window.open(url, "_blank");
+			Utility.stopSpinner('#btn-submit-invoice'	);
+
 				},
 				error: function (xhr, status, error) {
 					alert("Error saving invoice: " + error);
+			Utility.stopSpinner('#btn-submit-invoice'	);
+
 				}
 			});
+
 	}
 
-	function submitOrder() {
-			const $rows = $('#invoiceTable tbody tr');
-			if ($rows.length === 0) {
-				alert('Please add at least one product.');
+		function submitOrder() {
+				const $rows = $('#invoiceTable tbody tr');
+				if ($rows.length === 0) {
+					alert('Please add at least one product.');
+					return;
+				}
+				debugger
+				const totalAmount = parseFloat($('#totalAmount').val()) || 0;
+				const totalTax = parseFloat($('#totalTax').val()) || 0;
+				const grandTotal = parseFloat($('#grandTotal').val()) || 0;
+				const totalPayable = parseFloat($('#totalPayable').val()) || 0;
+				const discount = parseFloat($('#discount').val()) || 0;
+
+				const salesPersonId = $('#salesPerson').val() || null;
+				const tableId = $('#servingTable').val() || null;
+				const customerId = $('#customer').val() || null;
+				const paymentMethodId = $('#paymentMethod').val() || null;
+
+
+
+				const items = [];
+				$rows.each(function () {
+					const $tr = $(this);
+					debugger
+					const $firstTd = $tr.find('td').first();
+
+					const qty = parseFloat($tr.find('.lineqty').val()) || 0;
+					const unitPrice = parseFloat($tr.find('.currentPrice').val()) || 0;
+					const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
+					const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
+					const lineTotal = unitPrice * qty; // without tax
+					const lineTotalWithTax = lineTotal + taxAmount;
+
+					items.push({
+						ProductId: $firstTd.data('productid'),
+						VariantId: $firstTd.data('variantid'),
+						Quantity: qty,
+						UnitPrice: unitPrice,
+						TaxRate: taxRate,
+						TaxAmount: taxAmount,
+						LineTotal: lineTotal,
+						LineTotalWithTax: lineTotalWithTax
+					});
+				});
+
+				const payload = {
+					TotalAmount: totalAmount,
+					TotalTax: totalTax,
+					GrandTotal: grandTotal,
+					DiscountAmount: discount,
+					NetAmount: totalPayable, // after discount
+					CashReceived: cashReceived,
+					PaymentMethodId: paymentMethodId,
+					EmployeeId: salesPersonId,
+					ServingTableId: tableId,
+					CustomerId: customerId,
+					InvoiceDetails: items
+				};
+
+				$.ajax({
+					url: '/InvoiceManager/SaveOrder',
+					type: 'POST',
+					data: payload,
+
+					xhrFields: {
+						responseType: 'blob'  // expecting PDF back
+					},
+					success: function (data) {
+						console.log('Hello Dumpling');
+
+						console.log(data);
+						var blob = new Blob([data], { type: "application/pdf" });
+						var url = URL.createObjectURL(blob);
+						window.open(url, "_blank");
+					},
+					error: function (xhr, status, error) {
+						alert("Error saving invoice: " + error);
+					}
+				});
+		}
+
+		async function printInvoice(invoiceId) {
+		try {
+			// Connect to QZ Tray
+			await qz.websocket.connect();
+
+			// Fetch invoice HTML from server
+			const response = await fetch(`/Invoices/GetInvoiceHtml?invoiceId=${invoiceId}`);
+			const html = await response.text();
+
+			// Configure printer (replace with your printer name)
+			const config = qz.configs.create("Your Printer Name");
+
+			// Prepare print data
+			const data = [{
+				type: 'html',
+				format: 'plain',
+				data: html
+			}];
+
+			// Send to printer silently
+			await qz.print(config, data);
+
+			console.log("Invoice printed successfully!");
+		} catch (err) {
+			console.error("Print error:", err);
+		} finally {
+			qz.websocket.disconnect();
+		}
+		}
+
+		$(document).on('click', '.depBtn', async function () {
+				var departmentId = $(this).data('depid');
+				var categories = await Utility.RequestDataAjax({
+					url:'/AttributeManager/GetCategorybyDepartment',
+					data:{
+						DepartmentId:departmentId
+					}
+				})
+				var html = '';
+						if (categories && categories.length > 0) {
+							categories.forEach(function (cat) {
+							html += `
+		<div class="col-md-3 col-sm-6 pt-1">
+			<button type="button"
+					class="btn btn-success catBtn w-100"
+					data-catid="${cat.CategoryId}">
+				${cat.CategoryName}
+			</button>
+		</div>`;
+
+							});
+						} else {
+							html = '<p>No categories found.</p>';
+						}
+						// Replace department buttons with category buttons
+						$('#dcs').html(html);
+
+		});
+
+		$(document).on('click', '.catBtn', async function () {
+				var categoryId = $(this).data('catid');
+				var subcategories = await Utility.RequestDataAjax({
+					url:'/AttributeManager/GetSubCategorybyCategory',
+					data:{
+						CategoryId:categoryId
+					}
+				})
+				var html = '';
+						if (subcategories && subcategories.length > 0) {
+							subcategories.forEach(function (cat) {
+								html += `
+								<div class="col-md-3 col-sm-6 pt-1">
+								<button type="button" class="btn btn-danger subcatBtn w-100" data-subcatid="${cat.SubCategoryId}">
+											${cat.SubCategoryName}
+							   </button> </div>`;
+							});
+						} else {
+							html = '<p>No SubCategories found.</p>';
+						}
+						// Replace department buttons with category buttons
+						$('#dcs').html(html);
+
+		});
+
+		$(document).on('click', '.subcatBtn', async function () {
+				var subcategoryId = $(this).data('subcatid');
+				var getsubcatProducts = await Utility.RequestDataAjax({
+					url:'/Products/GetProductBySubCategoryId',
+					data:{
+						SubCategoryId:subcategoryId
+					}
+				})
+
+				renderTopFiveProducts(getsubcatProducts.TopProducts);
+				renderAllProducts(getsubcatProducts.AllProducts);
+
+		});
+
+		function renderTopFiveProducts(topProducts) {
+					const $wrap = $('#topfiveProducts');
+
+					if (!Array.isArray(topProducts) || topProducts.length === 0) {
+					$wrap.html('<div class="col-12 text-muted">No top products found.</div>');
+					return;
+					}
+
+					const html = topProducts.slice(0, 5).map(p => {
+					const price =
+						(p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0);
+					const priceText = Number(price).toLocaleString(undefined, {
+						minimumFractionDigits: 2,
+						maximumFractionDigits: 2
+					});
+
+					return `
+									<div class="col-md-3 mb-3">
+									<div class="card card-body text-center p-2 h-100 product-tile"
+										style="cursor: pointer;"
+										data-barcode="${p.BarCode || ''}"
+										data-product-id="${p.ProductId || ''}"
+										data-variant-id="${p.VariantId || ''}" data-sizename='${p.SizeName}' data-taxrate='${p.TaxRate}'>
+										<h6 class="font-weight-semibold mb-0">
+											${escapeHtml(p.ProductName ?? 'Unnamed')}
+										</h6>
+										<span class="text-muted">$${priceText}</span>
+									</div>
+								</div>
+								`;
+					}).join('');
+
+					$wrap.html(html);
+		}
+
+		function renderAllProducts(allProducts) {
+			const $tbody = $('#searchResultTable tbody');
+
+			if (!Array.isArray(allProducts) || allProducts.length === 0) {
+				$tbody.html('<tr><td colspan="5" class="text-muted text-center">No products found.</td></tr>');
 				return;
 			}
-			debugger
-			const totalAmount = parseFloat($('#totalAmount').val()) || 0;
-			const totalTax = parseFloat($('#totalTax').val()) || 0;
-			const grandTotal = parseFloat($('#grandTotal').val()) || 0;
-			const totalPayable = parseFloat($('#totalPayable').val()) || 0;
-			const discount = parseFloat($('#discount').val()) || 0;
 
-			const salesPersonId = $('#salesPerson').val() || null;
-			const tableId = $('#servingTable').val() || null;
-			const customerId = $('#customer').val() || null;
-			const paymentMethodId = $('#paymentMethod').val() || null;
-
-
-
-			const items = [];
-			$rows.each(function () {
-				const $tr = $(this);
-				debugger
-				const $firstTd = $tr.find('td').first();
-
-				const qty = parseFloat($tr.find('.lineqty').val()) || 0;
-				const unitPrice = parseFloat($tr.find('.currentPrice').text()) || 0;
-				const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
-				const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
-				const lineTotal = unitPrice * qty; // without tax
-				const lineTotalWithTax = lineTotal + taxAmount;
-
-				items.push({
-					ProductId: $firstTd.data('productid'),
-					VariantId: $firstTd.data('variantid'),
-					Quantity: qty,
-					UnitPrice: unitPrice,
-					TaxRate: taxRate,
-					TaxAmount: taxAmount,
-					LineTotal: lineTotal,
-					LineTotalWithTax: lineTotalWithTax
-				});
-			});
-
-			const payload = {
-				TotalAmount: totalAmount,
-				TotalTax: totalTax,
-				GrandTotal: grandTotal,
-				DiscountAmount: discount,
-				NetAmount: totalPayable, // after discount
-				CashReceived: cashReceived,
-				PaymentMethodId: paymentMethodId,
-				EmployeeId: salesPersonId,
-				ServingTableId: tableId,
-				CustomerId: customerId,
-				InvoiceDetails: items
-			};
-
-			$.ajax({
-				url: '/InvoiceManager/SaveOrder',
-				type: 'POST',
-				data: payload,
-
-				xhrFields: {
-					responseType: 'blob'  // expecting PDF back
-				},
-				success: function (data) {
-					console.log('Hello Dumpling');
-
-					console.log(data);
-					var blob = new Blob([data], { type: "application/pdf" });
-					var url = URL.createObjectURL(blob);
-					window.open(url, "_blank");
-				},
-				error: function (xhr, status, error) {
-					alert("Error saving invoice: " + error);
-				}
-			});
-	}
-
-	async function printInvoice(invoiceId) {
-	try {
-		// Connect to QZ Tray
-		await qz.websocket.connect();
-
-		// Fetch invoice HTML from server
-		const response = await fetch(`/Invoices/GetInvoiceHtml?invoiceId=${invoiceId}`);
-		const html = await response.text();
-
-		// Configure printer (replace with your printer name)
-		const config = qz.configs.create("Your Printer Name");
-
-		// Prepare print data
-		const data = [{
-			type: 'html',
-			format: 'plain',
-			data: html
-		}];
-
-		// Send to printer silently
-		await qz.print(config, data);
-
-		console.log("Invoice printed successfully!");
-	} catch (err) {
-		console.error("Print error:", err);
-	} finally {
-		qz.websocket.disconnect();
-	}
-	}
-
-</script>
-
-<script>
-	$(document).on('click', '.depBtn', async function () {
-			var departmentId = $(this).data('depid');
-			var categories = await Utility.RequestDataAjax({
-				url:'/AttributeManager/GetCategorybyDepartment',
-				data:{
-					DepartmentId:departmentId
-				}
-			})
-			var html = '';
-					if (categories && categories.length > 0) {
-						categories.forEach(function (cat) {
-						html += `
-	<div class="col-md-3 col-sm-6 pt-1">
-		<button type="button"
-				class="btn btn-success catBtn w-100"
-				data-catid="${cat.CategoryId}">
-			${cat.CategoryName}
-		</button>
-	</div>`;
-
-						});
-					} else {
-						html = '<p>No categories found.</p>';
-					}
-					// Replace department buttons with category buttons
-					$('#dcs').html(html);
-
-	});
-	$(document).on('click', '.catBtn', async function () {
-			var categoryId = $(this).data('catid');
-			var subcategories = await Utility.RequestDataAjax({
-				url:'/AttributeManager/GetSubCategorybyCategory',
-				data:{
-					CategoryId:categoryId
-				}
-			})
-			var html = '';
-					if (subcategories && subcategories.length > 0) {
-						subcategories.forEach(function (cat) {
-							html += `
-							<div class="col-md-3 col-sm-6 pt-1">
-							<button type="button" class="btn btn-danger subcatBtn w-100" data-subcatid="${cat.SubCategoryId}">
-										${cat.SubCategoryName}
-						   </button> </div>`;
-						});
-					} else {
-						html = '<p>No SubCategories found.</p>';
-					}
-					// Replace department buttons with category buttons
-					$('#dcs').html(html);
-
-	});
-
-	$(document).on('click', '.subcatBtn', async function () {
-			var subcategoryId = $(this).data('subcatid');
-			var getsubcatProducts = await Utility.RequestDataAjax({
-				url:'/Products/GetProductBySubCategoryId',
-				data:{
-					SubCategoryId:subcategoryId
-				}
-			})
-
-			renderTopFiveProducts(getsubcatProducts.TopProducts);
-			renderAllProducts(getsubcatProducts.AllProducts);
-
-	});
-
-	function renderTopFiveProducts(topProducts) {
-				const $wrap = $('#topfiveProducts');
-
-				if (!Array.isArray(topProducts) || topProducts.length === 0) {
-				$wrap.html('<div class="col-12 text-muted">No top products found.</div>');
-				return;
-				}
-
-				const html = topProducts.slice(0, 5).map(p => {
-				const price =
-					(p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0);
+			const rows = allProducts.map(p => {
+				const stock = p.QoH ?? 0; // quantity on hand
+				const price = p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0;
 				const priceText = Number(price).toLocaleString(undefined, {
 					minimumFractionDigits: 2,
 					maximumFractionDigits: 2
 				});
 
+				// Stock level color
+				let stockClass = 'text-success';
+				if (stock === 0) stockClass = 'text-danger';
+				else if (stock < 20) stockClass = 'text-warning';
+
+				// Button now has all product data
+				const buttonHtml = stock > 0
+					? `<button class="btn btn-primary btn-sm product-add-btn"
+								data-barcode="${p.BarCode || ''}"
+								data-product-id="${p.ProductId || ''}"
+								data-variant-id="${p.VariantId || ''}"
+								data-sizename="${p.SizeName || ''}"
+								data-product-name="${escapeHtml(p.ProductName ?? 'Unnamed')}"
+								data-price="${price}"
+								data-taxrate="${p.TaxRate}"
+								>
+							Add
+						</button>`
+					: `<button class="btn btn-light btn-sm" disabled>Out</button>`;
+
 				return `
-								<div class="col-md-3 mb-3">
-								<div class="card card-body text-center p-2 h-100 product-tile"
-									style="cursor: pointer;"
-									data-barcode="${p.BarCode || ''}"
-									data-product-id="${p.ProductId || ''}"
-									data-variant-id="${p.VariantId || ''}" data-sizename='${p.SizeName}' data-taxrate='${p.TaxRate}'>
-									<h6 class="font-weight-semibold mb-0">
-										${escapeHtml(p.ProductName ?? 'Unnamed')}
-									</h6>
-									<span class="text-muted">$${priceText}</span>
-								</div>
-							</div>
-							`;
-				}).join('');
+					<tr>
+						<td><div class="font-weight-semibold">${escapeHtml(p.ProductName ?? 'Unnamed')}</div></td>
+						<td>${escapeHtml(p.BarCode ?? '')}</td>
+						<td class="text-center ${stockClass} font-weight-bold">${stock}</td>
+						<td class="text-right">$${priceText}</td>
+						<td class="text-center">${buttonHtml}</td>
+					</tr>
+				`;
+			}).join('');
 
-				$wrap.html(html);
-	}
-
-	function renderAllProducts(allProducts) {
-		const $tbody = $('#searchResultTable tbody');
-
-		if (!Array.isArray(allProducts) || allProducts.length === 0) {
-			$tbody.html('<tr><td colspan="5" class="text-muted text-center">No products found.</td></tr>');
-			return;
+			$tbody.html(rows);
 		}
 
-		const rows = allProducts.map(p => {
-			const stock = p.QoH ?? 0; // quantity on hand
-			const price = p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0;
-			const priceText = Number(price).toLocaleString(undefined, {
-				minimumFractionDigits: 2,
-				maximumFractionDigits: 2
+		function escapeHtml(str) {
+			return String(str).replace(/[&<>"'`=\/]/g, s =>
+			({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s])
+			);
+		}
+
+		$(document).on('click', '#backbtn', async function () {
+				var departments = await Utility.RequestDataAjax({url:'/AttributeManager/GetDepartments'})
+				var html = '';
+					if (departments && departments.length > 0) {
+					departments.forEach(function (cat) {
+						html += ` <div class="col-md-3 col-sm-6 pt-1"><button type="button" class="btn btn-primary w-100 depBtn" data-depid="${cat.DepartmentId}">
+									${cat.DepartmentName}
+						</button></div>`;
+					});
+				} else {
+					html = '<p>No Departments found.</p>';
+				}
+				// Replace department buttons with category buttons
+				$('#dcs').html(html);
 			});
 
-			// Stock level color
-			let stockClass = 'text-success';
-			if (stock === 0) stockClass = 'text-danger';
-			else if (stock < 20) stockClass = 'text-warning';
-
-			// Button now has all product data
-			const buttonHtml = stock > 0
-				? `<button class="btn btn-primary btn-sm product-add-btn"
-							data-barcode="${p.BarCode || ''}"
-							data-product-id="${p.ProductId || ''}"
-							data-variant-id="${p.VariantId || ''}"
-							data-sizename="${p.SizeName || ''}"
-							data-product-name="${escapeHtml(p.ProductName ?? 'Unnamed')}"
-							data-price="${price}"
-							data-taxrate="${p.TaxRate}"
-							>
-						Add
-					</button>`
-				: `<button class="btn btn-light btn-sm" disabled>Out</button>`;
-
-			return `
-				<tr>
-					<td><div class="font-weight-semibold">${escapeHtml(p.ProductName ?? 'Unnamed')}</div></td>
-					<td>${escapeHtml(p.BarCode ?? '')}</td>
-					<td class="text-center ${stockClass} font-weight-bold">${stock}</td>
-					<td class="text-right">$${priceText}</td>
-					<td class="text-center">${buttonHtml}</td>
-				</tr>
-			`;
-		}).join('');
-
-		$tbody.html(rows);
-	}
-
-
-	function escapeHtml(str) {
-		return String(str).replace(/[&<>"'`=\/]/g, s =>
-		({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s])
-		);
-	}
-
-	$(document).on('click', '#backbtn', async function () {
-			var departments = await Utility.RequestDataAjax({url:'/AttributeManager/GetDepartments'})
-			var html = '';
-				if (departments && departments.length > 0) {
-				departments.forEach(function (cat) {
-					html += ` <div class="col-md-3 col-sm-6 pt-1"><button type="button" class="btn btn-primary w-100 depBtn" data-depid="${cat.DepartmentId}">
-								${cat.DepartmentName}
-					</button></div>`;
-				});
+	
+		let holdMode = true;
+		$(document).on('click', '#btn-submit-hold', function () {
+			if (holdMode) {
+				holdInvoice();
+				holdMode = false;
+				$(this).text('Show Held');
 			} else {
-				html = '<p>No Departments found.</p>';
+				showHeldInvoices();
+				holdMode = true;
+				$(this).text('Hold/UnHold');
 			}
-			// Replace department buttons with category buttons
-			$('#dcs').html(html);
 		});
-</script>
+			function showHeldInvoices() {
+			let heldInvoices = JSON.parse(localStorage.getItem('heldInvoices') || '[]');
+			let html = '';
+			if (heldInvoices.length === 0) {
+				html = '<p>No held invoices.</p>';
+			} else {
+				html = '<ul class="list-group">';
+				heldInvoices.forEach((inv, idx) => {
+					html += `<li class="list-group-item">
+						<strong>Invoice #${idx + 1}</strong> - ${inv.Date}
+						<button class="btn btn-sm btn-primary float-right" onclick="restoreHeldInvoice(${idx})">Restore</button>
+					</li>`;
+				});
+				html += '</ul>';
+			}
+			$('#heldInvoicesList').html(html);
+			$('#heldInvoicesModal').modal('show');
+		}
 
-<script>
-	$(document).ready(function(){
+		function holdInvoice() {
+			// Gather invoice data (similar to submitInvoice)
+			const $rows = $('#invoiceTable tbody tr');
+			if ($rows.length === 0) {
+				return;
+			}
+
+			const invoiceItems = [];
+			$rows.each(function () {
+				const $tr = $(this);
+				const $firstTd = $tr.find('td').first();
+				invoiceItems.push({
+					ProductId: $firstTd.data('productid'),
+					VariantId: $firstTd.data('variantid'),
+					BarCode: $firstTd.data('barcode'),
+					ProductName: $firstTd.text().trim(),
+					SizeName: $tr.find('td').eq(1).text().trim(),
+					Quantity: parseFloat($tr.find('.lineqty').val()) || 0,
+					CurrentPrice: parseFloat($tr.find('.currentPrice').val()) || 0,
+					TaxRate: parseFloat($tr.find('.taxPercent').text()) || 0,
+					TaxAmount: parseFloat($tr.find('.taxAmount').text()) || 0,
+					LineTotal: parseFloat($tr.find('.lineTotal').text()) || 0
+				});
+			});
+
+			// Other invoice fields
+			const invoiceData = {
+				Date: new Date().toISOString(),
+				CustomerId: $('#customer').val(),
+				SalesPersonId: $('#salesPerson').val(),
+				ServingTableId: $('#servingTable').val(),
+				Discount: $('#discount').val(),
+				TotalAmount: $('#totalAmount').val(),
+				TotalTax: $('#totalTax').val(),
+				GrandTotal: $('#grandTotal').val(),
+				TotalPayable: $('#totalPayable').val(),
+				Items: invoiceItems
+			};
+
+			// Save to localStorage (array of held invoices)
+			let heldInvoices = JSON.parse(localStorage.getItem('heldInvoices') || '[]');
+			heldInvoices.push(invoiceData);
+			localStorage.setItem('heldInvoices', JSON.stringify(heldInvoices));
+
+
+			// Optionally clear the table after holding
+			$('#invoiceTable tbody').empty();
+			setTotalPrice();
+		}
+
+		function restoreHeldInvoice(index) {
+			let heldInvoices = JSON.parse(localStorage.getItem('heldInvoices') || '[]');
+			if (!heldInvoices[index]) return;
+
+			const invoice = heldInvoices[index];
+			// Clear current invoice table
+			$('#invoiceTable tbody').empty();
+			debugger
+			// Restore items
+			invoice.Items.forEach(item => {
+				debugger
+				appendRow(item, item.BarCode);
+				setTotalPrice();
+			
+			});
+			scrollInvoiceTableToBottom();
+			// Restore other fields
+			$('#customer').val(invoice.CustomerId);
+			$('#salesPerson').val(invoice.SalesPersonId);
+			$('#servingTable').val(invoice.ServingTableId);
+			$('#discount').val(invoice.Discount);
+			setTotalPrice();
+
+			// Remove from held invoices
+			heldInvoices.splice(index, 1);
+			localStorage.setItem('heldInvoices', JSON.stringify(heldInvoices));
+			$('#heldInvoicesModal').modal('hide');
+		}
+	
+
+		 window.restoreHeldInvoice = restoreHeldInvoice;
+
+
+
+
+
+
+
+
+
 		$(document).on('click', '.product-add-btn', function () {
 			const $btn = $(this);
 
@@ -788,6 +915,7 @@
 
 			appendProductToTable(productData);
 		});
+	
 		$(document).on('click', '.product-tile', function () {
 			const $tile = $(this);
 
@@ -807,6 +935,7 @@
 			// Use your existing function to add to invoice table
 			appendProductToTable(productData);
 		});
+		
 		$('#barCode').focus();
 		  $(document).on('keydown', '#barCode', async function (e) {
 
@@ -853,7 +982,7 @@
 					qtyInput.val(newQty);
 
 					// Get unit price and tax rate from row
-					let unitPrice = parseFloat($(this).find('.currentPrice').text()) || 0;
+					let unitPrice = parseFloat($(this).find('.currentPrice').val()) || 0;
 					let taxRate = parseFloat($(this).find('.taxPercent').text()) || 0;
 
 					// Recalculate
@@ -874,31 +1003,33 @@
 				return; // No need to append new row
 			}
 
-		appendRow(result,incomingBarcode);
+			appendRow(result,incomingBarcode);
 			setTotalPrice();
 			scrollInvoiceTableToBottom();
 		}
 
-		$(document).on('input', '.lineqty', function () {
-			let qty = parseFloat($(this).val()) || 0;
-			let row = $(this).closest('tr');
+			$(document).on('input', '.lineqty, .currentPrice', function () {
+		let row = $(this).closest('tr');
 
-			// Get the unit price from the currentPrice td
-			let unitPrice = parseFloat(row.find('.currentPrice').text()) || 0;
+		let qty = parseFloat(row.find('.lineqty').val()) || 0;
+		let unitPrice = parseFloat(row.find('.currentPrice').val()) || 0;
 
-			// Calculate the new line total
-			let lineTotal = unitPrice * qty;
+		// Calculate the new line total
+		let lineTotal = unitPrice * qty;
 
-			// Update the line total cell
-			row.find('.lineTotal').text(lineTotal.toFixed(2));
+		// Update the line total cell
+		row.find('.lineTotal').text(lineTotal.toFixed(2));
 
-			// Update overall invoice total
-			setTotalPrice();
-		});
+		// Update overall invoice total
+		setTotalPrice();
+	});
+
+		
 		$(document).on('input','#discount',function(){
 			setTotalPrice();
 		})
-			function scrollInvoiceTableToBottom() {
+	
+		function scrollInvoiceTableToBottom() {
 				let container = $('#invoiceRowSection');
 			 container.scrollTop(container[0].scrollHeight);
 			}
@@ -969,9 +1100,14 @@
 		// -----------------------------
 		// Variables & calculations
 		// -----------------------------
+		debugger
 		let unitPrice = parseFloat(result.CurrentPrice) || 0;
 		let taxRate = parseFloat(result.TaxRate) || 0;
 		let qty = 1; // default for new row
+		if(result.Quantity)
+		{
+			qty=result.Quantity
+		}
 
 		let lineAmount = unitPrice * qty;
 		let taxAmount = (lineAmount * taxRate) / 100;
@@ -997,9 +1133,11 @@
 					<td class="text-center">
 						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
 					</td>
-					<td class='currentPrice text-right'>${unitPrice.toFixed(2)}</td>
+					<td class='text-right'>
+						<input class='currentPrice text-center' type='number' min='1' step='1' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
+					</td>
 					<td class='taxPercent text-right'>${taxRate.toFixed(2)}</td>
-					<td class='taxAmount text-right'>${taxAmount.toFixed(2)}</td>
+					<td class='taxAmount text-right'> ${taxAmount.toFixed(2)}</td>
 					<td class='lineTotal text-right'>${total.toFixed(2)}</td>
 					<td class="text-center">
 						<div class="list-icons">
@@ -1021,7 +1159,10 @@
 					<td class="text-center">
 						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
 					</td>
-					<td class='currentPrice text-right'>${unitPrice.toFixed(2)}</td>
+						<td class='text-right'>
+						<input class='currentPrice text-center' type='text'  value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
+					</td>
+					
 					<td class='lineTotal text-right'>${lineAmount.toFixed(2)}</td>
 					<td class="text-center">
 						<div class="list-icons">
@@ -1047,7 +1188,7 @@
 
 		$('#invoiceTable tbody tr').each(function () {
 			let qty = parseFloat($(this).find('.lineqty').val()) || 0;
-			let unitPrice = parseFloat($(this).find('.currentPrice').text()) || 0;
+			let unitPrice = parseFloat($(this).find('.currentPrice').val()) || 0;
 			let taxRate = parseFloat($(this).find('.taxPercent').text()) || 0;
 
 			let lineTotal = unitPrice * qty;
@@ -1073,18 +1214,6 @@
 	}
 
 
-		// function setTotalPrice(){
-
-		// 		let invoiceTotal = 0;
-		// 	  $('.lineTotal').each(function () {
-
-		// 		  const val = parseFloat($(this).text()) || 0;
-		// 		  invoiceTotal += val;
-		// 	  });
-		// 	  // Display grand total
-		// 	  $('#invoiceTotal').val(invoiceTotal.toFixed(2));
-		// 	  (updateGrandTotal(invoiceTotal));
-		// }
 
 			function updateGrandTotal(invoiceTotal) {
 					const discountAmount = parseFloat($('#discount').val()) || 0;
@@ -1122,4 +1251,9 @@
 		});
 
 	})
+		
+
+
+
+
 </script>

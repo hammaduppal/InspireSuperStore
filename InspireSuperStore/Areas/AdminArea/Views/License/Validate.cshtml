@@ -1,0 +1,33 @@
+﻿@* 
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Validate</title>
+</head>
+<body>
+    <h2>Validate License</h2>
+    <form asp-action="Validate" method="post">
+        <div class="form-group mb-3">
+            <label for="licenseKey">License Key</label>
+            <input type="text" class="form-control" id="licenseKey" name="licenseKey" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Validate</button>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </form>
+
+    @if (ViewBag.Message != null)
+    {
+        <div class="alert alert-info mt-3">
+            @ViewBag.Message
+        </div>
+    }
+</body>
+</html>
+ *@

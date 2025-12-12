@@ -44,7 +44,7 @@ namespace MarketBal.Repository.AccountingRP
                     CreatedAt = commonParams.CreatedOn.Value,
                     SourceModule = "Sales",
                     EntryNumber = await GetNewJournalNumber()
-                };
+                }; 
 
                 await _onedb.JournalEntries.AddAsync(journalEntry);
 
@@ -152,6 +152,105 @@ namespace MarketBal.Repository.AccountingRP
             catch (Exception)
             {
                 // Optional: log ex.Message
+                throw;
+            }
+        }
+
+        public async Task<int> AddServiceInvoiceJournals(InvoiceMaster invoiceMaster, bool isCash, Customer customer)
+        {
+            try
+            {
+                var commonParams = CommonParamHelper.GetCommonParams();
+
+                var journalEntry = new JournalEntry
+                {
+                    JournalEntryId = Guid.NewGuid(),
+                    EntryDate = commonParams.CreatedOn.Value,
+                    ReferenceNumber = invoiceMaster.InvoiceNo,
+                    Description = "Service Sale to " + (customer.Person?.FirstName ?? "") + " (" + customer.CustomerCode + ")",
+                    BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
+                    CreatedBy = AppDataUtility.SessionUser.Id,
+                    CreatedAt = commonParams.CreatedOn.Value,
+                    SourceModule = "Sales",
+                    EntryNumber = await GetNewJournalNumber()
+                };
+
+                await _onedb.JournalEntries.AddAsync(journalEntry);
+
+                // -----------------------------------------------------------
+                // 1️⃣  DR Cash / Accounts Receivable
+                // -----------------------------------------------------------
+                if (isCash)
+                {
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = CoaAccounts.CashOnHand,
+                        Description = "Cash Sale (Service)",
+                        Debit = invoiceMaster.GrandTotal,
+                        Credit = 0,
+                        ReferenceType = "Invoice",
+                        ReferenceId = invoiceMaster.InvoiceMasterId
+                    });
+                }
+                else
+                {
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = CoaAccounts.AccountsReceivable,
+                        Description = "Accounts Receivable (Service)",
+                        Debit = invoiceMaster.GrandTotal,
+                        Credit = 0,
+                        ReferenceType = "Invoice",
+                        ReferenceId = invoiceMaster.InvoiceMasterId
+                    });
+
+                    // Your existing credit sale function
+                    await _accountsReceivableRepository.AddCreditSale(invoiceMaster, customer, journalEntry);
+                }
+
+                // -----------------------------------------------------------
+                // 2️⃣  CR Service Income (NOT Sales Income)
+                // -----------------------------------------------------------
+                await _onedb.JournalLines.AddAsync(new JournalLine
+                {
+                    JournalLineId = Guid.NewGuid(),
+                    JournalEntryId = journalEntry.JournalEntryId,
+                    CoaId = CoaAccounts.ServiceIncome,  // <-- 4020 / ID: 23
+                    Description = "Service Income",
+                    Debit = 0,
+                    Credit = invoiceMaster.TotalAmount,
+                    ReferenceType = "Invoice",
+                    ReferenceId = invoiceMaster.InvoiceMasterId
+                });
+
+                // -----------------------------------------------------------
+                // 3️⃣  Output Tax (if enabled)
+                // -----------------------------------------------------------
+                if (AppDataUtility.SystemPreferences.EnableTax && invoiceMaster.TaxAmount > 0)
+                {
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = CoaAccounts.TaxesPayable, // SAME as product invoices
+                        Description = "Output VAT on Service",
+                        Debit = 0,
+                        Credit = invoiceMaster.TaxAmount,
+                        ReferenceType = "Invoice",
+                        ReferenceId = invoiceMaster.InvoiceMasterId
+                    });
+                }
+
+              
+                await _onedb.SaveChangesAsync();
+                return 1;
+            }
+            catch (Exception)
+            {
                 throw;
             }
         }

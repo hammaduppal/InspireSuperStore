@@ -2,6 +2,7 @@ using InspireSuperStore.Areas.Notification.Data;
 using InspireSuperStore.Models;
 using MainModels.Models;
 using MainModels.Util;
+using MarketBal.Repository.SystemRP;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -78,7 +79,9 @@ var apiKey = builder.Configuration.GetValue<string>("SystemSettings:GeminiAIKey"
 builder.Services.AddSingleton(new GoogleAI(apiKey));
 builder.Services.AddScoped<GeminiAIRepository>();
 builder.Services.AddScoped<IDataRepository, DataRepository>();
+builder.Services.AddScoped<LicenseService, LicenseService>();
 var app = builder.Build();
+
 
 
 // Configure the HTTP request pipeline.

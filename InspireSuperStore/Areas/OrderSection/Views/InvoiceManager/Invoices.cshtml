@@ -13,7 +13,7 @@
 			<div class="breadcrumb">
 				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
 
-				<span class="breadcrumb-item active">Orders</span>
+				<span class="breadcrumb-item active">Sale Invoices</span>
 			</div>
 
 			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
@@ -29,12 +29,12 @@
 
 	<div class="card shadow-5">
 		<div class="card-header header-elements-inline">
-			<h5 class="card-title">Orders</h5>
+			<h5 class="card-title">Sale Invoices</h5>
 			<div class="header-elements">
 
 				<div class="header-elements d-none">
 					<div class="d-flex justify-content-center">
-						<a id="addOrders" href="/OrderManager/CreateOrder" class="btn btn-success ">Add Orderss</a>
+						<a id="addOrders" href="/InvoiceManager/CreateInvoice" class="btn btn-success ">Add Invoice</a>
 
 					</div>
 				</div>
@@ -42,20 +42,24 @@
 		</div>
 
 		<div class="table-responsive">
-			<table class="table">
+			<table id="invoiceTable" class="table">
 				<thead>
 					<tr>
 						<th>#</th>
 						<th>Customer Name</th>
 
-						<th>Order Source</th>
+						<th>Invoice Source</th>
 						<th>Payment Status</th>
 						<th>Payment Method</th>
-						<th>Order Status</th>
-						<th>Total Tax</th>
+						<th>Invoice Status</th>
+						@if (AppDataUtility.SystemPreferences.EnableTax)
+						{
+							<th>Total Tax</th>
+
+						}
 
 						<th>Grand Total</th>
-						<th>Order Date</th>
+						<th>Invoice Date</th>
 
 						<th>Manage</th>
 
@@ -65,40 +69,209 @@
 				<tbody>
 					@foreach (var item in Model.Invoices)
 					{
+						if (item.PaymentStatusId==1)
+						{
+							<tr class="table-success">
+								<td>@count</td>
+								<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
+								<td>@item?.InvoiceSource?.SourceName</td>
+								<td>@item?.PaymentStatus?.Name</td>
 
-						<tr>
-							<td>@count</td>
-							<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
-							<td>@item?.InvoiceSource?.SourceName</td>
-							<td>@item?.PaymentStatus?.Name</td>
+								<td>@item?.PaymentMethod.Name</td>
+								<td>
+									<select data-ordermasterid="@item?.InvoiceMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
+										@foreach (AppConstants.PaymentStatus status in Enum.GetValues(typeof(AppConstants.PaymentStatus)))
+										{
+											<option value="@((int)status)" @(item?.PaymentStatusId == (int)status ? "selected" : "")>
+												@status.ToString()
+											</option>
+										}
+									</select>
+								</td>
 
-							<td>@item.PaymentMethod.Name</td>
-							<td>
-								<select data-ordermasterid="@item.InvoiceMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
-									@foreach (AppConstants.PaymentStatus status in Enum.GetValues(typeof(AppConstants.PaymentStatus)))
-									{
-										<option value="@((int)status)" @(item.InvoiceStatusId == (int)status ? "selected" : "")>
-											@status.ToString()
-										</option>
-									}
-								</select>
-							</td>
-							<td>@item.TotalTax</td>
+								@if (AppDataUtility.SystemPreferences.EnableTax)
+								{
+									<td>@item?.TotalTax</td>
+
+								}
+								<td>@item?.GrandTotal.ToString("N2")</td>
+
+								<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate)</td>
+								<td>
+
+									<div class="list-icons">
+										<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
+										@if (item.PaymentStatusId == 5)
+										{
+											<a class="list-icons-item text-danger "><i class="icon-trash"></i></a>
+										}
+										else
+										{
+											<a href="/InvoiceManager/CancelInvoice" data-invoiceId="@item.InvoiceMasterId" class="list-icons-item text-danger cancelInvoice"><i class="icon-trash "></i></a>
+										}
+										&nbsp;
+										<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
 
 
-							<td>@item.GrandTotal</td>
-							<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate)</td>
-							<td>
+									</div>
 
-								<div class="list-icons">
-									<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
-									<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
+								</td>
+							</tr>
+
+						}
+						else if(item.PaymentStatusId==2)
+						{
+							<tr class="table-warning">
+								<td>@count</td>
+								<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
+								<td>@item?.InvoiceSource?.SourceName</td>
+								<td>@item?.PaymentStatus?.Name</td>
+
+								<td>@item?.PaymentMethod.Name</td>
+								<td>
+									<select data-ordermasterid="@item?.InvoiceMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
+										@foreach (AppConstants.PaymentStatus status in Enum.GetValues(typeof(AppConstants.PaymentStatus)))
+										{
+											<option value="@((int)status)" @(item?.PaymentStatusId == (int)status ? "selected" : "")>
+												@status.ToString()
+											</option>
+										}
+									</select>
+								</td>
+
+								@if (AppDataUtility.SystemPreferences.EnableTax)
+								{
+									<td>@item?.TotalTax</td>
+
+								}
+								<td>@item?.GrandTotal.ToString("N2")</td>
+
+								<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate)</td>
+								<td>
+
+									<div class="list-icons">
+										<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
+										@if (item.PaymentStatusId == 5)
+										{
+											<a class="list-icons-item text-danger "><i class="icon-trash"></i></a>
+										}
+										else
+										{
+											<a href="/InvoiceManager/CancelInvoice" data-invoiceId="@item.InvoiceMasterId" class="list-icons-item text-danger cancelInvoice"><i class="icon-trash "></i></a>
+										}
+										&nbsp;
+										<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
 
 
-								</div>
+									</div>
 
-							</td>
-						</tr>
+								</td>
+							</tr>
+
+						}
+						else if(item.PaymentStatusId==3)
+						{
+							<tr class="table-success">
+								<td>@count</td>
+								<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
+								<td>@item?.InvoiceSource?.SourceName</td>
+								<td>@item?.PaymentStatus?.Name</td>
+
+								<td>@item?.PaymentMethod.Name</td>
+								<td>
+									<select data-ordermasterid="@item?.InvoiceMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
+										@foreach (AppConstants.PaymentStatus status in Enum.GetValues(typeof(AppConstants.PaymentStatus)))
+										{
+											<option value="@((int)status)" @(item?.PaymentStatusId == (int)status ? "selected" : "")>
+												@status.ToString()
+											</option>
+										}
+									</select>
+								</td>
+
+								@if (AppDataUtility.SystemPreferences.EnableTax)
+								{
+									<td>@item?.TotalTax</td>
+
+								}
+								<td>@item?.GrandTotal.ToString("N2")</td>
+
+								<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate)</td>
+								<td>
+
+									<div class="list-icons">
+										<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
+										@if (item.PaymentStatusId == 5)
+										{
+											<a class="list-icons-item text-danger "><i class="icon-trash"></i></a>
+										}
+										else
+										{
+											<a href="/InvoiceManager/CancelInvoice" data-invoiceId="@item.InvoiceMasterId" class="list-icons-item text-danger cancelInvoice"><i class="icon-trash "></i></a>
+										}
+										&nbsp;
+										<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
+
+
+									</div>
+
+								</td>
+							</tr>
+
+						}
+						else if(item.PaymentStatusId==5)
+						{
+							<tr class="table-danger">
+								<td>@count</td>
+								<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
+								<td>@item?.InvoiceSource?.SourceName</td>
+								<td>@item?.PaymentStatus?.Name</td>
+
+								<td>@item?.PaymentMethod.Name</td>
+								<td>
+									<select data-ordermasterid="@item?.InvoiceMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
+										@foreach (AppConstants.PaymentStatus status in Enum.GetValues(typeof(AppConstants.PaymentStatus)))
+										{
+											<option value="@((int)status)" @(item?.PaymentStatusId == (int)status ? "selected" : "")>
+												@status.ToString()
+											</option>
+										}
+									</select>
+								</td>
+
+								@if (AppDataUtility.SystemPreferences.EnableTax)
+								{
+									<td>@item?.TotalTax</td>
+
+								}
+								<td>@item?.GrandTotal.ToString("N2")</td>
+
+								<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate)</td>
+								<td>
+
+									<div class="list-icons">
+										<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
+										@if (item.PaymentStatusId == 5)
+										{
+											<a class="list-icons-item text-danger "><i class="icon-trash"></i></a>
+										}
+										else
+										{
+											<a href="/InvoiceManager/CancelInvoice" data-invoiceId="@item.InvoiceMasterId" class="list-icons-item text-danger cancelInvoice"><i class="icon-trash "></i></a>
+										}
+										&nbsp;
+										<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
+
+
+									</div>
+
+								</td>
+							</tr>
+
+						}
+					
+
+						
 						count++;
 					}
 				</tbody>
@@ -144,7 +317,34 @@
 		})
 
 
+		$('.cancelInvoice').click(async function(e){
+			e.preventDefault();
+			var url= $(this).attr('href');
+					var invoiceId = $(this).attr('data-invoiceId');
+			Utility.confirmBootBox('Do you Want to Cancel Invoice').then(async function(bootresult){
+				if(bootresult){
+					
+					console.log(url);
+					console.log(invoiceId);
+					var formData={
+						InvoiceMasterId:invoiceId
+					}
+					var objectDaa={
+						url:url,
+						data:formData
+					}
 
+					const respo = await Utility.RequestDataAjax(objectDaa);
+				}else
+				{
+						console.log("User clicked NO");
+						// cancel logic
+				}
+
+
+			});
+
+		});
 
 
 
@@ -173,5 +373,6 @@
 
 		});
 
+		window.invoiceTable=new DataTable('#invoiceTable');
 	});
 </script>

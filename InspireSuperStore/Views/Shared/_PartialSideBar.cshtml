@@ -6,14 +6,22 @@
 
 	<!-- Main navigation -->
 	<div class="card card-sidebar-mobile">
-		<input type="text" id="searchmenu" placeholder="Search...." class="form-control pt-2 mt-2"/>
+		<ul class=" list-unstyled">
+			<li class=""> 
+				<a>
+					<input type="text" style="color:rgb(38, 166, 154)!important;font-weight:600;font-size:18px;" id="searchmenu" placeholder="Search...." class="form-control pt-2 mt-2" />
+				</a>
+				
+
+			</li>
+		</ul>
 		<ul class="nav nav-sidebar" data-nav-type="accordion">
 
 			<!-- Main -->
 
 			<li class="nav-item">
 				<a href="/" class="nav-link ">
-					<i class="icon-home4 text-primary-300"></i>
+					<i class="icon-home4 icon-2x text-primary-300"></i>
 					<span>
 						Dashboard
 					</span>
@@ -22,7 +30,7 @@
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.PowerUser, UserRolesConstants.POSUser))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "> <span><i class="icon-typewriter  text-pink-300"></i> POS</span></a>
+					<a href="#" class="nav-link "> <span><i class="icon-typewriter icon-2x  text-pink-300"></i> POS</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="Point of Sale">
 						@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
@@ -30,19 +38,19 @@
 							<li class="nav-item">
 								<a href="/OrderManager/CreateOrder" class="nav-link">
 
-									<i class="fa fa-file-invoice-dollar"></i> Create Order
+									<i class="fa fa-file-invoice-dollar icon-2x"></i> Create Order
 								</a>
 							</li>
-							<li class="nav-item"><a href="/OrderManager/Orders" class="nav-link"><i class="fa fa-file-invoice-dollar text-pink-300"></i> Order</a></li>
+							<li class="nav-item"><a href="/OrderManager/Orders" class="nav-link"><i class="icon-barcode2  icon-2x text-pink-300"></i> Order</a></li>
 
 						}
 						else
 						{
-							<li class="nav-item"><a href="/InvoiceManager/CreateInvoice" class="nav-link"><i class="fa fa-cash-register"></i> Sale Invoice</a></li>
+							<li class="nav-item"><a href="/InvoiceManager/CreateInvoice" class="nav-link"><i class="icon-barcode2  icon-2x text-pink-300"></i> Sale Invoice</a></li>
 
 						}
 
-						<li class="nav-item"><a href="/InvoiceManager/Invoices" class="nav-link"><i class="fa fa-file-invoice-dollar"></i> Invoices</a></li>
+						<li class="nav-item"><a href="/InvoiceManager/Invoices" class="nav-link"><i class="icon-drawer3  text-pink-300 icon-2x"></i> Invoices</a></li>
 
 					</ul>
 				</li>
@@ -51,18 +59,18 @@
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.DataEntry, UserRolesConstants.Product, UserRolesConstants.PowerUser))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-box  text-blue-300"></i><span>Inventory</span></a>
+					<a href="#" class="nav-link "><i class="icon-box icon-2x  text-blue-300"></i><span>Inventory</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="Products">
-						<li class="nav-item"><a href="/Products/Products" class="nav-link"><i class="icon-grid5 "></i> Inventory</a></li>
+						<li class="nav-item"><a href="/Products/Products" class="nav-link"><i class="icon-grid5 icon-2x text-blue"></i> Inventory</a></li>
 					</ul>
 				</li>
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "> <span><i class="icon-stack3 text-purple-300"></i> Master Data</span></a>
+					<a href="#" class="nav-link "> <span><i class="icon-stack3 icon-2x text-purple-300"></i> Master Data</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="AttributeManager">
-						<li class="nav-item"><a href="/AttributeManager/DCSManager" class="nav-link"><i class="icon-folder4"></i>DCS Manager</a></li>
-						<li class="nav-item"><a href="/AttributeManager/BrandModels" class="nav-link"><i class="icon-folder4"></i>Brand Models</a></li>
+						<li class="nav-item"><a href="/AttributeManager/DCSManager" class="nav-link"><i class="icon-folder4 icon-2x text-purple-300"></i>DCS Manager</a></li>
+						<li class="nav-item"><a href="/AttributeManager/BrandModels" class="nav-link"><i class="icon-folder-plus4  icon-2x text-purple-300"></i>Brand Models</a></li>
 
 					</ul>
 				</li>
@@ -70,14 +78,14 @@
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.PowerUser, UserRolesConstants.Purchase))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="mi-money-off text-blue-400 "></i> <span>Purchase Orders</span></a>
+					<a href="#" class="nav-link "><i class="icon-cube  icon-2x text-blue-400 "></i> <span>Purchase Orders</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="Purchase Section">
-						<li class="nav-item"><a href="/Purchase/Requisitions" class="nav-link"><i class="mi-account-balance"></i>Purchase Requisitions</a></li>
-						<li class="nav-item"><a href="/Purchase/AddRequisitionForm" class="nav-link"><i class="mi-redeem "></i>Add Purchase Requisition</a></li>
+						<li class="nav-item"><a href="/Purchase/Requisitions" class="nav-link"><i class="icon-cube2 icon-2x text-blue-400 "></i>Purchase Requisitions</a></li>
+						<li class="nav-item"><a href="/Purchase/AddRequisitionForm" class="nav-link"><i class="icon-cube4 icon-2x text-blue-400 "></i>Add Purchase Requisition</a></li>
 						<hr />
-						<li class="nav-item"><a href="/Purchase/PurchaseOrder" class="nav-link"><i class="mi-local-shipping"></i>Purchase Order</a></li>
-						<li class="nav-item"><a href="/Purchase/GoodReceivedNote" class="nav-link"><i class="mi-kitchen"></i>GRN</a></li>
+						<li class="nav-item"><a href="/Purchase/PurchaseOrder" class="nav-link"><i class="icon-checkbox-partial2  icon-2x text-blue-400 "></i>Purchase Order</a></li>
+						<li class="nav-item"><a href="/Purchase/GoodReceivedNote" class="nav-link"><i class="icon-cart-add2  icon-2x text-blue-400 "></i>GRN</a></li>
 					</ul>
 				</li>
 			}
@@ -85,10 +93,10 @@
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.PowerUser, UserRolesConstants.Purchase))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-truck text-danger-300"></i> <span>Supplier Setup</span></a>
+					<a href="#" class="nav-link "><i class="icon-truck icon-2x text-danger-300"></i> <span>Supplier Setup</span></a>
 					<ul class="nav nav-group-sub" data-submenu-title="Supplier">
-						<li class="nav-item"><a href="/Supplier/Suppliers" class="nav-link"><i class="icon-store"></i>Suppliers</a></li>
-						<li class="nav-item"><a href="/Supplier/AddSupplier" class="nav-link"><i class="icon-cart4"></i>Add Supplier</a></li>
+						<li class="nav-item"><a href="/Supplier/Suppliers" class="nav-link"><i class="icon-store icon-2x text-danger-300"></i>Suppliers</a></li>
+						<li class="nav-item"><a href="/Supplier/AddSupplier" class="nav-link"><i class="icon-cart4 icon-2x text-danger-300"></i>Add Supplier</a></li>
 
 					</ul>
 				</li>
@@ -96,10 +104,10 @@
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.PowerUser, UserRolesConstants.Product))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-collaboration text-blue-300"></i> <span>Collections</span></a>
+					<a href="#" class="nav-link "><i class="icon-collaboration icon-2x text-indigo"></i> <span>Collections</span></a>
 					<ul class="nav nav-group-sub" data-submenu-title="Collections">
-						<li class="nav-item"><a href="/collection/collections" class="nav-link"><i class="icon-collaboration "></i>Collections</a></li>
-						<li class="nav-item"><a href="/collection/addcollection" class="nav-link"><i class="icon-cart4"></i>Add Collection</a></li>
+						<li class="nav-item"><a href="/collection/collections" class="nav-link"><i class="icon-collaboration icon-2x text-indigo "></i>Collections</a></li>
+						<li class="nav-item"><a href="/collection/addcollection" class="nav-link"><i class="icon-cart4 icon-2x text-indigo"></i>Add Collection</a></li>
 
 					</ul>
 				</li>
@@ -108,20 +116,20 @@
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.SuperAdmin))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="mi-settings text-teal-300"></i> <span>System Setup</span></a>
+					<a href="#" class="nav-link "><i class="icon-cogs  icon-2x text-teal-300"></i> <span>System Setup</span></a>
 					<ul class="nav nav-group-sub" data-submenu-title="System Section">
-						<li class="nav-item"><a href="/AdminPanel/LoginUser" class="nav-link"><i class="mi-person"></i>Loginusers</a></li>
+						<li class="nav-item"><a href="/AdminPanel/LoginUser" class="nav-link"><i class="icon-users4  icon-2x text-teal-300"></i>Loginusers</a></li>
 						@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin))
 						{
-							<li class="nav-item"><a href="/AdminPanel/AddUser" class="nav-link"><i class="mi-person-add"></i>Add User</a></li>
-							<li class="nav-item"><a href="/AdminPanel/SystemPrefrences" class="nav-link"><i class="mi-security "></i>System Prefrences</a></li>
-							<li class="nav-item"><a href="/AdminPanel/AccountPrefrences" class="nav-link"><i class="mi-security "></i>Account Prefrences</a></li>
+							<li class="nav-item"><a href="/AdminPanel/AddUser" class="nav-link"><i class="icon-user-plus  icon-2x text-teal-300"></i>Add User</a></li>
+							<li class="nav-item"><a href="/AdminPanel/SystemPrefrences" class="nav-link"><i class="mi-security icon-2x text-teal-300"></i>System Prefrences</a></li>
+							<li class="nav-item"><a href="/AdminPanel/AccountPrefrences" class="nav-link"><i class="mi-security icon-2x text-teal-300"></i>Account Prefrences</a></li>
 
 
 						}
 						@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
 						{
-							<li class="nav-item"><a href="/AdminPanel/BulkUpload" class="nav-link"><i class="icon-upload "></i>Bulk Upload</a></li>
+							<li class="nav-item"><a href="/AdminPanel/BulkUpload" class="nav-link"><i class="icon-upload icon-2x text-teal-300"></i>Bulk Upload</a></li>
 						}
 					</ul>
 				</li>
@@ -133,95 +141,108 @@
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="mi-settings text-success-300"></i> <span>Business Manager</span></a>
+					<a href="#" class="nav-link "><i class="mi-settings icon-2x text-success-300"></i> <span>Business Manager</span></a>
 					<ul class="nav nav-group-sub" data-submenu-title="Business Manager">
-						<li class="nav-item"><a href="/AdminPanel/BusinessEntities" class="nav-link"><i class="mi-person"></i>Business Entities</a></li>
-						<li class="nav-item"><a href="/AdminPanel/Organizations" class="nav-link"><i class="mi-person"></i>Organizations</a></li>
-						<li class="nav-item"><a href="/AdminPanel/Branches" class="nav-link"><i class="mi-person"></i>Branches</a></li>
+						<li class="nav-item"><a href="/AdminPanel/BusinessEntities" class="nav-link"><i class="mi-person icon-2x text-success-300"></i>Business Entities</a></li>
+						<li class="nav-item"><a href="/AdminPanel/Organizations" class="nav-link"><i class="mi-person icon-2x text-success-300"></i>Organizations</a></li>
+						<li class="nav-item"><a href="/AdminPanel/Branches" class="nav-link"><i class="mi-person icon-2x text-success-300"></i>Branches</a></li>
 
 					</ul>
 				</li>
 			}
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-newspaper2 icon-2x text-brown"></i> <span>Reports</span></a>
+					<ul class="nav nav-group-sub" data-submenu-title="Reporting Section">
+						<li class="nav-item"><a href="/Reports/CategoryWiseReport" class="nav-link"><i class="icon-calendar icon-2x text-brown"></i>Monthly Report</a></li>
+						<li class="nav-item"><a href="/Reports/DepartmentWiseReport" class="nav-link"><i class="icon-bag icon-2x text-brown"></i>Department Report</a></li>
 
+					</ul>
+				</li>
+			}
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Accounts))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-users4 text-success-300"></i> <span>Human Resources</span></a>
+					<a href="#" class="nav-link "><i class="icon-users4 icon-2x text-success"></i> <span>Human Resources</span></a>
 					<ul class="nav nav-group-sub" data-submenu-title="Purchase Section">
-						<li class="nav-item"><a href="/AdminPanel/Employees" class="nav-link"><i class="icon-user-tie "></i>Empployee</a></li>
-						<li class="nav-item"><a href="/AdminPanel/AddEmployee" class="nav-link"><i class="icon-user-plus"></i>Add Empployee</a></li>
-						<li class="nav-item"><a href="/AdminPanel/EmployeeDepartments" class="nav-link"><i class="icon-safe"></i>Employee Departments</a></li>
-						<li class="nav-item"><a href="/AdminPanel/EmployeeDesignation" class="nav-link"><i class="icon-hat "></i>Designations</a></li>
+						<li class="nav-item"><a href="/AdminPanel/Employees" class="nav-link"><i class="icon-user-tie icon-2x text-success"></i>Empployee</a></li>
+						<li class="nav-item"><a href="/AdminPanel/AddEmployee" class="nav-link"><i class="icon-user-plus icon-2x text-success"></i>Add Empployee</a></li>
+						<li class="nav-item"><a href="/AdminPanel/EmployeeDepartments" class="nav-link"><i class="icon-safe icon-2x text-success"></i>Employee Departments</a></li>
+						<li class="nav-item"><a href="/AdminPanel/EmployeeDesignation" class="nav-link"><i class="icon-hat icon-2x text-success"></i>Designations</a></li>
 					</ul>
 				</li>
 			}
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Accounts))
 			{
 				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link"><i class="mi-account-balance-wallet text-info-300"></i> <span>Accounting</span></a>
+					<a href="#" class="nav-link"><i class="icon-coins icon-2x text-warning"></i> <span>Accounting</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="Accounting Section">
 
 						<!-- Chart of Accounts -->
 						<li class="nav-item">
 							<a href="/Accounting/ChartOfAccounts" class="nav-link">
-								<i class="mi-view-list"></i> Chart of Accounts
+								<i class="icon-calculator2  icon-2x text-warning"></i> Chart of Accounts
 							</a>
 						</li>
 
 						<!-- Journal Entries -->
 						<li class="nav-item">
 							<a href="/Accounting/JournalEntries" class="nav-link">
-								<i class="mi-book"></i> Journal Entries
+								<i class="icon-newspaper icon-2x text-warning"></i> Journal Entries
 							</a>
 						</li>
 						<li class="nav-item">
 							<a href="/Accounting/TrialBalance" class="nav-link">
-								<i class="mi-book"></i> Trial Balance
+								<i class="icon-magazine  icon-2x text-warning"></i> Trial Balance
 							</a>
 						</li>
 						<li class="nav-item">
 							<a href="/Accounting/Ledger" class="nav-link">
-								<i class="mi-book"></i> Ledger
+								<i class="icon-book3  icon-2x text-warning"></i> Ledger
 							</a>
 						</li>
 						<!-- Accounts Receivable -->
 						<li class="nav-item nav-item-submenu">
-							<a href="#" class="nav-link"><i class="mi-attach-money"></i> Accounts Receivable</a>
+							<a href="#" class="nav-link"><i class="icon-file-check  icon-2x text-warning"></i> Accounts Receivable</a>
 							<ul class="nav nav-group-sub">
-								<li class="nav-item"><a href="/Accounting/Receivables" class="nav-link"><i class="mi-receipt"></i> Receivables</a></li>
+								<li class="nav-item"><a href="/Accounting/Receivables" class="nav-link">
+										<i class="icon-file-download2  icon-2x text-warning"></i> Receivables
+									</a>
+								</li>
 
-								<li class="nav-item"><a href="#" class="nav-link disabled"><i class="mi-people"></i> Credit Customers <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span> </a></li>
+								<li class="nav-item"><a href="#" class="nav-link disabled"><i class="mi-people icon-2x text-warning"></i> Credit Customers <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span> </a></li>
 
-								<li class="nav-item"><a href="/Accounting/Receivables/Payments" class="nav-link disabled"><i class="mi-payment"></i> Receive Payments <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
-								<li class="nav-item"><a href="/Accounting/Receivables/Statements" class="nav-link disabled"><i class="mi-description"></i> Customer Statements <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
+								<li class="nav-item"><a href="/Accounting/Receivables/Payments" class="nav-link disabled"><i class="mi-payment icon-2x text-warning"></i> Receive Payments <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
+								<li class="nav-item"><a href="/Accounting/Receivables/Statements" class="nav-link disabled"><i class="icon-file-spreadsheet  icon-2x text-warning"></i> Customer Statements <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
 							</ul>
 						</li>
 
 						<!-- Accounts Payable -->
 						<li class="nav-item nav-item-submenu">
-							<a href="#" class="nav-link"><i class="mi-shopping-cart"></i> Accounts Payable</a>
+							<a href="#" class="nav-link"><i class="icon-credit-card2  icon-2x text-warning"></i> Accounts Payable</a>
 							<ul class="nav nav-group-sub">
-								<li class="nav-item"><a href="/Accounting/Payables" class="nav-link"><i class="mi-people"></i> Payables</a></li>
+								<li class="nav-item"><a href="/Accounting/Payables" class="nav-link"><i class="icon-credit-card2  icon-2x text-warning"></i> Payables</a></li>
 
-								<li class="nav-item"><a href="/Accounting/Payables/Suppliers" class="nav-link disabled"><i class="mi-people-outline"></i> Supplier List</a></li>
-								<li class="nav-item"><a href="/Accounting/Payables/Bills" class="nav-link disabled"><i class="mi-receipt"></i> Supplier Bills <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
+								<li class="nav-item"><a href="/Accounting/Payables/Suppliers" class="nav-link disabled"><i class="icon-file-spreadsheet  icon-2x text-warning"></i> Supplier List</a></li>
+								<li class="nav-item"><a href="/Accounting/Payables/Bills" class="nav-link disabled"><i class="icon-file-spreadsheet  icon-2x text-warning"></i> Supplier Bills <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
 
-								<li class="nav-item"><a href="/Accounting/Payables/Payments" class="nav-link disabled"><i class="mi-credit-card"></i> Make Payments <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
+								<li class="nav-item"><a href="/Accounting/Payables/Payments" class="nav-link disabled"><i class="icon-price-tag2 icon-2x text-warning"></i> Make Payments <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
 
-								<li class="nav-item"><a href="/Accounting/Payables/Statements" class="nav-link disabled"><i class="mi-description"></i> Supplier Statements <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
+								<li class="nav-item"><a href="/Accounting/Payables/Statements" class="nav-link disabled"><i class="icon-stack2  icon-2x text-warning"></i> Supplier Statements <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a></li>
 							</ul>
 						</li>
 
 
 						<!-- Taxation -->
 						<li class="nav-item">
-							<a href="/Accounting/Taxation" class="nav-link disabled"><i class="mi-insert-chart"></i> Taxation <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a>
+							<a href="/Accounting/Taxation" class="nav-link disabled"><i class="icon-price-tag2 icon-2x text-warning"></i> Taxation <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a>
 						</li>
 
 						<!-- Reconciliation -->
 						<li class="nav-item">
-							<a href="/Accounting/Reconciliation" class="nav-link disabled"><i class="mi-assignment"></i> Reconciliation Log <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a>
+							<a href="/Accounting/Reconciliation" class="nav-link disabled"><i class="mi-assignment icon-2x text-warning"></i> Reconciliation Log <span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></a>
 						</li>
 
 					</ul>

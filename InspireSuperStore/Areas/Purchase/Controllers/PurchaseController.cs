@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
 
-namespace InspireSuperStore.Areas.Purchases.Controllers
+namespace InspireSuperStore.Areas.Purchase.Controllers
 {
     [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry + "," + UserRolesConstants.Purchase + "," + UserRolesConstants.PowerUser)]
     [Area("Purchase")]

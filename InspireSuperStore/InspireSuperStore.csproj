@@ -16,7 +16,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.11" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +42,9 @@
     <Folder Include="Areas\Product\Models\" />
     <Folder Include="Areas\Purchase\Data\" />
     <Folder Include="Areas\Purchase\Models\" />
+    <Folder Include="Areas\ReportingArea\Data\" />
+    <Folder Include="Areas\ReportingArea\Models\" />
+    <Folder Include="Areas\ReportingArea\Views\" />
   </ItemGroup>
 
   <ItemGroup>

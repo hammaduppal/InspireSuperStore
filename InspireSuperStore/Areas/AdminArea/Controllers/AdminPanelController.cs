@@ -590,6 +590,25 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveSystemPrefrences(SystemPreferencesVM model, IFormFile? CompanyLogoFile)
         {
+            if (CompanyLogoFile != null && CompanyLogoFile.Length > 0)
+            {
+                // Save to wwwroot/uploads/logos (create if not exists)
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "logos");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(CompanyLogoFile.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await CompanyLogoFile.CopyToAsync(stream);
+                }
+
+                // Build the URL for the saved file
+                var logoUrl = $"/uploads/logos/{fileName}";
+                model.CompanyLogoUrl = logoUrl;
+            }
             var result = await _adminPanel.SavePrefrences(model);
             return Json(new { });
         }

@@ -11,6 +11,7 @@ using MarketBal.Repository.POSManager;
 using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using ZXing;
 
 namespace InspireSuperStore.Areas.OrderSection.Controllers
@@ -36,7 +37,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         {
             _config = config;
             _oneDb = oneDb;
-            _attrib = new AttributeRepository(_config,_oneDb);
+            _attrib = new AttributeRepository(_config, _oneDb);
             _account = new AccountRepository(_config);
             _admin = new AdminPanelRepository(_config, _oneDb);
             _assets = new AssetRepository(_config, _oneDb);
@@ -63,13 +64,28 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             return View(vm);
         }
         public async Task<IActionResult> SaveInvoice(InvoiceMasterVM model)
-            {
+        {
             var result = await _invoicesRepo.SaveInvoice(model);
             try
             {
                 var invoice = await _invoicesRepo.GenerateInvoiceHTML(result);
                 if (invoice != null)
                 {
+                    var orderparam = new OrderParam
+                    {
+                        OrderId = result.InvoiceMasterId
+                    };
+                    var Notification = new NotificationsDTO
+                    {
+                        CreatedAt = DateTime.Now,
+                        GroupName = "Sales",
+                        IsRead = false,
+                        Params = JsonConvert.SerializeObject(orderparam),
+                        UserId = AppDataUtility.SessionUser.Id,
+                        NotificationTypeId = 1
+                    };
+                    await _notificationServices.SendToRoleGroup("Admin", JsonConvert.SerializeObject(Notification));
+                    await _notificationRepository.SaveNotification(Notification);
                     return File(invoice, "application/pdf", "invoice.pdf");
                 }
                 else
@@ -91,13 +107,25 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
 
             return File(invoice, "application/pdf", "invoice.pdf");
 
-           
+
         }
 
-        public async Task<IActionResult> PreviewInvoice()
+        public async Task<IActionResult> CancelInvoice(InvoiceMasterVM model)
         {
-            return View();
+            var result = await _invoicesRepo.CancelInvoice(model.InvoiceMasterId, "");
+            if (result)
+            {
+                return Json(new { statusCode="200" });
+
+            }
+            else
+            {
+                return Json(new { statusCode="300" });
+
+            }
         }
+
+
 
     }
 }

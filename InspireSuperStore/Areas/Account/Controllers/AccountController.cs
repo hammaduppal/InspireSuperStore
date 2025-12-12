@@ -5,6 +5,7 @@ using MainModels.Util;
 using MarketBal.Repository;
 using MarketBal.Repository.Account;
 using MarketBal.Repository.HRM;
+using MarketBal.Repository.SystemRP;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.SqlServer.Server;
@@ -26,6 +27,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
         private readonly NotificationRepository notificationRepository;
         private readonly OneDb _oneDb;
         private readonly HumanRespourceRepository _hrm;
+        private readonly DeviceRegistrationRepository deviceRegistrationRepository;
         public AccountController(IConfiguration config, OneDb onedb)
         {
             _config = config;
@@ -35,6 +37,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
             _admin = new AdminPanelRepository(_config, _oneDb);
             _hrm = new HumanRespourceRepository(_config, _oneDb);
             notificationRepository = new NotificationRepository(_oneDb);
+            deviceRegistrationRepository = new DeviceRegistrationRepository(_config, _oneDb);
         }
         public async Task<IActionResult> Login(string? returnUrl = null)
         {
@@ -49,7 +52,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
             {
                 string base64 = Uri.UnescapeDataString(returnUrl);
                 string decrypted = EncryptionPasses.RandomDecrypt(base64);
-                LoginUserVM user = Newtonsoft.Json.JsonConvert.DeserializeObject<LoginUserVM>(decrypted);
+                LoginUserRequestModel user = Newtonsoft.Json.JsonConvert.DeserializeObject<LoginUserRequestModel>(decrypted);
                 var res = await _login.ValidateLogin(user);
                 if (res != null)
                 {
@@ -114,39 +117,55 @@ namespace InspireSuperStore.Areas.Account.Controllers
             return 1;
         }
         [HttpPost]
-        public async Task<IActionResult> ValidateLogin(LoginUserVM formData)
+        public async Task<IActionResult> ValidateLogin(LoginUserRequestModel formData)
         {
             try
             {
+                int allowedDevices = 2;
                 string url = (string)TempData["ReturnURL"];
                 var res = await _login.ValidateLogin(formData);
+
                 if (res != null)
                 {
+                    if (res.Person != null)
+                    {
+                        var deviceInfo = new DeviceRequestModelVM
+                        {
+                            DeviceUniqueId = formData.Device.DeviceUniqueId, // from localStorage
+                            DeviceName = formData.Device.DeviceName,
+                            BrowserName = formData.Device.BrowserName,
+                            OperatingSystem = formData.Device.OperatingSystem,
+                            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                            AppVersion = formData.Device.AppVersion
+                        };
+                        bool isRegistered = await deviceRegistrationRepository.IsAlreadyRegistered(deviceInfo);
+
+                        if (!isRegistered)
+                        {
+                            int registeredDevicesCount= await deviceRegistrationRepository.RegisteredDevicesCount();
+                            if (registeredDevicesCount<allowedDevices)
+                            {
+                                await deviceRegistrationRepository.RegisterNewDevice(deviceInfo,res.Person.BranchId.Value);
+                            }
+                            else
+                            {
+                                return Json(new { statusCode = "900", Message = "Device Limit Reached" });
+
+                            }
+
+                        }
+                        
+                    }
                     await _login.SigninAsync(res, HttpContext);
                     await LoginHandler(res);
-                    // res.Passwords = "";
-                    //AppDataUtility.SessionUser = res;
-                    //string[] rolesnames = res.Roles.Select(x => x.Name).ToArray();
-                    //bool isSuperAdmin = res.Roles.Any(r => r.Id == 1 && r.Name.Equals("superadmin", StringComparison.OrdinalIgnoreCase));
-                    //if (!isSuperAdmin)
-                    //{
-                    //    AppDataUtility.UserNotifications = await notificationRepository.GetGroupNotification(rolesnames);
-                    //}
-                    //else
-                    //{
-                    //    AppDataUtility.UserNotifications = new List<NotificationsDTO>(); // empty list for superadmin
-                    //}
-                    //if (res.RoleName=="SuperAdmin")
-                    //{
-                    //    url = "/adminPanel";
-
-                    //}
+                   
                     return Json(new { statusCode = "200", Message = "LoginSuccessfull", returnUrl = url });
                 }
                 else
                 {
                     return Json(new { statusCode = "300", Message = "LoginFailure" });
                 }
+
             }
             catch (Exception ex)
             {

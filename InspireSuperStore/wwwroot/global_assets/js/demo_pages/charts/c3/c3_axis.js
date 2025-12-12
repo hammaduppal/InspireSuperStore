@@ -180,83 +180,139 @@ var С3Axis = function() {
             });
         }
 
-        // Text label rotation
         if(axis_tick_rotation_element) {
 
-            // Generate chart
-            var axis_tick_rotation = c3.generate({
-                bindto: axis_tick_rotation_element,
-                size: { height: 250 },
-                data: {
-                    x : 'x',
-                    columns: [
-                        ['x', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                        ['Sales Chart', 90, 100, 140, 200, 100, 400, 90, 100, 140, 200, 100, 400],
-                    ],
-                    type: 'bar'
-                },
-                color: {
-                    pattern: ['#00BCD4']
-                },
-                axis: {
-                    x: {
-                        type: 'category',
-                        tick: {
-                            rotate: -90
+           
+            $.ajax({
+                url: '/Reports/GetInvoiceChart',  
+                method: 'GET',
+                success: function (res) {
+
+                    var axis_tick_rotation = c3.generate({
+                        bindto: axis_tick_rotation_element,
+                        size: { height: 250 },
+                        data: {
+                            x: 'x',
+                            columns: [
+                                ['x', ...res.months],       
+                                ['Sales Chart', ...res.sales]
+                            ],
+                            type: 'bar'
                         },
-                        height: 80
-                    }
+                        color: {
+                            pattern: ['#00BCD4']
+                        },
+                        axis: {
+                            x: {
+                                type: 'category',
+                                tick: { rotate: -90 },
+                                height: 80
+                            }
+                        },
+                        grid: {
+                            x: { show: true }
+                        }
+                    });
+
+                    $('.sidebar-control').on('click', function () {
+                        axis_tick_rotation.resize();
+                    });
                 },
-                grid: {
-                    x: {
-                        show: true
-                    }
+                error: function () {
+                    console.log("Error loading invoice chart data");
                 }
             });
-
-            // Resize chart on sidebar width change
-            $('.sidebar-control').on('click', function() {
-                axis_tick_rotation.resize();
-            });
+            
         }
 
         // Axis labels
         if(axis_labels_element) {
 
             // Generate chart
-            var axis_labels = c3.generate({
-                bindto: axis_labels_element,
-                size: { height: 250 },
-                data: {
-                    columns: [
-                        ['sample', 30, 200, 100, 400, 150, 250],
-                        ['sample2', 130, 300, 200, 500, 250, 350]
-                    ],
-                    axes: {
-                        sample2: 'y2'
-                    }
+            //var axis_labels = c3.generate({
+            //    bindto: axis_labels_element,
+            //    size: { height: 250 },
+            //    data: {
+            //        columns: [
+            //            ['sample', 30, 200, 100, 400, 150, 250],
+            //            ['sample2', 130, 300, 200, 500, 250, 350]
+            //        ],
+            //        axes: {
+            //            sample2: 'y2'
+            //        }
+            //    },
+            //    color: {
+            //        pattern: ['#9C27B0']
+            //    },
+            //    axis: {
+            //        x: {
+            //            label: 'X Label'
+            //        },
+            //        y: {
+            //            label: 'Y Label'
+            //        },
+            //        y2: {
+            //            show: true,
+            //            label: 'Y2 Label'
+            //        }
+            //    }
+            //});
+
+            // Resize chart on sidebar width change
+            //$('.sidebar-control').on('click', function() {
+            //    axis_labels.resize();
+            //});
+            $.ajax({
+                url: '/Reports/GetSalesProfitChart', // Your controller endpoint
+                method: 'GET',
+                success: function (res) {
+                    console.log(res);
+                    // Generate chart with live data
+                    var axis_labels = c3.generate({
+                        bindto: axis_labels_element,
+                        size: { height: 250 },
+                        data: {
+                            x: 'x',
+                            columns: [
+                                ['x', ...res.Months],
+                                ['Sales', ...res.Sales],
+                                ['Profit', ...res.Profit]
+                            ],
+                            axes: {
+                                Sales: 'y',   // primary
+                                Profit: 'y2'  // secondary
+                            },
+                            type: 'line'     // ensure line chart
+                        },
+                        color: {
+                            pattern: ['#0D6EFD', '#9C27B0'] // Sales blue, Profit purple
+                        },
+                        axis: {
+                            x: {
+                                type: 'category',
+                                label: 'Months'
+                            },
+                            y: {
+                                label: 'Sales'
+                            },
+                            y2: {
+                                show: true,
+                                label: 'Profit'
+                            }
+                        }
+                    });
+
+                    // Resize chart on sidebar toggle
+                    $('.sidebar-control').on('click', function () {
+                        axis_labels.resize();
+                    });
+
                 },
-                color: {
-                    pattern: ['#9C27B0']
-                },
-                axis: {
-                    x: {
-                        label: 'X Label'
-                    },
-                    y: {
-                        label: 'Y Label'
-                    },
-                    y2: {
-                        show: true,
-                        label: 'Y2 Label'
-                    }
+                error: function () {
+                    console.log("Error loading Sales/Profit chart data.");
                 }
             });
 
-            // Resize chart on sidebar width change
-            $('.sidebar-control').on('click', function() {
-                axis_labels.resize();
-            });
         }
     };
 

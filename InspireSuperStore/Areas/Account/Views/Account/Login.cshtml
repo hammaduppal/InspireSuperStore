@@ -109,50 +109,47 @@
 
 		/* Mobile / Tablet view */
 		@@media (max-width: 991.98px) {
-			.login-page
-
-		{
-			flex-direction: column;
-			height: auto;
-			overflow: visible;
-		}
-
-		.login-image-panel {
-			order: 1;
-			width: 100%;
-			height: auto;
-			padding: 40px 20px;
-			background-position: center;
-			background-attachment: fixed;
-		}
-
-		.login-form-panel {
-			position: relative;
-			order: 2;
-			width: 100%;
-			height: auto;
-			box-shadow: none;
-			background: #fff;
-		}
-
-		.login-form-wrapper {
-			padding: 20px 25px 40px;
-		}
-
-		.login-image-content {
-			text-align: center;
-			color: #fff;
-			padding: 20px;
-		}
-
-			.login-image-content h1 {
-				font-size: 1.75rem;
+			.login-page {
+				flex-direction: column;
+				height: auto;
+				overflow: visible;
 			}
 
-			.login-image-content p {
-				font-size: 0.95rem;
+			.login-image-panel {
+				order: 1;
+				width: 100%;
+				height: auto;
+				padding: 40px 20px;
+				background-position: center;
+				background-attachment: fixed;
 			}
 
+			.login-form-panel {
+				position: relative;
+				order: 2;
+				width: 100%;
+				height: auto;
+				box-shadow: none;
+				background: #fff;
+			}
+
+			.login-form-wrapper {
+				padding: 20px 25px 40px;
+			}
+
+			.login-image-content {
+				text-align: center;
+				color: #fff;
+				padding: 20px;
+			}
+
+				.login-image-content h1 {
+					font-size: 1.75rem;
+				}
+
+				.login-image-content p {
+					font-size: 0.95rem;
+				}
 		}
 
 		.login-card {
@@ -177,18 +174,15 @@
 				}
 
 				@@keyframes fadeIn {
-					0%
+					0% {
+						opacity: 0;
+						transform: translateY(10px);
+					}
 
-				{
-					opacity: 0;
-					transform: translateY(10px);
-				}
-
-				100% {
-					opacity: 1;
-					transform: translateY(0);
-				}
-
+					100% {
+						opacity: 1;
+						transform: translateY(0);
+					}
 				}
 
 				/* optional – to make it pop a bit more */
@@ -250,7 +244,7 @@
 				<div class="card login-form-wrapper">
 					<form id="form-login" class="needs-validation login-card shadow-5" novalidate action="">
 						<div class="card-body">
-							
+
 
 							<div class="form-group form-group-feedback form-group-feedback-left">
 								<input id="login-Email" name="email" type="email" class="form-control" placeholder="Email" required />
@@ -273,7 +267,7 @@
 										Remember me
 									</label>
 								</div>
-							@* 	<a  href="#" class="ml-auto">Forgot password?</a> *@
+								@* 	<a  href="#" class="ml-auto">Forgot password?</a> *@
 							</div>
 
 							<div class="form-group">
@@ -317,15 +311,27 @@
 	</script>
 	<script>
 		$(document).ready(function () {
+			const appVersion = "1.0.3";
 
+			function buildDeviceModel() {
+				return {
+					deviceUniqueId: getDeviceUniqueId(),
+					deviceName: generateDeviceName(),
+					browserName: getBrowserInfo(),
+					operatingSystem: getOSInfo(),
+					appVersion: appVersion,
+				};
+			}
 
 
 
 			$('#form-login').submit(function (e) {
-				
+
 				e.preventDefault();
 				const validate = Utility.validateFormAndInputs('#form-login');
 				const isFormValid = validate();
+				var dataSomething = buildDeviceModel();
+				console.log('Device Info:', dataSomething);
 					let isChecked = $('#login-Remember').is(':checked');
 				if (isFormValid) {
 					Utility.SpinnerMessageParent('signinBtn','Loading..');
@@ -333,9 +339,10 @@
 					var formData = {
 						UserName: $('#login-Email').val(),
 						Password: $('#login-Password').val(),
-						Remember:isChecked
+						Remember:isChecked,
+						Device:dataSomething
 					}
-					
+
 
 					$.ajax({
 						url: "/Account/ValidateLogin/",
@@ -345,10 +352,19 @@
 							// Decrypt server response
 								Utility.StopSpinnerMessageParent('signinBtn');
 							if(result.statusCode==='200'){
-								
-									
-					window.location.href = result.returnUrl ? result.returnUrl : "/";
+
+
+							window.location.href = result.returnUrl ? result.returnUrl : "/";
 							}
+									else if (result.statusCode === '900') {
+								Utility.stopSpinner(this, 'Stopping');
+
+								$('#passwordMessage').html(
+									`<span style="color:red">${result.Message}</span>`
+								);
+								Utility.failMessage(result.Message);
+							}
+
 							else{
 							Utility.stopSpinner(this, 'Stopping');
 
@@ -367,8 +383,44 @@
 
 			})
 
+			function getBrowserInfo() {
+				const ua = navigator.userAgent;
+				if (ua.includes("Chrome") && !ua.includes("Edg")) return "Chrome";
+				if (ua.includes("Edg")) return "Edge";
+				if (ua.includes("Firefox")) return "Firefox";
+				if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
+				return "Unknown";
+			}
 
-		})
+			function getDeviceUniqueId() {
+				let uid = localStorage.getItem("DeviceUniqueId");
+				if (!uid) {
+					uid = crypto.randomUUID();
+					localStorage.setItem("DeviceUniqueId", uid);
+				}
+				return uid;
+			}
+
+			function getOSInfo() {
+				const platform = navigator.userAgent;
+
+				if (platform.includes("Win")) return "Windows";
+				if (platform.includes("Mac")) return "MacOS";
+				if (platform.includes("Linux")) return "Linux";
+				if (/Android/i.test(platform)) return "Android";
+				if (/iPhone|iPad|iPod/i.test(platform)) return "iOS";
+
+				return "Unknown";
+			}
+
+			function generateDeviceName() {
+				return `${getOSInfo()} - ${getBrowserInfo()}`;
+			}
+
+
+		});
+
+
 
 
 	</script>

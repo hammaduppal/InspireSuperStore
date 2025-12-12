@@ -33,8 +33,43 @@
 
 				<div class="header-elements d-none">
 					<div class="d-flex justify-content-center">
-						<a href="#" class="btn btn-success addProduct">Add Product</a>
+						<div class="" id="">
+							
+						<ul class="navbar-nav ml-md-auto">
+							<li class="nav-item dropdown">
+								<a href="#" class="navbar-nav-link  dropdown-toggle btn btn-success" data-toggle="dropdown">
+									Add
+								</a>
 
+								<div class="dropdown-menu dropdown-menu-right dropdown-content wmin-md-350">
+									<div class="dropdown-content-body p-2">
+										<div class="row no-gutters">
+											<div class="col-12 col-sm-4">
+												<a href="#" class="d-block text-default text-center ripple-dark rounded p-3 addProduct">
+													<i class="icon-diff-added text-blue-400 icon-2x"></i>
+													<div class="font-size-sm font-weight-semibold text-uppercase mt-2">Add Product</div>
+												</a>
+												
+
+
+											</div>
+											<div class="col-12 col-sm-4">
+													<a href="#" class="d-block text-default text-center ripple-dark rounded p-3 addService">
+														<i class="icon-diff-added text-blue-400 icon-2x"></i>
+														<div class="font-size-sm font-weight-semibold text-uppercase mt-2">Add Service</div>
+													</a>
+
+
+
+											</div>
+											
+										</div>
+									</div>
+								</div>
+							</li>
+
+							</ul>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -62,9 +97,12 @@
 					<tr>
 						<th class="text-center">Id</th>
 						<th class="text-center">Product Name</th>
-						<th class="text-center">Product Description</th>
+						<th class="text-center">Brand </th>
+						<th class="text-center">Model</th>
+						<th class="text-center">SubCategory </th>
+
 						<th class="text-center">QOH</th>
-						<th class="text-center">Created on</th>
+						<th class="text-center">Created</th>
 
 						<th class="text-center">Status</th>
 
@@ -96,7 +134,13 @@
 					{ data: 'ProductId',visible:false
 					},
 					{ data: 'ProductName' },
-					{ data: 'ProductDescription',
+					{ data: 'BrandName',
+					  className: 'text-center'
+					},
+					{ data: 'ModelName',
+					  className: 'text-center'
+					},
+					{ data: 'SubCategoryName',
 					  className: 'text-center'
 					},
 					{ data: 'Qoh',
@@ -163,7 +207,24 @@
 					}
 				})
 			});
+			$('.addService').click(function(e){
 
+				e.preventDefault();
+				$.ajax({
+					url:'/Products/_AddServiceForm',
+					method:'POST',
+					success:function(e){
+						$('.full-modal-title').html('Add Service');
+						$('.full-modal-body').html(e);
+						$('#modal_full').modal(
+						{
+						 backdrop: 'static',
+							keyboard: false
+						}
+						);
+					}
+				})
+			});
 			$(document).on('click', '.view', function (e) {
 					e.preventDefault();
 					var Id = $(this).attr('data-value');

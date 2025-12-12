@@ -1,0 +1,55 @@
+﻿@* @model List<MainModels.Models.License>
+
+@{
+    ViewData["Title"] = "Licenses";
+}
+
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+</head>
+<body>
+ 
+    <h2>Licenses</h2>
+
+    <p>
+        <a class="btn btn-primary" asp-action="Create">Create New License</a>
+    </p>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer Name</th>
+                <th>Device ID</th>
+                <th>Product Name</th>
+                <th>License Key</th>
+                <th>Valid Till</th>
+                <th>Is Active</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var license in Model)
+            {
+                <tr>
+                    <td>@license.Id</td>
+                    <td>@license.CustomerName</td>
+                    <td>@license.DeviceId</td>
+                    <td>@license.ProductName</td>
+                    <td style="word-break: break-all;">@license.LicenseKey</td>
+                    <td>@license.ValidTill.ToString("yyyy-MM-dd")</td>
+                    <td>@(license.IsActive ? "Yes" : "No")</td>
+                    <td>@license.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</body>
+</html>
+ *@

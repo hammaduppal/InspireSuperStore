@@ -1,0 +1,43 @@
+﻿@* @{
+    ViewData["Title"] = "Create License";
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Create</title>
+</head>
+<body>
+    <h2>Create License</h2>
+
+    <form  action="/License/Create" method="post">
+        <div class="form-group mb-3">
+            <label for="customerName">Customer Name</label>
+            <input type="text" class="form-control" id="customerName" name="customerName" required />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="productName">Product Name</label>
+            <input type="text" class="form-control" id="productName" name="productName" required />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="validTill">Valid Till</label>
+            <input type="date" class="form-control" id="validTill" name="validTill" required />
+        </div>
+
+        <button type="submit" class="btn btn-success">Create License</button>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </form>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mt-3">
+            @TempData["Success"]
+        </div>
+    }
+</body>
+</html>
+ *@

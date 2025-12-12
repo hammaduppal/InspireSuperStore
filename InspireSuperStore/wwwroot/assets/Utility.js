@@ -383,6 +383,7 @@ const Utility = {
             closeWith: ['button']
         }).show();
     },
+
     failMessage: function (message) {
         new Noty({
             theme: ' alert alert-danger alert-styled-left p-0 bg-white',
@@ -392,6 +393,7 @@ const Utility = {
             closeWith: ['button']
         }).show();
     },
+
     infoMessage: function (message) {
         new Noty({
             theme: ' alert alert-primary alert-styled-left p-0 bg-white',
@@ -403,27 +405,32 @@ const Utility = {
     },
 
     validateNumericValue: function validateFloatInput(input, decimalPlaces) {
-        
-        let value = input.value.trim(); 
-        
+
+        let value = input.value.trim();
+
+        // remove everything except digits, dot, minus
         value = value.replace(/[^0-9.-]/g, '');
 
         let floatValue = parseFloat(value);
-
-        if (!isNaN(floatValue)) {
-            if (decimalPlaces >= 0) {
-                input.value = floatValue.toFixed(decimalPlaces);
-            } else {
-                input.value = floatValue.toString(); 
-            }
-        } else {
-            input.value = 0.00;
+        if (isNaN(floatValue)) {
+            floatValue = 0;
         }
+
+        // format the number using Intl
+        let formatted = new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: decimalPlaces,
+            maximumFractionDigits: decimalPlaces
+        }).format(floatValue);
+
+        input.value = formatted;
+        return formatted;
     },
+
     validateAlphaNumeric: function validateAlphaNumericInput(input) {
         // Remove all characters except alphanumeric, dash (`-`), and dot (`.`)
         input.value = input.value.replace(/[^a-zA-Z0-9.-]/g, '');
     },
+
     startSpinner: function startSpinner(element, message) {
         var block = $(element); // Get the target element
         $(block).block({
@@ -440,10 +447,12 @@ const Utility = {
             }
         });
     },
+
     stopSpinner: function stopSpinner(element) {
         var block = $(element); // Get the target element
         $(block).unblock(); // Unblock the element
     },
+
     RequestDataAjax: async function (data) {
         try {
             
@@ -459,6 +468,7 @@ const Utility = {
             return null;
         }
     },
+
     RequestFileAjax: async function (data) {
         try {
             const response = await $.ajax({

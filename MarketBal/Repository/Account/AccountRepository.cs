@@ -18,7 +18,7 @@ namespace MarketBal.Repository.Account
             _config = config;
             _db = new DBManager(_config);
         }
-        public async Task<LoginUserVM> ValidateLogin(LoginUserVM model)
+        public async Task<LoginUserVM> ValidateLogin(LoginUserRequestModel model)
         {
             string encodedPass = EncryptionPasses.Encrypt(model.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
 
