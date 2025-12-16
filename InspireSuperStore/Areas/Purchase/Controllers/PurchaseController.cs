@@ -40,39 +40,49 @@ namespace InspireSuperStore.Areas.Purchase.Controllers
             _notificationServices = notificationService;
             _hubContext = hubContext;
         }
-        #region Requisitions
-
-
-
-        #endregion
-        
         public async Task<IActionResult> AddRequisitionForm()
         {
+            vm.PurchaseTypes = await repository.GetPurchaseTypes();
             vm.Suppliers = await _supplier.GetSuppliers();
-           
             return View(vm);
         }
         public async Task<IActionResult> Requisitions()
         {
             await _notificationServices.SendToRoleGroup("Purchase", "Purchase Login Done");
-            vm.PurchaseMasters= await repository.GetPurchaseRequisition(AppConstants.PurchaseType.Requisition);
+            vm.PurchaseMasters = await repository.GetPurchaseRequisition(AppConstants.PurchaseType.Requisition);
             return View(vm);
         }
         public async Task<IActionResult> AddPurchaseRequisation(PurchaseDataDto model)
         {
-            var result = await repository.SavePurchase(model);
-            return Json(new {statusCode="200" });
+            if (model.PurchaseTypeId == AppConstants.PurchaseTypes.OpeningStock)
+            {
+                var result = await repository.SaveOpeningStock(model);
+
+                return Json(new { statusCode = "200" });
+
+
+            }
+            else if(model.PurchaseTypeId == AppConstants.PurchaseTypes.Purchase)
+            {
+                var result = await repository.SavePurchase(model);
+                return Json(new { statusCode = "200" });
+
+            }
+            else
+            {
+                return Json(new { statusCode = "200" });
+            }
         }
-       
+
         public async Task<IActionResult> EditRequisition(Guid Id)
         {
-            var result = await repository.GetSingleRequisition(Id,AppConstants.PurchaseType.Requisition);
+            var result = await repository.GetSingleRequisition(Id, AppConstants.PurchaseType.Requisition);
             vm.PurchaseMaster = result;
             return View(vm);
         }
 
 
-        public async Task <IActionResult> PurchaseOrder()
+        public async Task<IActionResult> PurchaseOrder()
         {
             vm.PurchaseMasters = await repository.GetPurchaseRequisition(AppConstants.PurchaseType.PurchaseOrder);
 
@@ -84,7 +94,7 @@ namespace InspireSuperStore.Areas.Purchase.Controllers
             return View(vm);
         }
         public async Task<IActionResult> GoodReceivedNote()
-            {
+        {
             vm.PurchaseMasters = await repository.GetPurchaseRequisition(AppConstants.PurchaseType.Receiving);
 
             return View(vm);
@@ -98,8 +108,8 @@ namespace InspireSuperStore.Areas.Purchase.Controllers
         public async Task<IActionResult> POChangeStatus(PurchaseMasterVM model)
         {
             var result = await repository.UpdatePOSTATUS(model);
-           
-                return Ok(new { statusCode = "", Message = "" });
+
+            return Ok(new { statusCode = "", Message = "" });
 
 
 
@@ -120,12 +130,12 @@ namespace InspireSuperStore.Areas.Purchase.Controllers
         public async Task<IActionResult> POChangeQty(PurchaseDetailVM model)
         {
             await repository.UpdatePoQTY(model);
-            return Ok(new { statusCode="200"});
+            return Ok(new { statusCode = "200" });
         }
         public async Task<IActionResult> RecieveGRN(PurchaseMasterVM model)
         {
             await repository.CreateGRNNote(model);
-            return Ok(new { statusCode = "200",Message="GRN Completed Successfully Items have been added in Inventory" });
+            return Ok(new { statusCode = "200", Message = "GRN Completed Successfully Items have been added in Inventory" });
         }
     }
 }

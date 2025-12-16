@@ -7,7 +7,7 @@
 }
 
 <div class="page-header page-header-light">
-	<div class="row">
+	<div class="row mt-1 pt-1">
 		<!-- Barcode Input -->
 		<div class="col-md-3">
 			<div class="input-group">
@@ -27,10 +27,16 @@
 					<select id="productSearch" style="width: 100%" class="form-control"></select>
 
 				</div>
-			</div>
-		</div>
 
-	
+			</div>
+
+		</div>
+		<div class="col-md-1">
+			<div id="clock" style="font-size: 24px; font-weight: bold;"></div>
+		</div>
+		<div class="col-md-2">
+			<div id="date" style="font-size: 18px; color: gray;"></div>
+		</div>
 
 	</div>
 
@@ -45,10 +51,7 @@
 		<div class="card">
 
 			<div class="row p-2">
-				<div class="col-md-2">
-					<div id="clock" style="font-size: 24px; font-weight: bold;"></div>
-					<div id="date" style="font-size: 18px; color: gray;"></div>
-				</div>
+
 				<div class="col-lg-3">
 					<div class="form-group">
 						<label>Company:</label>
@@ -75,7 +78,7 @@
 						</select>
 					</div>
 				</div>
-				<div class="col-lg-4">
+				<div class="col-lg-3">
 					<div class="form-group">
 						<label>Supplier:</label>
 						<select id="supplier" data-placeholder="Enter 'Supplier'" class="form-control select-minimum" data-fouc required>
@@ -89,7 +92,17 @@
 						</select>
 					</div>
 				</div>
-
+				<div class="col-lg-3">
+					<div class="form-group">
+						<label>Purchase Type:</label>
+						<select id="purchaseTypeId" data-placeholder="Select PurchaseType'" class="form-control required">
+							@foreach (var item in Model.PurchaseTypes)
+							{
+								<option value="@item.PurchaseTypeId"> @item.Name</option>
+							}
+						</select>
+					</div>
+				</div>
 			</div>
 
 
@@ -122,7 +135,7 @@
 						<th>
 							Purchase Price
 						</th>
-						
+
 						<th>
 							Total Price
 						</th>
@@ -132,7 +145,6 @@
 
 				</thead>
 				<tbody>
-					
 				</tbody>
 			</table>
 
@@ -208,7 +220,7 @@
 					  data: { BarCode: barCode },
 					  url: '/Products/GetVariantbyBarCode'
 				  });
-				  
+
 				  if(data){
 					appendProductToTable(data);
 
@@ -225,7 +237,7 @@
 				}
 		  });
 
-	
+
 		$(document).on('input', '.lineqty', function () {
 			let qty = parseFloat($(this).val()) || 0;
 			let row = $(this).closest('tr');
@@ -291,8 +303,8 @@
 		$(this).val(null).trigger('change');
 	});
 
-		
-		
+
+
 		function formatProductSelection(data) {
 			return data.text;
 		}
@@ -303,7 +315,7 @@
 				<strong>${data.text}</strong><br/>
 				<small>Price: ${data.fullData?.RetailPrice || 'N/A'}</small>
 			</div>`);
-		}	
+		}
 		// On select, append to table
 		// $(document).on('select2:select','#productSearch', function (e) {
 		// 	debugger
@@ -312,7 +324,7 @@
 		// 	// Optionally clear
 		// 	$(this).val(null).trigger('change');
 		// });
-	
+
 
 			function appendProductToTable(result) {
 			if (!result) return;
@@ -458,6 +470,7 @@
 		const grandTotal = parseFloat($('#grandTotal').val()) || 0;
 		const branchId = $('#branch').val();
 		const supplierId = $('#supplier').val();
+		const purchaseTypeId = $('#purchaseTypeId').val();
 
 		Utility.SpinnerMessageParent('requisitionsubmitBtn','Loading..');
 		const payload = {
@@ -465,7 +478,8 @@
 			Discount: discount,
 			GrandTotal: grandTotal,
 			SupplierId: supplierId,
-			BranchId: branchId
+			BranchId: branchId,
+			PurchaseTypeId:purchaseTypeId
 		};
 
 		const objectData = {
@@ -486,7 +500,7 @@
 		}
 	});
 
-	
+
 	})
 
 </script>

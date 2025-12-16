@@ -26,7 +26,6 @@ namespace InspireSuperStore.Areas.POS.Controllers
         private readonly OneDb _oneDb;
         private readonly AssetRepository _assets;
         private readonly HumanRespourceRepository _hrm;
-        private readonly POSRepository _posRepo;
         private readonly NotificationService _notificationServices;
         private readonly NotificationRepository _notificationRepository;
 
@@ -39,7 +38,6 @@ namespace InspireSuperStore.Areas.POS.Controllers
             _admin = new AdminPanelRepository(_config, _oneDb);
             _assets = new AssetRepository(_config, _oneDb);
             _hrm = new HumanRespourceRepository(_config, _oneDb);
-            _posRepo = new POSRepository(_config, _oneDb);
             _notificationServices = notificationServices;
             _notificationRepository = new NotificationRepository(_oneDb);
         }

@@ -59,17 +59,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
                     await _login.SigninAsync(res, HttpContext);
                     await LoginHandler(res);
 
-                    //AppDataUtility.SessionUser = res;
-                    //string[] rolesnames = res.Roles.Select(x => x.Name).ToArray();
-                    //bool isSuperAdmin = res.Roles.Any(r => r.Id == 1 && r.Name.Equals("superadmin", StringComparison.OrdinalIgnoreCase));
-                    //if (!isSuperAdmin)
-                    //{
-                    //    AppDataUtility.UserNotifications = await notificationRepository.GetGroupNotification(rolesnames);
-                    //}
-                    //else
-                    //{
-                    //    AppDataUtility.UserNotifications = new List<NotificationsDTO>(); // empty list for superadmin
-                    //}
+                   
 
                 }
             }

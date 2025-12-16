@@ -33,7 +33,8 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         private readonly NotificationRepository _notificationRepository;
         private readonly OrderRepository _orderRepo;
         private readonly InvoiceRepository _invoicesRepo;
-        public InvoiceManagerController(IConfiguration config, OneDb oneDb, NotificationService notificationServices)
+        private readonly IWebHostEnvironment _env;
+        public InvoiceManagerController(IConfiguration config, OneDb oneDb, NotificationService notificationServices, IWebHostEnvironment env)
         {
             _config = config;
             _oneDb = oneDb;
@@ -45,6 +46,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             _notificationServices = notificationServices;
             _notificationRepository = new NotificationRepository(_oneDb);
             _orderRepo = new OrderRepository(_config, _oneDb);
+            _env = env;
             _invoicesRepo = new InvoiceRepository(_config, _oneDb);
         }
         public async Task<IActionResult> Invoices()
@@ -68,7 +70,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             var result = await _invoicesRepo.SaveInvoice(model);
             try
             {
-                var invoice = await _invoicesRepo.GenerateInvoiceHTML(result);
+                var invoice = await _invoicesRepo.GenerateInvoiceHTML(result,_env);
                 if (invoice != null)
                 {
                     var orderparam = new OrderParam
@@ -103,7 +105,7 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         {
             var result = await _invoicesRepo.GetInvoiceById(model.InvoiceMasterId);
 
-            var invoice = await _invoicesRepo.GenerateInvoiceHTML(result);
+            var invoice = await _invoicesRepo.GenerateInvoiceHTML(result,_env);
 
             return File(invoice, "application/pdf", "invoice.pdf");
 

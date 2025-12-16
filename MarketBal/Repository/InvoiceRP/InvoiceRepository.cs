@@ -23,10 +23,9 @@ namespace MarketBal.Repository.InvoiceRP
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
-        private readonly POSRepository _pOSRepository;
         private readonly HumanRespourceRepository _hrmRepository;
         private readonly JournalsRepository _journalRepo;
-        private readonly AccountsReceivableRepository _accountsReceivableRepository ;
+        private readonly AccountsReceivableRepository _accountsReceivableRepository;
         public InvoiceRepository(IConfiguration config, OneDb oneDb)
         {
             _config = config;
@@ -34,7 +33,6 @@ namespace MarketBal.Repository.InvoiceRP
             _api = new ApiMethods();
             _onedb = oneDb;
             _attrib = new AttributeRepository(_config, _onedb);
-            _pOSRepository = new POSRepository(_config, _onedb);
             _hrmRepository = new HumanRespourceRepository(_config, _onedb);
             _journalRepo = new JournalsRepository(_config, _onedb);
             _accountsReceivableRepository = new AccountsReceivableRepository(_config, _onedb);
@@ -52,7 +50,7 @@ namespace MarketBal.Repository.InvoiceRP
                     CustomerId = x.CustomerId,
                     DiscountAmount = x.DiscountAmount,
                     TaxAmount = x.TaxAmount,
-                    PaymentStatusId=x.PaymentStatusId.Value,
+                    PaymentStatusId = x.PaymentStatusId.Value,
                     PaymentMethodId = x.PaymentMethodId.Value,
                     PaymentStatus = x.PaymentStatus == null ? null : new PaymentStatusVM
                     {
@@ -240,7 +238,7 @@ namespace MarketBal.Repository.InvoiceRP
                     {
                         isCashINvoice = true;
                     }
-                    
+
 
                     var customer = await _hrmRepository.GetCustomer(invoiceMaster.CustomerId.Value);
                     var cost = await GetCostofGoods(
@@ -251,7 +249,7 @@ namespace MarketBal.Repository.InvoiceRP
                         }).ToList());
                     var productIds = model.InvoiceDetails.Select(x => x.ProductId).ToList();
 
-                    bool isServiceInvoice= await _onedb.Products
+                    bool isServiceInvoice = await _onedb.Products
                         .AnyAsync(p => productIds.Contains(p.ProductId) && p.ProductType == 2);
                     int revenueAccount = isServiceInvoice
                     ? CoaAccounts.ServiceIncome
@@ -265,7 +263,7 @@ namespace MarketBal.Repository.InvoiceRP
                         await _journalRepo.AddInvoiceJournals(invoiceMaster, isCashINvoice, customer, cost);
                     }
 
-                   // var tesla = await _journalRepo.AddInvoiceJournals(invoiceMaster, isCashINvoice, customer, cost);
+                    // var tesla = await _journalRepo.AddInvoiceJournals(invoiceMaster, isCashINvoice, customer, cost);
                     await _onedb.SaveChangesAsync();
                     await transaction.CommitAsync();
                     return invoiceMaster;
@@ -297,9 +295,9 @@ namespace MarketBal.Repository.InvoiceRP
                     // ---------------------------
                     // 1️⃣ Mark Invoice as Cancelled
                     // ---------------------------
-                    
+
                     invoice.IsCancelled = true;
-                    invoice.CanceledDate= DateTime.Now;
+                    invoice.CanceledDate = DateTime.Now;
                     invoice.PaymentStatusId = (int)AppConstants.PaymentStatus.Cancelled;
                     _onedb.InvoiceMasters.Update(invoice);
 
@@ -426,7 +424,7 @@ namespace MarketBal.Repository.InvoiceRP
         }
 
 
-        public async Task<byte[]> GenerateInvoiceHTML(InvoiceMaster model)
+        public async Task<byte[]> GenerateInvoiceHTML(InvoiceMaster model,IWebHostEnvironment _env)
         {
             try
             {
@@ -435,17 +433,21 @@ namespace MarketBal.Repository.InvoiceRP
 
                 if (!string.IsNullOrEmpty(imageUrl))
                 {
-                    using (var client = new HttpClient())
-                    {
-                        var bytes = await client.GetByteArrayAsync(imageUrl);
-                        var base64 = Convert.ToBase64String(bytes);
+                    // Combine wwwroot path + your file path
+                    string fullPath = Path.Combine(_env.WebRootPath, imageUrl.TrimStart('/'));
 
-                        // detect file extension (fallback: png)
-                        string ext = Path.GetExtension(imageUrl)?.ToLower() switch
+                    if (System.IO.File.Exists(fullPath))
+                    {
+                        var bytes = System.IO.File.ReadAllBytes(fullPath);
+                        string base64 = Convert.ToBase64String(bytes);
+
+                        // detect extension
+                        string ext = Path.GetExtension(fullPath)?.ToLower() switch
                         {
                             ".jpg" or ".jpeg" => "jpeg",
                             ".gif" => "gif",
                             ".bmp" => "bmp",
+                            ".webp" => "webp",
                             _ => "png"
                         };
 
@@ -456,80 +458,155 @@ namespace MarketBal.Repository.InvoiceRP
                 StringBuilder sb = new StringBuilder();
                 foreach (var item in model.InvoiceDetails)
                 {
-                    sb.AppendLine($"<tr>");
-                    sb.AppendLine($"<td style='text-align:left; font-size:12px;'>{item.Product.ProductName}</td> <td style='text-align:left; font-size:12px;'>{item.Quantity}</td> <td style='text-align:left; font-size:12px;'>{item.LineTotal}</td>");
-                    sb.AppendLine($"</tr>");
+                    var name = item.Product.ProductName;
+                    if (!string.IsNullOrEmpty(name) && name.Length > 35)
+                        name = name.Substring(0, 35) + "...";
+
+                    sb.AppendLine("<tr>");
+                    sb.AppendLine($@"
+        <td style='text-align:left; font-size:12px;'>{name}</td>
+        <td style='text-align:center; font-size:12px;'>{item.Quantity}</td>
+        <td style='text-align:right; font-size:12px;'>{item.LineTotal}</td>");
+                    sb.AppendLine("</tr>");
                 }
 
+                // FINAL HTML
                 var html = $@"
-                <!DOCTYPE html>
-                <html>
-                <head>
-                 <meta charset='UTF-8'>
-                   <style>
-                {ReportHelper.GetCustomCSS()}
-                    </style>
-                </head>
-                <body>
-                <section style='width:80mm; margin:0 auto;'>
-                     <div class='company-info'>
-                <p>
-                    <img width='250px' height='20px' src='{GenerateBarCode.GenerateBarcode(model.InvoiceMasterId.ToString())}' alt='QR Code' />
-                </p>
-                      <div class='row align-items-center text-center'>
-        <!-- Logo -->
-        <div class='col-3'>
-          	<img src={base64Logo}' />
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <style>
+        {ReportHelper.GetCustomCSS()}
+
+        body {{
+            font-family: Arial, sans-serif;
+            padding: 5px;
+            margin: 0;
+        }}
+
+        .invoice-container {{
+            width: 80mm;
+            margin: 0 auto;
+        }}
+
+        .company-info {{
+            text-align: center;
+            margin-bottom: 10px;
+        }}
+
+        .company-logo {{
+            margin-bottom: 5px;
+        }}
+
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }}
+
+        th, td {{
+            padding: 4px 0;
+        }}
+
+        th {{
+            border-bottom: 1px solid #000;
+        }}
+
+        tfoot td {{
+            padding-top: 4px;
+        }}
+
+        .section-title {{
+            margin-top: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            text-decoration: underline;
+        }}
+    </style>
+</head>
+
+<body>
+<section class='invoice-container'>
+
+    <!-- QR Code -->
+    <div style='text-align:center'>
+        <img width='180' height='20' src='{GenerateBarCode.GenerateBarcode(model.InvoiceMasterId.ToString())}' alt='QR Code' />
+    </div>
+
+    <!-- Logo + Company Name -->
+    <div class='row align-items-center text-center'>
+        <div class='col-3 company-logo'>
+            <img src='{base64Logo}' alt='Company Logo' style='max-width:60px;' />
         </div>
 
         <div class='col-9'>
-            <h3 style='font-size:14px; margin:0;'>
-                {@AppDataUtility.SystemPreferences.CompanyName}
+            <h3 style='font-size:13px; margin:2px 0;'>
+                {AppDataUtility.SystemPreferences.CompanyName}
             </h3>
+            <p style='font-size:11px; margin:0;'>
+                Phone: +33311123123<br>
+                Email: info@company.com
+            </p>
         </div>
     </div>
-                        <p>{AppDataUtility.SystemPreferences.CompanyName}</p>
-                        <p>Phone: +1234567890 | Email: info@company.com</p>
 
+    <!-- Items Table -->
+    <table>
+        <thead>
+            <tr>
+                <th style='text-align:left; font-size:12px;'>Item</th>
+                <th style='text-align:center; font-size:12px;'>Qty</th>
+                <th style='text-align:right; font-size:12px;'>Price</th>
+            </tr>
+        </thead>
 
-                    </div>
-<div class='row'>
-<table class='table table-striped'>
-<thead>
-<tr>
-<th style='text-align:left; font-size:12px;'>Item</th>
-<th style='text-align:left; font-size:12px;'>Qty</th>
-<th style='text-align:left; font-size:12px;'>Price</th>
-</tr>
-</thead>
-<tbody>
-{sb.ToString()}
-</tbody>
-<tfoot>
-<tr>
-<td colspan='2' style='text-align:left; font-size:12px;'><strong>Subtotal</strong></td>
-<td style='text-align:left; font-size:12px;'>{model.TotalAmount}</td>
-</tr>
-<tr>
-<td colspan='2' style='text-align:left; font-size:12px;'><strong>Tax</strong></td>
-<td style='text-align:left; font-size:12px;'>{model.TaxAmount}</td>
-</tr>
-<tr>
-<td colspan='2' style='text-align:left; font-size:12px;'><strong>Discount</strong></td>
-<td style='text-align:left; font-size:12px;'>{model.DiscountAmount}</td>
-</tr>
-<tr>
-<td colspan='2' style='text-align:left; font-size:12px;'><strong>Total</strong></td>
-<td style='text-align:left; font-size:12px;'>{model.GrandTotal}</td>
-</tr>
-</tfoot>
-</table>
-</div>
-                </section>
+        <tbody>
+            {sb.ToString()}
+        </tbody>
+
+        <tfoot>
+            <tr>
+                <td colspan='2' style='text-align:left; font-size:12px;'><strong>Subtotal</strong></td>
+                <td style='text-align:right; font-size:12px;'>{model.TotalAmount}</td>
+            </tr>
+            <tr>
+                <td colspan='2' style='text-align:left; font-size:12px;'><strong>Tax</strong></td>
+                <td style='text-align:right; font-size:12px;'>{model.TaxAmount}</td>
+            </tr>
+            <tr>
+                <td colspan='2' style='text-align:left; font-size:12px;'><strong>Discount</strong></td>
+                <td style='text-align:right; font-size:12px;'>{model.DiscountAmount}</td>
+            </tr>
+            <tr>
+                <td colspan='2' style='text-align:left; font-size:12px;'><strong>Total</strong></td>
+                <td style='text-align:right; font-size:12px;'><strong>{model.GrandTotal}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- Return Policy -->
+    <p class='section-title'>Return Policy</p>
+    <p style='font-size:11px; margin:0 0 8px 0;'>
+        Items can be returned within 7 days if unused and in original packaging. 
+        Refunds follow store policy. Proof of purchase required.
+    </p>
+
+    <!-- Terms & Conditions -->
+    <p class='section-title'>Terms & Conditions</p>
+    <p style='font-size:11px; margin:0 0 10px 0;'>
+        Please verify items before leaving the counter. 
+        Warranty is handled by the manufacturer. 
+        Prices include applicable taxes. 
+        Thank you for shopping with us!
+    </p>
+
+</section>
+
 <div style='page-break-after: always;'></div>
-  
+
 </body>
-                </html>
+</html>
 ";
 
                 var pdfOptions = new PdfOptions

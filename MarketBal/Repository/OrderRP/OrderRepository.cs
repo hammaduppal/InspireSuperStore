@@ -17,7 +17,6 @@ namespace MarketBal.Repository.OrderRP
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
-        private readonly POSRepository _pOSRepository;
         private readonly InvoiceRepository _invoiceRepo;
         public OrderRepository(IConfiguration config, OneDb oneDb)
         {
@@ -26,7 +25,6 @@ namespace MarketBal.Repository.OrderRP
             _api = new ApiMethods();
             _onedb = oneDb;
             _attrib = new AttributeRepository(_config,_onedb);
-            _pOSRepository = new POSRepository(_config, _onedb);
             _invoiceRepo=new InvoiceRepository(_config, _onedb);
         }
 

@@ -63,7 +63,8 @@ namespace MarketBal.Repository.PurchaseRP
                     TotalAmount = model.GrandTotal + model.Discount,
                     PurchaseNumber = PurchaseNumberGenerator.Generate(AppConstants.PurchaseType.Requisition.ToString(), model.SupplierId),
                     PurchaseType = (int)AppConstants.PurchaseType.Requisition,
-                    Status = (int)AppConstants.PurchaseStatus.Draft
+                    Status = (int)AppConstants.PurchaseStatus.Draft,
+                    PurchaseTypeId=model.PurchaseTypeId
                 };
                 var pditems = new List<PurchaseDetail>();
                 foreach (var item in model.Items)
@@ -95,6 +96,150 @@ namespace MarketBal.Repository.PurchaseRP
             }
 
         }
+        public async Task<int> SaveOpeningStock(PurchaseDataDto model)
+        {
+            try
+            {
+
+
+
+            var commonParams = CommonParamHelper.GetCommonParams();
+            Guid pmId = Guid.NewGuid();
+
+            // 1️⃣ Create PurchaseMaster
+            var pm = new PurchaseMaster
+            {
+                PurchaseMasterId = pmId,
+                Createdby = int.Parse(commonParams.CreatedBy.ToString()),
+                CreatedOn = commonParams.CreatedOn,
+                ModifiedOn = commonParams.ModifiedOn,
+                BranchId = model.BranchId,
+                PurchaseDate = commonParams.CreatedOn,
+                IsActive = commonParams.IsActive,
+                GrandTotal = model.GrandTotal,
+                DiscountAmount = model.Discount,
+                TotalAmount = model.GrandTotal + model.Discount,
+                Status = (int)AppConstants.PurchaseStatus.Approved,
+                PurchaseTypeId = model.PurchaseTypeId,
+                Remarks = "Opening Stock Initialization", 
+                PurchaseNumber = PurchaseNumberGenerator.Generate(AppConstants.PurchaseType.Requisition.ToString(), model.SupplierId)
+            };
+
+            // 2️⃣ Add PurchaseDetails
+            var pditems = model.Items.Select(item => new PurchaseDetail
+            {
+                PurchaseDetailId = Guid.NewGuid(),
+                Createdby = int.Parse(commonParams.CreatedBy.ToString()),
+                CreatedOn = commonParams.CreatedOn,
+                ModifiedOn = commonParams.ModifiedOn,
+                IsActive = commonParams.IsActive,
+                VariantId = item.VariantId,
+                Qty = item.Quantity,
+                UnitPrice = item.PurchasePrice,
+                DiscountAmount = 0,
+                TotalPrice = item.TotalPrice
+            }).ToList();
+
+            pm.PurchaseDetails = pditems;
+            await _onedb.PurchaseMasters.AddAsync(pm);
+            await _onedb.SaveChangesAsync(); // Save to get IDs
+
+            // 3️⃣ Update branch stock and product QOH
+            var variantIds = model.Items.Select(x => x.VariantId).ToList();
+            var variants = await _onedb.ProductVariants
+                .Where(v => variantIds.Contains(v.VariantId))
+                .ToListAsync();
+
+            var branchStocks = await _onedb.BranchStocks
+                .Where(bs => bs.BranchId == model.BranchId && variantIds.Contains(bs.ProductVariantId.Value))
+                .ToListAsync();
+
+            foreach (var item in model.Items)
+            {
+                var variant = variants.FirstOrDefault(v => v.VariantId == item.VariantId);
+                if (variant == null) continue;
+
+                decimal receivedQty = item.Quantity * (variant.QuantityPerUnit ?? 1M);
+
+                // Update branch stock
+                var branchStock = branchStocks.FirstOrDefault(bs => bs.ProductVariantId == item.VariantId);
+                if (branchStock != null)
+                {
+                    branchStock.Qty += receivedQty;
+                    branchStock.Cost = item.PurchasePrice;
+                }
+                else
+                {
+                    _onedb.BranchStocks.Add(new BranchStock
+                    {
+                        BranchStockId = Guid.NewGuid(),
+                        BranchId = model.BranchId,
+                        ProductVariantId = item.VariantId,
+                        Qty = receivedQty,
+                        Cost = item.PurchasePrice,
+                        CreatedOn = DateTime.UtcNow
+                    });
+                }
+
+                // Update product QOH
+                var product = await _onedb.Products.FirstOrDefaultAsync(p => p.ProductId == variant.ProductId);
+                if (product != null)
+                {
+                    product.Qoh = (product.Qoh ?? 0M) + receivedQty;
+                    product.ModifiedOn = DateTime.UtcNow;
+                }
+            }
+
+            await _onedb.SaveChangesAsync();
+
+            // 4️⃣ Create Journal Entry (Opening Stock)
+            var journalEntry = new JournalEntry
+            {
+                JournalEntryId = Guid.NewGuid(),
+                EntryDate = DateTime.UtcNow,
+                EntryNumber = await _journalRepo.GetNewJournalNumber(),
+                ReferenceNumber = $"OS-{pmId.ToString().Substring(0, 8)}",
+                BranchId = pm.BranchId.Value,
+                Description = "Opening Stock Initialization",
+                CreatedBy = pm.Createdby,
+                CreatedAt = DateTime.UtcNow,
+                SourceModule = "OpeningStock"
+            };
+            _onedb.JournalEntries.Add(journalEntry);
+
+            // Debit Inventory
+            _onedb.JournalLines.Add(new JournalLine
+            {
+                JournalLineId = Guid.NewGuid(),
+                JournalEntryId = journalEntry.JournalEntryId,
+                CoaId = AppConstants.CoaAccounts.Inventory, // Inventory account
+                Debit = pm.TotalAmount ?? 0M,
+                Credit = 0,
+                Description = "Inventory increased by Opening Stock",
+            });
+
+            // Credit Opening Stock / Adjustment account
+            _onedb.JournalLines.Add(new JournalLine
+            {
+                JournalLineId = Guid.NewGuid(),
+                JournalEntryId = journalEntry.JournalEntryId,
+                CoaId = AppConstants.CoaAccounts.OpeningStock, // Opening Stock / Capital account
+                Debit = 0,
+                Credit = pm.TotalAmount ?? 0M,
+                Description = "Opening Stock balance",
+            });
+
+            await _onedb.SaveChangesAsync();
+
+            return 1;
+        }
+              catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
         //Get Single Requisition
         public async Task<PurchaseMasterVM> GetSingleRequisition(Guid Id, AppConstants.PurchaseType purchaseType)
         {
@@ -180,7 +325,16 @@ namespace MarketBal.Repository.PurchaseRP
         }
 
 
-
+        public async Task<List<PurchaseTypeVM>> GetPurchaseTypes()
+        {
+            return await _onedb.PurchaseTypes.Select(pt => new PurchaseTypeVM
+            {
+                PurchaseTypeId = pt.Id,
+                Name= pt.Name,
+                 Code= pt.Code,
+                  IsActive= pt.IsActive
+            }).ToListAsync();
+        }
 
 
 
