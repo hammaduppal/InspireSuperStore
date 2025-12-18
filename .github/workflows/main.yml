@@ -1,0 +1,1 @@
+dotnet publish ./InspireSupertStore/InspireSuperStore.csproj -c Release -o ./publish
