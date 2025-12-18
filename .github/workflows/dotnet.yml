@@ -1,0 +1,64 @@
+name: .NET Core CI/CD
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout main repo and all submodules (MainModels)
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GH_PAT }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore ./InspireSuperStore.sln
+
+      - name: Build solution
+        run: dotnet build ./InspireSuperStore.sln -c Release --no-restore
+
+      - name: Run tests
+        run: dotnet test ./InspireSuperStore.sln --no-build --verbosity normal
+
+  deploy:
+    name: Deploy to Plesk Windows Subdomain
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GH_PAT }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Publish main web project
+        run: dotnet publish ./InspireSuperStore/InspireSuperStore.csproj -c Release -o ./publish
+
+      - name: Deploy to Plesk via FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./publish/
+          server-dir: ${{ secrets.FTP_PATH }}/
+          dangerous-clean-slate: true
