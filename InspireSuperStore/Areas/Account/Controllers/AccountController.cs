@@ -111,7 +111,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
         {
             try
             {
-                int allowedDevices = 2;
+                int allowedDevices = 200;
                 string url = (string)TempData["ReturnURL"];
                 var res = await _login.ValidateLogin(formData);
 

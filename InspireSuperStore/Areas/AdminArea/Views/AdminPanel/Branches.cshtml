@@ -73,7 +73,7 @@
 					{
 						<tr>
 							<td>@i</td>
-							<td><a href="#">@item.BranchName</a></td>
+							<td>@item.BranchName</td>
 							<td>@item.OrganizationName</td>
 							<td>@item.BranchCode</td>
 							<td><input type="checkbox" class="form-input-styled activeUnactive" @(item.IsMasterBranch.Value ? "checked disabled" : "") data-value="@item.BranchId" data-organizationId="@item.OrganizationId" value="@item.IsMasterBranch" /></td>

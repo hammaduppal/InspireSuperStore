@@ -122,7 +122,8 @@ namespace MarketBal.Repository.PurchaseRP
                 Status = (int)AppConstants.PurchaseStatus.Approved,
                 PurchaseTypeId = model.PurchaseTypeId,
                 Remarks = "Opening Stock Initialization", 
-                PurchaseNumber = PurchaseNumberGenerator.Generate(AppConstants.PurchaseType.Requisition.ToString(), model.SupplierId)
+                PurchaseNumber = PurchaseNumberGenerator.Generate(AppConstants.PurchaseType.Requisition.ToString(), model.SupplierId),
+                PurchaseType = (int)AppConstants.PurchaseType.OpeningStock
             };
 
             // 2️⃣ Add PurchaseDetails
