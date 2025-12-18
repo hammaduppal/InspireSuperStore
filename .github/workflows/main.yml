@@ -21,16 +21,16 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore ./InspireSuperStore.sln
 
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
+      - name: Build solution
+        run: dotnet build ./InspireSuperStore.sln -c Release --no-restore
 
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test ./InspireSuperStore.sln --no-build --verbosity normal
 
   deploy:
-    name: Deploy to Windows Plesk (IIS)
+    name: Deploy to Plesk Windows Subdomain
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Publish (Plesk Windows IIS)
+      - name: Publish main web project
         run: dotnet publish ./InspireSuperStore/InspireSuperStore.csproj -c Release -o ./publish
 
       - name: Deploy to Plesk via FTPS
