@@ -1,0 +1,3 @@
+[submodule "InspireSuperStore/Repositories/MainModels/MainModels"]
+	path = InspireSuperStore/Repositories/MainModels/MainModels
+	url = https://github.com/hammaduppal/MainModels
