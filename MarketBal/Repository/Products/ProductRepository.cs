@@ -358,7 +358,7 @@ SELECT
     s.SizeName,
     uom.UOMName,
     uoms.SubUOMName,
-    bs.SalePrice as SalesPrice,
+    bs.SalePrice as SalePrice,
     bs.RetailPrice,
     bs.PromotionPrice,
     bs.Cost,
@@ -830,14 +830,14 @@ BEGIN
         BarCode, SubUOMId, QuantityPerUnit, IsSerial,
         MinQty, MaxQty, CreatedOn, CreatedBy, ModifiedOn,
         IsActive, IsDeleted,
-        BranchId, OrganizationId,TaxSlabId
+        BranchId, OrganizationId,TaxSlabId,PriceFormat
     )
     VALUES (
         @VariantId, @MaterialId, @ColorId, @SizeId, @ProductId,
         @BarCode, @SubUOMId, @QuantityPerUnit, @IsSerial,
         @MinQty, @MaxQty, @CreatedOn, @CreatedBy, @ModifiedOn,
         @IsActive, @IsDeleted, 
-        @BranchId, @OrganizationId,@TaxSlabId
+        @BranchId, @OrganizationId,@TaxSlabId,0
     );
 
     -- Insert branch-specific pricing/quantity into BranchStock

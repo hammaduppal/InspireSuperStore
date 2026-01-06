@@ -221,12 +221,12 @@ namespace InspireSuperStore.Areas.Product.Controllers
             var result = await _product.AddProductVariant(model);
             if (result == -1)
             {
-                return Json(new { id = result, statusCode = "300" });
+                return Json(new { id = result, statusCode = "300", Message = "Check Barcode or Other Items" });
 
             }
             else
             {
-                return Json(new { id = result, statusCode = "200" });
+                return Json(new { id = result, statusCode = "200",Message="Record Saved" });
 
             }
         }
