@@ -170,11 +170,11 @@ namespace MarketBal.Repository.Products
         DECLARE @NewProductId UNIQUEIDENTIFIER = NEWID();
 
         INSERT INTO INV.Products (
-            ProductId, ProductName, ProductDescription, SubCategoryId, BranchId,BrandModelId,
+            ProductId, ProductName, ProductDescription,AdditionalInformation, SubCategoryId, BranchId,BrandModelId,
             CreatedOn, Createdby, ModifiedOn, IsActive, IsDeleted, ProductSlug, UOMId,BrandId,OrganizationId,ProductType
         )
         VALUES (
-            @NewProductId, @ProductName, @ProductDescription, @SubCategoryId, @BranchId,@BrandModelId,
+            @NewProductId, @ProductName, @ProductDescription,@AdditionalInformation, @SubCategoryId, @BranchId,@BrandModelId,
             @CreatedOn, @CreatedBy, @ModifiedOn, 1, 0, @ProductSlug, @UOMId,@BrandId,@OrganizationId,@ProductType
         );
 
@@ -195,6 +195,7 @@ namespace MarketBal.Repository.Products
                     {
                         product.ProductName,
                         product.ProductDescription,
+                        product.AdditionalInformation,
                         product.SubCategoryId,
                         commonParams.BranchId,
                         product.BrandModelId,
@@ -221,7 +222,7 @@ namespace MarketBal.Repository.Products
 
 public async Task<ProductVM> GetProduct(Guid ProductId)
 {
-    string query = $@"select p.ProductId, bm.BrandModelId, bm.ModelName, p.ProductName,uom.UOMName,p.UOMId,p.ProductDescription, sc.SubCategoryId,sc.SubCategoryName,c.CategoryName, d.DepartmentName,p.ProductSlug, ppimg.ImageUrl 
+    string query = $@"select p.ProductId, bm.BrandModelId, bm.ModelName, p.ProductName,uom.UOMName,p.UOMId,p.ProductDescription,p.AdditionalInformation, sc.SubCategoryId,sc.SubCategoryName,c.CategoryName, d.DepartmentName,p.ProductSlug, ppimg.ImageUrl 
     ,b.BrandId,b.BrandName
 from Inv.Products p 
 LEFT JOIN INV.SubCategory sc on p.SubCategoryId = sc.SubCategoryId 
@@ -250,6 +251,7 @@ public async Task<int> UpdateDescriptionSection(ProductVM vm)
                 Update Inv.Products Set
                 ProductName =@ProductName, 
                 ProductDescription = @ProductDescription ,
+                AdditionalInformation = @AdditionalInformation,
                 SubCategoryId = @SubCategoryId ,
                 BrandId=@BrandId,
                 UOMId=@UOMId,
@@ -272,6 +274,7 @@ public async Task<int> UpdateDescriptionSection(ProductVM vm)
 
         vm.ProductName,
         vm.ProductDescription,
+        vm.AdditionalInformation,
         vm.SubCategoryId,
         BrandId,
         vm.UOMId,

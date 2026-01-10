@@ -66,8 +66,14 @@
 													<div class="form-group">
 														<label>Product Description</label>
 
-														<button id="regenerate"><i class="fa fa-refresh"></i></button>
+														<button id="regenerate"><i class="icon-reload-alt"></i></button>
 														<textarea id="description" class="form-control" placeholder="Product Description" required> @Model.Product.ProductDescription</textarea>
+													</div>
+													<div class="form-group">
+														<label>Additional Information</label>
+														<button id="addInfo"><i class="icon-reload-alt"></i></button>
+
+														<textarea id="additionalInformation" class="form-control" placeholder="Product Description" required> @Model.Product.AdditionalInformation</textarea>
 													</div>
 
 													<div class="row">
@@ -221,17 +227,40 @@
 <script>
 	$(document).ready(function(){
 			 $('#description').summernote();
+			 $('#additionalInformation').summernote();
+
+
+			 
 			 $('#regenerate').click(async function(e){
 				 e.preventDefault();
 				 var productName = $('#productName').val();
+				 Utility.SpinnerMessage('regenerate');
 				 var objectData={
 					 url:'/Products/CreateDescriptionPrompt',
 					 data:{
 						 ProductName:productName
 					 }
 				 }
+				 Utility.StopSpinnerMessage('regenerate');
 				 const result = await Utility.RequestDataAjax(objectData);
 				 $('#description').summernote('code', result.Prompt);
+			 });
+			
+			 $('#addInfo').click(async function(e){
+				 e.preventDefault();
+				 Utility.SpinnerMessage('addInfo');
+
+				 var productName = $('#productName').val();
+				 var objectData={
+					 url:'/Products/CreateAdditionalInformation',
+					 data:{
+						 ProductName:productName
+					 }
+				 }
+				 Utility.StopSpinnerMessage('addInfo');
+
+				 const result = await Utility.RequestDataAjax(objectData);
+				 $('#additionalInformation').summernote('code', result.Prompt);
 			 });
 	});
 	$('#productDescTab').click(function(){
@@ -271,12 +300,15 @@
 			var id= `@Model.Product.ProductId`;
 			$('#descForm').submit(async function(e){
 					e.preventDefault();
-		var desc = $('#description').summernote();
+					var desc = $('#description').summernote();
+					var addInfo = $('#additionalInformation').summernote();
+
 
 					Utility.SpinnerMessageParent('descFormSubmitBtn','Loading..');
 					var formData = {
 					ProductName: $('#productName').val(),
 					ProductDescription:desc.summernote('code'),
+					AdditionalInformation:addInfo.summernote('code'),
 					ProductId:id,
 					SubCategoryId: $('#subcat').val(),
 					UOMId: $('#uom').val(),

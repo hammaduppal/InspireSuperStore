@@ -29,7 +29,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
         private readonly AdminPanelRepository _admin;
         private readonly SystemRepository _system;
         private readonly IDataRepository _datarepo;
-        public ProductsController(IConfiguration config, OneDb oneDb,IDataRepository data)
+        public ProductsController(IConfiguration config, OneDb oneDb, IDataRepository data)
         {
             this.oneDb = oneDb;
 
@@ -89,8 +89,10 @@ namespace InspireSuperStore.Areas.Product.Controllers
                 return Json(new { statusCode = "300" });
 
             }
-            product.ProductDescription = await _datarepo.AnalyzeTextAsync(product.ProductName);
-            var result = await _product.AddProduct(product,ProductType.PhysicalInventory);
+            product.ProductDescription = await _datarepo.GenerateProductDescription(product.ProductName);
+            product.AdditionalInformation = await _datarepo.ProductAdditionalInformation(product.ProductName);
+
+            var result = await _product.AddProduct(product, ProductType.PhysicalInventory);
 
             return Json(new { statusCode = "200", ProductId = result });
         }
@@ -102,18 +104,24 @@ namespace InspireSuperStore.Areas.Product.Controllers
                 return Json(new { statusCode = "300" });
 
             }
-            var result = await _product.AddProduct(product,ProductType.ServiceInventory);
+            var result = await _product.AddProduct(product, ProductType.ServiceInventory);
 
             return Json(new { statusCode = "200", ProductId = result });
         }
 
 
 
+        public async Task<IActionResult> CreateAdditionalInformation(ProductVM product)
+        {
+            var resulttext = await _datarepo.ProductAdditionalInformation(product.ProductName);
+
+            return Json(new { statusCode = 200, Prompt = resulttext });
+        }
         public async Task<IActionResult> CreateDescriptionPrompt(ProductVM product)
         {
-            var resulttext = await _datarepo.AnalyzeTextAsync(product.ProductName);
+            var resulttext = await _datarepo.GenerateProductDescription(product.ProductName);
 
-            return Json(new { statusCode = 200, Prompt =resulttext});
+            return Json(new { statusCode = 200, Prompt = resulttext });
         }
         [HttpGet]
         public async Task<IActionResult> EditProduct(Guid productId)
@@ -226,7 +234,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             }
             else
             {
-                return Json(new { id = result, statusCode = "200",Message="Record Saved" });
+                return Json(new { id = result, statusCode = "200", Message = "Record Saved" });
 
             }
         }
