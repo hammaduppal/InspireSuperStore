@@ -29,6 +29,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
 
             return View(vm);
         }
+       
         public async Task<IActionResult> _GetAddDepartmentForm()
         {
             return PartialView();
@@ -285,7 +286,11 @@ namespace InspireSuperStore.Areas.Product.Controllers
 
 
 
-
+        public async Task<IActionResult> UpdateSlugs()
+        {
+            await _attrib.UpdateSlugs();
+            return Json(new { statusCode = "200" });
+        }
 
 
         #region GetDCSValues

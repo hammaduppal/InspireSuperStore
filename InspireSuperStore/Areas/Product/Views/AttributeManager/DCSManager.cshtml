@@ -83,9 +83,40 @@
 		</div>
 	</div>
 
+	<div class="card shadow-5">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Manage</h5>
+			<div class="header-elements">
+				<div class="list-icons">
+					<a class="list-icons-item" data-action="collapse"></a>
+				</div>
+			</div>
+		</div>
+
+		<div class="card-body">
+			<div class="row">
+				<button id="updateSlug" class="btn btn-outline-success">Update Slug</button>
+			</div>
+		</div>
+	</div>
+
 </div>
+
+
 <!-- /content area -->
 <script>
+	$('#updateSlug').on('click', async function() {
+		// Add your function to update the slug here
+		Utility.SpinnerMessage('updateSlug','Loading..');
+		const result = await Utility.RequestAjax("/AttributeManager/UpdateSlugs");
+		if(result.statusCode==='200'){
+			Utility.successMessage('Slugs Updated Successfully');
+			Utility.StopSpinnerMessage('updateSlug');
+		}
+		else{
+			Utility.failMessage('Error Updating Slugs');
+		}
+	});
 	$(document).ready(function(){
 		$.ajax({
 			url:'/AttributeManager/_GetAddDepartmentForm',

@@ -541,5 +541,57 @@ namespace MarketBal.Repository.Products
             var result = await _db.ExecuteQueryList<UOMSUBUomExcel>(query);
             return result.ToList();
         }
+
+        public async Task<bool> UpdateSlugs()
+        {
+            var deps = await _onedb.Departments.Where(x => x.DepartmentSlug == null).ToListAsync();
+            foreach (var item in deps)
+            {
+                item.DepartmentSlug = HelperClass.CreateSlug(item.DepartmentName);
+            }
+            var cats = await _onedb.Categories.Where(x => x.CategorySlug == null).ToListAsync();
+            foreach (var item in cats)
+            {
+                item.CategorySlug = HelperClass.CreateSlug(item.CategoryName);
+            }
+
+            var subCats = await _onedb.SubCategories.Where(x => x.SubCategorySlug == null).ToListAsync();
+            foreach (var item in subCats)
+            {
+                item.SubCategorySlug = HelperClass.CreateSlug(item.SubCategoryName);
+            }
+            var sizes = await _onedb.Sizes.Where(x => x.SizeSlug == null).ToListAsync();
+            foreach (var item in sizes)
+            {
+                item.SizeSlug = HelperClass.CreateSlug(item.SizeName);
+            }
+            var brands= await _onedb.Brands.Where(x => x.BrandSlug == null).ToListAsync();
+            foreach (var item in brands)
+            {
+                item.BrandSlug = HelperClass.CreateSlug(item.BrandName);
+            }
+            var materials = await _onedb.Materials.Where(x => x.MaterialSlug == null).ToListAsync();
+            foreach (var item in materials)
+            {
+                item.MaterialSlug = HelperClass.CreateSlug(item.MaterialName);
+            }
+            var colors = await _onedb.Colors.Where(x => x.ColorSlug == null).ToListAsync();
+            foreach (var item in colors)
+            {
+                item.ColorSlug = HelperClass.CreateSlug(item.ColorName);
+            }
+            var products = await _onedb.Products.Where(x => x.ProductSlug == null).ToListAsync();
+            foreach (var item in products)
+            {
+                item.ProductSlug = HelperClass.CreateSlug(item.ProductName);
+            }
+
+        
+
+
+            await _onedb.SaveChangesAsync();
+            return true;
+        }
     }
 }
+
