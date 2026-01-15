@@ -23,5 +23,6 @@ namespace InspireSuperStore.Areas.Product.Controllers
             return Json(result);
         }
 
+        
     }
 }

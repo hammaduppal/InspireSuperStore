@@ -3,8 +3,10 @@ using InspireSuperStore.Areas.Product.Data;
 using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
+using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace InspireSuperStore.Areas.Product.Controllers
 {
@@ -14,13 +16,18 @@ namespace InspireSuperStore.Areas.Product.Controllers
     public class MarketController : Controller
     {
         private readonly OneDb _oneDb;
+        private readonly IConfiguration _config;
         private readonly MarketRepository repository;
+        private readonly AttributeRepository _attributeRepository;
         PagesViewModel vm = new PagesViewModel();
-        public MarketController(OneDb oneDb)
-        {
 
+        public MarketController( OneDb oneDb, IConfiguration config)
+        {
             _oneDb = oneDb;
+            _config = config;
             repository = new MarketRepository(_oneDb);
+            _attributeRepository = new AttributeRepository(_config, _oneDb);
+
         }
         public async Task<IActionResult> Coupons()
         {
@@ -28,7 +35,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
             vm.Coupons = await repository.GetAllCoupons();
             return View(vm);
         }
-        public async Task<IActionResult> _AddCouponView()
+        public IActionResult _AddCouponView()
         {
             return PartialView();
         }
@@ -73,9 +80,38 @@ namespace InspireSuperStore.Areas.Product.Controllers
         [HttpGet("{CouponId}")]
         public async Task<IActionResult> CouponProduct(Guid CouponId)
         {
+            vm.Departments = await _attributeRepository.GetDepartment();
             vm.Coupon = await repository.GetCoupon(CouponId);
             return View(vm);
         }
+        [HttpPost]
+        public async Task<IActionResult> AssignVariants(Guid couponId, List<Guid> variantIds)
+        {
+            var result = await repository.AssignVariants(couponId, variantIds);
+            return Json(new { statusCode = "200" });
+        }
+        public async Task<IActionResult> GetAssignedVariantIds(CouponVM model)
+        {
+            var ids = await repository.GetAssignedVariantIds(model.CouponId);
+            return Json(ids);
+        }
+        public async Task<IActionResult> GetAssignedVariants(CouponVM model)
+        {
+            var data = await repository.GetAssignedVariants(model.CouponId);
+            return Json(data);
+        }
+        [HttpPost]
+        public async Task<IActionResult> UnassignVariant(CouponProductVM model)
+        {
+            var record = await _oneDb.CouponProducts.FindAsync(model.ProductVariantId);
 
+            if (record != null)
+            {
+                _oneDb.CouponProducts.Remove(record);
+                await _oneDb.SaveChangesAsync();
+            }
+
+            return Json(new { statusCode = "200" });
+        }
     }
 }

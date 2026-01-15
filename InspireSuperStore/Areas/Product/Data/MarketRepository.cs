@@ -113,8 +113,7 @@ namespace InspireSuperStore.Areas.Product.Data
             existingCoupon.AllowStacking = model.AllowStacking;
             existingCoupon.IsActive = model.IsActive;
             existingCoupon.UpdatedDate = DateTime.UtcNow;
-
-            // Save changes
+          
             try
             {
                 await _oneDb.SaveChangesAsync();
@@ -122,10 +121,57 @@ namespace InspireSuperStore.Areas.Product.Data
             }
             catch (Exception ex)
             {
-                // Optionally log the exception
                 return false;
             }
         }
+        public async Task <bool> AssignVariants(Guid couponId, List<Guid> variantIds)
+        {
+            var existingVariantIds = await _oneDb.CouponProducts
+                .Where(x => x.CouponId == couponId)
+                .Select(x => x.ProductVariantId)
+                .ToListAsync();
 
+            var newLinks = variantIds
+                .Where(id => !existingVariantIds.Contains(id))
+                .Select(id => new CouponProduct
+                {
+                    CouponProductId = Guid.NewGuid(),
+                    CouponId = couponId,
+                    ProductVariantId = id
+                });
+
+            _oneDb.CouponProducts.AddRange(newLinks);
+            await _oneDb.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<List<Guid>> GetAssignedVariantIds(Guid couponId)
+        {
+            var ids = await _oneDb.CouponProducts
+                .Where(x => x.CouponId == couponId)
+                .Select(x => x.ProductVariantId)
+                .ToListAsync();
+
+            return ids;
+        }
+        public async Task<object> GetAssignedVariants(Guid couponId)
+        {
+            var data = await (
+                from cp in _oneDb.CouponProducts
+                join pv in _oneDb.ProductVariants on cp.ProductVariantId equals pv.VariantId
+                join p in _oneDb.Products on pv.ProductId equals p.ProductId
+                where cp.CouponId == couponId
+                select new
+                {
+                    cp.CouponProductId,
+                    pv.VariantId,
+                    p.ProductName,
+                    pv.BarCode,
+                    CurrentPrice = pv.BranchStocks.Where(x=>x.ProductVariantId==pv.VariantId).Select(bs=>bs.RetailPrice)
+                }
+            ).ToListAsync();
+
+            return data;
+        }
     }
 }
