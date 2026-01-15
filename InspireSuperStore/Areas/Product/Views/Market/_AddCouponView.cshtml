@@ -1,0 +1,139 @@
+﻿@{
+	ViewData["Title"] = "_AddCouponView";
+}
+<form id="form-coupon">
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-12">
+				<label for="CouponCode">Coupon Code *</label>
+				<input type="text" id="CouponCode" class="form-control" required placeholder="Enter Coupon Code" />
+			</div>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-12">
+				<label for="CouponName">Coupon Name *</label>
+				<input type="text" id="CouponName" class="form-control" required placeholder="Enter Coupon Name" />
+			</div>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-6">
+				<label for="StartDate">Start Date *</label>
+				<input type="date" id="StartDate" class="form-control" required />
+			</div>
+			<div class="col-sm-6">
+				<label for="EndDate">End Date *</label>
+				<input type="date" id="EndDate" class="form-control" required />
+			</div>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-6">
+				<label for="DiscountType">Discount Type *</label>
+				<select id="DiscountType" class="form-control" required>
+					<option value="Percentage">Percentage</option>
+					<option value="FixedAmount">Fixed Amount</option>
+				</select>
+			</div>
+			<div class="col-sm-6">
+				<label for="DiscountValue">Discount Value *</label>
+				<input type="number" id="DiscountValue" class="form-control" required step="0.01" min="0" placeholder="Enter Discount Value" />
+			</div>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-6">
+				<label for="UsageLimitPerUser">Usage Limit Per User</label>
+				<input type="number" id="UsageLimitPerUser" class="form-control" min="1" placeholder="Enter Limit per User" />
+			</div>
+			<div class="col-sm-6">
+				<label for="MaxTotalUsage">Max Total Usage</label>
+				<input type="number" id="MaxTotalUsage" class="form-control" min="1" placeholder="Enter Max Total Usage" />
+			</div>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-6">
+				<label for="MinQuantity">Min Quantity</label>
+				<input type="number" id="MinQuantity" class="form-control" min="1" placeholder="Minimum Quantity" />
+			</div>
+			<div class="col-sm-6">
+				<label for="MinCartAmount">Min Cart Amount</label>
+				<input type="number" id="MinCartAmount" class="form-control" min="0" step="0.01" placeholder="Minimum Cart Amount" />
+			</div>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="form-check mt-2">
+					<input type="checkbox" id="AllowStacking" class="form-check-input" />
+					<label class="form-check-label" for="AllowStacking">Allow Stacking</label>
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="form-check mt-2">
+					<input type="checkbox" id="IsActive" class="form-check-input" checked />
+					<label class="form-check-label" for="IsActive">Is Active</label>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal-footer">
+		<button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
+		<button type="submit" class="btn bg-primary">Submit form</button>
+	</div>
+</form>
+
+
+<script>
+	$(document).ready(function () {
+
+		$('#form-coupon').on('submit', async function (e) {
+			e.preventDefault();
+
+			const couponData = {
+				CouponCode: $('#CouponCode').val(),
+				CouponName: $('#CouponName').val(),
+				UsageLimitPerUser: $('#UsageLimitPerUser').val() || null,
+				MaxTotalUsage: $('#MaxTotalUsage').val() || null,
+				StartDate: $('#StartDate').val(),
+				EndDate: $('#EndDate').val(),
+				MinQuantity: $('#MinQuantity').val() || null,
+				MinCartAmount: $('#MinCartAmount').val() || null,
+				DiscountType: $('#DiscountType').val(),
+				DiscountValue: $('#DiscountValue').val(),
+				AllowStacking: $('#AllowStacking').is(':checked'),
+				IsActive: $('#IsActive').is(':checked')
+			};
+				const result = await Utility.RequestDataAjax({
+					url:'/Market/CreateCoupon',
+					data:couponData
+
+				});
+		   if(result.statusCode==='200')
+		   {
+			   Utility.successMessage('Record Added Successfully');
+			   location.reload();
+		   }
+			else{
+				Utility.failMessage('Unable to Update Record');
+
+			}
+		});
+
+	});
+</script>

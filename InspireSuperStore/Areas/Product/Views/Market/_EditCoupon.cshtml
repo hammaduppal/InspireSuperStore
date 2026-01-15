@@ -1,0 +1,142 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+<div class="container">
+    <form id="form-coupon-edit">
+        <input type="hidden" asp-for="Coupon.CouponId" id="CouponId" value="@Model.Coupon.CouponId" />
+
+        <div class="form-group">
+            <div class="row">
+                <div class="col-sm-12">
+                    <label asp-for="Coupon.CouponCode">Coupon Code *</label>
+                    <input asp-for="Coupon.CouponCode" id="CouponCode" value="@Model.Coupon.CouponCode" class="form-control" required placeholder="Enter Coupon Code" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="row">
+                <div class="col-sm-12">
+                    <label asp-for="Coupon.CouponName">Coupon Name *</label>
+                    <input asp-for="Coupon.CouponName" id="CouponName" value="@Model.Coupon.CouponName" class="form-control" required placeholder="Enter Coupon Name" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="row">
+                <div class="col-sm-6">
+                    <label asp-for="Coupon.StartDate">Start Date *</label>
+                    <input asp-for="Coupon.StartDate" id="StartDate" class="form-control" type="date" value="@Model.Coupon.StartDate.ToString("yyyy-MM-dd")" required />
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Coupon.EndDate">End Date *</label>
+                    <input asp-for="Coupon.EndDate" id="EndDate" class="form-control" type="date" value="@Model.Coupon.EndDate.ToString("yyyy-MM-dd")" required />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="row">
+                <div class="col-sm-6">
+                    <label asp-for="Coupon.DiscountType">Discount Type *</label>
+                    <select asp-for="Coupon.DiscountType" id="DiscountType" class="form-control" required>
+                        <option value="Percentage" @(Model.Coupon.DiscountType == "Percentage" ? "selected" : "")>Percentage</option>
+                        <option value="FixedAmount" @(Model.Coupon.DiscountType == "FixedAmount" ? "selected" : "")>Fixed Amount</option>
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Coupon.DiscountValue">Discount Value *</label>
+                    <input asp-for="Coupon.DiscountValue" id="DiscountValue" class="form-control" step="0.01" min="0" value="@Model.Coupon.DiscountValue" required placeholder="Enter Discount Value" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="row">
+                <div class="col-sm-6">
+                    <label asp-for="Coupon.UsageLimitPerUser">Usage Limit Per User</label>
+                    <input asp-for="Coupon.UsageLimitPerUser" id="UsageLimitPerUser" class="form-control" min="1" value="@Model.Coupon.UsageLimitPerUser" placeholder="Limit per User" />
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Coupon.MaxTotalUsage">Max Total Usage</label>
+                    <input asp-for="Coupon.MaxTotalUsage" id="MaxTotalUsage" class="form-control" min="1" value="@Model.Coupon.MaxTotalUsage" placeholder="Max Total Usage" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="row">
+                <div class="col-sm-6">
+                    <label asp-for="Coupon.MinQuantity">Min Quantity</label>
+                    <input asp-for="Coupon.MinQuantity" id="MinQuantity" class="form-control" min="1" value="@Model.Coupon.MinQuantity" placeholder="Minimum Quantity" />
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Coupon.MinCartAmount">Min Cart Amount</label>
+                    <input asp-for="Coupon.MinCartAmount" id="MinCartAmount" class="form-control" min="0" step="0.01" value="@Model.Coupon.MinCartAmount" placeholder="Minimum Cart Amount" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-check mt-2">
+                        <input asp-for="Coupon.AllowStacking" id="AllowStacking" class="form-check-input" type="checkbox" @(Model.Coupon.AllowStacking.HasValue && Model.Coupon.AllowStacking.Value ? "checked" : "") />
+                        <label class="form-check-label" asp-for="Coupon.AllowStacking">Allow Stacking</label>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-check mt-2">
+                        <input asp-for="Coupon.IsActive" id="IsActive" class="form-check-input" type="checkbox" @(Model.Coupon.IsActive.HasValue && Model.Coupon.IsActive.Value ? "checked" : "") />
+                        <label class="form-check-label" asp-for="Coupon.IsActive">Is Active</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Buttons -->
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn bg-primary">Save Changes</button>
+            <button type="button" class="btn btn-info" id="btnManageCategories">Manage Categories</button>
+            <a href="/Market/CouponProduct/@Model.Coupon.CouponId" class="btn btn-info" id="btnManageProducts">Manage Products</a>
+        </div>
+    </form>
+
+</div>
+
+<script>
+	
+	$('#form-coupon-edit').on('submit', async function (e) {
+		e.preventDefault();
+
+		const couponData = {
+			CouponId: $('#CouponId').val(), // hidden field
+			CouponCode: $('#CouponCode').val(),
+			CouponName: $('#CouponName').val(),
+			UsageLimitPerUser: $('#UsageLimitPerUser').val() || null,
+			MaxTotalUsage: $('#MaxTotalUsage').val() || null,
+			StartDate: $('#StartDate').val(),
+			EndDate: $('#EndDate').val(),
+			MinQuantity: $('#MinQuantity').val() || null,
+			MinCartAmount: $('#MinCartAmount').val() || null,
+			DiscountType: $('#DiscountType').val(),
+			DiscountValue: $('#DiscountValue').val(),
+			AllowStacking: $('#AllowStacking').is(':checked'),
+			IsActive: $('#IsActive').is(':checked')
+		};
+
+		const result = await Utility.RequestDataAjax({
+			url: '/Market/EditCoupon', 
+			data: couponData
+		});
+
+		if (result.statusCode === '200' || result.success) {
+			Utility.successMessage('Record Updated Successfully');
+			location.reload();
+		} else {
+			Utility.failMessage('Unable to Update Record');
+		}
+	});
+
+</script>

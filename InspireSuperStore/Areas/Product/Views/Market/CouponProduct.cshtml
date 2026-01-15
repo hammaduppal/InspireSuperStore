@@ -1,0 +1,172 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Manage Products for Coupon";
+
+}
+
+<div class="container-fluid mt-4">
+
+    <!-- Coupon Header -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4>Coupon: <span class="text-primary">@Model.Coupon.CouponCode</span></h4>
+            <p>Name: @Model.Coupon.CouponName</p>
+            <p>Discount: @Model.Coupon.DiscountType == "Percentage" ? @Model.Coupon.DiscountValue + "%" : "$" + @Model.Coupon.DiscountValue</p>
+        </div>
+    </div>
+
+    <!-- Search Product Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5>Search Products to Assign</h5>
+            <div class="input-group mb-3">
+                <input type="text" id="productSearch" class="form-control" placeholder="Enter product name or SKU" />
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-primary" id="btnSearchProduct">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </div>
+            <div id="searchResults" class="list-group">
+                @* Search results will be dynamically inserted here *@
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Products Table -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h5>Assigned Products</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-hover" id="couponProductsTable">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Product Name</th>
+                        <th>SKU</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @* Connected products loaded via AJAX *@
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="@Url.Action("EditCoupon", "Market", new { CouponId = Model.Coupon.CouponId })" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Coupon Edit
+        </a>
+    </div>
+</div>
+
+
+    <script>
+        const couponId = '@Model.Coupon.CouponId';
+
+        // Load connected products
+        async function loadConnectedProducts() {
+            const products = await Utility.RequestDataAjax({
+                url: '/Market/GetConnectedProducts',
+                data: { couponId }
+            });
+
+            const tbody = $('#couponProductsTable tbody');
+            tbody.empty();
+
+            if (!products || products.length === 0) {
+                tbody.append('<tr><td colspan="4" class="text-center">No products assigned</td></tr>');
+                return;
+            }
+
+            products.forEach(p => {
+                tbody.append(`
+                    <tr>
+                        <td>${p.ProductName}</td>
+                        <td>${p.SKU}</td>
+                        <td>${p.Price}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger btn-unassign" data-id="${p.ProductId}">
+                                <i class="fas fa-times"></i> Unassign
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        // Search products
+        $('#btnSearchProduct').on('click', async function () {
+            const keyword = $('#productSearch').val();
+            if (!keyword) return;
+
+            const results = await Utility.RequestDataAjax({
+                url: '/Market/SearchProducts',
+                data: { couponId, keyword }
+            });
+
+            const container = $('#searchResults');
+            container.empty();
+
+            if (!results || results.length === 0) {
+                container.append('<div class="list-group-item text-muted">No products found</div>');
+                return;
+            }
+
+            results.forEach(p => {
+                container.append(`
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${p.ProductName}</strong> (${p.SKU}) - $${p.Price}
+                        </div>
+                        <button class="btn btn-sm btn-success btn-assign" data-id="${p.ProductId}">
+                            <i class="fas fa-plus"></i> Assign
+                        </button>
+                    </div>
+                `);
+            });
+        });
+
+        // Assign product
+        $(document).on('click', '.btn-assign', function () {
+            const productId = $(this).data('id');
+            Utility.RequestDataAjax({
+                url: '/Market/AssignProduct',
+                type: 'POST',
+                data: { couponId, productId }
+            }).then(res => {
+                if (res.success) {
+                    Utility.successMessage('Product assigned successfully');
+                    loadConnectedProducts();
+                    $('#productSearch').val('');
+                    $('#searchResults').empty();
+                }
+            });
+        });
+
+        // Unassign product
+        $(document).on('click', '.btn-unassign', function () {
+            const productId = $(this).data('id');
+            if (confirm('Unassign this product?')) {
+                Utility.RequestDataAjax({
+                    url: '/Market/UnassignProduct',
+                    type: 'POST',
+                    data: { couponId, productId }
+                }).then(res => {
+                    if (res.success) {
+                        Utility.successMessage('Product unassigned successfully');
+                        loadConnectedProducts();
+                    }
+                });
+            }
+        });
+
+        // Initial load
+        loadConnectedProducts();
+    </script>

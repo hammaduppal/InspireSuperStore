@@ -161,6 +161,17 @@
 					</ul>
 				</li>
 			}
+			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+			{
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-newspaper2 icon-2x text-brown"></i> <span>Marketing</span></a>
+					<ul class="nav nav-group-sub" data-submenu-title="Marketing Section">
+						<li class="nav-item"><a href="/Market/Coupons" class="nav-link"><i class="icon-calendar icon-2x text-brown"></i>Coupons</a></li>
+
+
+					</ul>
+				</li>
+			}
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Accounts))
 			{
 				<li class="nav-item nav-item-submenu">

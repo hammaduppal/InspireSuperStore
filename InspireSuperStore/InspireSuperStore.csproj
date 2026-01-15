@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
+	
   <ItemGroup>
     <Compile Remove="Repositories\MainModels\**" />
     <Content Remove="Repositories\MainModels\**" />
@@ -23,7 +23,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.11" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.12" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,7 +45,6 @@
     <Folder Include="Areas\OrderSection\Models\" />
     <Folder Include="Areas\POS\Data\" />
     <Folder Include="Areas\POS\Models\" />
-    <Folder Include="Areas\Product\Data\" />
     <Folder Include="Areas\Product\Models\" />
     <Folder Include="Areas\Purchase\Data\" />
     <Folder Include="Areas\Purchase\Models\" />
