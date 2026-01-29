@@ -58,6 +58,7 @@
 			Utility.successMessage('New Order Recieved');
 		});
 		function renderNotification(message, prepend = false) {
+			debugger;
 			var params = {};
 			try {
 				params = JSON.parse(message.Params || "{}");
@@ -70,7 +71,7 @@
 			var li = `
 				<li class="media">
 					<div class="mr-3">
-						<a href="/PosManager/Order/${params.OrderId ?? ''}"
+						<a href="/OrderManager/Order/${params.OrderId ?? ''}"
 						   class="btn bg-purple-300 rounded-round btn-icon">
 							<i class="icon-truck"></i>
 						</a>

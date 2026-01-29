@@ -42,28 +42,37 @@ namespace MarketBal.Repository.OrderRP
                     DiscountAmount = x.DiscountAmount,
                     TaxAmount = x.TaxAmount,
                     PaymentMethodId = x.PaymentMethodId,
-                    PaymentStatus = new PaymentStatusVM
+
+                    // Check if PaymentStatus exists
+                    PaymentStatus = x.PaymentStatus == null ? null : new PaymentStatusVM
                     {
                         PaymentStatusId = x.PaymentStatus.PaymentStatusId,
                         Name = x.PaymentStatus.Name
                     },
-                    OrderSource = new InvoiceSourceVM
+
+                    // Check if OrderSource exists
+                    OrderSource = x.OrderSource == null ? null : new InvoiceSourceVM
                     {
                         InvoiceSourceId = x.OrderSource.InvoiceSourceId,
                         SourceName = x.OrderSource.SourceName
                     },
-                    Employee = new EmployeeVM
+
+                    // Check if Employee exists (Common culprit)
+                    Employee = x.Employee == null ? null : new EmployeeVM
                     {
                         EmployeeId = x.Employee.EmployeeId,
                         EmployeeCode = x.Employee.EmployeeCode,
                         FirstName = x.Employee.Person.FirstName,
                         LastName = x.Employee.Person.LastName,
                     },
-                    ServingTable = new ServingTableVM
+
+                    // Check if ServingTable exists (Common in POS systems to be null)
+                    ServingTable = x.ServingTable == null ? null : new ServingTableVM
                     {
                         ServingTableId = x.ServingTable.ServingTableId,
                         TableName = x.ServingTable.TableName,
                     },
+
                     Customer = x.Customer == null ? null : new CustomerVM
                     {
                         CustomerId = x.Customer.CustomerId,
@@ -71,17 +80,19 @@ namespace MarketBal.Repository.OrderRP
                         LastName = x.Customer.Person.LastName,
                         Email = x.Customer.Person.Email,
                     },
-                    PaymentMethod = new PaymentMethodVM
+
+                    // Check if PaymentMethod exists
+                    PaymentMethod = x.PaymentMethod == null ? null : new PaymentMethodVM
                     {
                         PaymentMethodId = x.PaymentMethod.PaymentMethodId,
                         Name = x.PaymentMethod.Name
                     },
+
                     ParentOrderId = x.ParentOrderId,
                     OrderDate = x.OrderDate,
                     CreatedBy = x.CreatedBy,
                     CreatedDate = x.CreatedDate,
                 }).ToListAsync();
-
                 return model;
             }
             catch (Exception ex)
@@ -96,106 +107,115 @@ namespace MarketBal.Repository.OrderRP
         {
             try
             {
-                var model = await _onedb.OrderMasters.Where(x => x.OrderMasterId == orderMasterId).Select(x => new OrderMasterVM
-                {
-                    OrderMasterId = x.OrderMasterId,
-                    OrderNo = x.OrderNo,
-                    GrandTotal = x.GrandTotal,
-                    OrderStatusId = x.OrderStatusId,
-                    CustomerId = x.CustomerId,
-                    DiscountAmount = x.DiscountAmount,
-                    TotalAmount = x.TotalAmount,
-                    TaxAmount = x.TaxAmount,
-                    PaymentMethodId = x.PaymentMethodId,
-                    PaymentStatus = new PaymentStatusVM
-                    {
-                        PaymentStatusId = x.PaymentStatus.PaymentStatusId,
-                        Name = x.PaymentStatus.Name
-                    },
-                    OrderSource = new InvoiceSourceVM
-                    {
-                        InvoiceSourceId = x.OrderSource.InvoiceSourceId,
-                        SourceName = x.OrderSource.SourceName
-                    },
-                    Employee = new EmployeeVM
-                    {
-                        EmployeeId = x.Employee.EmployeeId,
-                        EmployeeCode = x.Employee.EmployeeCode,
-                        FirstName = x.Employee.Person.FirstName,
-                        LastName = x.Employee.Person.LastName,
-                    },
-                    ServingTable = new ServingTableVM
-                    {
-                        ServingTableId = x.ServingTable.ServingTableId,
-                        TableName = x.ServingTable.TableName,
-                    },
-                    Customer = x.Customer == null ? null : new CustomerVM
-                    {
-                        CustomerId = x.Customer.CustomerId,
-                        FirstName = x.Customer.Person.FirstName,
-                        LastName = x.Customer.Person.LastName,
-                        Email = x.Customer.Person.Email,
-                    },
-                    PaymentMethod = new PaymentMethodVM
-                    {
-                        PaymentMethodId = x.PaymentMethod.PaymentMethodId,
-                        Name = x.PaymentMethod.Name
-                    },
-                    ParentOrderId = x.ParentOrderId,
-                    OrderDate = x.OrderDate,
-                    CreatedBy = x.CreatedBy,
-                    CreatedDate = x.CreatedDate,
-                    OrderDetails = x.OrderDetails.Select(od => new OrderDetailVM
-                    {
-                        OrderDetailId = od.OrderDetailId,
-                        OrderMasterId = od.OrderMasterId,
-                        ProductId = od.ProductId,
-                        VariantId = od.VariantId,
-                        Quantity = od.Quantity,
-                        UnitPrice = od.UnitPrice,
-                        TaxRate = od.TaxRate,
-                        TaxAmount = od.TaxAmount,
-                        LineTotal = od.LineTotal,
-                        LineTotalWithTax = od.LineTotalWithTax,
-                        Discount = od.Discount,
-                        Remarks = od.Remarks,
-                        Variant = new ProductVariantVM
-                        {
-                            VariantId = od.Variant.VariantId,
-                            TaxSlabId = od.Variant.TaxSlabId,
-                            MaterialId = od.Variant.MaterialId,
-                            ColorId = od.Variant.ColorId,
-                            SizeId = od.Variant.SizeId,
-                            ProductId = od.Variant.ProductId,
-                            BarCode = od.Variant.BarCode,
-                            MinQty = od.Variant.MinQty,
-                            MaxQty = od.Variant.MaxQty,
-                            LastPurchase = od.Variant.LastPurchase,
-                            CreatedOn = od.Variant.CreatedOn,
-                            Createdby = od.Variant.Createdby,
-                            ModifiedOn = od.Variant.ModifiedOn,
-                            IsActive = od.Variant.IsActive,
-                            IsDeleted = od.Variant.IsDeleted,
-                            BranchId = od.Variant.BranchId,
-                            VariantImageId = od.Variant.VariantImageId,
+                var model = await _onedb.OrderMasters
+      .Where(x => x.OrderMasterId == orderMasterId)
+      .Select(x => new OrderMasterVM
+      {
+          OrderMasterId = x.OrderMasterId,
+          OrderNo = x.OrderNo,
+          GrandTotal = x.GrandTotal,
+          OrderStatusId = x.OrderStatusId,
+          CustomerId = x.CustomerId,
+          DiscountAmount = x.DiscountAmount,
+          TotalAmount = x.TotalAmount,
+          TaxAmount = x.TaxAmount,
+          PaymentMethodId = x.PaymentMethodId,
 
-                            ProductName = od.Variant.Product.ProductName,
-                            ProductDescription = od.Variant.Product.ProductDescription,
-                            ProductSlug = od.Variant.Product.ProductSlug,
-                            ColorName = od.Variant.Color.ColorName,
-                            MaterialName = od.Variant.Material.MaterialName,
-                            SizeName = od.Variant.Size.SizeName,
-                            UOMName = od.Variant.Product.Uom.Uomname,
-                            SubUOMName = od.Variant.SubUom.SubUomname,
-                            PriceFormat = od.Variant.PriceFormat,
-                            SubUomid = od.Variant.SubUomid,
-                            BrandName = od.Variant.Product.Brand.BrandName,
-                            QuantityPerUnit = od.Variant.QuantityPerUnit
-                        },
-                        CreatedDate = od.CreatedDate
-                    }).ToList(),
-                }).FirstOrDefaultAsync();
+          // Handle Top-Level Navigations
+          PaymentStatus = x.PaymentStatus == null ? null : new PaymentStatusVM
+          {
+              PaymentStatusId = x.PaymentStatus.PaymentStatusId,
+              Name = x.PaymentStatus.Name
+          },
+          OrderSource = x.OrderSource == null ? null : new InvoiceSourceVM
+          {
+              InvoiceSourceId = x.OrderSource.InvoiceSourceId,
+              SourceName = x.OrderSource.SourceName
+          },
+          Employee = x.Employee == null ? null : new EmployeeVM
+          {
+              EmployeeId = x.Employee.EmployeeId,
+              EmployeeCode = x.Employee.EmployeeCode,
+              FirstName = x.Employee.Person.FirstName,
+              LastName = x.Employee.Person.LastName,
+          },
+          ServingTable = x.ServingTable == null ? null : new ServingTableVM
+          {
+              ServingTableId = x.ServingTable.ServingTableId,
+              TableName = x.ServingTable.TableName,
+          },
+          Customer = x.Customer == null ? null : new CustomerVM
+          {
+              CustomerId = x.Customer.CustomerId,
+              FirstName = x.Customer.Person.FirstName,
+              LastName = x.Customer.Person.LastName,
+              Email = x.Customer.Person.Email,
+          },
+          PaymentMethod = x.PaymentMethod == null ? null : new PaymentMethodVM
+          {
+              PaymentMethodId = x.PaymentMethod.PaymentMethodId,
+              Name = x.PaymentMethod.Name
+          },
+          ParentOrderId = x.ParentOrderId,
+          OrderDate = x.OrderDate,
+          CreatedBy = x.CreatedBy,
+          CreatedDate = x.CreatedDate,
 
+          // Handle Nested Order Details
+          OrderDetails = x.OrderDetails.Select(od => new OrderDetailVM
+          {
+              OrderDetailId = od.OrderDetailId,
+              OrderMasterId = od.OrderMasterId,
+              ProductId = od.ProductId,
+              VariantId = od.VariantId,
+              Quantity = od.Quantity,
+              UnitPrice = od.UnitPrice,
+              TaxRate = od.TaxRate,
+              TaxAmount = od.TaxAmount,
+              LineTotal = od.LineTotal,
+              LineTotalWithTax = od.LineTotalWithTax,
+              Discount = od.Discount,
+              Remarks = od.Remarks,
+
+              // Critical: Guard the Variant and its nested relations
+              Variant = od.Variant == null ? null : new ProductVariantVM
+              {
+                  VariantId = od.Variant.VariantId,
+                  TaxSlabId = od.Variant.TaxSlabId,
+                  MaterialId = od.Variant.MaterialId,
+                  ColorId = od.Variant.ColorId,
+                  SizeId = od.Variant.SizeId,
+                  ProductId = od.Variant.ProductId,
+                  BarCode = od.Variant.BarCode,
+                  MinQty = od.Variant.MinQty,
+                  MaxQty = od.Variant.MaxQty,
+                  LastPurchase = od.Variant.LastPurchase,
+                  CreatedOn = od.Variant.CreatedOn,
+                  Createdby = od.Variant.Createdby,
+                  ModifiedOn = od.Variant.ModifiedOn,
+                  IsActive = od.Variant.IsActive,
+                  IsDeleted = od.Variant.IsDeleted,
+                  BranchId = od.Variant.BranchId,
+                  VariantImageId = od.Variant.VariantImageId,
+
+                  // Deep nested null checks
+                  ProductName = od.Variant.Product != null ? od.Variant.Product.ProductName : null,
+                  ProductDescription = od.Variant.Product != null ? od.Variant.Product.ProductDescription : null,
+                  ProductSlug = od.Variant.Product != null ? od.Variant.Product.ProductSlug : null,
+                  ColorName = od.Variant.Color != null ? od.Variant.Color.ColorName : null,
+                  MaterialName = od.Variant.Material != null ? od.Variant.Material.MaterialName : null,
+                  SizeName = od.Variant.Size != null ? od.Variant.Size.SizeName : null,
+                  UOMName = (od.Variant.Product != null && od.Variant.Product.Uom != null) ? od.Variant.Product.Uom.Uomname : null,
+                  SubUOMName = od.Variant.SubUom != null ? od.Variant.SubUom.SubUomname : null,
+                  BrandName = (od.Variant.Product != null && od.Variant.Product.Brand != null) ? od.Variant.Product.Brand.BrandName : null,
+
+                  PriceFormat = od.Variant.PriceFormat,
+                  SubUomid = od.Variant.SubUomid,
+                  QuantityPerUnit = od.Variant.QuantityPerUnit
+              },
+              CreatedDate = od.CreatedDate
+          }).ToList(),
+      }).FirstOrDefaultAsync();
                 return model;
             }
             catch (Exception ex)
@@ -318,6 +338,8 @@ namespace MarketBal.Repository.OrderRP
                     EmployeeId = order.EmployeeId,
                     CustomerRemarks = order.CustomerRemarks,
                     OfficeRemarks = order.OfficeRemarks,
+                    PaymentStatusId=order.PaymentStatusId.Value,
+                    InvoiceSourceId=order.OrderSourceId,
 
                     InvoiceDetails = order.OrderDetails.Select(d => new InvoiceDetailVM
                     {
@@ -395,12 +417,12 @@ namespace MarketBal.Repository.OrderRP
                         DiscountAmount = discount,
                         TaxAmount = totalTax,
                         GrandTotal = grandTotal,
-
+                        
                         PaymentMethodId = model.PaymentMethodId,
                         PaymentStatusId = model.PaymentStatusId ?? 2,
                         ShippingTypeId = model.ShippingTypeId ?? 1,
                         OrderSourceId = model.OrderSourceId ?? (int)AppConstants.InvoiceSource.POS,
-
+                        OrderStatusId=(int)OrderStatusEnum.Pending,
                         CustomerRemarks = model.CustomerRemarks,
                         OfficeRemarks = model.OfficeRemarks,
 
@@ -417,7 +439,7 @@ namespace MarketBal.Repository.OrderRP
                                         ? model.EmployeeId
                                         : null
                     };
-
+                    
                     _onedb.OrderMasters.Add(orderMaster);
                     await _onedb.SaveChangesAsync();
 

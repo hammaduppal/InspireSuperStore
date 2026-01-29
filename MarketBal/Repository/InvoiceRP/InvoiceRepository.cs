@@ -152,7 +152,7 @@ namespace MarketBal.Repository.InvoiceRP
                         PaymentMethodId = model.PaymentMethodId,
                         PaymentStatusId = model.PaymentStatusId,
                         ShippingTypeId = 1,
-                        InvoiceSourceId = (int)AppConstants.InvoiceSource.POS,
+                        InvoiceSourceId = model.InvoiceSourceId ?? (int)AppConstants.InvoiceSource.POS,
 
                         CustomerRemarks = model.CustomerRemarks,
                         OfficeRemarks = model.OfficeRemarks,

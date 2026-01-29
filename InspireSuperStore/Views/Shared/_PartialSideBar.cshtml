@@ -33,7 +33,7 @@
 					<a href="#" class="nav-link "> <span><i class="icon-typewriter icon-2x  text-pink-300"></i> POS</span></a>
 
 					<ul class="nav nav-group-sub" data-submenu-title="Point of Sale">
-						@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
+						@if (AppDataUtility.SystemPreferences.IsRestaurantApplication || AppDataUtility.SystemPreferences.IsEcommerece)
 						{
 							<li class="nav-item">
 								<a href="/OrderManager/CreateOrder" class="nav-link">
@@ -44,7 +44,7 @@
 							<li class="nav-item"><a href="/OrderManager/Orders" class="nav-link"><i class="icon-barcode2  icon-2x text-pink-300"></i> Order</a></li>
 
 						}
-						else
+						else 
 						{
 							<li class="nav-item"><a href="/InvoiceManager/CreateInvoice" class="nav-link"><i class="icon-barcode2  icon-2x text-pink-300"></i> Sale Invoice</a></li>
 
@@ -155,8 +155,8 @@
 				<li class="nav-item nav-item-submenu">
 					<a href="#" class="nav-link "><i class="icon-newspaper2 icon-2x text-brown"></i> <span>Reports</span></a>
 					<ul class="nav nav-group-sub" data-submenu-title="Reporting Section">
-						<li class="nav-item"><a href="/Reports/CategoryWiseReport" class="nav-link"><i class="icon-calendar icon-2x text-brown"></i>Monthly Report</a></li>
-						<li class="nav-item"><a href="/Reports/DepartmentWiseReport" class="nav-link"><i class="icon-bag icon-2x text-brown"></i>Department Report</a></li>
+						<li class="nav-item"><a href="#" class="nav-link disabled"><i class="icon-calendar icon-2x text-brown"></i>Monthly Report</a><span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></li>
+						<li class="nav-item"><a href="#" class="nav-link disabled"><i class="icon-bag icon-2x text-brown"></i>Department Report</a><span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></li>
 
 					</ul>
 				</li>
