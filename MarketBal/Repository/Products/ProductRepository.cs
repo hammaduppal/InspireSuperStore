@@ -1,4 +1,5 @@
-﻿using Azure.Core;
+﻿using System.Globalization;
+using Azure.Core;
 using Dapper;
 using MainModels;
 using MainModels.DTOModels;
@@ -165,7 +166,7 @@ namespace MarketBal.Repository.Products
         {
             try
             {
-                string ProductSlug = HelperClass.CreateSlug(product.ProductName);
+                string ProductSlug = HelperClass.CreateProductLink(product.ProductName,product.SubCategoryId.Value);
                 string query = @"
         DECLARE @NewProductId UNIQUEIDENTIFIER = NEWID();
 
@@ -181,7 +182,7 @@ namespace MarketBal.Repository.Products
         SELECT @NewProductId;
     ";
                 var commonParams = CommonParamHelper.GetCommonParams();
-                ProductSlug = $"{ProductSlug}&{commonParams.BranchId.ToString()}";
+               // ProductSlug = $"{ProductSlug}&{commonParams.BranchId.ToString()}";
                 Guid? BrandId = Guid.Empty;
                 if (product.BrandId==Guid.Empty)
                 {
@@ -982,8 +983,9 @@ public async Task<int> UpdateVariant(UpdateVariantModel model)
     }
     else
     {
-        query = $@"
-                    UPDATE INV.BranchStock set {model.DataType} = {model.Value} where VariantId = '{model.VariantId}' AND BranchId = '{AppDataUtility.SessionUser.Person.Branch.BranchId}'";
+                decimal parsedValue = decimal.Parse(model.Value, NumberStyles.Any, CultureInfo.InvariantCulture);
+                query = $@"
+                    UPDATE INV.BranchStock set {model.DataType} = {parsedValue} where ProductVariantId = '{model.VariantId}' AND BranchId = '{AppDataUtility.SessionUser.Person.Branch.BranchId}'";
         var allResult = await _db.ExecuteQueryModify(query);
         return allResult;
     }

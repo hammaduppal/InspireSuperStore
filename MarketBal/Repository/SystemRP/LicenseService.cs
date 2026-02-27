@@ -45,7 +45,7 @@ namespace MarketBal.Repository.SystemRP
             string mac = HardwareInfo.GetMacAddress();
 
             string raw = $"{cpu}|{board}|{disk}|{mac}";
-            return ConvertToSha256(raw);
+            return raw;
         }
         // Generate a license key
         public string GenerateLicenseKey(string deviceId, string productName, DateTime validTill)

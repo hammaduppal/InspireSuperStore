@@ -1472,6 +1472,8 @@ VALUES
                 existing.CurrencySymbol = model.CurrencySymbol;
                 existing.DecimalPlaces = model.DecimalPlaces;
                 existing.IsAffilatedInvoice = model.IsAffilatedInvoice;
+                existing.IsEcommOnly = model.IsEcommOnly;
+                existing.EcommTaxRate = model.EcommTaxRate;
 
                 // Tax & Financial
                 existing.EnableTax = model.EnableTax;
@@ -1530,7 +1532,8 @@ VALUES
                     CurrencySymbol = model.CurrencySymbol,
                     DecimalPlaces = model.DecimalPlaces,
                     IsAffilatedInvoice = model.IsAffilatedInvoice,
-
+                    IsEcommOnly = model.IsEcommOnly,
+                    EcommTaxRate = model.EcommTaxRate,
                     // Tax & Financial
                     EnableTax = model.EnableTax,
                     DefaultTaxRate = model.DefaultTaxRate,

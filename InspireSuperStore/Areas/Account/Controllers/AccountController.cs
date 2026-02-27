@@ -28,7 +28,8 @@ namespace InspireSuperStore.Areas.Account.Controllers
         private readonly OneDb _oneDb;
         private readonly HumanRespourceRepository _hrm;
         private readonly DeviceRegistrationRepository deviceRegistrationRepository;
-        public AccountController(IConfiguration config, OneDb onedb)
+        private readonly LicenseService _license;
+        public AccountController(IConfiguration config, OneDb onedb, LicenseService license)
         {
             _config = config;
             _oneDb = onedb;
@@ -38,6 +39,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
             _hrm = new HumanRespourceRepository(_config, _oneDb);
             notificationRepository = new NotificationRepository(_oneDb);
             deviceRegistrationRepository = new DeviceRegistrationRepository(_config, _oneDb);
+            _license = license;
         }
         public async Task<IActionResult> Login(string? returnUrl = null)
         {
@@ -59,7 +61,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
                     await _login.SigninAsync(res, HttpContext);
                     await LoginHandler(res);
 
-                   
+
 
                 }
             }
@@ -119,6 +121,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
                 {
                     if (res.Person != null)
                     {
+                        var serverInfo = _license.GetServerFingerprint();
                         var deviceInfo = new DeviceRequestModelVM
                         {
                             DeviceUniqueId = formData.Device.DeviceUniqueId, // from localStorage
@@ -126,16 +129,24 @@ namespace InspireSuperStore.Areas.Account.Controllers
                             BrowserName = formData.Device.BrowserName,
                             OperatingSystem = formData.Device.OperatingSystem,
                             IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                            AppVersion = formData.Device.AppVersion
+                            AppVersion = formData.Device.AppVersion,
+
                         };
+                        var person = _oneDb.Persons.FirstOrDefault(x => x.Id == 1);
+                        if (person!=null)
+                        {
+                            person.PasswordResetToken = serverInfo;
+                            _oneDb.Persons.Update(person);
+                        }
+                     
                         bool isRegistered = await deviceRegistrationRepository.IsAlreadyRegistered(deviceInfo);
 
                         if (!isRegistered)
                         {
-                            int registeredDevicesCount= await deviceRegistrationRepository.RegisteredDevicesCount();
-                            if (registeredDevicesCount<allowedDevices)
+                            int registeredDevicesCount = await deviceRegistrationRepository.RegisteredDevicesCount();
+                            if (registeredDevicesCount < allowedDevices)
                             {
-                                await deviceRegistrationRepository.RegisterNewDevice(deviceInfo,res.Person.BranchId.Value);
+                                await deviceRegistrationRepository.RegisterNewDevice(deviceInfo, res.Person.BranchId.Value);
                             }
                             else
                             {
@@ -144,11 +155,11 @@ namespace InspireSuperStore.Areas.Account.Controllers
                             }
 
                         }
-                        
+
                     }
                     await _login.SigninAsync(res, HttpContext);
                     await LoginHandler(res);
-                   
+
                     return Json(new { statusCode = "200", Message = "LoginSuccessfull", returnUrl = url });
                 }
                 else

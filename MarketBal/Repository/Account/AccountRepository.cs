@@ -21,9 +21,14 @@ namespace MarketBal.Repository.Account
         public async Task<LoginUserVM> ValidateLogin(LoginUserRequestModel model)
         {
             string encodedPass = EncryptionPasses.Encrypt(model.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
+            //var query = $"select * from HRM.LoginUsers  u  where u.UserName='{model.UserName}'";
 
             var query = $"select * from HRM.LoginUsers  u  where u.UserName='{model.UserName}' and u.Password='{encodedPass}' and u.IsActive = 1   ";
             var result = await _db.ExecuteQuery<LoginUserVM>(query);
+
+            string decorded = EncryptionPasses.Decrypt(result.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
+            result.Password = decorded;
+
 
             if (result != null)
             {

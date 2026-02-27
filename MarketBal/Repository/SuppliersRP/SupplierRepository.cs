@@ -26,7 +26,7 @@ namespace MarketBal.Repository.SuppliersRP
                 SupplierId = x.SupplierId,
                 Ntn = x.Ntn,
                 SupplierCode = x.SupplierCode,
-                IsActive=bool.Parse(x.IsActive.ToString()),
+                IsActive = bool.Parse(x.IsActive.ToString()),
                 SupplierBusinessName = x.SupplierBusinessName
             }).ToListAsync();
         }
@@ -98,10 +98,11 @@ namespace MarketBal.Repository.SuppliersRP
                 SupplierContacts = newSupplierContact,
                 IsActive = true,
                 CreatedOn = currentTime,
-                 
+
 
             };
             var result = await _onedb.Suppliers.AddAsync(newSupplier);
+            
             var result2 = await _onedb.SaveChangesAsync();
             return result2;
         }

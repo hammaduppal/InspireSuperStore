@@ -580,10 +580,10 @@ namespace MarketBal.Repository.Products
             {
                 item.ColorSlug = HelperClass.CreateSlug(item.ColorName);
             }
-            var products = await _onedb.Products.Where(x => x.ProductSlug == null).ToListAsync();
+            var products = await _onedb.Products.ToListAsync();
             foreach (var item in products)
             {
-                item.ProductSlug = HelperClass.CreateSlug(item.ProductName);
+                item.ProductSlug = HelperClass.CreateProductLink(item.ProductName,item.SubCategoryId.Value);
             }
 
         

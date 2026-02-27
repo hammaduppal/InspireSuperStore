@@ -1,401 +1,419 @@
 ﻿@using MainModels.DTOModels
 @model PagesViewModel
 @{
-    Layout = null;
+	Layout = null;
 }
 @functions {
-    string PrefValue(string? val) => string.IsNullOrEmpty(val) ? "AAA" : val;
-    string PrefValueNum(int? val) => val == null ? "AAA" : val.ToString();
+	string PrefValue(string? val) => string.IsNullOrEmpty(val) ? "AAA" : val;
+	string PrefValueNum(int? val) => val == null ? "AAA" : val.ToString();
 }
 <h5 class="mb-3">General Settings</h5>
 <div class="row">
-    <div class="col-lg-4 mb-3">
-        <label>Company Name</label>
-        <input type="text" class="form-control" id="CompanyName"
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.CompanyName) ? "My Company" : Model.SystemPreferences.CompanyName)">
-    </div>
+	<div class="col-lg-4 mb-3">
+		<label>Company Name</label>
+		<input type="text" class="form-control" id="CompanyName"
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.CompanyName) ? "My Company" : Model.SystemPreferences.CompanyName)">
+	</div>
 
 
-   
-    <div class="col-lg-4 mb-3">
-        <label>Currency Code</label>
-        <input type="text" class="form-control" id="CurrencyCode"
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.CurrencyCode) ? "RS" : Model.SystemPreferences.CurrencyCode)">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Currency Symbol</label>
-        <input type="text" class="form-control" id="CurrencySymbol"
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.CurrencySymbol) ? "PKR" : Model.SystemPreferences.CurrencySymbol)">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Decimal Places</label>
-        <input type="number" class="form-control" id="DecimalPlaces"
-               value="@(Model.SystemPreferences.DecimalPlaces == null ? "AAA" : Model.SystemPreferences.DecimalPlaces.ToString())">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Default Language</label>
-        <input type="text" disabled class="form-control" id="DefaultLanguage"
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.DefaultLanguage) ? "Coming Soons Feature" : Model.SystemPreferences.DefaultLanguage)">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Time Zone</label>
-        <input type="text" disabled class="form-control" id="TimeZone"
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.TimeZone) ? "Coming Soons Feature" : Model.SystemPreferences.TimeZone)">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Date Format</label>
-        <input type="text" disabled class="form-control" id="DateFormat"
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.DateFormat) ? "Coming Soons Feature" : Model.SystemPreferences.DateFormat)">
-    </div>
 
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Is Affiliated Invoice</label>
-        <label class="switch">
-            <input type="checkbox" id="IsAffilatedInvoice"
-                   @(Model.SystemPreferences.IsAffilatedInvoice ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Is Restaurant Application</label>
-        <label class="switch">
-            <input type="checkbox" id="IsRestaurantApplication"
-                   @(Model.SystemPreferences.IsRestaurantApplication ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Company Logo URL</label>
-        <input type="file" class="form-control" id="CompanyLogoFile">
-    </div>
+	<div class="col-lg-4 mb-3">
+		<label>Currency Code</label>
+		<input type="text" class="form-control" id="CurrencyCode"
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.CurrencyCode) ? "RS" : Model.SystemPreferences.CurrencyCode)">
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>Currency Symbol</label>
+		<input type="text" class="form-control" id="CurrencySymbol"
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.CurrencySymbol) ? "PKR" : Model.SystemPreferences.CurrencySymbol)">
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>Decimal Places</label>
+		<input type="number" class="form-control" id="DecimalPlaces"
+			   value="@(Model.SystemPreferences.DecimalPlaces == null ? "AAA" : Model.SystemPreferences.DecimalPlaces.ToString())">
+	</div>
+</div>
+<div class="col-lg-4 mb-3">
+	<label>Is E-commerce</label>
+	<input type="checkbox" class="form-control" id="IsEcommerece"
+		   @(Model.SystemPreferences.IsEcommerece == true ? "checked" : "")>
+</div>
+<div class="col-lg-4 mb-3">
+	<label>Is E-commerce Tax Rate</label>
+	<input type="text" class="form-control" id="EcommTaxRate" value="@(Model.SystemPreferences.EcommTaxRate == null ? 4.5 : Model.SystemPreferences.EcommTaxRate.ToString())">
+</div>
+
+<div class="col-lg-4 mb-3">
+	<label>Decimal Places</label>
+	<input type="number" class="form-control" id="DecimalPlaces"
+		   value="@(Model.SystemPreferences.DecimalPlaces == null ? "AAA" : Model.SystemPreferences.DecimalPlaces.ToString())">
+</div>
+<div class="col-lg-4 mb-3">
+	<label>Default Language</label>
+	<input type="text" disabled class="form-control" id="DefaultLanguage"
+		   value="@(string.IsNullOrEmpty(Model.SystemPreferences.DefaultLanguage) ? "Coming Soons Feature" : Model.SystemPreferences.DefaultLanguage)">
+</div>
+<div class="col-lg-4 mb-3">
+	<label>Time Zone</label>
+	<input type="text" disabled class="form-control" id="TimeZone"
+		   value="@(string.IsNullOrEmpty(Model.SystemPreferences.TimeZone) ? "Coming Soons Feature" : Model.SystemPreferences.TimeZone)">
+</div>
+<div class="col-lg-4 mb-3">
+	<label>Date Format</label>
+	<input type="text" disabled class="form-control" id="DateFormat"
+		   value="@(string.IsNullOrEmpty(Model.SystemPreferences.DateFormat) ? "Coming Soons Feature" : Model.SystemPreferences.DateFormat)">
+</div>
+
+<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+	<label>Is Affiliated Invoice</label>
+	<label class="switch">
+		<input type="checkbox" id="IsAffilatedInvoice"
+			   @(Model.SystemPreferences.IsAffilatedInvoice ? "checked" : "")>
+		<span class="slider"></span>
+	</label>
+</div>
+<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+	<label>Is Restaurant Application</label>
+	<label class="switch">
+		<input type="checkbox" id="IsRestaurantApplication"
+			   @(Model.SystemPreferences.IsRestaurantApplication ? "checked" : "")>
+		<span class="slider"></span>
+	</label>
+</div>
+<div class="col-lg-4 mb-3">
+	<label>Company Logo URL</label>
+	<input type="file" class="form-control" id="CompanyLogoFile">
+</div>
 </div>
 
 <!-- Tax & Financial -->
 <h5 class="mb-3">Tax & Financial</h5>
 <div class="row">
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Prices Include Tax</label>
-        <label class="switch">
-            <input type="checkbox" id="PricesIncludeTax"
-                   @(Model.SystemPreferences.PricesIncludeTax ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Enable Tax</label>
-        <label class="switch">
-            <input type="checkbox" id="EnableTax"
-                   @(Model.SystemPreferences.EnableTax ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
-@*     <div class="col-lg-4 mb-3">
+	<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+		<label>Prices Include Tax</label>
+		<label class="switch">
+			<input type="checkbox" id="PricesIncludeTax"
+				   @(Model.SystemPreferences.PricesIncludeTax ? "checked" : "")>
+			<span class="slider"></span>
+		</label>
+	</div>
+	<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+		<label>Enable Tax</label>
+		<label class="switch">
+			<input type="checkbox" id="EnableTax"
+				   @(Model.SystemPreferences.EnableTax ? "checked" : "")>
+			<span class="slider"></span>
+		</label>
+	</div>
+	@*     <div class="col-lg-4 mb-3">
         <label>Default Tax Rate</label>
         <input type="number" class="form-control" id="DefaultTaxRate"
                value="@(Model.SystemPreferences.DefaultTaxRate == null ? 0 : Model.SystemPreferences.DefaultTaxRate.ToString())">
     </div> *@
-    <div class="col-lg-4 mb-3">
-        <label>Tax Registration Number</label>
-        <input type="text" class="form-control" id="TaxRegistrationNumber"
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.TaxRegistrationNumber) ? "00000-0" : Model.SystemPreferences.TaxRegistrationNumber)">
-    </div>
-  
+	<div class="col-lg-4 mb-3">
+		<label>Tax Registration Number</label>
+		<input type="text" class="form-control" id="TaxRegistrationNumber"
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.TaxRegistrationNumber) ? "00000-0" : Model.SystemPreferences.TaxRegistrationNumber)">
+	</div>
+
 </div>
 
 <!-- Inventory & Sales -->
 <h5 class="mb-3">Inventory & Sales</h5>
 <div class="row">
 
-    <div class="col-lg-4 mb-3">
-        <label>Default Warehouse</label>
-        <input type="text" class="form-control" id="DefaultWarehouse" disabled
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.DefaultWarehouse) ? "Coming Soon" : Model.SystemPreferences.DefaultWarehouse)">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Low Stock Threshold</label>
-        <input type="text" class="form-control" id="LowStockThreshold" disabled
-               value="@(Model.SystemPreferences.LowStockThreshold == null ? "Coming Soon" : Model.SystemPreferences.LowStockThreshold.ToString())">
-    </div>
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Allow Negative Stock</label>
-        <label class="switch">
-            <input type="checkbox" id="AllowNegativeStock" disabled
-                   @(Model.SystemPreferences.AllowNegativeStock ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Enable Inventory Tracking</label>
-        <label class="switch">
-            <input type="checkbox" id="EnableInventoryTracking" disabled
-                   @(Model.SystemPreferences.EnableInventoryTracking ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
+	<div class="col-lg-4 mb-3">
+		<label>Default Warehouse</label>
+		<input type="text" class="form-control" id="DefaultWarehouse" disabled
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.DefaultWarehouse) ? "Coming Soon" : Model.SystemPreferences.DefaultWarehouse)">
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>Low Stock Threshold</label>
+		<input type="text" class="form-control" id="LowStockThreshold" disabled
+			   value="@(Model.SystemPreferences.LowStockThreshold == null ? "Coming Soon" : Model.SystemPreferences.LowStockThreshold.ToString())">
+	</div>
+	<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+		<label>Allow Negative Stock</label>
+		<label class="switch">
+			<input type="checkbox" id="AllowNegativeStock" disabled
+				   @(Model.SystemPreferences.AllowNegativeStock ? "checked" : "")>
+			<span class="slider"></span>
+		</label>
+	</div>
+	<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+		<label>Enable Inventory Tracking</label>
+		<label class="switch">
+			<input type="checkbox" id="EnableInventoryTracking" disabled
+				   @(Model.SystemPreferences.EnableInventoryTracking ? "checked" : "")>
+			<span class="slider"></span>
+		</label>
+	</div>
 </div>
 
 <!-- Invoice & Document -->
 <h5 class="mb-3">Invoice & Document</h5>
 <div class="row">
-    <div class="col-lg-4 mb-3">
-        <label>Invoice Prefix</label>
-        <input type="text" class="form-control" id="InvoicePrefix"
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.InvoicePrefix) ? "INV" : Model.SystemPreferences.InvoicePrefix)">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Invoice Start Number</label>
-        <input type="number" class="form-control" id="InvoiceStartNumber"
-               value="@(Model.SystemPreferences.InvoiceStartNumber == null ? "001" : Model.SystemPreferences.InvoiceStartNumber.ToString())">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Quotation Prefix</label>
-        <input type="text" class="form-control" id="QuotationPrefix" disabled
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.QuotationPrefix) ? "Coming Soon" : Model.SystemPreferences.QuotationPrefix)">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Receipt Prefix</label>
-        <input type="text" class="form-control" id="ReceiptPrefix" disabled
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.ReceiptPrefix) ? "Coming Soon" : Model.SystemPreferences.ReceiptPrefix)">
-    </div>
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Show Logo On Invoices</label>
-        <label class="switch">
-            <input type="checkbox" id="ShowLogoOnInvoices" disabled
-                   @(Model.SystemPreferences.ShowLogoOnInvoices ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Show Tax Breakdown</label>
-        <label class="switch">
-            <input type="checkbox" id="ShowTaxBreakdown" disabled
-                   @(Model.SystemPreferences.ShowTaxBreakdown ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
+	<div class="col-lg-4 mb-3">
+		<label>Invoice Prefix</label>
+		<input type="text" class="form-control" id="InvoicePrefix"
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.InvoicePrefix) ? "INV" : Model.SystemPreferences.InvoicePrefix)">
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>Invoice Start Number</label>
+		<input type="number" class="form-control" id="InvoiceStartNumber"
+			   value="@(Model.SystemPreferences.InvoiceStartNumber == null ? "001" : Model.SystemPreferences.InvoiceStartNumber.ToString())">
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>Quotation Prefix</label>
+		<input type="text" class="form-control" id="QuotationPrefix" disabled
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.QuotationPrefix) ? "Coming Soon" : Model.SystemPreferences.QuotationPrefix)">
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>Receipt Prefix</label>
+		<input type="text" class="form-control" id="ReceiptPrefix" disabled
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.ReceiptPrefix) ? "Coming Soon" : Model.SystemPreferences.ReceiptPrefix)">
+	</div>
+	<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+		<label>Show Logo On Invoices</label>
+		<label class="switch">
+			<input type="checkbox" id="ShowLogoOnInvoices" disabled
+				   @(Model.SystemPreferences.ShowLogoOnInvoices ? "checked" : "")>
+			<span class="slider"></span>
+		</label>
+	</div>
+	<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+		<label>Show Tax Breakdown</label>
+		<label class="switch">
+			<input type="checkbox" id="ShowTaxBreakdown" disabled
+				   @(Model.SystemPreferences.ShowTaxBreakdown ? "checked" : "")>
+			<span class="slider"></span>
+		</label>
+	</div>
 </div>
 
 <!-- User & Security -->
 <h5 class="mb-3">User & Security</h5>
 <div class="row">
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Enable Two Factor Auth</label>
-        <label class="switch">
-            <input type="checkbox" id="EnableTwoFactorAuth" disabled
-                   @(Model.SystemPreferences.EnableTwoFactorAuth ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Session Timeout (Minutes)</label>
-        <input type="text" class="form-control" id="SessionTimeoutMinutes" disabled
-               value="@(Model.SystemPreferences.SessionTimeoutMinutes == null ? 0 : Model.SystemPreferences.SessionTimeoutMinutes.ToString())">
-    </div>
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Allow Multiple Logins</label>
-        <label class="switch">
-            <input type="checkbox" id="AllowMultipleLogins" disabled
-                   @(Model.SystemPreferences.AllowMultipleLogins ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
+	<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+		<label>Enable Two Factor Auth</label>
+		<label class="switch">
+			<input type="checkbox" id="EnableTwoFactorAuth" disabled
+				   @(Model.SystemPreferences.EnableTwoFactorAuth ? "checked" : "")>
+			<span class="slider"></span>
+		</label>
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>Session Timeout (Minutes)</label>
+		<input type="text" class="form-control" id="SessionTimeoutMinutes" disabled
+			   value="@(Model.SystemPreferences.SessionTimeoutMinutes == null ? 0 : Model.SystemPreferences.SessionTimeoutMinutes.ToString())">
+	</div>
+	<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+		<label>Allow Multiple Logins</label>
+		<label class="switch">
+			<input type="checkbox" id="AllowMultipleLogins" disabled
+				   @(Model.SystemPreferences.AllowMultipleLogins ? "checked" : "")>
+			<span class="slider"></span>
+		</label>
+	</div>
 </div>
 
 <!-- Email & Communication -->
 <h5 class="mb-3">Email & Communication</h5>
 <div class="row">
-    <div class="col-lg-4 mb-3">
-        <label>SMTP Server</label>
-        <input type="text" class="form-control" id="SmtpServer" disabled
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.SmtpServer) ? "Coming Soon" : Model.SystemPreferences.SmtpServer)">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>SMTP Port</label>
-        <input type="text" class="form-control" id="SmtpPort" disabled
-               value="@(Model.SystemPreferences.SmtpPort == null ? "Coming Soon" : Model.SystemPreferences.SmtpPort.ToString())">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>SMTP Username</label>
-        <input type="text" class="form-control" id="SmtpUserName" disabled
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.SmtpUserName) ? "Coming Soon" : Model.SystemPreferences.SmtpUserName)">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>SMTP Password</label>
-        <input type="password" class="form-control" id="SmtpPassword" disabled
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.SmtpPassword) ? "Coming Soon" : Model.SystemPreferences.SmtpPassword)">
-    </div>
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Enable SSL</label>
-        <label class="switch">
-            <input type="checkbox" id="EnableSsl" disabled
-                   @(Model.SystemPreferences.EnableSsl ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Default From Email</label>
-        <input type="text" class="form-control" id="DefaultFromEmail" disabled
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.DefaultFromEmail) ? "Coming Soon" : Model.SystemPreferences.DefaultFromEmail)">
-    </div>
+	<div class="col-lg-4 mb-3">
+		<label>SMTP Server</label>
+		<input type="text" class="form-control" id="SmtpServer" disabled
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.SmtpServer) ? "Coming Soon" : Model.SystemPreferences.SmtpServer)">
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>SMTP Port</label>
+		<input type="text" class="form-control" id="SmtpPort" disabled
+			   value="@(Model.SystemPreferences.SmtpPort == null ? "Coming Soon" : Model.SystemPreferences.SmtpPort.ToString())">
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>SMTP Username</label>
+		<input type="text" class="form-control" id="SmtpUserName" disabled
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.SmtpUserName) ? "Coming Soon" : Model.SystemPreferences.SmtpUserName)">
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>SMTP Password</label>
+		<input type="password" class="form-control" id="SmtpPassword" disabled
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.SmtpPassword) ? "Coming Soon" : Model.SystemPreferences.SmtpPassword)">
+	</div>
+	<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+		<label>Enable SSL</label>
+		<label class="switch">
+			<input type="checkbox" id="EnableSsl" disabled
+				   @(Model.SystemPreferences.EnableSsl ? "checked" : "")>
+			<span class="slider"></span>
+		</label>
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>Default From Email</label>
+		<input type="text" class="form-control" id="DefaultFromEmail" disabled
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.DefaultFromEmail) ? "Coming Soon" : Model.SystemPreferences.DefaultFromEmail)">
+	</div>
 </div>
 
 <!-- Other Options -->
 <h5 class="mb-3">Other Options</h5>
 <div class="row">
-    <div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
-        <label>Enable Auto Backup</label>
-        <label class="switch">
-            <input type="checkbox" id="EnableAutoBackup" disabled
-                   @(Model.SystemPreferences.EnableAutoBackup ? "checked" : "")>
-            <span class="slider"></span>
-        </label>
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Auto Backup Interval (Days)</label>
-        <input type="number" class="form-control" id="AutoBackupIntervalDays" disabled
-               value="@(Model.SystemPreferences.AutoBackupIntervalDays == null ? "Coming Soon" : Model.SystemPreferences.AutoBackupIntervalDays.ToString())">
-    </div>
-    <div class="col-lg-4 mb-3">
-        <label>Backup Location</label>
-        <input type="text" class="form-control" id="BackupLocation" disabled
-               value="@(string.IsNullOrEmpty(Model.SystemPreferences.BackupLocation) ? "Coming Soon" : Model.SystemPreferences.BackupLocation)">
-    </div>
+	<div class="col-lg-4 mb-3 d-flex justify-content-between align-items-center">
+		<label>Enable Auto Backup</label>
+		<label class="switch">
+			<input type="checkbox" id="EnableAutoBackup" disabled
+				   @(Model.SystemPreferences.EnableAutoBackup ? "checked" : "")>
+			<span class="slider"></span>
+		</label>
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>Auto Backup Interval (Days)</label>
+		<input type="number" class="form-control" id="AutoBackupIntervalDays" disabled
+			   value="@(Model.SystemPreferences.AutoBackupIntervalDays == null ? "Coming Soon" : Model.SystemPreferences.AutoBackupIntervalDays.ToString())">
+	</div>
+	<div class="col-lg-4 mb-3">
+		<label>Backup Location</label>
+		<input type="text" class="form-control" id="BackupLocation" disabled
+			   value="@(string.IsNullOrEmpty(Model.SystemPreferences.BackupLocation) ? "Coming Soon" : Model.SystemPreferences.BackupLocation)">
+	</div>
 </div>
 
 <!-- Save Button -->
 <div class="text-center mt-4">
-    <button id="btnSavePreferences" class="btn btn-success px-4">Save Preferences</button>
+	<button id="btnSavePreferences" class="btn btn-success px-4">Save Preferences</button>
 </div>
 
 <style>
-    /* Switch style */
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 46px;
-        height: 24px;
-    }
+	/* Switch style */
+	.switch {
+		position: relative;
+		display: inline-block;
+		width: 46px;
+		height: 24px;
+	}
 
-        .switch input {
-            display: none;
-        }
+		.switch input {
+			display: none;
+		}
 
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        transition: .4s;
-        border-radius: 34px;
-    }
+	.slider {
+		position: absolute;
+		cursor: pointer;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: #ccc;
+		transition: .4s;
+		border-radius: 34px;
+	}
 
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
+		.slider:before {
+			position: absolute;
+			content: "";
+			height: 18px;
+			width: 18px;
+			left: 3px;
+			bottom: 3px;
+			background-color: white;
+			transition: .4s;
+			border-radius: 50%;
+		}
 
-    input:checked + .slider {
-        background-color: #28a745;
-    }
+	input:checked + .slider {
+		background-color: #28a745;
+	}
 
-        input:checked + .slider:before {
-            transform: translateX(22px);
-        }
+		input:checked + .slider:before {
+			transform: translateX(22px);
+		}
 </style>
 <script>
-    $(document).ready(function () {
+	$(document).ready(function () {
 
-        $("#btnSavePreferences").click(function () {
-            var formData = new FormData();
+		$("#btnSavePreferences").click(function () {
+			var formData = new FormData();
 
-            // === General Settings ===
-            formData.append("CompanyName", $("#CompanyName").val());
-            formData.append("CurrencyCode", $("#CurrencyCode").val());
-            formData.append("CurrencySymbol", $("#CurrencySymbol").val());
-            formData.append("DecimalPlaces", $("#DecimalPlaces").val());
-            formData.append("DefaultLanguage", $("#DefaultLanguage").val());
-            formData.append("TimeZone", $("#TimeZone").val());
-            formData.append("DateFormat", $("#DateFormat").val());
-            formData.append("IsAffilatedInvoice", $("#IsAffilatedInvoice").is(":checked"));
-            formData.append("IsRestaurantApplication", $("#IsRestaurantApplication").is(":checked"));
+			// === General Settings ===
+			formData.append("CompanyName", $("#CompanyName").val());
+			formData.append("CurrencyCode", $("#CurrencyCode").val());
+			formData.append("CurrencySymbol", $("#CurrencySymbol").val());
+			formData.append("DecimalPlaces", $("#DecimalPlaces").val());
+			formData.append("DefaultLanguage", $("#DefaultLanguage").val());
+			formData.append("TimeZone", $("#TimeZone").val());
+			formData.append("DateFormat", $("#DateFormat").val());
+			formData.append("IsAffilatedInvoice", $("#IsAffilatedInvoice").is(":checked"));
+			formData.append("IsRestaurantApplication", $("#IsRestaurantApplication").is(":checked"));
 
-            var companyLogoFile = $("#CompanyLogoFile")[0].files[0];
-            if (companyLogoFile) {
-                formData.append("CompanyLogoFile", companyLogoFile);
-            }
+			var companyLogoFile = $("#CompanyLogoFile")[0].files[0];
+			if (companyLogoFile) {
+				formData.append("CompanyLogoFile", companyLogoFile);
+			}
 
-            // === Tax & Financial ===
-            formData.append("PricesIncludeTax", $("#PricesIncludeTax").is(":checked"));
-            formData.append("EnableTax", $("#EnableTax").is(":checked"));
-            // formData.append("DefaultTaxRate", $("#DefaultTaxRate").val()); // commented in HTML
-            formData.append("TaxRegistrationNumber", $("#TaxRegistrationNumber").val());
+			// === Tax & Financial ===
+			formData.append("PricesIncludeTax", $("#PricesIncludeTax").is(":checked"));
+			formData.append("EnableTax", $("#EnableTax").is(":checked"));
+			// formData.append("DefaultTaxRate", $("#DefaultTaxRate").val()); // commented in HTML
+			formData.append("TaxRegistrationNumber", $("#TaxRegistrationNumber").val());
 
-            // === Inventory & Sales ===
-            formData.append("DefaultWarehouse", $("#DefaultWarehouse").val());
-            formData.append("LowStockThreshold", $("#LowStockThreshold").val());
-            formData.append("AllowNegativeStock", $("#AllowNegativeStock").is(":checked"));
-            formData.append("EnableInventoryTracking", $("#EnableInventoryTracking").is(":checked"));
+			// === Inventory & Sales ===
+			formData.append("DefaultWarehouse", $("#DefaultWarehouse").val());
+			formData.append("LowStockThreshold", $("#LowStockThreshold").val());
+			formData.append("AllowNegativeStock", $("#AllowNegativeStock").is(":checked"));
+			formData.append("EnableInventoryTracking", $("#EnableInventoryTracking").is(":checked"));
 
-            // === Invoice & Document ===
-            formData.append("InvoicePrefix", $("#InvoicePrefix").val());
-            formData.append("InvoiceStartNumber", $("#InvoiceStartNumber").val());
-            formData.append("QuotationPrefix", $("#QuotationPrefix").val());
-            formData.append("ReceiptPrefix", $("#ReceiptPrefix").val());
-            formData.append("ShowLogoOnInvoices", $("#ShowLogoOnInvoices").is(":checked"));
-            formData.append("ShowTaxBreakdown", $("#ShowTaxBreakdown").is(":checked"));
+			formData.append("EcommTaxRate", $("#EcommTaxRate").val());
+			formData.append("IsEcommerece", $("#IsEcommerece").is(":checked"));
+			// === Invoice & Document ===
+			formData.append("InvoicePrefix", $("#InvoicePrefix").val());
+			formData.append("InvoiceStartNumber", $("#InvoiceStartNumber").val());
+			formData.append("QuotationPrefix", $("#QuotationPrefix").val());
+			formData.append("ReceiptPrefix", $("#ReceiptPrefix").val());
+			formData.append("ShowLogoOnInvoices", $("#ShowLogoOnInvoices").is(":checked"));
+			formData.append("ShowTaxBreakdown", $("#ShowTaxBreakdown").is(":checked"));
 
-            // === User & Security ===
-            formData.append("EnableTwoFactorAuth", $("#EnableTwoFactorAuth").is(":checked"));
-            formData.append("SessionTimeoutMinutes", $("#SessionTimeoutMinutes").val());
-            formData.append("AllowMultipleLogins", $("#AllowMultipleLogins").is(":checked"));
+			// === User & Security ===
+			formData.append("EnableTwoFactorAuth", $("#EnableTwoFactorAuth").is(":checked"));
+			formData.append("SessionTimeoutMinutes", $("#SessionTimeoutMinutes").val());
+			formData.append("AllowMultipleLogins", $("#AllowMultipleLogins").is(":checked"));
 
-            // === Email & Communication ===
-            formData.append("SmtpServer", $("#SmtpServer").val());
-            formData.append("SmtpPort", $("#SmtpPort").val());
-            formData.append("SmtpUserName", $("#SmtpUserName").val());
-            formData.append("SmtpPassword", $("#SmtpPassword").val());
-            formData.append("EnableSsl", $("#EnableSsl").is(":checked"));
-            formData.append("DefaultFromEmail", $("#DefaultFromEmail").val());
+			// === Email & Communication ===
+			formData.append("SmtpServer", $("#SmtpServer").val());
+			formData.append("SmtpPort", $("#SmtpPort").val());
+			formData.append("SmtpUserName", $("#SmtpUserName").val());
+			formData.append("SmtpPassword", $("#SmtpPassword").val());
+			formData.append("EnableSsl", $("#EnableSsl").is(":checked"));
+			formData.append("DefaultFromEmail", $("#DefaultFromEmail").val());
 
-            // === Other Options ===
-            formData.append("EnableAutoBackup", $("#EnableAutoBackup").is(":checked"));
-            formData.append("AutoBackupIntervalDays", $("#AutoBackupIntervalDays").val());
-            formData.append("BackupLocation", $("#BackupLocation").val());
-            formData.append("BranchId", $("#branch").val());
+			// === Other Options ===
+			formData.append("EnableAutoBackup", $("#EnableAutoBackup").is(":checked"));
+			formData.append("AutoBackupIntervalDays", $("#AutoBackupIntervalDays").val());
+			formData.append("BackupLocation", $("#BackupLocation").val());
+			formData.append("BranchId", $("#branch").val());
 
 
-            // Debug: log all values
-            console.log("=== System Preferences FormData ===");
-            for (var pair of formData.entries()) {
-                console.log(pair[0] + ": ", pair[1]);
-            }
+			// Debug: log all values
+			console.log("=== System Preferences FormData ===");
+			for (var pair of formData.entries()) {
+				console.log(pair[0] + ": ", pair[1]);
+			}
 
-            // AJAX post
-            $.ajax({
-                url: '/AdminPanel/SaveSystemPrefrences',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (response) {
-                    alert("System Preferences saved successfully!");
-                },
-                error: function (xhr, status, error) {
-                    alert("Error saving system preferences: " + error);
-                }
-            });
-        });
+			// AJAX post
+			$.ajax({
+				url: '/AdminPanel/SaveSystemPrefrences',
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function (response) {
+					alert("System Preferences saved successfully!");
+				},
+				error: function (xhr, status, error) {
+					alert("Error saving system preferences: " + error);
+				}
+			});
+		});
 
-    });
+	});
 </script>
 
