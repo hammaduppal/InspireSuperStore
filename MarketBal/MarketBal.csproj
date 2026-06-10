@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Repositories\MainModels\MainModels\MainModels.csproj" />
+    <ProjectReference Include="..\..\MainModels\MainModels\MainModels.csproj" />
   </ItemGroup>
 
 </Project>

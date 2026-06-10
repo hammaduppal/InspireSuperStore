@@ -60,6 +60,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Repositories\MainModels\MainModels\MainModels.csproj" />
+    <ProjectReference Include="..\..\MainModels\MainModels\MainModels.csproj" />
     <ProjectReference Include="..\MarketBal\MarketBal.csproj" />
   </ItemGroup>
 
