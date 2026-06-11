@@ -1,0 +1,70 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+<div class="card">
+
+
+    <div class="card-body">
+        <form id="addProject" action="#">
+            <div class="row">
+                <div class="col-md-12">
+                    <fieldset>
+                        <legend class="font-weight-semibold"><i class="icon-home "></i> Project details</legend>
+
+                        <div class="form-group">
+                            <label>Project Name</label>
+                            <input id="projectName" type="text" class="form-control" placeholder="Enter Project Name" required />
+                        </div>
+
+
+
+
+                    </fieldset>
+                </div>
+
+
+            </div>
+
+            <div class="text-right">
+                <button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
+
+                <button id="btnSubmit" type="submit" class="btn btn-primary">Submit form <i class="icon-paperplane ml-2"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $(document).ready(function(){
+        $('#addProject').submit(async function(e){
+            e.preventDefault();
+
+            const validate = Utility.validateFormAndInputs('#addProject');
+                const isFormValid = validate();
+
+                if(isFormValid)
+                {
+                    var formData={
+                        ProjectName:$('#projectName').val(),
+
+
+                    }
+                    var endPoint = '/ProjectBoard/AddProject'
+                    var sendObject={
+                        url:endPoint,
+                        data:formData
+                    }
+                    const result = await Utility.RequestDataAjax(sendObject);
+                    console.log(result);
+                    debugger
+                    if(result.statusCode==='200'){
+
+                        window.location.href='/ProjectBoard/Project?projectId='+result.projectId;
+                    }
+                    else{
+                                Utility.failMessage('Please Try Again Later');
+
+                    }
+                }
+        });
+
+    })
+</script>

@@ -6,6 +6,7 @@ using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository;
 using MarketBal.Repository.DashBoard;
+using MarketBal.Repository.IPM;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -25,6 +26,7 @@ namespace InspireSuperStore.Controllers
 		private readonly NotificationService _notificationServices;
         private readonly IHubContext<NotificationHub> _hubContext;
 		private readonly OneDb _onedb;
+		private readonly PagesViewModel vm = new PagesViewModel();
         public HomeController(ILogger<HomeController> logger, OneDb onedb,IConfiguration config, NotificationService notificationService, IHubContext<NotificationHub> hubContext)
 		{
 			_config = config;
@@ -58,14 +60,17 @@ namespace InspireSuperStore.Controllers
 		{
 			await _notificationServices.NotifyOnlineUsersUpdated();
 			await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Welcome! You are logged in.");
-			
 
-			string message = "this is my message to send to admin@inspirenation.us";
+			var res =await new ProjectRepository(_config, _onedb).GetProjectWiseReportAsync();
+            var userreport = await new ProjectRepository(_config, _onedb).GetUserWiseReportAsync();
+			vm.UserReports = userreport;
+            vm.ProjectReports = res;
+            string message = "this is my message to send to admin@inspirenation.us";
 			await _hubContext.Clients.User("admin@inspirenation.us").SendAsync("ReceiveNotification", $"Private: {message}");
 
             await _notificationServices.SendToRoleGroup("Sales", "New Order Recieved");
 
-            return View();
+            return View(vm);
 		}
 
 		public IActionResult ToggleSideMenu()

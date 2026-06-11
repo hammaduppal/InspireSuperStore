@@ -225,7 +225,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
             return View(vm);
         }
         [HttpPost]
-        public async Task<IActionResult> SeedData(OrganizationRegistrationDto model)
+        public async Task<IActionResult> SeedData([FromForm]OrganizationRegistrationDto model)
         {
             var result = await _admin.SeedinData(model);
             if (result)

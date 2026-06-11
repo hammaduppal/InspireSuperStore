@@ -1,0 +1,620 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Project";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Accessing the single project from your view model
+    var project = Model.Project;
+}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
+    /* Kanban Horizontal Scroll Setup */
+    .kanban-wrapper {
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        padding-bottom: 15px;
+        min-height: calc(100vh - 120px);
+        align-items: flex-start;
+    }
+
+    /* Fixed Column Width (Limitless Standard Dashboard size) */
+    .kanban-column {
+        width: 300px;
+        min-width: 300px;
+        max-width: 300px;
+        margin-right: 1.25rem;
+        background-color: #f8f9fa;
+        border: 1px solid rgba(0,0,0,.05);
+        border-radius: 0.25rem;
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 140px);
+        white-space: normal;
+    }
+
+    /* Handle styling for moving the entire column */
+    .column-grab-handle {
+        cursor: move;
+    }
+
+    /* Card Container Area inside columns */
+    .kanban-cards-area {
+        flex-grow: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 50px;
+        padding: 0.5rem;
+    }
+
+    /* Dynamic Title Editing Input Styling */
+    .editable-title-input {
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 0.875rem;
+        width: 100%;
+    }
+
+        .editable-title-input:focus {
+            background: #fff;
+            outline: none;
+            box-shadow: 0 0 0 1px #5c6bc0;
+            border-radius: 2px;
+        }
+
+    /* Add Column placeholder box */
+    .kanban-add-column-box {
+        width: 300px;
+        min-width: 300px;
+        background-color: rgba(0, 0, 0, 0.02);
+        border: 2px dashed rgba(0, 0, 0, 0.1);
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .kanban-add-column-box:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+            border-color: #5c6bc0;
+        }
+
+    /* Dragging Shadow Placeholders (SortableJS Ghost Classes) */
+    .sortable-ghost-card {
+        opacity: 0.4;
+        background-color: #e8eaf6 !important;
+        border: 1px dashed #5c6bc0 !important;
+    }
+
+    .sortable-ghost-column {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
+
+    /* Avatar Stack Logic for Task Cards */
+    .avatar-group {
+        display: flex;
+        align-items: center;
+    }
+
+        .avatar-group .avatar-link {
+            transition: transform 0.2s ease;
+            text-decoration: none;
+        }
+
+            .avatar-group .avatar-link:hover {
+                transform: translateY(-2px);
+                z-index: 10;
+            }
+
+        .avatar-group img,
+        .avatar-group .avatar-placeholder {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1.5px solid #fff;
+            object-fit: cover;
+        }
+
+        .avatar-group .avatar-link + .avatar-link {
+            margin-left: -6px;
+        }
+
+    .avatar-placeholder {
+        background-color: #5c6bc0;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        font-weight: 600;
+    }
+    /* target card elements explicitly to force custom priority backgrounds */
+    .card.card-limitless.bg-danger-alpha {
+        background-color: #fbeae5 !important; /* Premium solid soft red fallback */
+        background-color: rgba(239, 83, 80, 0.08) !important;
+        border-color: rgba(239, 83, 80, 0.4) !important;
+    }
+
+    .card.card-limitless.bg-primary-alpha {
+        background-color: #eef0fa !important; /* Premium solid soft indigo/blue fallback */
+        background-color: rgba(92, 107, 192, 0.08) !important;
+        border-color: rgba(92, 107, 192, 0.4) !important;
+    }
+
+    .card.card-limitless.bg-success-alpha {
+        background-color: #eef6ee !important; /* Premium solid soft green fallback */
+        background-color: rgba(76, 175, 80, 0.08) !important;
+        border-color: rgba(76, 175, 80, 0.4) !important;
+    }
+</style>
+
+<div class="page-header page-header-light">
+    <div class="page-header-content header-elements-md-inline">
+        <div class="d-flex">
+            <div class="breadcrumb">
+                <a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+                <span class="breadcrumb-item active">Project</span>
+            </div>
+            <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="content" data-project-id="@project.ProjectId">
+    <div class="card shadow-5">
+        <div class=" avatar-group card-header bg-transparent border-bottom">
+            <h5 class="card-title font-weight-semibold">@project.ProjectName</h5>
+            <span class="text-muted small">@Html.Raw(project.Description)</span>
+            @if (project.ProjectUsers != null)
+            {
+                foreach (var assigned in project.ProjectUsers)
+                {
+                    <a href="/AdminPanel/EditUser/@assigned.UserId" class="avatar-link" title="@assigned.FirstName @assigned.LastName">
+                        @if (string.IsNullOrEmpty(assigned.ImageUrl))
+                        {
+                            var fInit = !string.IsNullOrEmpty(assigned.FirstName) ? assigned.FirstName.Substring(0, 1).ToUpper() : "";
+                            var lInit = !string.IsNullOrEmpty(assigned.LastName) ? assigned.LastName.Substring(0, 1).ToUpper() : "";
+                            var initials = !string.IsNullOrEmpty(fInit + lInit) ? (fInit + lInit) : "?";
+                            <div class="avatar-placeholder">@initials</div>
+                        }
+                        else
+                        {
+                            <img src="@PagesViewModel.SystemSettings.ContentAPIUrl/@assigned.ImageUrl" alt="Avatar">
+                        }
+                    </a>
+                }
+            }
+        </div>
+
+        <div class="row p-2">
+            <div class="container-fluid">
+                <div class="kanban-wrapper" id="kanban-board-columns">
+
+                    @foreach (var column in project.ProjectColumns)
+                    {
+                        <div class="kanban-column shadow-sm" data-column-id="@column.ColumnId">
+                            <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-white rounded-top column-grab-handle">
+                                <div class="d-flex align-items-center col-10 p-0">
+                                    <i class="fas fa-grip-vertical text-muted mr-2"></i>
+                                    <input type="text" class="editable-title-input text-dark" value="@column.ColumnName" data-old-val="@column.ColumnName">
+                                </div>
+
+                                <div class="dropdown no-arrow">
+                                    <button class="btn btn-link text-muted p-0" data-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item text-danger delete-column-btn" href="#"><i class="fas fa-trash-alt mr-2"></i>Delete Column</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="kanban-cards-area sortable-cards">
+                                @foreach (var task in column.ProjectTasks)
+                                {
+                                    var priorityBgClass = task.Priority == "High" ? "bg-danger-alpha border-danger-300" :
+                                    task.Priority == "Normal" ? "bg-primary-alpha border-primary-300" :
+                                                    "bg-success-alpha border-success-300";
+                                    <div class="card card-limitless mb-2  shadow-sm border @priorityBgClass" data-card-id="@task.TaskId">
+                                        <div class="card-body p-2">
+
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <h6 class="font-size-sm font-weight-semibold mb-0 text-truncate col-9 p-0">
+                                                    <a data-taskId="@task.TaskId" href="#" class="text-body editTask" title="@task.Title">@task.Title</a>
+                                                </h6>
+
+                                                <div class="avatar-group flex-shrink-0">
+                                                    @if (task.TaskAssignedUsers != null)
+                                                    {
+                                                        foreach (var assigned in task.TaskAssignedUsers)
+                                                        {
+                                                            <a href="/AdminPanel/EditUser/@assigned.UserId" class="avatar-link" title="@assigned.FirstName @assigned.LastName">
+                                                                @if (string.IsNullOrEmpty(assigned.ImageUrl))
+                                                                {
+                                                                    var fInit = !string.IsNullOrEmpty(assigned.FirstName) ? assigned.FirstName.Substring(0, 1).ToUpper() : "";
+                                                                    var lInit = !string.IsNullOrEmpty(assigned.LastName) ? assigned.LastName.Substring(0, 1).ToUpper() : "";
+                                                                    var initials = !string.IsNullOrEmpty(fInit + lInit) ? (fInit + lInit) : "?";
+                                                                    <div class="avatar-placeholder">@initials</div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <img src="@PagesViewModel.SystemSettings.ContentAPIUrl/@assigned.ImageUrl" alt="Avatar">
+                                                                }
+                                                            </a>
+                                                        }
+                                                    }
+                                                </div>
+                                                <div class="dropdown no-arrow">
+                                                    <button class="btn btn-link text-muted p-0" data-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                                                    <div class="dropdown-menu dropdown-menu-right">
+                                                        <a class="dropdown-item text-danger delete-task-btn" href="#" data-taskId="@task.TaskId" ><i class="fas fa-trash-alt mr-2"></i>Delete Task</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <p class="text-muted small mb-2 text-truncate-2">@Html.Raw(task.Description)</p>
+
+                                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                                @{
+                                                    var badgeClass = task.Priority == "High" ? "border-danger text-danger-600" :
+                                                    task.Priority == "Medium" ? "border-primary text-primary-600" :
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            "border-success text-success-600";
+                                                }
+                                                <span class="badge badge-flat @badgeClass" style="font-size: 10px;">@task.Priority</span>
+
+                                                @if (task.DueDate.HasValue)
+                                                {
+                                                    <small class="text-muted"><i class="far fa-clock mr-1"></i> @TimeHelper.GetFormattedTimeSpan(task.DueDate.Value)</small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="p-2 border-top bg-white rounded-bottom">
+                                <input type="text" class="btn btn-light btn-block btn-sm text-muted text-left add-card-btn" />
+                            </div>
+                        </div>
+                    }
+                    @if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.SuperAdmin))
+                    {
+                        <div class="kanban-add-column-box p-3 text-center d-flex align-items-center justify-content-center flex-column text-muted" id="add-column-trigger">
+                            <div><i class="fas fa-plus-circle fa-2x mb-2 text-muted opacity-50"></i></div>
+                            <span class="font-weight-semibold small text-uppercase">Add Dynamic Column</span>
+                        </div>
+                    }
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+
+<script>
+           $(document).ready(function() {
+            // Read the root Project GUID from the parent wrapper view canvas
+            var projectId = $('.content').data('project-id');
+
+            // ==========================================
+            // 1. INITIALIZE HORIZONTAL COLUMN SORTING
+            // ==========================================
+            var boardContainer = document.getElementById('kanban-board-columns');
+            Sortable.create(boardContainer, {
+                animation: 150,
+                handle: '.column-grab-handle',
+                draggable: '.kanban-column',
+                ghostClass: 'sortable-ghost-column',
+                onEnd: function (evt) {
+                    // Build an ordered array of column GUIDs based on the new visual order
+                    var sortedIds = [];
+                    $('.kanban-column').each(function() {
+                        sortedIds.push($(this).data('column-id'));
+                    });
+
+                    // POST order changes to backend
+                    $.ajax({
+                        url: '/ProjectBoard/SortColumns',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ SortedColumnIds: sortedIds }),
+                        success: function(res) {
+                            if(!res.success) alert("Failed to save column position: " + res.message);
+                        }
+                    });
+                }
+            });
+
+            // ==========================================
+            // 2. INITIALIZE VERTICAL CARD SORTING
+            // ==========================================
+            function initCardContainers() {
+                var cardAreas = document.querySelectorAll('.sortable-cards');
+                cardAreas.forEach(function (area) {
+                    Sortable.create(area, {
+                        group: 'kanban-shared-cards',
+                        animation: 150,
+                        ghostClass: 'sortable-ghost-card',
+                        onEnd: function (evt) {
+                            var targetColumn = $(evt.to).closest('.kanban-column');
+                            var targetColumnId = targetColumn.data('column-id');
+
+                            // Compile an ordered array of task GUIDs inside the destination column
+                            var sortedTaskIds = [];
+                            targetColumn.find('.card-limitless').each(function() {
+                                sortedTaskIds.push($(this).data('card-id'));
+                            });
+
+                            // POST task order changes to backend
+                            $.ajax({
+                                url: '/ProjectBoard/SortTasks',
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    TargetColumnId: targetColumnId,
+                                    SortedTaskIds: sortedTaskIds
+                                }),
+                                success: function(res) {
+                                    if(!res.success) alert("Failed to save card position: " + res.message);
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+            initCardContainers(); // Initial system runtime bind
+            $(document).on('click','.editTask',async function(e){
+             e.preventDefault();
+                var taskId = $(this).attr('data-taskId');
+              var result = await  Utility.RequestAjax('/ProjectBoard/_EditTask?taskId='+taskId);
+              $('.full-modal-body').html(result);
+              $('#modal_full').modal();
+            });
+            // $('.editTask').on('click',async function(e){
+            //     e.preventDefault();
+            //     var taskId = $(this).attr('data-taskId');
+            //   var result = await  Utility.RequestAjax('/ProjectBoard/_EditTask?taskId='+taskId);
+            //   $('.full-modal-body').html(result);
+            //   $('#modal_full').modal();
+            // });
+
+            $('#add-column-trigger').on('click', function() {
+                var defaultTitle = "New Column Workflow";
+                var triggerBtn = $(this);
+
+                $.ajax({
+                    url: '/ProjectBoard/CreateColumn',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ ProjectId: projectId, ColumnName: defaultTitle }),
+                    success: function(res) {
+                        if(res.success) {
+                            var newColumnHtml = `
+                                <div class="kanban-column shadow-sm" data-column-id="${res.columnId}">
+                                    <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-white rounded-top column-grab-handle">
+                                        <div class="d-flex align-items-center col-10 p-0">
+                                            <i class="fas fa-grip-vertical text-muted mr-2"></i>
+                                            <input type="text" class="editable-title-input text-dark" value="${defaultTitle}" data-old-val="${defaultTitle}">
+                                        </div>
+                                        <div class="dropdown no-arrow">
+                                            <button class="btn btn-link text-muted p-0" data-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item text-danger delete-column-btn" href="#"><i class="fas fa-trash-alt mr-2"></i>Delete Column</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="kanban-cards-area sortable-cards"></div>
+                                    <div class="p-2 border-top bg-white rounded-bottom">
+                                        <button class="btn btn-light btn-block btn-sm text-muted text-left add-card-btn"><i class="fas fa-plus mr-1"></i>Add Card</button>
+                                    </div>
+                                </div>`;
+
+                            triggerBtn.before(newColumnHtml);
+                            initCardContainers(); // Attach SortableJS listeners to the new column dropzone
+                        } else {
+                            alert("Error creating column: " + res.message);
+                        }
+                    }
+                });
+            });
+
+            $(document).on('focusout', '.add-card-btn', function() {
+                //$('#modal_mini').modal();
+
+                var targetColumn = $(this).closest('.kanban-column');
+                var columnId = targetColumn.data('column-id');
+                var defaultTaskTitle = $(this).val();
+                $(this).val('');
+                if(defaultTaskTitle)
+                {
+                    $.ajax({
+                        url: '/ProjectBoard/CreateTask',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ ColumnId: columnId, Title: defaultTaskTitle }),
+                        success: function(res) {
+                            if(res.success) {
+                                var cardHtml = `
+                                    <div class="card card-limitless bg-success-alpha border-success-300" data-card-id="${res.taskId}">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <h6 class="font-size-sm font-weight-semibold mb-0 text-truncate col-9 p-0">
+                                                    <a href="#" data-taskid="${res.taskId}" class="text-body editTask" title="${defaultTaskTitle}">${defaultTaskTitle}</a>
+                                                </h6>
+                                                <div class="avatar-group flex-shrink-0"></div>
+                                            </div>
+                                            <p class="text-muted small mb-2 text-truncate-2">Click to add details...</p>
+                                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                                <span class="badge badge-flat border-success text-success-600" style="font-size: 10px;">Low</span>
+                                                <small class="text-muted"><i class="far fa-clock mr-1"></i>Today</small>
+                                            </div>
+                                        </div>
+                                    </div>`;
+
+                                targetColumn.find('.kanban-cards-area').append(cardHtml);
+                            } else {
+                                alert("Error creating task: " + res.message);
+                            }
+                        }
+                    });
+
+                }
+            });
+
+            // ==========================================
+            // 5. BONUS: CALL COMPONENT USER ASSIGNMENT
+            // ==========================================
+            // Call this utility helper function when a user selects a team member from your modal picker layout
+            window.assignUserToTask = function(taskId, userId) {
+                $.ajax({
+                    url: '/ProjectBoard/AssignUser',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ TaskId: taskId, UserId: userId }),
+                    success: function(res) {
+                        if(res.success) {
+                            // Refresh component or append user avatar icon locally to the card DOM
+                            console.log('User Assigned Successfully!');
+                        }
+                    }
+                });
+            };
+
+
+
+        $(document).on('focusout', '.editable-title-input', function() {
+        var inputEl = $(this);
+        var currentVal = inputEl.val().trim();
+        var oldVal = inputEl.data('old-val');
+        var colId = inputEl.closest('.kanban-column').attr('data-column-id');
+
+        // 1. If the input is left empty, revert to the old value and stop execution
+        if (currentVal === "") {
+            inputEl.val(oldVal);
+            return;
+        }
+
+        // 2. If the value actually changed, dispatch the update request
+        if (currentVal !== oldVal) {
+            $.ajax({
+                url: '/ProjectBoard/RenameColumn',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    ColumnId: colId,
+                    ColumnName: currentVal
+                }),
+                success: function(res) {
+                    if (res.success) {
+                        // Cache the new value as the current baseline for future edits
+                        inputEl.data('old-val', currentVal);
+                        console.log('Column ' + colId + ' successfully renamed to: ' + currentVal);
+                    } else {
+                        alert("Failed to rename column: " + res.message);
+                        // Revert to old value on database failure
+                        inputEl.val(oldVal);
+                    }
+                },
+                error: function() {
+                    alert("An error occurred while saving the column name.");
+                    inputEl.val(oldVal);
+                }
+            });
+        }
+    });
+    // ==========================================
+    // DYNAMIC DELETE COLUMN ACTION
+    // ==========================================
+    $(document).on('click', '.delete-column-btn', function(e) {
+        e.preventDefault();
+
+        var deleteBtn = $(this);
+        var columnEl = deleteBtn.closest('.kanban-column');
+        var colId = columnEl.data('column-id');
+        var columnName = columnEl.find('.editable-title-input').val();
+
+        // Confirm action with the user before wiping out the workflow stage
+        if (confirm("Are you sure you want to delete the column '" + columnName + "' and all of its tasks?")) {
+            $.ajax({
+                url: '/ProjectBoard/DeleteColumn',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ ColumnId: colId }),
+                success: function(res) {
+                    if (res.success) {
+                        // Limitless theme visual polish: fade out cleanly before removing from DOM
+                        columnEl.animate({ opacity: 0, width: 0, marginRight: 0 }, 300, function() {
+                            $(this).remove();
+                        });
+                        console.log('Column ' + colId + ' and its tasks soft-deleted successfully.');
+                    } else {
+                        alert("Failed to delete column: " + res.message);
+                    }
+                },
+                error: function() {
+                    alert("An error occurred while deleting the column.");
+                }
+            });
+        }
+    });
+
+    // Optional UX: Allow users to press 'Enter' to save immediately without losing focus manually
+                $(document).on('keypress', '.editable-title-input', function(e) {
+                    if (e.which == 13) { // Enter key
+                        e.preventDefault();
+                        $(this).blur(); // Programmatically fires the focusout event above
+                    }
+                });
+
+    $(document).on('click', '.delete-task-btn', function(e) {
+        e.preventDefault();
+
+        var btn = $(this);
+        var taskId = btn.attr('data-taskId') || btn.data('taskid'); // Pull handle fallback values safely
+        var cardNode = btn.closest('.card-limitless'); // Finds the main Kanban card container wrapper
+
+        if (!taskId) {
+            Utility.failMessage("Task identifier reference could not be localized.");
+            return;
+        }
+
+        if (confirm("Are you sure you want to permanently discard this task workspace node?")) {
+            // Toggle indicator state
+            btn.html('<i class="icon-spinner2 spinner mr-2"></i>Deleting...');
+
+            $.ajax({
+                url: '/ProjectBoard/DeleteTask',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ TaskId: taskId }),
+                success: function(res) {
+                    if (res.success) {
+                        // Smooth visual elimination slide transition sequence
+                        cardNode.fadeOut(300, function() {
+                            $(this).remove();
+                        });
+
+                        // If the full detail modal happens to be open, shut it down natively
+                        $('#modal_full').modal('hide');
+                        console.log("Task soft deleted successfully.");
+                    } else {
+                        Utility.failMessage("Could not drop task element: " + res.message);
+                        btn.html('<i class="fas fa-trash-alt mr-2"></i>Delete Task'); // Reset look
+                    }
+                },
+                error: function() {
+                    Utility.failMessage("Communication error isolating delete transaction.");
+                    btn.html('<i class="fas fa-trash-alt mr-2"></i>Delete Task');
+                }
+            });
+        }
+    });
+
+
+});
+</script>

@@ -45,9 +45,167 @@
 						User Status
 					</div>
 				</div>
+				<div class="col-lg-6"></div>
+				<style>
+					/* Profile Image Container Area Rules */
+					.profile-avatar-wrapper {
+						position: relative;
+						width: 150px;
+						height: 150px;
+						margin: 0 auto;
+						border-radius: 50%;
+						overflow: hidden;
+						cursor: pointer;
+						border: 3px solid #fff;
+						box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+						transition: all 0.2s ease;
+					}
+
+						.profile-avatar-wrapper:hover {
+							transform: scale(1.02);
+							box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+						}
+
+					/* Avatar Render Size Scaling */
+					.profile-avatar-img {
+						width: 100%;
+						height: 100%;
+						object-fit: cover;
+					}
+
+					/* Hover Action Interaction Overlay */
+					.avatar-upload-overlay {
+						position: absolute;
+						top: 0;
+						left: 0;
+						width: 100%;
+						height: 100%;
+						background: rgba(0, 0, 0, 0.6); /* Translucent dim screen */
+						color: #fff;
+						display: flex;
+						flex-direction: column;
+						align-items: center;
+						justify-content: center;
+						opacity: 0;
+						transition: opacity 0.25s ease;
+					}
+
+					.profile-avatar-wrapper:hover .avatar-upload-overlay {
+						opacity: 1;
+					}
+
+					.avatar-upload-overlay i {
+						font-size: 1.5rem;
+						margin-bottom: 4px;
+					}
+
+					.avatar-upload-overlay span {
+						font-size: 11px;
+						font-weight: 600;
+						text-uppercase: uppercase;
+						letter-spacing: 0.5px;
+					}
+				</style>
+				<div class="col-lg-3 text-center">
+					<div class="profile-avatar-wrapper" id="btn-trigger-avatar-upload">
+
+						@if (string.IsNullOrEmpty(Model.LoginUser.Person.ImageUrl))
+						{
+							var fInit = !string.IsNullOrEmpty(Model.LoginUser.Person.FirstName) ? Model.LoginUser.Person.FirstName.Substring(0, 1).ToUpper() : "";
+							var lInit = !string.IsNullOrEmpty(Model.LoginUser.Person.LastName) ? Model.LoginUser.Person.LastName.Substring(0, 1).ToUpper() : "";
+							var initials = !string.IsNullOrEmpty(fInit + lInit) ? (fInit + lInit) : "?";
+
+							<div class="avatar-placeholder-md w-100 h-100 d-flex align-items-center justify-content-center font-weight-bold" style="font-size: 2.5rem; border-radius: 0;">@initials</div>
+						}
+						else
+						{
+							<img id="img-profile-avatar-view"
+								 src="@PagesViewModel.SystemSettings.ContentAPIUrl/@Model.LoginUser.Person.ImageUrl"
+								 class="profile-avatar-img"
+								 alt="Profile Picture" />
+						}
+
+						<div class="avatar-upload-overlay">
+							<i class="icon-camera2"></i>
+							<span>Change Photo</span>
+						</div>
+					</div>
+
+					<input type="file" id="avatar-file-uploader" accept="image/*" style="display: none;" />
+				</div>
 			</div>
 		</div>
+		<script>
+						$(document).ready(function() {
 
+				// 1. Trigger the hidden file channel input box on container box click click
+				$(document).on('click', '#btn-trigger-avatar-upload', function() {
+					$('#avatar-file-uploader').click();
+				});
+
+				// 2. Listen for the file picker selection change execution context
+				$(document).on('change', '#avatar-file-uploader', function() {
+					var fileInput = this;
+					if (fileInput.files.length === 0) return;
+
+					var file = fileInput.files[0];
+
+					// Basic Guardrail: Enforce image type formats validation rules checks
+					if (!file.type.startsWith('image/')) {
+						Utility.failMessage("Please select a valid image file configuration format.");
+						return;
+					}
+
+					var formData = new FormData();
+					formData.append("ProfileImage", file);
+
+					// Turn on loading overlay state appearance visual adjustments
+					$('.avatar-upload-overlay').css('opacity', '1')
+						.html('<i class="icon-spinner2 spinner"></i><span>Uploading...</span>');
+
+					$.ajax({
+						url: '/ProjectBoard/UploadProfilePicture', // Target controller route
+						type: 'POST',
+						data: formData,
+						processData: false, // Prevent conversion mechanisms parameters
+						contentType: false, // Let browser set true multi-part headers bounding tags
+						success: function(res) {
+							if (res.success) {
+								// Cache root API URL path reference token from global variables configuration settings
+								var contentApiRoot = '@PagesViewModel.SystemSettings.ContentAPIUrl';
+								var absolutePathUrl = contentApiRoot + "/" + res.newImageUrl;
+
+								// Swap or generate the profile avatar element display values tags
+								var wrapper = $('#btn-trigger-avatar-upload');
+								var placeholder = wrapper.find('.avatar-placeholder-md');
+
+								if (placeholder.length > 0) {
+									// Replace initials block container with a clean dynamic image tag context
+									placeholder.remove();
+									wrapper.prepend(`<img id="img-profile-avatar-view" src="${absolutePathUrl}" class="profile-avatar-img" alt="Profile Picture" />`);
+								} else {
+									// Update existing image target src canvas path attributes
+									$('#img-profile-avatar-view').attr('src', absolutePathUrl);
+								}
+
+								// BONUS: Dynamically find and update your navbar header picture icon simultaneously if it exists
+								$('.navbar-nav .rounded-circle, .sidebar-user img').attr('src', absolutePathUrl);
+
+								Utility.successMessage("Profile image updated successfully.");
+							} else {
+								Utility.failMessage("Could not process photo adjustment: " + res.message);
+							}
+						},
+						complete: function() {
+							// Restore baseline overlay presentation templates texts states
+							$('.avatar-upload-overlay').removeAttr('style')
+								.html('<i class="icon-camera2"></i><span>Change Photo</span>');
+							$('#avatar-file-uploader').val(''); // Clear form memory arrays block trace
+						}
+					});
+				});
+			});
+		</script>
 		<div class="card-body">
 
 			<form id="updateLoginForm" class="form-validate-jquery" action="#">
@@ -299,12 +457,12 @@
 			else{
 				Utility.failMessage(result.Message);
 			}
-	});	
+	});
 
 		$('#country-Shipping').change(async function(){
 			var CountryId=$(this).val();
 		var states = await GetStates(CountryId);
-		
+
 
 							$('#province-Shipping').empty();
 							$('#city-Shipping').empty();
@@ -320,7 +478,7 @@
 								  });
 		})
 		$('#province-Shipping').change(async function(){
-			
+
 			var StateId=$(this).val();
 			var formData={
 				StateProvinceId:StateId
@@ -338,7 +496,7 @@
 		$('#country-Billing').change(async function(){
 			var CountryId=$(this).val();
 		var states = await GetStates(CountryId);
-		
+
 
 							$('#province-Billing').empty();
 							$('#city-Billing').empty();
@@ -354,7 +512,7 @@
 								  });
 		})
 		$('#province-Billing').change(async function(){
-			
+
 			var StateId=$(this).val();
 			var formData={
 				StateProvinceId:StateId
@@ -373,7 +531,7 @@
 
 	})
 	async function GetCities(Id){
-		
+
 			var formData={
 				StateProvinceId:Id
 			}
@@ -385,7 +543,7 @@
 			return result
 	}
 	async function GetStates(Id){
-		
+
 			var formData={
 				CountryId:Id
 			}
@@ -494,7 +652,7 @@
 				data:formData,
 				url:'/AdminPanel/AssignUserRoles'
 			}
-			
+
 			const result = await Utility.RequestDataAjax(objectData);
 			if(result.statusCode==='200')
 			{

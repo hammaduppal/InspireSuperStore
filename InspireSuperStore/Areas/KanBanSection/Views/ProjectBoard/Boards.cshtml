@@ -1,0 +1,223 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Boards";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    /* Limitless Theme Refinements */
+    .card-limitless {
+        border: 1px solid rgba(0, 0, 0, .05);
+        border-radius: 0.25rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all ease-in-out 0.2s;
+    }
+
+        /* Subtle hover effect common in Limitless interactive elements */
+        .card-limitless:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+    /* Avatar Stack Logic */
+    .avatar-group {
+        display: flex;
+        align-items: center;
+    }
+
+        .avatar-group .avatar-link {
+            transition: transform 0.2s ease;
+            text-decoration: none;
+        }
+
+            .avatar-group .avatar-link:hover {
+                transform: translateY(-2px);
+                z-index: 10;
+            }
+
+        .avatar-group img,
+        .avatar-group .avatar-placeholder {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            object-fit: cover;
+        }
+
+        /* Shift overlapping avatars to the left */
+        .avatar-group .avatar-link + .avatar-link {
+            margin-left: -10px;
+        }
+
+    /* Fallback text avatar if no image is present */
+    .avatar-placeholder {
+        background-color: #5c6bc0; /* Limitless Indigo-400 */
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+    }
+</style>
+<div class="page-header page-header-light">
+    <div class="page-header-content header-elements-md-inline">
+
+        <div class="d-flex">
+            <div class="breadcrumb">
+                <a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+                <span class="breadcrumb-item active">Board</span>
+            </div>
+
+            <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+
+    <div class="card shadow-5">
+        <div class="card-header header-elements-inline">
+            <h5 class="card-title">Projects</h5>
+            <div class="header-elements">
+
+                <div class="header-elements d-none">
+                    <div class="d-flex justify-content-center">
+                        @if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.SuperAdmin))
+                        {
+                            <a id="addProject" href="/ProjectBoard/AddProject" class="btn btn-success ">New Project</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row p-2">
+            @if (Model.Projects != null)
+            {
+                @foreach (var item in Model.Projects)
+                {
+                    <div class="col-md-4 col-sm-6">
+                        <div class="card card-limitless bg-white h-100">
+                            <div class="card-body p-3">
+
+                                <!-- Header Row: Name & User Icons -->
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <!-- Project Title (Clickable) -->
+                                    <h6 class="card-title font-weight-semibold mb-0 mr-2 text-truncate">
+                                        <a href="/ProjectBoard/Project?projectId=@item.ProjectId" class="text-body text-letter-hover" title="Cloud Infrastructure Setup">
+                                            @item.ProjectName
+                                        </a>
+                                    </h6>
+
+                                    <!-- Top Right: Clickable User Icons Stack -->
+                                    <div class="avatar-group flex-shrink-0">
+                                        @foreach (var user in item.ProjectUsers)
+                                        {
+                                            <a href="/AdminPanel/EditUser/@user.UserId" class="avatar-link" title="@user.FirstName @user.LastName">
+                                                @if (string.IsNullOrEmpty(user.ImageUrl))
+                                                {
+                                                    @* Extract first initials safely, fallback to '?' if names are entirely null *@
+                                                    var firstInitial = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName.Substring(0, 1).ToUpper() : "";
+                                                    var lastInitial = !string.IsNullOrEmpty(user.LastName) ? user.LastName.Substring(0, 1).ToUpper() : "";
+                                                    var initials = !string.IsNullOrEmpty(firstInitial + lastInitial) ? (firstInitial + lastInitial) : "?";
+
+                                                    <div class="avatar-placeholder">@initials</div>
+                                                }
+                                                else
+                                                {
+                                                    <img src="@PagesViewModel.SystemSettings.ContentAPIUrl/@user.ImageUrl" alt="@user.FirstName @user.LastName">
+                                                }
+                                            </a>
+                                        }
+
+
+                                    </div>
+                                </div>
+
+                                <!-- Project Metadata / Subtext -->
+                                @* <div class="d-flex align-items-center text-muted font-size-sm mb-3">
+                                    <span class="badge badge-flat border-success text-success-600 px-2 py-1 mr-2" style="font-size: 11px;">Active</span>
+                                    <small><i class="far fa-calendar-alt mr-1"></i> Due: @item.EndDate</small>
+                                </div> *@
+
+                                <!-- Footer Details -->
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-light">
+                                    @{
+                                        var activeTasks = item.ProjectColumns.SelectMany(col => col.ProjectTasks).ToList();
+                                        var totalTasks = activeTasks.Count;
+
+                                        // Extract items specifically matched against completed string tags names definitions
+                                        var completedTasks = item.ProjectColumns
+                                        .Where(c => c.ColumnName.ToLower().Contains("done") || c.ColumnName.ToLower().Contains("completed"))
+                                        .SelectMany(c => c.ProjectTasks)
+                                       
+                                        .Count();
+
+                                        // Safe zero division checks logic
+                                        double completionPercentage = totalTasks > 0 ? ((double)completedTasks / totalTasks) * 100 : 0;
+                                    }
+
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-1 font-size-sm">
+                                            <span class="text-muted">Burn Progress: <strong>@completedTasks / @totalTasks Done</strong></span>
+                                            <span class="text-success font-weight-bold">@completionPercentage.ToString("0")%</span>
+                                        </div>
+
+                                        <div class="progress w-100 shadow-sm" style="height: 6px; border-radius: 3px;">
+                                            <div class="progress-bar bg-success"
+                                                 role="progressbar"
+                                                 style="width: @completionPercentage.ToString("0.##")%;"
+                                                 aria-valuenow="@completionPercentage"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                }
+            }
+
+        </div>
+
+
+
+    </div>
+
+
+</div>
+
+
+<script>
+    $('#addProject').click(function(e){
+
+                e.preventDefault();
+                $.ajax({
+                    url:'/ProjectBoard/_AddProjectForm',
+                    method:'POST',
+                    success:function(e){
+                        $('.full-modal-title').html('Add Product');
+                        $('.full-modal-body').html(e);
+                        $('#modal_full').modal(
+                        {
+                         backdrop: 'static',
+                            keyboard: false
+                        }
+                        );
+                    }
+                })
+            });
+</script>

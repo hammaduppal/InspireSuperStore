@@ -39,6 +39,8 @@
     <Folder Include="Areas\InvoiceArea\Data\" />
     <Folder Include="Areas\InvoiceArea\Models\" />
     <Folder Include="Areas\InvoiceArea\Views\" />
+    <Folder Include="Areas\KanBanSection\Data\" />
+    <Folder Include="Areas\KanBanSection\Models\" />
     <Folder Include="Areas\Notification\Models\" />
     <Folder Include="Areas\Notification\Views\" />
     <Folder Include="Areas\OrderSection\Data\" />
@@ -59,8 +61,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Repositories\MainModels\MainModels\MainModels.csproj" />
+   
     <ProjectReference Include="..\..\MainModels\MainModels\MainModels.csproj" />
+   
     <ProjectReference Include="..\MarketBal\MarketBal.csproj" />
   </ItemGroup>
 

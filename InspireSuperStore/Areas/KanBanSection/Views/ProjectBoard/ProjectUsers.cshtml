@@ -1,0 +1,264 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Project Team Assignment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Limitless Dashboard Card Enhancements */
+    .user-assign-card {
+        border: 1px solid rgba(0, 0, 0, .05);
+        border-radius: 0.25rem;
+        transition: all ease-in-out 0.25s;
+        cursor: pointer;
+    }
+
+        .user-assign-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-color: rgba(92, 107, 192, 0.3); /* Muted Indigo border on hover */
+        }
+
+        /* Selected State Visual Highlight */
+        .user-assign-card.is-assigned {
+            background-color: #f0f4ff !important; /* Extremely subtle tint */
+            border-color: #5c6bc0 !important; /* Limitless Indigo theme theme */
+        }
+
+    /* Custom Custom Switch Size Adjustments */
+    .custom-control-input:checked ~ .custom-control-label::before {
+        border-color: #5c6bc0;
+        background-color: #5c6bc0;
+    }
+
+    /* Avatar Sizing Rules */
+    .user-card-avatar {
+        width: 44px;
+        height: 44px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .avatar-placeholder-md {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background-color: #5c6bc0;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+    }
+</style>
+
+<div class="page-header page-header-light">
+    <div class="page-header-content header-elements-md-inline">
+        <div class="d-flex">
+            <div class="breadcrumb">
+                <a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+                <span class="breadcrumb-item active">Project Management</span>
+                <span class="breadcrumb-item active">Team Assignments</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content">
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body bg-light-alpha p-3">
+            <div class="row align-items-center">
+                <div class="col-md-5">
+                    <label class="font-weight-semibold text-muted small text-uppercase mb-1">Select Workspace Project</label>
+                    <select id="ddl-project-selector" class="form-control select-search font-weight-semibold text-dark" style="height: 40px;">
+                        <option value="">-- Choose a Project Board --</option>
+                        @foreach (var proj in Model.Projects)
+                        {
+                            <option value="@proj.ProjectId">@proj.ProjectName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4 mt-3 mt-md-0">
+                    <label class="font-weight-semibold text-muted small text-uppercase mb-1">Filter Team Members</label>
+                    <div class="form-group-feedback form-group-feedback-left">
+                        <input type="text" id="txt-user-search" class="form-control font-size-sm" placeholder="Search by name, email or username..." style="height: 40px;">
+                        <div class="form-control-feedback">
+                            <i class="icon-search4 text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 text-md-right mt-2 mt-md-0">
+                    <span class="text-muted small d-block">Assigned Members Count</span>
+                    <h3 class="font-weight-bold text-indigo-400 mb-0" id="lbl-assigned-count">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="team-assignment-grid" style="display:none;">
+        @foreach (var user in Model.LoginUsers)
+        {
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-3 user-item-node" data-username="@user.UserName" data-fullname="@user.Person.FirstName @user.Person.LastName">
+                <div class="card user-assign-card bg-white h-100 shadow-sm mb-0 p-3" data-user-id="@user.Id">
+                    <div class="d-flex align-items-center justify-content-between">
+
+                        <div class="d-flex align-items-center col-10 p-0">
+                            <div class="mr-3 flex-shrink-0">
+                                @if (string.IsNullOrEmpty(user.Person.ImageUrl))
+                                {
+                                    var fInit = !string.IsNullOrEmpty(user.Person.FirstName) ? user.Person.FirstName.Substring(0, 1).ToUpper() : "";
+                                    var lInit = !string.IsNullOrEmpty(user.Person.LastName) ? user.Person.LastName.Substring(0, 1).ToUpper() : "";
+                                    var initials = !string.IsNullOrEmpty(fInit + lInit) ? (fInit + lInit) : "?";
+                                    <div class="avatar-placeholder-md">@initials</div>
+                                }
+                                else
+                                {
+                                    <img src="@user.Person.ImageUrl" class="user-card-avatar" alt="Avatar">
+                                }
+                            </div>
+
+                            <div class="text-truncate">
+                                <h6 class="font-weight-semibold text-body mb-0 text-truncate font-size-sm">@user.Person.FirstName @user.Person.LastName</h6>
+                                <span class="text-muted small text-truncate d-block">@@@user.UserName</span>
+                            </div>
+                        </div>
+
+                        <div class="custom-control custom-checkbox flex-shrink-0">
+                            <input type="checkbox" class="custom-control-input chk-user-toggle" id="chk-user-@user.Id" data-user-id="@user.Id">
+                            <label class="custom-control-label" for="chk-user-@user.Id"></label>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="text-center p-5 text-muted bg-light rounded border border-dashed mb-4" id="board-placeholder-watermark">
+        <i class="icon-stack-picture fa-3x text-muted opacity-40 mb-2"></i>
+        <h6 class="font-weight-semibold text-body mb-1">No Active Project View Selected</h6>
+        <p class="small mb-0">Please choose an active project board from the master select dropdown above to evaluate and manipulate team member assignments.</p>
+    </div>
+
+</div>
+<script>
+        $(document).ready(function() {
+
+        // 1. PROJECT DROPDOWN SELECTION CHANGE EVENT
+        $('#ddl-project-selector').change(function() {
+            var projectId = $(this).val();
+
+            if (!projectId) {
+                // No selection -> hide user list card viewport layout framework
+                $('#team-assignment-grid').hide();
+                $('#board-placeholder-watermark').show();
+                return;
+            }
+
+            // Display user assignment grid area
+            $('#board-placeholder-watermark').hide();
+            $('#team-assignment-grid').fadeIn(200);
+
+            // Reset all client checkboxes to unselected defaults first
+            $('.chk-user-toggle').prop('checked', false);
+            $('.user-assign-card').removeClass('is-assigned');
+
+            // Fetch your full project board payload dynamically to see who is already assigned
+            $.ajax({
+                url: '/ProjectBoard/GetProjectById', // Route targeting the API controller method we created earlier
+                type: 'GET',
+                data: { projectId: projectId },
+                success: function(project) {
+                    if (project && project.projectUsers) {
+                        var assignedCount = 0;
+
+                        // 2. Loop through the already assigned users
+                        project.projectUsers.forEach(function(pUser) {
+
+                            // Note: projectUsers list from GetProjectById uses 'userId'
+                            // The checkboxes in your HTML use the ID from Model.LoginUsers which is 'Id'
+                            var targetCheckbox = $('#chk-user-' + pUser.userId);
+
+                            if (targetCheckbox.length > 0) {
+                                targetCheckbox.prop('checked', true);
+                                targetCheckbox.closest('.user-assign-card').addClass('is-assigned');
+                                assignedCount++;
+                            }
+                        });
+
+                        $('#lbl-assigned-count').text(assignedCount);
+                    }
+                }
+            });
+        });
+
+        // 2. CHECKBOX / CARD CLICK TOGGLE INTERACTION HANDLER
+        $(document).on('change', '.chk-user-toggle', function() {
+            var checkbox = $(this);
+            var card = checkbox.closest('.user-assign-card');
+            var userId = checkbox.data('user-id');
+            var projectId = $('#ddl-project-selector').val();
+            var isChecked = checkbox.is(':checked');
+
+            // Toggle background highlight class natively
+            if (isChecked) {
+                card.addClass('is-assigned');
+            } else {
+                card.removeClass('is-assigned');
+            }
+
+            // Recalculate dynamic tracking numbers
+            var totalCount = $('.chk-user-toggle:checked').length;
+            $('#lbl-assigned-count').text(totalCount);
+
+            // Map directly to your endpoints to add or drop users automatically
+            var endpointUrl = isChecked ? '/ProjectBoard/AssignProjectUser' : '/ProjectBoard/RemoveUserFromProject';
+
+            var payload = isChecked
+                ? { TaskId: null, ProjectId: projectId, UserId: userId } // Adapting payload parameters mapping
+                : { ProjectId: projectId, UserId: userId };
+
+            $.ajax({
+                url: endpointUrl,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ ProjectId: projectId, UserId: userId }),
+                success: function(res) {
+                    if(!res.success) {
+                        alert("Error processing tracking operation change state: " + res.message);
+                        // Revert state if backend save fails
+                        checkbox.prop('checked', !isChecked).trigger('change');
+                    }
+                }
+            });
+        });
+
+        // Make clicking anywhere on the card container toggle the custom checkbox input component
+        $(document).on('click', '.user-assign-card', function(e) {
+            if (!$(e.target).is('.custom-control-label, .chk-user-toggle')) {
+                var chk = $(this).find('.chk-user-toggle');
+                chk.prop('checked', !chk.is(':checked')).trigger('change');
+            }
+        });
+
+        // 3. LIVE SEARCH FILTER KEYSTROKES CAPTURE
+        $('#txt-user-search').on('keyup', function() {
+            var searchKey = $(this).val().toLowerCase().trim();
+
+            $('.user-item-node').each(function() {
+                var fullName = $(this).data('fullname').toLowerCase();
+                var userName = $(this).data('username').toLowerCase();
+
+                if (fullName.includes(searchKey) || userName.includes(searchKey)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+    });
+</script>

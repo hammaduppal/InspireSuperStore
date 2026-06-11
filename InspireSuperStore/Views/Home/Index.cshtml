@@ -1,563 +1,575 @@
 ﻿@using MainModels.DTOModels
 @using MainModels.Util
+@model PagesViewModel
 @{
-	ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home Page";
+    string application = "PM";
 }
 
 
 <div class="page-header page-header-light">
-	<div class="page-header-content header-elements-md-inline">
+    <div class="page-header-content header-elements-md-inline">
 
-		<div class="d-flex">
-			<div class="breadcrumb">
-				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+        <div class="d-flex">
+            <div class="breadcrumb">
+                <a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
 
-			</div>
+            </div>
 
-			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
-			<div class="header-elements d-none">
-				<div id="MessageBox" class="col-lg-12"></div>
-			</div>
-		</div>
-	</div>
+            <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+            <div class="header-elements d-none">
+                <div id="MessageBox" class="col-lg-12"></div>
+            </div>
+        </div>
+    </div>
 
 
 </div>
 
 <div class="content">
 
-	<div class="row">
-		@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin,UserRolesConstants.POSUser) )
-		{
-			<div class="col-1">
-				<a href="/InvoiceManager/CreateInvoice" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/poscounter.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Sale</div>
-					</div>
-				</a>
-			</div>
-			<div class="col-1">
-				<a href="/InvoiceManager/Invoices" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius:10px;">
-						<img src="~/assets/img/icons/invoices.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Invoices</div>
-					</div>
-				</a>
-			</div>
-		}
+    <div class="row">
+        @if (application == "PM")
+        {
+            if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.User))
+            {
+                <div class="col-1">
+                    <a href="/ProjectBoard/Boards" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/kanban.png" alt="KANBAN" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Project Board</div>
+                        </div>
+                    </a>
+                </div>
+            }
+            if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+            {
+                <div class="col-1">
+                    <a href="/ProjectBoard/ProjectUsers" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius:10px;">
+                            <img src="~/assets/img/icons/supplierslist.png" alt="Project Users" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Project Users</div>
+                        </div>
+                    </a>
+                </div>
+            }
+        }
+        else
+        {
+            @if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.POSUser))
+            {
+                <div class="col-1">
+                    <a href="/InvoiceManager/CreateInvoice" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/poscounter.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Sale</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-1">
+                    <a href="/InvoiceManager/Invoices" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius:10px;">
+                            <img src="~/assets/img/icons/invoices.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Invoices</div>
+                        </div>
+                    </a>
+                </div>
+            }
 
-		@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.DataEntry, UserRolesConstants.Product))
-		{
-			<div class="col-1">
-				<a href="/Products/Products" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/inventory.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Inventory</div>
-					</div>
-				</a>
-			</div>
-			<div class="col-1">
-				<a href="/AttributeManager/DCSManager" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/masterdata.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Data</div>
-					</div>
-				</a>
-			</div>
-		}
-	
-		@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Purchase))
-		{
-			<div class="col-1">
-				<a href="/Purchase/AddRequisitionForm" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/purchase.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Purchase</div>
-					</div>
-				</a>
-			</div>
-			<div class="col-1">
-				<a href="/Purchase/GoodReceivedNote" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/grn.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">GRN</div>
-					</div>
-				</a>
-			</div>
+            @if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.DataEntry, UserRolesConstants.Product))
+            {
+                <div class="col-1">
+                    <a href="/Products/Products" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/inventory.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Inventory</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-1">
+                    <a href="/AttributeManager/DCSManager" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/masterdata.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Data</div>
+                        </div>
+                    </a>
+                </div>
+            }
 
-		}
+            @if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Purchase))
+            {
+                <div class="col-1">
+                    <a href="/Purchase/AddRequisitionForm" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/purchase.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Purchase</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-1">
+                    <a href="/Purchase/GoodReceivedNote" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/grn.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">GRN</div>
+                        </div>
+                    </a>
+                </div>
 
-		@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin) || CheckPermissions.HasAnyRole(UserRolesConstants.Purchase))
-		{
-			<div class="col-1">
-				<a href="/Supplier/Suppliers" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/supplierslist.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Suppliers</div>
-					</div>
-				</a>
-			</div>
-			
-		}
-		@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
-		{
-			<div class="col-1">
-				<a href="/collection/collections" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/colection.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Collection</div>
-					</div>
-				</a>
-			</div>
-		
-			<div class="col-1">
-				<a href="/AdminPanel/LoginUser" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/loginusers.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Users</div>
-					</div>
-				</a>
-			</div>
-		}
+            }
 
+            @if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin) || CheckPermissions.HasAnyRole(UserRolesConstants.Purchase))
+            {
+                <div class="col-1">
+                    <a href="/Supplier/Suppliers" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/supplierslist.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Suppliers</div>
+                        </div>
+                    </a>
+                </div>
 
-		@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin,UserRolesConstants.Accounts))
-		{
-			<div class="col-1">
-				<a href="/Accounting/ChartOfAccounts" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/coa.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">COA</div>
-					</div>
-				</a>
-			</div>
-			<div class="col-1">
-				<a href="/Accounting/JournalEntries" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/journalentry.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Journals</div>
-					</div>
-				</a>
-			</div>
-			<div class="col-1">
-				<a href="/Accounting/Ledger" class="text-Accounting/Ledger-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/ledgers.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Ledgers</div>
-					</div>
-				</a>
-			</div>
-			<div class="col-1">
-				<a href="/Accounting/Receivables" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/receivable.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Rcvable</div>
-					</div>
-				</a>
-			</div>
-			<div class="col-1">
-				<a href="/Accounting/Payables" class="text-decoration-none">
-					<div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
-						<img src="~/assets/img/icons/payables.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
-						<div class="small text-dark fw-semibold">Payables</div>
-					</div>
-				</a>
-			</div>
-		}
+            }
+            @if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+            {
+                <div class="col-1">
+                    <a href="/collection/collections" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/colection.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Collection</div>
+                        </div>
+                    </a>
+                </div>
 
-		
+                <div class="col-1">
+                    <a href="/AdminPanel/LoginUser" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/loginusers.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Users</div>
+                        </div>
+                    </a>
+                </div>
+            }
 
 
+            @if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.Accounts))
+            {
+                <div class="col-1">
+                    <a href="/Accounting/ChartOfAccounts" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/coa.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">COA</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-1">
+                    <a href="/Accounting/JournalEntries" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/journalentry.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Journals</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-1">
+                    <a href="/Accounting/Ledger" class="text-Accounting/Ledger-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/ledgers.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Ledgers</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-1">
+                    <a href="/Accounting/Receivables" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/receivable.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Rcvable</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-1">
+                    <a href="/Accounting/Payables" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius: 10px;">
+                            <img src="~/assets/img/icons/payables.png" alt="PosCounter" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Payables</div>
+                        </div>
+                    </a>
+                </div>
+            }
 
-	</div>
+
+        }
 
 
+    </div>
+    @if (application == "PM")
+    {
+        if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+        {
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white header-elements-inline pb-2">
+                            <h5 class="card-title font-weight-bold text-dark"><i class="icon-stack2 mr-2 text-primary"></i> Project Delivery Matrix</h5>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle mb-0">
+                                <thead class="bg-light font-weight-semibold text-muted small text-uppercase">
+                                    <tr>
+                                        <th>Project Space</th>
+                                        <th class="text-center">Health</th>
+                                        <th class="text-center">Total Tasks</th>
+                                        <th class="text-center">Completed</th>
+                                        <th style="width: 25%;">Progress Burn</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.ProjectReports != null)
+                                    {
+                                        @foreach (var proj in Model.ProjectReports)
+                                        {
+                                            var statusBadge = proj.HealthStatus == "On Track" ? "badge-flat border-success text-success-600" :
+                                            proj.HealthStatus == "At Risk" ? "badge-flat border-danger text-danger-600 animate-pulse" :
+                                                                                                                                                                                                                                                                                                                            "badge-flat border-muted text-muted";
+                                            <tr>
+                                                <td><span class="font-weight-semibold text-body">@proj.ProjectName</span></td>
+                                                <td class="text-center"><span class="badge @statusBadge">@proj.HealthStatus</span></td>
+                                                <td class="text-center font-weight-semibold">@proj.TotalTasks</td>
+                                                <td class="text-center text-success font-weight-semibold">@proj.CompletedTasks</td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress w-100 mr-2 shadow-sm" style="height: 6px; border-radius:3px;">
+                                                            <div class="progress-bar bg-success" style="width: @proj.CompletionPercentage.ToString("0")%;"></div>
+                                                        </div>
+                                                        <span class="small font-weight-bold text-dark">@proj.CompletionPercentage.ToString("0")%</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
 
-	@if (CheckPermissions.HasAnyRole(UserRolesConstants.SuperAdmin))
-	{
-		<div class="row">
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-teal-300 has-bg-image shadow-3">
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalOrganizations</h3>
-							<span class="text-uppercase font-size-xs">Total Organizations</span>
-						</div>
-						<a href="/AdminPanel/Organizations" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-office icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-				</div>
-			</div>
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-blue-400 has-bg-image shadow-3">
-
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalBranches</h3>
-							<span class="text-uppercase font-size-xs">Total Branches</span>
-						</div>
-						<a href="/AdminPanel/Branches" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-home7  icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-
-
-				</div>
-			</div>
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-danger-400 has-bg-image shadow-3">
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalUsers</h3>
-							<span class="text-uppercase font-size-xs">Total Users</span>
-						</div>
-						<a href="/AdminPanel/LoginUser" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-users  icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-				</div>
-			</div>
-
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-brown has-bg-image shadow-3">
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0"></h3>
-							<span class="text-uppercase font-size-xs">System Prefrences</span>
-						</div>
-						<a href="/AdminPanel/SystemPrefrences" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-gear  icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-				</div>
-			</div>
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-blue-800 has-bg-image shadow-3">
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0"></h3>
-							<span class="text-uppercase font-size-xs">Account Prefrences</span>
-						</div>
-						<a href="/AdminPanel/AccountPrefrences" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-paste2 icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-				</div>
-			</div>
-
-		</div>
-
-	}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
 
 
-	@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
-	{
-		<div class="row">
-	
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-blue-400 has-bg-image shadow-3">
+                </div>
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white header-elements-inline pb-2">
+                            <h5 class="card-title font-weight-bold text-dark"><i class="icon-users4 mr-2 text-indigo"></i> Team Allocation & Workflow Loads</h5>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light font-weight-semibold text-muted small text-uppercase">
+                                    <tr>
+                                        <th>Team Member</th>
+                                        <th class="text-center">Total Tasks</th>
+                                        <th class="text-center">Backlog</th>
+                                        <th class="text-center">In Progress</th>
+                                        <th class="text-center">In Review</th>
+                                        <th class="text-center">QA / Testing</th>
+                                        <th class="text-center">Completed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.UserReports != null)
+                                    {
+                                        @foreach (var user in Model.UserReports)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="mr-2">
+                                                            @if (string.IsNullOrEmpty(user.ImageUrl))
+                                                            {
+                                                                <div class="avatar-placeholder bg-indigo text-white rounded-circle d-flex align-items-center justify-content-center font-weight-bold" style="width:32px; height:32px; font-size:10px;">@user.FullName.Substring(0, 1)</div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <img src="@PagesViewModel.SystemSettings.ContentAPIUrl/@user.ImageUrl" class="rounded-circle" style="width:32px; height:32px; object-fit:cover;" />
+                                                            }
+                                                        </div>
+                                                        <span class="font-weight-semibold text-body">@user.FullName</span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center font-weight-bold text-dark font-size-sm">@user.TotalAssigned</td>
+                                                <td class="text-center"><span class="badge badge-light badge-striped text-muted font-weight-semibold px-2">@user.BacklogCount</span></td>
+                                                <td class="text-center"><span class="badge badge-primary font-weight-semibold px-2">@user.InProgressCount</span></td>
+                                                <td class="text-center"><span class="badge badge-warning font-weight-semibold px-2">@user.ReviewCount</span></td>
+                                                <td class="text-center"><span class="badge badge-warning font-weight-semibold px-2">@user.QACount</span></td>
 
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalProducts</h3>
-							<span class="text-uppercase font-size-xs">Total Products</span>
-						</div>
-						<a href="/Products/Products" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-cube2 icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-
-
-				</div>
-			</div>
-			
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-danger-400 has-bg-image shadow-3">
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
-							<span class="text-uppercase font-size-xs">Total Variants</span>
-						</div>
-						<a href="/Products/Products" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-bag icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-				</div>
-			</div>
-
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-brown has-bg-image shadow-3">
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">0</h3>
-							<span class="text-uppercase font-size-xs">Total Categories</span>
-						</div>
-						<a href="/AttributeManager/DCSManager" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-bag icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-				</div>
-			</div>
-		
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-blue-800 has-bg-image shadow-3">
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">0</h3>
-							<span class="text-uppercase font-size-xs">Total Suppliers</span>
-						</div>
-						<a href="/Supplier/Suppliers" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-bag icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-				</div>
-			</div>
-
-		</div>
-
-	}
-
-	@if (CheckPermissions.HasAnyRole(UserRolesConstants.POSUser,UserRolesConstants.DataEntry))
-	{
-		<div class="row">
-
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-blue-400 has-bg-image shadow-3">
-
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
-							<span class="text-uppercase font-size-xs">Total Invoices</span>
-						</div>
-						<a href="/InvoiceManager/Invoices" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-cube2 icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
+                                                <td class="text-center"><span class="badge badge-success font-weight-semibold px-2">@user.CompletedCount</span></td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
 
-				</div>
-			</div>
-
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-danger-400 has-bg-image shadow-3">
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
-							<span class="text-uppercase font-size-xs">Total Variants</span>
-						</div>
-						<a href="/Products/Products" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-bag icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-				</div>
-			</div>
-
-		
-		</div>
-
-	}
-	
-	@if (CheckPermissions.HasAnyRole(UserRolesConstants.Accounts, UserRolesConstants.Purchase))
-	{
-		<div class="row">
-
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-blue-400 has-bg-image shadow-3">
-
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
-							<span class="text-uppercase font-size-xs">Total Invoices</span>
-						</div>
-						<a href="/Purchase/Requisitions" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-cube2 icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
+                </div>
 
 
-				</div>
-			</div>
 
-			<div class="col-sm-4 col-xl-3">
-				<div class="card card-body bg-danger-400 has-bg-image shadow-3">
-					<div class="media">
-						<div class="media-body">
-							<h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
-							<span class="text-uppercase font-size-xs">Total Variants</span>
-						</div>
-						<a href="/Accounting/JournalEntries" class="text-white">
-							<div class="ml-3 align-self-center">
-								<i class="icon-bag icon-3x opacity-75"></i>
-							</div>
-						</a>
-					</div>
-				</div>
-			</div>
+            </div>
+
+        }
+
+    }
+    else
+    {
+        @if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+        {
+            <div class="row">
+
+                <div class="col-sm-4 col-xl-3">
+                    <div class="card card-body bg-blue-400 has-bg-image shadow-3">
+
+                        <div class="media">
+                            <div class="media-body">
+                                <h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalProducts</h3>
+                                <span class="text-uppercase font-size-xs">Total Products</span>
+                            </div>
+                            <a href="/Products/Products" class="text-white">
+                                <div class="ml-3 align-self-center">
+                                    <i class="icon-cube2 icon-3x opacity-75"></i>
+                                </div>
+                            </a>
+                        </div>
 
 
-		</div>
+                    </div>
+                </div>
 
-	}
+                <div class="col-sm-4 col-xl-3">
+                    <div class="card card-body bg-danger-400 has-bg-image shadow-3">
+                        <div class="media">
+                            <div class="media-body">
+                                <h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
+                                <span class="text-uppercase font-size-xs">Total Variants</span>
+                            </div>
+                            <a href="/Products/Products" class="text-white">
+                                <div class="ml-3 align-self-center">
+                                    <i class="icon-bag icon-3x opacity-75"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-	
-	@if (CheckPermissions.HasAnyRole(UserRolesConstants.Accounts, UserRolesConstants.Purchase,UserRolesConstants.Admin))
-	{
-	<div class="row">
-		<div class="col-md-9">
+                <div class="col-sm-4 col-xl-3">
+                    <div class="card card-body bg-brown has-bg-image shadow-3">
+                        <div class="media">
+                            <div class="media-body">
+                                <h3 class="mb-0">0</h3>
+                                <span class="text-uppercase font-size-xs">Total Categories</span>
+                            </div>
+                            <a href="/AttributeManager/DCSManager" class="text-white">
+                                <div class="ml-3 align-self-center">
+                                    <i class="icon-bag icon-3x opacity-75"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-				<div class="row">
-					<div class="col-md-6">
-						<div class="card w-100">
-							<div class="card-header header-elements-inline">
-								<h5 class="card-title">Monthly Sale Summary</h5>
-								<div class="header-elements">
-									<div class="list-icons">
-									</div>
-								</div>
-							</div>
+                <div class="col-sm-4 col-xl-3">
+                    <div class="card card-body bg-blue-800 has-bg-image shadow-3">
+                        <div class="media">
+                            <div class="media-body">
+                                <h3 class="mb-0">0</h3>
+                                <span class="text-uppercase font-size-xs">Total Suppliers</span>
+                            </div>
+                            <a href="/Supplier/Suppliers" class="text-white">
+                                <div class="ml-3 align-self-center">
+                                    <i class="icon-bag icon-3x opacity-75"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-							<div class="card-body">
-								<div class="chart-container" style="width: 100%;">
-									<div class="chart" id="c3-axis-tick-rotation" style="width:100%; min-height:300px;"></div>
-								</div>
-							</div>
-						</div>
-					</div>
+            </div>
 
-					<div class="col-md-6">
-						<div class="card w-100">
-							<div class="card-header header-elements-inline">
-								<h5 class="card-title">Sales & Profit Summary</h5>
-								<div class="header-elements">
-									<div class="list-icons">
-									</div>
-								</div>
-							</div>
+        }
 
-							<div class="card-body">
-								<div class="chart-container" style="width: 100%;">
-									<div class="chart" id="c3-axis-labels" style="width:100%; min-height:300px;"></div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-		</div>
-		<div class="col-md-3">
-				<!-- Daily sales -->
-				<div class="card">
-					<div class="card-header header-elements-inline">
-						<h6 class="card-title">Low Stock Item Alert</h6>
-						@* <div class="header-elements">
-							<span class="font-weight-bold text-danger-600 ml-2">$4,378</span>
-							<div class="list-icons ml-3">
-								<div class="list-icons-item dropdown">
-									<a href="#" class="list-icons-item dropdown-toggle" data-toggle="dropdown"><i class="icon-cog3"></i></a>
-									<div class="dropdown-menu">
-										<a href="#" class="dropdown-item"><i class="icon-sync"></i> Update data</a>
-										<a href="#" class="dropdown-item"><i class="icon-list-unordered"></i> Detailed log</a>
-										<a href="#" class="dropdown-item"><i class="icon-pie5"></i> Statistics</a>
-										<div class="dropdown-divider"></div>
-										<a href="#" class="dropdown-item"><i class="icon-cross3"></i> Clear list</a>
-									</div>
-								</div>
-							</div>
-						</div> *@
-					</div>
 
-					<div class="card-body">
-						<div class="chart" id="sales-heatmap"></div>
-					</div>
+        @if (CheckPermissions.HasAnyRole(UserRolesConstants.POSUser, UserRolesConstants.DataEntry))
+        {
+            <div class="row">
 
-					<div class="table-responsive">
-						<table class="table text-nowrap">
-							<thead>
-								<tr>
-									<th class="w-100">Item</th>
-									<th>Qty</th>
-									<th>Select</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td colspan="3">
-										<span>Comming Soon</span>
-									</td>
-								</tr>
+                <div class="col-sm-4 col-xl-3">
+                    <div class="card card-body bg-blue-400 has-bg-image shadow-3">
 
-						
-							</tbody>
-						</table>
-					</div>
-				</div>
-				<!-- /daily sales -->
+                        <div class="media">
+                            <div class="media-body">
+                                <h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
+                                <span class="text-uppercase font-size-xs">Total Invoices</span>
+                            </div>
+                            <a href="/InvoiceManager/Invoices" class="text-white">
+                                <div class="ml-3 align-self-center">
+                                    <i class="icon-cube2 icon-3x opacity-75"></i>
+                                </div>
+                            </a>
+                        </div>
 
-		</div>
-	</div>
-	@* 	<div class="row">
-			<div class="col-md-6">
-				<div class="card">
-					<div class="card-header header-elements-inline">
-						<h5 class="card-title">Basic pie chart</h5>
-					
-					</div>
 
-					<div class="card-body">
-						<div class="chart-container text-center">
-							<div class="d-inline-block" id="c3-pie-chart"></div>
-						</div>
-					</div>
-				</div>
-			</div>
+                    </div>
+                </div>
 
-			<div class="col-md-6">
-				<div class="card">
-					<div class="card-header header-elements-inline">
-						<h5 class="card-title">Basic donut chart</h5>
-						
-					</div>
+                <div class="col-sm-4 col-xl-3">
+                    <div class="card card-body bg-danger-400 has-bg-image shadow-3">
+                        <div class="media">
+                            <div class="media-body">
+                                <h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
+                                <span class="text-uppercase font-size-xs">Total Variants</span>
+                            </div>
+                            <a href="/Products/Products" class="text-white">
+                                <div class="ml-3 align-self-center">
+                                    <i class="icon-bag icon-3x opacity-75"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-					<div class="card-body">
-						<div class="chart-container text-center">
-							<div class="d-inline-block" id="c3-donut-chart"></div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	 *@
-		<!-- /pies -->
-		
 
-	}
-	
+            </div>
+
+        }
+
+        @if (CheckPermissions.HasAnyRole(UserRolesConstants.Accounts, UserRolesConstants.Purchase))
+        {
+            <div class="row">
+
+                <div class="col-sm-4 col-xl-3">
+                    <div class="card card-body bg-blue-400 has-bg-image shadow-3">
+
+                        <div class="media">
+                            <div class="media-body">
+                                <h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
+                                <span class="text-uppercase font-size-xs">Total Invoices</span>
+                            </div>
+                            <a href="/Purchase/Requisitions" class="text-white">
+                                <div class="ml-3 align-self-center">
+                                    <i class="icon-cube2 icon-3x opacity-75"></i>
+                                </div>
+                            </a>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <div class="col-sm-4 col-xl-3">
+                    <div class="card card-body bg-danger-400 has-bg-image shadow-3">
+                        <div class="media">
+                            <div class="media-body">
+                                <h3 class="mb-0">@PagesViewModel.DashBoardSetting.TotalVariants</h3>
+                                <span class="text-uppercase font-size-xs">Total Variants</span>
+                            </div>
+                            <a href="/Accounting/JournalEntries" class="text-white">
+                                <div class="ml-3 align-self-center">
+                                    <i class="icon-bag icon-3x opacity-75"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+        }
+
+
+        @if (CheckPermissions.HasAnyRole(UserRolesConstants.Accounts, UserRolesConstants.Purchase, UserRolesConstants.Admin))
+        {
+            <div class="row">
+                <div class="col-md-9">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card w-100">
+                                <div class="card-header header-elements-inline">
+                                    <h5 class="card-title">Monthly Sale Summary</h5>
+                                    <div class="header-elements">
+                                        <div class="list-icons">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-body">
+                                    <div class="chart-container" style="width: 100%;">
+                                        <div class="chart" id="c3-axis-tick-rotation" style="width:100%; min-height:300px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card w-100">
+                                <div class="card-header header-elements-inline">
+                                    <h5 class="card-title">Sales & Profit Summary</h5>
+                                    <div class="header-elements">
+                                        <div class="list-icons">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-body">
+                                    <div class="chart-container" style="width: 100%;">
+                                        <div class="chart" id="c3-axis-labels" style="width:100%; min-height:300px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <!-- Daily sales -->
+                    <div class="card">
+                        <div class="card-header header-elements-inline">
+                            <h6 class="card-title">Low Stock Item Alert</h6>
+
+                        </div>
+
+                        <div class="card-body">
+                            <div class="chart" id="sales-heatmap"></div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table text-nowrap">
+                                <thead>
+                                    <tr>
+                                        <th class="w-100">Item</th>
+                                        <th>Qty</th>
+                                        <th>Select</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="3">
+                                            <span>Comming Soon</span>
+                                        </td>
+                                    </tr>
+
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- /daily sales -->
+
+                </div>
+            </div>
+
+        }
+    }
+
+
 </div>
 
 <!-- /content area -->
