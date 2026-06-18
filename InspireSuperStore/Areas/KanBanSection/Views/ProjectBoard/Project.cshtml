@@ -373,6 +373,7 @@
                 var taskId = $(this).attr('data-taskId');
               var result = await  Utility.RequestAjax('/ProjectBoard/_EditTask?taskId='+taskId);
               $('.full-modal-body').html(result);
+                  $('.full-modal-title').html('Edit Task');
               $('#modal_full').modal();
             });
             // $('.editTask').on('click',async function(e){

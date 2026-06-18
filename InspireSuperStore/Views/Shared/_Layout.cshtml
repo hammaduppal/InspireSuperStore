@@ -50,12 +50,12 @@
 		.build();
 
 		connection.on("ReceiveNotification", function (messageJson) {
-			debugger
 			var message = JSON.parse(messageJson);
 			renderNotification(message, true); 
-
+			debugger
+			var param = JSON.parse(message.Params);
 					   playalarmnewOrder();
-			Utility.successMessage('New Order Recieved');
+			Utility.successMessage(param.Title);
 		});
 		function renderNotification(message, prepend = false) {
 			debugger;
@@ -67,8 +67,10 @@
 			}
 
 			var createdAt = new Date(message.CreatedAt);
-
-			var li = `
+			var li ='';
+			if(message.otificationTypeId===1)
+			{
+				li = `
 				<li class="media">
 					<div class="mr-3">
 						<a href="/OrderManager/Order/${params.OrderId ?? ''}"
@@ -92,6 +94,34 @@
 					</div>
 				</li>
 			`;
+			}
+			else{
+				li = `
+				<li class="media">
+					<div class="mr-3">
+						<a href="/OrderManager/Order/${params.OrderId ?? ''}"
+						   class="btn bg-purple-300 rounded-round btn-icon">
+							<i class="icon-truck"></i>
+						</a>
+					</div>
+					<div class="media-body">
+						<div>
+							<strong>${message.GroupName}</strong> – ${message.Message ?? "New notification"}
+						</div>
+						<div class="text-muted font-size-sm">
+							${params.OrderNumber ?? "Order"} | ${params.CustomerName ?? ""}
+						</div>
+						<div class="font-size-sm text-muted mt-1">
+							${createdAt.toLocaleString("en-GB", {
+								day: "2-digit", month: "short", year: "numeric",
+								hour: "2-digit", minute: "2-digit"
+							})}
+						</div>
+					</div>
+				</li>
+			`;
+			}
+		
 
 			var $list = $(".notificationList");
 

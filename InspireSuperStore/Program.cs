@@ -1,7 +1,10 @@
+using Hangfire;
+using Hangfire.SqlServer;
 using InspireSuperStore.Areas.Notification.Data;
 using InspireSuperStore.Models;
 using MainModels.Models;
 using MainModels.Util;
+using MarketBal.Repository.SystemJOBS;
 using MarketBal.Repository.SystemRP;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.SignalR;
@@ -28,6 +31,23 @@ builder.Services.AddDbContext<OneDb>(option =>
     option.UseSqlServer(builder.Configuration.GetConnectionString("MarketDB"))
     ;
 });
+
+string hangfireConnectionString = builder.Configuration.GetConnectionString("HangfireConnection");
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(hangfireConnectionString, new SqlServerStorageOptions
+    {
+        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+        QueuePollInterval = TimeSpan.FromSeconds(15),
+        UseRecommendedIsolationLevel = true,
+        DisableGlobalLocks = true // Highly recommended for performance
+    }));
+builder.Services.AddHangfireServer();
+
+
 var cookieScheme = CookieAuthenticationDefaults.AuthenticationScheme + builder.Configuration.GetValue<string>("SystemSettings:CookieName");
 builder.Services.AddHttpContextAccessor();
 
@@ -103,6 +123,22 @@ app.UseAuthorization();
 AppDataUtility.Configure(app.Services.GetRequiredService<IHttpContextAccessor>());
 app.UseSession();
 app.UseMiddleware<SessionCheckMiddleware>();
+app.UseHangfireDashboard();
+
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+
+    recurringJobManager.AddOrUpdate<ProjectCronJobs>(
+        "project-email-sender",               // Unique Identifier for the job
+        job => job.SendEmail(),               // The method execution loop
+        Cron.Minutely()                       // Fires every minute to check and process 2 items
+    );
+}
+
+
+
+
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllerRoute(

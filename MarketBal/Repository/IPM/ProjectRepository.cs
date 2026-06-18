@@ -316,46 +316,45 @@ namespace MarketBal.Repository.IPM
 
         public async Task<List<UserWorkloadReportVM>> GetUserWiseReportAsync()
         {
-            return await _onedb.LoginUsers
+            // 1. Fetch real team member workload breakdowns
+            var userReports = await _onedb.LoginUsers
                 .Where(u => u.IsActive == true && u.ProjectUsers.Any(pu => pu.IsActive == true && pu.ProjectId != Guid.Empty))
                 .Select(u => new UserWorkloadReportVM
                 {
                     UserId = u.Id,
                     FullName = (u.Person.FirstName ?? "") + " " + (u.Person.LastName ?? ""),
                     ImageUrl = u.Person.ImageUrl,
+                    IsUnassignedQueue = false,
 
-                    // 1. Backlog Column
-                    BacklogCount = _onedb.ProjectTasks
-                        .Count(t => t.IsDeleted == false &&
-                            t.TaskAssignedUsers.Any(tau => tau.UserId == u.Id) &&
-                            t.Column.ColumnName.ToLower() == "backlog"),
-
-                    // 2. In Progress Column
-                    InProgressCount = _onedb.ProjectTasks
-                        .Count(t => t.IsDeleted == false &&
-                            t.TaskAssignedUsers.Any(tau => tau.UserId == u.Id) &&
-                            t.Column.ColumnName.ToLower() == "in progress"),
-
-                    // 3. In Review Column
-                    ReviewCount = _onedb.ProjectTasks
-                        .Count(t => t.IsDeleted == false &&
-                            t.TaskAssignedUsers.Any(tau => tau.UserId == u.Id) &&
-                            t.Column.ColumnName.ToLower() == "in review"),
-
-                    // 4. QA / Testing Columns (Grouping both into your Quality Control metric)
-                    QACount = _onedb.ProjectTasks
-                        .Count(t => t.IsDeleted == false &&
-                            t.TaskAssignedUsers.Any(tau => tau.UserId == u.Id) &&
-                            (t.Column.ColumnName.ToLower() == "qa" || t.Column.ColumnName.ToLower() == "testing")),
-
-                    // 5. Completed Column
-                    CompletedCount = _onedb.ProjectTasks
-                        .Count(t => t.IsDeleted == false &&
-                            t.TaskAssignedUsers.Any(tau => tau.UserId == u.Id) &&
-                            t.Column.ColumnName.ToLower() == "completed")
+                    BacklogCount = _onedb.ProjectTasks.Count(t => t.IsDeleted == false && t.TaskAssignedUsers.Any(tau => tau.UserId == u.Id) && t.Column.ColumnName.ToLower() == "backlog"),
+                    InProgressCount = _onedb.ProjectTasks.Count(t => t.IsDeleted == false && t.TaskAssignedUsers.Any(tau => tau.UserId == u.Id) && t.Column.ColumnName.ToLower() == "in progress"),
+                    ReviewCount = _onedb.ProjectTasks.Count(t => t.IsDeleted == false && t.TaskAssignedUsers.Any(tau => tau.UserId == u.Id) && t.Column.ColumnName.ToLower() == "in review"),
+                    QACount = _onedb.ProjectTasks.Count(t => t.IsDeleted == false && t.TaskAssignedUsers.Any(tau => tau.UserId == u.Id) && (t.Column.ColumnName.ToLower() == "qa" || t.Column.ColumnName.ToLower() == "testing")),
+                    CompletedCount = _onedb.ProjectTasks.Count(t => t.IsDeleted == false && t.TaskAssignedUsers.Any(tau => tau.UserId == u.Id) && t.Column.ColumnName.ToLower() == "completed")
                 })
                 .ToListAsync();
+
+            // 2. Calculate tasks across the pipeline that completely lack user assignments
+            var unassignedRow = new UserWorkloadReportVM
+            {
+                UserId = 0,
+                FullName = "Unassigned Tasks Pool",
+                ImageUrl = null,
+                IsUnassignedQueue = true,
+
+                // Check if TaskAssignedUsers is completely empty using !Any()
+                BacklogCount = await _onedb.ProjectTasks.CountAsync(t => t.IsDeleted == false && !t.TaskAssignedUsers.Any() && t.Column.ColumnName.ToLower() == "backlog"),
+                InProgressCount = await _onedb.ProjectTasks.CountAsync(t => t.IsDeleted == false && !t.TaskAssignedUsers.Any() && t.Column.ColumnName.ToLower() == "in progress"),
+                ReviewCount = await _onedb.ProjectTasks.CountAsync(t => t.IsDeleted == false && !t.TaskAssignedUsers.Any() && t.Column.ColumnName.ToLower() == "in review"),
+                QACount = await _onedb.ProjectTasks.CountAsync(t => t.IsDeleted == false && !t.TaskAssignedUsers.Any() && (t.Column.ColumnName.ToLower() == "qa" || t.Column.ColumnName.ToLower() == "testing")),
+                CompletedCount = await _onedb.ProjectTasks.CountAsync(t => t.IsDeleted == false && !t.TaskAssignedUsers.Any() && t.Column.ColumnName.ToLower() == "completed")
+            };
+
+            // Append the row cleanly to the bottom of the list
+            userReports.Add(unassignedRow);
+            return userReports;
         }
+      
 
     }
 

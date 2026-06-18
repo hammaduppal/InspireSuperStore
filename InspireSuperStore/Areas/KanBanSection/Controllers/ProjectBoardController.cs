@@ -1,4 +1,5 @@
-﻿using MainModels.DTOModels;
+﻿using InspireSuperStore.Areas.Notification.Data;
+using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository;
@@ -6,7 +7,9 @@ using MarketBal.Repository.Account;
 using MarketBal.Repository.IPM;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace InspireSuperStore.Areas.KanBanSection.Controllers
 {
@@ -21,13 +24,17 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
         private readonly FileRepository _file;
         private readonly PagesViewModel vm = new PagesViewModel();
         private readonly OneDb _oneDb;
-        public ProjectBoardController(IConfiguration config, OneDb oneDb)
+        private readonly NotificationService _notificationServices;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        public ProjectBoardController(IConfiguration config, OneDb oneDb, NotificationService notificationServices, IHubContext<NotificationHub> hubContext)
         {
             _oneDb = oneDb;
             _config = config;
             _file = new FileRepository();
             _adminPanel = new AdminPanelRepository(_config, _oneDb);
             _project = new ProjectRepository(_config, _oneDb);
+            _notificationServices = notificationServices;
+            _hubContext = hubContext;
         }
 
         #region BoardSectionWhichisProject
@@ -94,6 +101,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                     existingAssignment.CreatedOn = DateTime.UtcNow; // Optional: Reset the timestamp trace window
 
                     _oneDb.ProjectUsers.Update(existingAssignment);
+
                 }
                 else
                 {
@@ -110,7 +118,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
 
                     _oneDb.ProjectUsers.Add(assignment);
                 }
-
+                await AddProjectEmailNotification(model.ProjectId, model.UserId);
                 // 3. Persist changes to SQL Server
                 await _oneDb.SaveChangesAsync();
                 return Json(new { success = true });
@@ -120,8 +128,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-
-
+     
         [HttpGet]
         public async Task<IActionResult> GetProjectUsers(Guid taskId)
         {
@@ -156,6 +163,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
             }
         }
 
+        //I think not in use need to check this
         public async Task<IActionResult> AddUserByEmail([FromBody] AddUserByEmailModel model)
         {
             try
@@ -381,6 +389,8 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                 };
 
                 _oneDb.ProjectTasks.Add(task);
+                await NewTaskNotification(model.ColumnId, model.Title);
+
                 await _oneDb.SaveChangesAsync();
 
                 return Json(new { success = true, taskId = newId });
@@ -390,8 +400,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-
-
+     
         // 4. MOVE & SORT TASKS (Vertical Drag)
         [HttpPost]
         public async Task<IActionResult> SortTasks([FromBody] SortTasksModel model)
@@ -463,6 +472,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
             var task = await _oneDb.ProjectTasks.Where(x => x.TaskId == request.TaskId).FirstOrDefaultAsync();
             task.Description = request.Description;
             _oneDb.ProjectTasks.Update(task);
+            await GeneralTaskNotification(request.TaskId);
             await _oneDb.SaveChangesAsync();
             return Json(new { statusCode = "200", message = "Successfully Update" });
         }
@@ -527,6 +537,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                 }
 
                 task.IsModified = true;
+                await GeneralTaskNotification(model.TaskId);
                 await _oneDb.SaveChangesAsync();
 
                 return Json(new { success = true });
@@ -642,7 +653,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                 // Apply mutations fields configurations updates safely
                 task.Title = model.Title.Trim();
                 task.IsModified = true;
-
+                await GeneralTaskNotification(model.TaskId);
                 await _oneDb.SaveChangesAsync();
                 return Json(new { success = true });
             }
@@ -797,6 +808,169 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
             }
         }
 
+
+        private async Task<bool> AddProjectEmailNotification(Guid projectId, int currentUserId)
+        {
+            List<ProjectNotificationEmail> emails = new List<ProjectNotificationEmail>();
+            var selectedProject = await _oneDb.Projects.Where(x => x.ProjectId == projectId).Include(x => x.ProjectUsers).FirstOrDefaultAsync();
+
+            foreach (var item in selectedProject.ProjectUsers)
+            {
+                if (item.UserId != currentUserId)
+                {
+                    emails.Add(new ProjectNotificationEmail
+                    {
+                        ProjectNotificationEmailId = Guid.NewGuid(),
+                        UserId = item.UserId,
+                        IsRead = false,
+                        IsSent = false,
+                        CreatedOn = DateTime.UtcNow,
+                        ProjectEmailNotificationType = (int)ProjectNotificationType.SomeOneAddedToProject,
+                        MessageJson = JsonConvert.SerializeObject(new AddedToProjectData
+                        {
+                            ProjectName = selectedProject.ProjectName,
+                            DirectBoardUrl = $"https://app.inspirenation.us/ProjectBoard/Project?projectId={selectedProject.ProjectId}" 
+                        })
+                    });
+                }
+                var orderparam = new NewProjectTasksNotification
+                {
+                    Title = "New Task Generated"
+                };
+                var Notification = new NotificationsDTO
+                {
+                    CreatedAt = DateTime.Now,
+                    GroupName = "Projects",
+                    IsRead = false,
+                    Params = JsonConvert.SerializeObject(orderparam),
+                    UserId = AppDataUtility.SessionUser.Id,
+                    NotificationTypeId = 2
+                };
+                await _notificationServices.SendToUser(item.UserId.ToString(), JsonConvert.SerializeObject(Notification));
+
+            }
+            emails.Add(new ProjectNotificationEmail
+            {
+                ProjectNotificationEmailId = Guid.NewGuid(),
+                UserId = currentUserId,
+                IsRead = false,
+                IsSent = false,
+                ProjectEmailNotificationType = (int)ProjectNotificationType.YouAreAddedToProject,
+                CreatedOn = DateTime.UtcNow,
+                MessageJson = JsonConvert.SerializeObject(new AddedToProjectData
+                {
+                    ProjectName = selectedProject.ProjectName,
+                    DirectBoardUrl = $"https://app.inspirenation.us/ProjectBoard/Project?projectId={selectedProject.ProjectId}"
+                })
+            });
+            await _oneDb.ProjectNotificationEmails.AddRangeAsync(emails);
+            return true;
+        }
+
+        private async Task<bool> NewTaskNotification(Guid columnId, string taskTitle)
+        {
+            List<ProjectNotificationEmail> emails = new List<ProjectNotificationEmail>();
+            var selectedColumn = await _oneDb.ProjectColumns.Where(x => x.ColumnId == columnId).FirstOrDefaultAsync();
+            var selectedProject = await _oneDb.Projects.Where(x => x.ProjectId == selectedColumn.ProjectId).Include(inn => inn.ProjectUsers).FirstOrDefaultAsync();
+
+
+            foreach (var item in selectedProject.ProjectUsers)
+            {
+
+                emails.Add(new ProjectNotificationEmail
+                {
+                    ProjectNotificationEmailId = Guid.NewGuid(),
+                    UserId = item.UserId,
+                    IsRead = false,
+                    IsSent = false,
+                    ProjectEmailNotificationType = (int)ProjectNotificationType.NewTaskCreated,
+                    MessageJson = JsonConvert.SerializeObject(new NewTaskToBoard
+                    {
+                        ActionDate = DateTime.UtcNow,
+                        ProjectId = item.ProjectId.Value,
+                        ProjectName = selectedProject.ProjectName,
+                        TaskName = taskTitle,
+                        ColumnName = selectedColumn.ColumnName,
+                        DirectBoardUrl = $"https://app.inspirenation.us/ProjectBoard/Project?projectId={selectedProject.ProjectId}"
+                    }),
+                    CreatedOn = DateTime.UtcNow,
+                });
+                var orderparam = new NewProjectTasksNotification
+                {
+                    Title = "New Task Generated"
+                };
+                var Notification = new NotificationsDTO
+                {
+                    CreatedAt = DateTime.Now,
+                    GroupName = "Projects",
+                    IsRead = false,
+                    Params = JsonConvert.SerializeObject(orderparam),
+                    UserId = AppDataUtility.SessionUser.Id,
+                    NotificationTypeId = 2
+                };
+                await _notificationServices.SendToUser(item.UserId.ToString(), JsonConvert.SerializeObject(Notification));
+
+
+            }
+
+            await _oneDb.ProjectNotificationEmails.AddRangeAsync(emails);
+            //_oneDb.SaveChanges();
+            return true;
+        }
+
+        private async Task<bool> GeneralTaskNotification(Guid taskId)
+        {
+            List<ProjectNotificationEmail> emails = new List<ProjectNotificationEmail>();
+            var selectedTask = await _oneDb.ProjectTasks.Where(x => x.TaskId == taskId).Include(inn=>inn.Column).FirstOrDefaultAsync();
+            
+            var selectedProject = await _oneDb.Projects.Where(x => x.ProjectId == selectedTask.Column.ProjectId).Include(inn => inn.ProjectUsers).FirstOrDefaultAsync();
+
+
+            foreach (var item in selectedProject.ProjectUsers)
+            {
+                var users = await _oneDb.LoginUsers.Where(x=>x.Id==item.UserId).Include(p=>p.Person).FirstOrDefaultAsync();
+
+
+                emails.Add(new ProjectNotificationEmail
+                {
+                    ProjectNotificationEmailId = Guid.NewGuid(),
+                    UserId = item.UserId,
+                    IsRead = false,
+                    IsSent = false,
+                    ProjectEmailNotificationType = (int)ProjectNotificationType.GenericTaskChanges,
+                    MessageJson = JsonConvert.SerializeObject(new NewTaskToBoard
+                    {
+                        ActionDate = DateTime.UtcNow,
+                        ProjectId = item.ProjectId.Value,
+                        ProjectName = selectedProject.ProjectName,
+                        TaskName = selectedTask.Title,
+                        DirectBoardUrl = $"https://app.inspirenation.us/ProjectBoard/Project?projectId={selectedProject.ProjectId}"
+                    }),
+                    CreatedOn = DateTime.UtcNow,
+                });
+                var orderparam = new NewProjectTasksNotification
+                {
+                    Title = $"Modification on Task: {selectedTask.Title}"
+                };
+                var Notification = new NotificationsDTO
+                {
+                    CreatedAt = DateTime.Now,
+                    GroupName = "Projects",
+                    IsRead = false,
+                    Params = JsonConvert.SerializeObject(orderparam),
+                    UserId = AppDataUtility.SessionUser.Id,
+                    NotificationTypeId = 2
+                };
+                //await _notificationServices.SendToUser(item.UserId.ToString(), JsonConvert.SerializeObject(Notification));
+
+                await _hubContext.Clients.User(item.User.Person.Email).SendAsync("ReceiveNotification",JsonConvert.SerializeObject(Notification));
+
+            }
+
+            await _oneDb.ProjectNotificationEmails.AddRangeAsync(emails);
+            //_oneDb.SaveChanges();
+            return true;
+        }
 
     }
 

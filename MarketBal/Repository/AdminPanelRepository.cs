@@ -438,7 +438,7 @@ namespace MarketBal.Repository
                 return result;
 
             }
-            catch (Exception e)
+            catch (Exception )
             {
 
                 throw;

@@ -12,6 +12,9 @@
 
   <ItemGroup>
     <PackageReference Include="EPPlus" Version="8.0.8" />
+    <PackageReference Include="Hangfire" Version="1.8.23" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="MimeKit" Version="4.17.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="PuppeteerSharp" Version="10.1.0" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
