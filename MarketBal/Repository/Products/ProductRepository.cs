@@ -22,11 +22,13 @@ namespace MarketBal.Repository.Products
         private readonly OneDb context;
         string baseAPIURL;
         private readonly MemoryStream memoryStream;
-        public ProductRepository(IConfiguration config, OneDb context)
+        private readonly ISessionService _sessionService;
+        public ProductRepository(IConfiguration config, OneDb context, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
+            _sessionService = sessionService;
             baseAPIURL = _config.GetValue<string>("SystemSettings:ContentAPIUrl");
             memoryStream = new MemoryStream();
             this.context = context;
@@ -86,7 +88,7 @@ namespace MarketBal.Repository.Products
     };
 
             var parameters = new DynamicParameters();
-            parameters.Add("OrganizationId", AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId);
+            parameters.Add("OrganizationId", _sessionService.SessionUser.Person.Branch.Organization.OrganizationId);
 
             // Search
             if (!string.IsNullOrWhiteSpace(searchValue))
@@ -181,7 +183,7 @@ namespace MarketBal.Repository.Products
 
         SELECT @NewProductId;
     ";
-                var commonParams = CommonParamHelper.GetCommonParams();
+                var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
                // ProductSlug = $"{ProductSlug}&{commonParams.BranchId.ToString()}";
                 Guid? BrandId = Guid.Empty;
                 if (product.BrandId==Guid.Empty)
@@ -309,7 +311,7 @@ INSERT INTO INV.ProductImages(ProductImageId,ImageUrl,ProductId,IsDeleted, Branc
 
                             select @NewProductId
                             ";
-    var commonParams = CommonParamHelper.GetCommonParams();
+    var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
 
     var param = new
     {
@@ -392,7 +394,7 @@ WHERE pv.ProductId = @ProductId  AND bs.BranchId = @BranchId
     var param = new
     {
         ProductId,
-        AppDataUtility.SessionUser.Person.Branch.BranchId
+        _sessionService.SessionUser.Person.Branch.BranchId
     };
     var result = await _db.GetDataListWithQueryAndParam<ProductVariantVM>(query, param);
     foreach (var variant in result)
@@ -453,7 +455,7 @@ public async Task<int> AddProductVariantBranch(ProductVariantVM model)
     if (model.BranchId == Guid.Empty)
         return 0;
 
-    var masterBranchId = AppDataUtility.SessionUser.Person.Branch.BranchId;
+    var masterBranchId = _sessionService.SessionUser.Person.Branch.BranchId;
 
     // Skip if the selected branch is master
     if (model.BranchId == masterBranchId)
@@ -521,7 +523,7 @@ public async Task<int> AddProductVariantBranch(ProductVariantVM model)
                 StaffPrice = masterStock.StaffPrice,
                 Cost = masterStock.Cost,
                 Qty = masterStock.Qty,
-                CreatedBy = AppDataUtility.SessionUser.Person.Id
+                CreatedBy = _sessionService.SessionUser.Person.Id
             }
         );
 
@@ -532,7 +534,7 @@ public async Task<int> AddProductVariantBranch(ProductVariantVM model)
 
 public async Task<ProductVariantVM> GetProductVariant(string BarCode)
 {
-    var branchId = AppDataUtility.SessionUser.Person.Branch.BranchId; // Logged-in branch
+    var branchId = _sessionService.SessionUser.Person.Branch.BranchId; // Logged-in branch
 
     string query = @"
         SELECT 
@@ -689,7 +691,7 @@ ORDER BY p.ProductName";
             whereConditions.Add("CAST(bs.RetailPrice AS VARCHAR) LIKE '%' + @priceTerm + '%'");
             param.Add("priceTerm", terms[2]);
         }
-        param.Add("BranchId", AppDataUtility.SessionUser.Person.Branch.BranchId);
+        param.Add("BranchId", _sessionService.SessionUser.Person.Branch.BranchId);
         // Fallback fuzzy search if only one term (no `%`)
         if (terms.Length == 1)
         {
@@ -728,7 +730,7 @@ public class SearchTopProductResult
 public async Task<SearchTopProductResult> ProductsBySubCategories(Guid subCategoryId, bool isPaginated = false, int page = 1, int pageSize = 20)
 {
     var result = new SearchTopProductResult();
-    var branchId = AppDataUtility.SessionUser.Person.Branch.BranchId;
+    var branchId = _sessionService.SessionUser.Person.Branch.BranchId;
     var query =
  from pv in context.ProductVariants
      // make the types match: pv.VariantId (Guid) -> (Guid?) so it equals bs.ProductVariantId (Guid?)
@@ -863,7 +865,7 @@ END
 ";
 
 
-                var commonParams = CommonParamHelper.GetCommonParams();
+                var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
 
                 var param = new
                 {
@@ -977,7 +979,7 @@ public async Task<int> UpdateVariant(UpdateVariantModel model)
     else if (model.DataType == "QuantityPerUnit" || model.DataType == "MinQty" || model.DataType == "MaxQty")
     {
         query = $@"
-                    UPDATE INV.ProductVariants set {model.DataType} = {model.Value} where VariantId = '{model.VariantId}' AND BranchId = '{AppDataUtility.SessionUser.Person.Branch.BranchId}'";
+                    UPDATE INV.ProductVariants set {model.DataType} = {model.Value} where VariantId = '{model.VariantId}' AND BranchId = '{_sessionService.SessionUser.Person.Branch.BranchId}'";
         var allResult = await _db.ExecuteQueryModify(query);
         return allResult;
     }
@@ -985,7 +987,7 @@ public async Task<int> UpdateVariant(UpdateVariantModel model)
     {
                 decimal parsedValue = decimal.Parse(model.Value, NumberStyles.Any, CultureInfo.InvariantCulture);
                 query = $@"
-                    UPDATE INV.BranchStock set {model.DataType} = {parsedValue} where ProductVariantId = '{model.VariantId}' AND BranchId = '{AppDataUtility.SessionUser.Person.Branch.BranchId}'";
+                    UPDATE INV.BranchStock set {model.DataType} = {parsedValue} where ProductVariantId = '{model.VariantId}' AND BranchId = '{_sessionService.SessionUser.Person.Branch.BranchId}'";
         var allResult = await _db.ExecuteQueryModify(query);
         return allResult;
     }

@@ -29,17 +29,19 @@ namespace InspireSuperStore.Areas.Product.Controllers
         private readonly AdminPanelRepository _admin;
         private readonly SystemRepository _system;
         private readonly IDataRepository _datarepo;
-        public ProductsController(IConfiguration config, OneDb oneDb, IDataRepository data)
+        private readonly ISessionService _sessionService;
+        public ProductsController(IConfiguration config, OneDb oneDb, IDataRepository data, ISessionService sessionService)
         {
             this.oneDb = oneDb;
 
             _config = config;
-            _product = new ProductRepository(_config, oneDb);
+            _sessionService = sessionService;
+            _product = new ProductRepository(_config, oneDb, _sessionService);
             _dcs = new DCSRepository(_config);
-            _attrib = new AttributeRepository(_config, oneDb);
-            _file = new FileRepository();
-            _admin = new AdminPanelRepository(_config, oneDb);
-            _system = new SystemRepository(_config, oneDb);
+            _attrib = new AttributeRepository(_config, oneDb, _sessionService);
+            _file = new FileRepository(_sessionService);
+            _admin = new AdminPanelRepository(_config, oneDb, _sessionService);
+            _system = new SystemRepository(_config, oneDb, _sessionService);
             _datarepo = data;
         }
         public async Task<IActionResult> Products()

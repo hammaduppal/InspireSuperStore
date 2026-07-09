@@ -12,20 +12,22 @@ namespace MarketBal.Repository.PurchaseRP
 {
     public class PurchaseRepository
     {
+        private readonly ISessionService _sessionService;
         private readonly IConfiguration _config;
         private readonly DBManager _db;
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly DapperContext _dap;
         private readonly JournalsRepository _journalRepo;
-        public PurchaseRepository(IConfiguration config, OneDb oneDb)
+        public PurchaseRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
+            _sessionService = sessionService;
             _dap = new DapperContext(_config);
-            _journalRepo = new JournalsRepository(_config, oneDb);
+            _journalRepo = new JournalsRepository(_config, oneDb, _sessionService);
         }
 
 
@@ -47,10 +49,10 @@ namespace MarketBal.Repository.PurchaseRP
             try
             {
                 Guid pmId = Guid.NewGuid();
-                var commonParams = CommonParamHelper.GetCommonParams();
+                var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
                 var pm = new PurchaseMaster
                 {
-                    Createdby = int.Parse(CommonParamHelper.GetCommonParams().CreatedBy.ToString()),
+                    Createdby = int.Parse(commonParams.CreatedBy.ToString()),
                     CreatedOn = commonParams.CreatedOn,
                     ModifiedOn = commonParams.ModifiedOn,
                     BranchId = commonParams.BranchId,
@@ -73,7 +75,7 @@ namespace MarketBal.Repository.PurchaseRP
                     pditems.Add(new PurchaseDetail
                     {
                         PurchaseDetailId = guid,
-                        Createdby = int.Parse(CommonParamHelper.GetCommonParams().CreatedBy.ToString()),
+                        Createdby = int.Parse(commonParams.CreatedBy.ToString()),
                         CreatedOn = commonParams.CreatedOn,
                         ModifiedOn = commonParams.ModifiedOn,
                         IsActive = commonParams.IsActive,
@@ -103,7 +105,7 @@ namespace MarketBal.Repository.PurchaseRP
 
 
 
-            var commonParams = CommonParamHelper.GetCommonParams();
+            var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
             Guid pmId = Guid.NewGuid();
 
             // 1️⃣ Create PurchaseMaster

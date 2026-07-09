@@ -29,16 +29,18 @@ namespace InspireSuperStore.Areas.Account.Controllers
         private readonly HumanRespourceRepository _hrm;
         private readonly DeviceRegistrationRepository deviceRegistrationRepository;
         private readonly LicenseService _license;
-        public AccountController(IConfiguration config, OneDb onedb, LicenseService license)
+        private readonly ISessionService _sessionService;
+        public AccountController(IConfiguration config, OneDb onedb, LicenseService license, ISessionService sessionService)
         {
             _config = config;
             _oneDb = onedb;
-            _login = new AccountRepository(_config);
+            _sessionService = sessionService;
+            _login = new AccountRepository(_config, _sessionService);
             _aes = new AESEncryption();
-            _admin = new AdminPanelRepository(_config, _oneDb);
-            _hrm = new HumanRespourceRepository(_config, _oneDb);
+            _admin = new AdminPanelRepository(_config, _oneDb, _sessionService);
+            _hrm = new HumanRespourceRepository(_config, _oneDb, _sessionService);
             notificationRepository = new NotificationRepository(_oneDb);
-            deviceRegistrationRepository = new DeviceRegistrationRepository(_config, _oneDb);
+            deviceRegistrationRepository = new DeviceRegistrationRepository(_config, _oneDb, _sessionService);
             _license = license;
         }
         public async Task<IActionResult> Login(string? returnUrl = null)
@@ -95,16 +97,17 @@ namespace InspireSuperStore.Areas.Account.Controllers
         private async Task<int> LoginHandler(LoginUserVM res)
         {
             res.WelcomeMessage = GreetingHelper.GetGreeting();
-            AppDataUtility.SessionUser = res;
+            _sessionService.SessionUser = res;
+            //AppDataUtility.SessionUser = res;
             string[] rolesnames = res.Roles.Select(x => x.Name).ToArray();
             bool isSuperAdmin = res.Roles.Any(r => r.Id == 1 && r.Name.Equals("superadmin", StringComparison.OrdinalIgnoreCase));
             if (!isSuperAdmin)
             {
-                AppDataUtility.UserNotifications = await notificationRepository.GetGroupNotification(rolesnames);
+                _sessionService.UserNotifications = await notificationRepository.GetGroupNotification(rolesnames);
             }
             else
             {
-                AppDataUtility.UserNotifications = new List<NotificationsDTO>(); // empty list for superadmin
+                _sessionService.UserNotifications = new List<NotificationsDTO>(); 
             }
             return 1;
         }
@@ -250,7 +253,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
             if (res != null)
             {
                 await _login.SigninAsync(res, HttpContext);
-                AppDataUtility.SessionUser = res;
+                _sessionService.SessionUser = res;
                 //if (res.RoleName=="SuperAdmin")
                 //{
                 //    url = "/adminPanel";

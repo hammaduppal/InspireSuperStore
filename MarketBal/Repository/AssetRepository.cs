@@ -1,6 +1,7 @@
 ﻿using MainModels;
 using MainModels.DTOModels;
 using MainModels.Models;
+using MainModels.Util;
 using MarketBal.Repository.Products;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,18 +9,20 @@ namespace MarketBal.Repository
 {
     public class AssetRepository
     {
+        private readonly ISessionService _sessionService;
         private readonly IConfiguration _config;
         private readonly DBManager _db;
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
-        public AssetRepository(IConfiguration config, OneDb oneDb)
+        public AssetRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
+            _sessionService = sessionService;
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config,_onedb);
+            _attrib = new AttributeRepository(_config,_onedb,_sessionService);
         }
         public async Task<List<ServingTableVM>> ServingTables()
         {

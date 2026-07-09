@@ -18,14 +18,18 @@ namespace MarketBal.Repository.OrderRP
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
         private readonly InvoiceRepository _invoiceRepo;
-        public OrderRepository(IConfiguration config, OneDb oneDb)
+        private readonly ISessionService _sessionService;
+        public OrderRepository(IConfiguration config, OneDb oneDb, ISessionService sessionSerivce)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config,_onedb);
-            _invoiceRepo=new InvoiceRepository(_config, _onedb);
+
+            _sessionService = sessionSerivce;
+
+            _attrib = new AttributeRepository(_config, _onedb, _sessionService);
+            _invoiceRepo = new InvoiceRepository(_config, _onedb, _sessionService);
         }
 
         public async Task<List<OrderMasterVM>> GetOrders()
@@ -102,7 +106,7 @@ namespace MarketBal.Repository.OrderRP
             }
 
         }
-        
+
         public async Task<OrderMasterVM> GetOrderById(Guid orderMasterId)
         {
             try
@@ -338,8 +342,8 @@ namespace MarketBal.Repository.OrderRP
                     EmployeeId = order.EmployeeId,
                     CustomerRemarks = order.CustomerRemarks,
                     OfficeRemarks = order.OfficeRemarks,
-                    PaymentStatusId=order.PaymentStatusId.Value,
-                    InvoiceSourceId=order.OrderSourceId,
+                    PaymentStatusId = order.PaymentStatusId.Value,
+                    InvoiceSourceId = order.OrderSourceId,
 
                     InvoiceDetails = order.OrderDetails.Select(d => new InvoiceDetailVM
                     {
@@ -360,13 +364,13 @@ namespace MarketBal.Repository.OrderRP
                 // 3. Call existing SaveInvoice
                 return await _invoiceRepo.SaveInvoice(invoiceModel);
             }
-            catch (Exception )
+            catch (Exception)
             {
 
                 throw;
             }
             // 1. Get the order
-           
+
         }
 
         public async Task<SaveStatusVM> SaveOrder(OrderMasterVM model)
@@ -375,14 +379,14 @@ namespace MarketBal.Repository.OrderRP
             {
                 try
                 {
-                    var commonParams = CommonParamHelper.GetCommonParams();
+                    var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
 
                     // Generate Order Number
                     var lastOrder = await _onedb.OrderMasters
                         .OrderByDescending(i => i.CreatedDate)
                         .FirstOrDefaultAsync();
 
-                    var orderPrefix = AppDataUtility.SystemPreferences.InvoicePrefix ?? "ORD";
+                    var orderPrefix = _sessionService.SystemPreferences.InvoicePrefix ?? "ORD";
                     string newOrderNo = $"{orderPrefix}-001";
 
                     if (lastOrder != null && !string.IsNullOrEmpty(lastOrder.OrderNo))
@@ -417,12 +421,12 @@ namespace MarketBal.Repository.OrderRP
                         DiscountAmount = discount,
                         TaxAmount = totalTax,
                         GrandTotal = grandTotal,
-                        
+
                         PaymentMethodId = model.PaymentMethodId,
                         PaymentStatusId = model.PaymentStatusId ?? 2,
                         ShippingTypeId = model.ShippingTypeId ?? 1,
                         OrderSourceId = model.OrderSourceId ?? (int)AppConstants.InvoiceSource.POS,
-                        OrderStatusId=(int)OrderStatusEnum.Pending,
+                        OrderStatusId = (int)OrderStatusEnum.Pending,
                         CustomerRemarks = model.CustomerRemarks,
                         OfficeRemarks = model.OfficeRemarks,
 
@@ -439,7 +443,7 @@ namespace MarketBal.Repository.OrderRP
                                         ? model.EmployeeId
                                         : null
                     };
-                    
+
                     _onedb.OrderMasters.Add(orderMaster);
                     await _onedb.SaveChangesAsync();
 

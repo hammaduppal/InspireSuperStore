@@ -14,11 +14,13 @@ namespace InspireSuperStore.Areas.ReportingArea.Controllers
         private readonly IConfiguration _config;
         private readonly OneDb _context;
         private readonly ReportRepository _repo;
-        public ReportsController(IConfiguration config, OneDb context)
+        private readonly ISessionService _sessionService;
+        public ReportsController(IConfiguration config, OneDb context, ISessionService sessionService)
         {
             _config = config;
             _context = context;
-            _repo = new ReportRepository(config, context);
+            _sessionService = sessionService;
+            _repo = new ReportRepository(config, context,_sessionService);
         }
         public IActionResult MonthlySaleReport()
         {

@@ -17,21 +17,23 @@ namespace MarketBal.Repository.AccountingRP
         private readonly DapperContext _dap;
         private readonly AccountsReceivableRepository _accountsReceivableRepository;
         private readonly AccountPayableRP _accountPayable;
-        public JournalsRepository(IConfiguration config, OneDb oneDb)
+        private readonly ISessionService _sessionService;
+        public JournalsRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
+            _sessionService = sessionService;
             _dap = new DapperContext(_config);
-            _accountsReceivableRepository = new AccountsReceivableRepository(_config, _onedb);
-            _accountPayable = new AccountPayableRP(_config, _onedb);
+            _accountsReceivableRepository = new AccountsReceivableRepository(_config, _onedb, _sessionService);
+            _accountPayable = new AccountPayableRP(_config, _onedb, _sessionService);
         }
         public async Task<int> AddInvoiceJournals(InvoiceMaster invoiceMaster, bool isCash, Customer customer, decimal cost)
         {
             try
             {
-                var commonParams = CommonParamHelper.GetCommonParams();
+                var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
 
                 var journalEntry = new JournalEntry
                 {
@@ -39,8 +41,8 @@ namespace MarketBal.Repository.AccountingRP
                     EntryDate = commonParams.CreatedOn.Value,
                     ReferenceNumber = invoiceMaster.InvoiceNo,
                     Description = "Sales to " + (customer.Person?.FirstName ?? "") + " (" + customer.CustomerCode + ")",
-                    BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
-                    CreatedBy = AppDataUtility.SessionUser.Id,
+                    BranchId = _sessionService.SessionUser.Person.Branch.BranchId,
+                    CreatedBy = _sessionService.SessionUser.Id,
                     CreatedAt = commonParams.CreatedOn.Value,
                     SourceModule = "Sales",
                     EntryNumber = await GetNewJournalNumber()
@@ -101,7 +103,7 @@ namespace MarketBal.Repository.AccountingRP
                 // -----------------------------------------------------------
                 // 3️⃣  Tax Payable (if enabled)
                 // -----------------------------------------------------------
-                if (AppDataUtility.SystemPreferences.EnableTax && invoiceMaster.TaxAmount > 0)
+                if (_sessionService.SystemPreferences.EnableTax && invoiceMaster.TaxAmount > 0)
                 {
                     await _onedb.JournalLines.AddAsync(new JournalLine
                     {
@@ -160,7 +162,7 @@ namespace MarketBal.Repository.AccountingRP
         {
             try
             {
-                var commonParams = CommonParamHelper.GetCommonParams();
+                var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
 
                 var journalEntry = new JournalEntry
                 {
@@ -168,8 +170,8 @@ namespace MarketBal.Repository.AccountingRP
                     EntryDate = commonParams.CreatedOn.Value,
                     ReferenceNumber = invoiceMaster.InvoiceNo,
                     Description = "Service Sale to " + (customer.Person?.FirstName ?? "") + " (" + customer.CustomerCode + ")",
-                    BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
-                    CreatedBy = AppDataUtility.SessionUser.Id,
+                    BranchId = _sessionService.SessionUser.Person.Branch.BranchId,
+                    CreatedBy = _sessionService.SessionUser.Id,
                     CreatedAt = commonParams.CreatedOn.Value,
                     SourceModule = "Sales",
                     EntryNumber = await GetNewJournalNumber()
@@ -230,7 +232,7 @@ namespace MarketBal.Repository.AccountingRP
                 // -----------------------------------------------------------
                 // 3️⃣  Output Tax (if enabled)
                 // -----------------------------------------------------------
-                if (AppDataUtility.SystemPreferences.EnableTax && invoiceMaster.TaxAmount > 0)
+                if (_sessionService.SystemPreferences.EnableTax && invoiceMaster.TaxAmount > 0)
                 {
                     await _onedb.JournalLines.AddAsync(new JournalLine
                     {
@@ -280,7 +282,7 @@ namespace MarketBal.Repository.AccountingRP
                 Credit = 0,
                 Description = "Inventory increased by GRN"
             });
-            if (AppDataUtility.SystemPreferences.EnableTax && master.TaxAmount > 0)
+            if (_sessionService.SystemPreferences.EnableTax && master.TaxAmount > 0)
             {
                 _onedb.JournalLines.Add(new JournalLine
                 {

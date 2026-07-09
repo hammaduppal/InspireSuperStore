@@ -18,18 +18,20 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
     [Route("[controller]/[action]")]
     public class AdminPanelController : Controller
     {
+        private readonly ISessionService _sessionService;
         private readonly IConfiguration _config;
         private readonly AdminPanelRepository _adminPanel;
         private readonly AccountRepository _account;
 
         private readonly PagesViewModel vm = new PagesViewModel();
         private readonly OneDb _oneDb;
-        public AdminPanelController(IConfiguration config, OneDb oneDb)
+        public AdminPanelController(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _oneDb = oneDb;
             _config = config;
-            _adminPanel = new AdminPanelRepository(_config, _oneDb);
-            _account = new AccountRepository(_config);
+            _sessionService = sessionService;
+            _adminPanel = new AdminPanelRepository(_config, _oneDb, _sessionService);
+            _account = new AccountRepository(_config,  _sessionService);
         }
         #region Users
         public async Task<IActionResult> LoginUser()
@@ -468,10 +470,10 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                     product.IsActive = true;
                     product.IsDeleted = false;
                     product.CreatedOn = currentTime;
-                    product.Createdby = AppDataUtility.SessionUser.Id;
+                    product.Createdby = _sessionService.SessionUser.Id;
                     product.ProductSlug = HelperClass.CreateSlug(product.ProductName);
-                    product.BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId;
-                    product.OrganizationId = AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId;
+                    product.BranchId = _sessionService.SessionUser.Person.Branch.BranchId;
+                    product.OrganizationId = _sessionService.SessionUser.Person.Branch.Organization.OrganizationId;
 
                     currentProductId = product.ProductId;
                     products.Add(product);
@@ -504,10 +506,10 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                     variant.PriceFormat = int.TryParse(worksheet.Cells[row, 21].Text, out var pf) ? pf : 0;
                     variant.IsActive = true;
                     variant.IsDeleted = false;
-                    variant.BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId;
-                    variant.OrganizationId = AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId;
+                    variant.BranchId = _sessionService.SessionUser.Person.Branch.BranchId;
+                    variant.OrganizationId = _sessionService.SessionUser.Person.Branch.Organization.OrganizationId;
                     variant.CreatedOn = currentTime;
-                    variant.Createdby = AppDataUtility.SessionUser.Id;
+                    variant.Createdby = _sessionService.SessionUser.Id;
                     variants.Add(variant);
                 }
             }

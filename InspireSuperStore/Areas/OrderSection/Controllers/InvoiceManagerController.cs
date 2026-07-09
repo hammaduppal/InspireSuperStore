@@ -34,20 +34,22 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         private readonly OrderRepository _orderRepo;
         private readonly InvoiceRepository _invoicesRepo;
         private readonly IWebHostEnvironment _env;
-        public InvoiceManagerController(IConfiguration config, OneDb oneDb, NotificationService notificationServices, IWebHostEnvironment env)
+        private readonly ISessionService _sessionService;
+        public InvoiceManagerController(IConfiguration config, OneDb oneDb, NotificationService notificationServices, IWebHostEnvironment env, ISessionService sessionService)
         {
             _config = config;
             _oneDb = oneDb;
-            _attrib = new AttributeRepository(_config, _oneDb);
-            _account = new AccountRepository(_config);
-            _admin = new AdminPanelRepository(_config, _oneDb);
-            _assets = new AssetRepository(_config, _oneDb);
-            _hrm = new HumanRespourceRepository(_config, _oneDb);
+            _sessionService = sessionService;
+            _attrib = new AttributeRepository(_config, _oneDb, _sessionService);
+            _account = new AccountRepository(_config, _sessionService);
+            _admin = new AdminPanelRepository(_config, _oneDb, _sessionService);
+            _assets = new AssetRepository(_config, _oneDb, _sessionService);
+            _hrm = new HumanRespourceRepository(_config, _oneDb, _sessionService);
             _notificationServices = notificationServices;
             _notificationRepository = new NotificationRepository(_oneDb);
-            _orderRepo = new OrderRepository(_config, _oneDb);
+            _orderRepo = new OrderRepository(_config, _oneDb, _sessionService);
             _env = env;
-            _invoicesRepo = new InvoiceRepository(_config, _oneDb);
+            _invoicesRepo = new InvoiceRepository(_config, _oneDb,_sessionService);
         }
         public async Task<IActionResult> Invoices()
         {

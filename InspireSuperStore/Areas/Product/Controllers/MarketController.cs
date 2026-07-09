@@ -20,13 +20,14 @@ namespace InspireSuperStore.Areas.Product.Controllers
         private readonly MarketRepository repository;
         private readonly AttributeRepository _attributeRepository;
         PagesViewModel vm = new PagesViewModel();
-
-        public MarketController( OneDb oneDb, IConfiguration config)
+        private readonly ISessionService _sessionService;
+        public MarketController( OneDb oneDb, IConfiguration config, ISessionService sessionService)
         {
             _oneDb = oneDb;
             _config = config;
+            _sessionService = sessionService;
             repository = new MarketRepository(_oneDb);
-            _attributeRepository = new AttributeRepository(_config, _oneDb);
+            _attributeRepository = new AttributeRepository(_config, _oneDb, _sessionService);
 
         }
         public async Task<IActionResult> Coupons()

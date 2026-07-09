@@ -13,19 +13,20 @@ namespace MarketBal.Repository.SystemRP
 {
     public class DeviceRegistrationRepository
     {
-
+        private readonly ISessionService _sessionService;
         private readonly IConfiguration _config;
         private readonly DBManager _db;
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
-        public DeviceRegistrationRepository(IConfiguration config, OneDb oneDb)
+        public DeviceRegistrationRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config, _onedb);
+            _sessionService = sessionService;
+            _attrib = new AttributeRepository(_config, _onedb, _sessionService);
         }
         public async Task<bool> IsAlreadyRegistered(DeviceRequestModelVM device)
         {

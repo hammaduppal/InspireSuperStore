@@ -20,13 +20,16 @@ namespace MarketBal.Repository
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
-        public AdminPanelRepository(IConfiguration config, OneDb oneDb)
+        private readonly ISessionService _sessionService;
+        
+        public AdminPanelRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config,_onedb);
+            _sessionService = sessionService;
+            _attrib = new AttributeRepository(_config,_onedb,_sessionService);
         }
 
         public async Task<List<LoginUserVM>> GetLoginUser()
@@ -397,7 +400,7 @@ namespace MarketBal.Repository
                     IsActive = true,
                     IsDeleted = false,
                     CreatedOn = currentTime,
-                    Createdby = AppDataUtility.SessionUser.Id
+                    Createdby = _sessionService.SessionUser.Id
 
                 };
                 assignBranches.Add(assignBranch);
@@ -410,7 +413,7 @@ namespace MarketBal.Repository
                     ModifiedOn = currentTime,
                     IsActive = true,
                     IsDeleted = false,
-                    Createdby = AppDataUtility.SessionUser.Id,
+                    Createdby = _sessionService.SessionUser.Id,
                     UserAssignedBranches = assignBranches,
                     Person = new Person
                     {
@@ -427,7 +430,7 @@ namespace MarketBal.Repository
                         ModifiedOn = currentTime,
                         IsActive = true,
                         IsDeleted = false,
-                        Createdby = AppDataUtility.SessionUser.Id
+                        Createdby = _sessionService.SessionUser.Id
 
 
                     }
@@ -565,12 +568,12 @@ namespace MarketBal.Repository
                         FirstName = model.Person.FirstName,
                         MobileNumber = model.Person.MobileNumber,
                         LaneAddresses = addresses,
-                        BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
+                        BranchId = _sessionService.SessionUser.Person.Branch.BranchId,
                         CreatedOn = currentTime,
                         ModifiedOn = currentTime,
                         IsActive = true,
                         IsDeleted = false,
-                        Createdby = AppDataUtility.SessionUser.Id
+                        Createdby = _sessionService.SessionUser.Id
 
 
                     }
@@ -627,7 +630,7 @@ namespace MarketBal.Repository
                 OrganizationName = request.OrganizationName,
                 IsActive = 1,
                 CreatedOn = DateTime.Now,
-                CreatedBy = AppDataUtility.SessionUser.Id,
+                CreatedBy = _sessionService.SessionUser.Id,
                 IsDeleted = 0
 
             };
@@ -736,7 +739,7 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                 request.BusinessCategoryId,
                 IsActive = 1,
                 CreatedOn = DateTime.Now,
-                CreatedBy = AppDataUtility.SessionUser.Id,
+                CreatedBy = _sessionService.SessionUser.Id,
                 IsDeleted = 0
 
             };
@@ -1271,7 +1274,7 @@ VALUES
         }
         public async Task<SystemPreferencesVM> GetSystemPreferences()
         {
-            var branchId = AppDataUtility.SessionUser?.Person?.Branch?.BranchId ?? Guid.Empty;
+            var branchId = _sessionService.SessionUser?.Person?.Branch?.BranchId ?? Guid.Empty;
             var result = await _onedb.SystemPreferences
 
                 .Select(x => new SystemPreferencesVM
@@ -1680,7 +1683,7 @@ VALUES
             {
                 BusinessEntityTypeName = model.BusinessEntityTypeName,
                 IsActive = 1,
-                CreatedBy = AppDataUtility.SessionUser.Id,
+                CreatedBy = _sessionService.SessionUser.Id,
                 CreatedOn = DateTime.Now
             };
 
@@ -1717,7 +1720,7 @@ VALUES
             {
                 BusinessCategoryName = model.BusinessCategoryName,
                 IsActive = 1,
-                CreatedBy = AppDataUtility.SessionUser.Id,
+                CreatedBy = _sessionService.SessionUser.Id,
                 CreatedOn = DateTime.Now
             };
 

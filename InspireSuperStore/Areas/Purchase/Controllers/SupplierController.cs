@@ -19,17 +19,18 @@ namespace InspireSuperStore.Areas.Purchase.Controllers
         private readonly IConfiguration _config;
         private readonly SupplierRepository repo;
         private readonly AdminPanelRepository _admin;
-
+        private readonly ISessionService _sessionService;
         private readonly OneDb _one;
-        public SupplierController(IConfiguration config, OneDb one)
+        public SupplierController(IConfiguration config, OneDb one, ISessionService sessionService)
         {
             _one = one;
+            _sessionService = sessionService;
 
             vm = new PagesViewModel();
             _config = config;
-            _product = new ProductRepository(_config, _one);
-            repo = new SupplierRepository(_config, _one);
-            _admin = new AdminPanelRepository(_config, _one);
+            _product = new ProductRepository(_config, _one, _sessionService);
+            repo = new SupplierRepository(_config, _one, _sessionService);
+            _admin = new AdminPanelRepository(_config, _one, _sessionService);
 
         }
 

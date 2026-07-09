@@ -12,11 +12,13 @@ namespace MarketBal.Repository.Products
         private readonly IConfiguration _config;
         private readonly DBManager _db;
         private readonly OneDb _onedb;
-        public AttributeRepository(IConfiguration config,OneDb onedb)
+        private readonly ISessionService _sessionService;
+        public AttributeRepository(IConfiguration config, OneDb onedb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _onedb = onedb;
+            _sessionService = sessionService;
         }
         public async Task<int> AddDepartment(DepartmentVM model)
         {
@@ -38,7 +40,7 @@ namespace MarketBal.Repository.Products
     
                             SELECT 1 AS Result; -- Insert successful
                         END";
-            var commonParams = CommonParamHelper.GetCommonParams();
+            var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
             var param = new
             {
                 model.DepartmentName,
@@ -81,7 +83,7 @@ namespace MarketBal.Repository.Products
                             SELECT 1 AS Result; -- Insert successful
                         END
                         ";
-            var commonParams = CommonParamHelper.GetCommonParams();
+            var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
             var param = new
             {
                 model.CategoryName,
@@ -126,7 +128,7 @@ namespace MarketBal.Repository.Products
                             SELECT 1 AS Result;
                         END
                         ";
-            var commonParams = CommonParamHelper.GetCommonParams();
+            var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
             var param = new
             {
                 model.SubCategoryName,
@@ -171,7 +173,7 @@ namespace MarketBal.Repository.Products
                             SELECT 1 AS Result;
                         END
                         ";
-            var commonParams = CommonParamHelper.GetCommonParams();
+            var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
             var param = new
             {
                 model.ColorName,
@@ -215,7 +217,7 @@ namespace MarketBal.Repository.Products
                             SELECT 1 AS Result;
                         END
                         ";
-            var commonParams = CommonParamHelper.GetCommonParams();
+            var commonParams = CommonParamHelper.GetCommonParams(_sessionService    );
             var param = new
             {
                 model.SizeName,
@@ -258,7 +260,7 @@ namespace MarketBal.Repository.Products
                             SELECT 1 AS Result;
                         END
                         ";
-            var commonParams = CommonParamHelper.GetCommonParams();
+            var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
             var param = new
             {
                 model.UOMName,
@@ -300,7 +302,7 @@ namespace MarketBal.Repository.Products
                             SELECT 1 AS Result;
                         END
                         ";
-            var commonParams = CommonParamHelper.GetCommonParams();
+            var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
             var param = new
             {
                 model.SubUOMName,
@@ -344,7 +346,7 @@ namespace MarketBal.Repository.Products
                             SELECT 1 AS Result;
                         END
                         ";
-            var commonParams = CommonParamHelper.GetCommonParams();
+            var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
             var param = new
             {
                 model.MaterialName,
@@ -388,7 +390,7 @@ namespace MarketBal.Repository.Products
                             SELECT 1 AS Result;
                         END
                         ";
-            var commonParams = CommonParamHelper.GetCommonParams();
+            var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
             var param = new
             {
                 model.BrandName,

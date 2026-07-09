@@ -12,15 +12,17 @@ namespace InspireSuperStore.Areas.Collections.Controllers
     [Route("collection/[action]")]
     public class CollectionController : Controller
     {
+        private readonly ISessionService _sessionService;
         private readonly IConfiguration _config;
         private readonly CollectionRepository _collectionRepository;
         private readonly PagesViewModel vm = new PagesViewModel();
         private readonly OneDb _oneDb;
-        public CollectionController(IConfiguration config,OneDb oneDb)
+        public CollectionController(IConfiguration config,OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _oneDb = oneDb;
-            _collectionRepository = new CollectionRepository(_config,_oneDb);
+            _sessionService = sessionService;
+            _collectionRepository = new CollectionRepository(_config,_oneDb,_sessionService);
         }
         public async Task<IActionResult> Collections()
         {

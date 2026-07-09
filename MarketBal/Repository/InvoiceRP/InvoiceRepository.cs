@@ -26,16 +26,18 @@ namespace MarketBal.Repository.InvoiceRP
         private readonly HumanRespourceRepository _hrmRepository;
         private readonly JournalsRepository _journalRepo;
         private readonly AccountsReceivableRepository _accountsReceivableRepository;
-        public InvoiceRepository(IConfiguration config, OneDb oneDb)
+        private readonly ISessionService _sessionService;
+        public InvoiceRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config, _onedb);
-            _hrmRepository = new HumanRespourceRepository(_config, _onedb);
-            _journalRepo = new JournalsRepository(_config, _onedb);
-            _accountsReceivableRepository = new AccountsReceivableRepository(_config, _onedb);
+            _sessionService = sessionService;
+            _attrib = new AttributeRepository(_config, _onedb, _sessionService);
+            _hrmRepository = new HumanRespourceRepository(_config, _onedb, _sessionService);
+            _journalRepo = new JournalsRepository(_config, _onedb, _sessionService);
+            _accountsReceivableRepository = new AccountsReceivableRepository(_config, _onedb, _sessionService);
         }
 
         public async Task<List<InvoiceMasterVM>> GetInvoices()
@@ -108,14 +110,14 @@ namespace MarketBal.Repository.InvoiceRP
             {
                 try
                 {
-                    var commonParams = CommonParamHelper.GetCommonParams();
+                    var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
 
                     // Generate Invoice Number
                     var lastInvoice = await _onedb.InvoiceMasters
                         .OrderByDescending(i => i.CreatedDate)
                         .FirstOrDefaultAsync();
 
-                    var invoicePrefix = AppDataUtility.SystemPreferences.InvoicePrefix;
+                    var invoicePrefix = _sessionService.SystemPreferences.InvoicePrefix;
                     string newInvoiceNo = $"{invoicePrefix}-001";
 
                     if (lastInvoice != null && !string.IsNullOrEmpty(lastInvoice.InvoiceNo))
@@ -215,7 +217,7 @@ namespace MarketBal.Repository.InvoiceRP
                             var branchstock = await _onedb.BranchStocks
                                 .FirstOrDefaultAsync(v =>
                                     v.ProductVariantId == detail.VariantId &&
-                                    v.BranchId == AppDataUtility.SessionUser.Person.Branch.BranchId);
+                                    v.BranchId == _sessionService.SessionUser.Person.Branch.BranchId);
 
                             if (branchstock != null)
                             {
@@ -312,7 +314,7 @@ namespace MarketBal.Repository.InvoiceRP
                             var branchStock = await _onedb.BranchStocks
                                 .FirstOrDefaultAsync(s =>
                                     s.ProductVariantId == detail.VariantId &&
-                                    s.BranchId == AppDataUtility.SessionUser.Person.Branch.BranchId);
+                                    s.BranchId == _sessionService.SessionUser.Person.Branch.BranchId);
 
                             if (branchStock != null)
                             {
@@ -353,7 +355,7 @@ namespace MarketBal.Repository.InvoiceRP
                         ReferenceNumber = invoice.InvoiceNo + "-REV",
                         Description = $"Reversal of Invoice {invoice.InvoiceNo} Journal Entry number: {originalEntry.JournalEntryId}",
                         BranchId = originalEntry.BranchId,
-                        CreatedBy = AppDataUtility.SessionUser.Id,
+                        CreatedBy = _sessionService.SessionUser.Id,
                         CreatedAt = DateTime.Now,
                         SourceModule = "Sales-Reversal",
                         EntryNumber = await _journalRepo.GetNewJournalNumber(),
@@ -428,7 +430,7 @@ namespace MarketBal.Repository.InvoiceRP
         {
             try
             {
-                string imageUrl = AppDataUtility.SystemPreferences.CompanyLogoUrl;
+                string imageUrl = _sessionService.SystemPreferences.CompanyLogoUrl;
                 string base64Logo = "";
 
                 if (!string.IsNullOrEmpty(imageUrl))
@@ -542,7 +544,7 @@ namespace MarketBal.Repository.InvoiceRP
 
         <div class='col-9'>
             <h3 style='font-size:13px; margin:2px 0;'>
-                {AppDataUtility.SystemPreferences.CompanyName}
+                {_sessionService.SystemPreferences.CompanyName}
             </h3>
             <p style='font-size:11px; margin:0;'>
                 Phone: +33311123123<br>
@@ -680,7 +682,7 @@ namespace MarketBal.Repository.InvoiceRP
         {
             try
             {
-                var branchId = AppDataUtility.SessionUser.Person.Branch.BranchId;
+                var branchId = _sessionService.SessionUser.Person.Branch.BranchId;
 
                 // Filter valid items
                 var validItems = invoiceDetails

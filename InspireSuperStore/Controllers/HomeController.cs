@@ -17,8 +17,8 @@ namespace InspireSuperStore.Controllers
 	[Authorize]
 	public class HomeController : Controller
 	{
-		
-		private readonly ILogger<HomeController> _logger;
+        private readonly ISessionService _sessionService;
+        private readonly ILogger<HomeController> _logger;
 		private readonly IConfiguration _config;
 		private readonly ApiMethods _apiMethod;
 		private readonly DashBoardRepository _dashboard;
@@ -27,19 +27,20 @@ namespace InspireSuperStore.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
 		private readonly OneDb _onedb;
 		private readonly PagesViewModel vm = new PagesViewModel();
-        public HomeController(ILogger<HomeController> logger, OneDb onedb,IConfiguration config, NotificationService notificationService, IHubContext<NotificationHub> hubContext)
+        public HomeController(ILogger<HomeController> logger, OneDb onedb,IConfiguration config, NotificationService notificationService, IHubContext<NotificationHub> hubContext, ISessionService sessionService)
 		{
 			_config = config;
 			_logger = logger;
 			_apiMethod = new ApiMethods();
 			_onedb = onedb;
+			_sessionService = sessionService;
             _dashboard = new DashBoardRepository(_config,_onedb);
-			_admin = new AdminPanelRepository(_config, _onedb);
+			_admin = new AdminPanelRepository(_config, _onedb,_sessionService);
 			_notificationServices = notificationService;
             _hubContext = hubContext;
             var systemSettings = _config.GetSection("SystemSettings").Get<SystemSettings>();
 			var systemPref =  _admin.GetSystemPreferences();
-			AppDataUtility.SystemPreferences = systemPref.GetAwaiter().GetResult();
+			_sessionService.SystemPreferences = systemPref.GetAwaiter().GetResult();
 			PagesViewModel.SystemSettings = systemSettings;
 			if (PagesViewModel.ThemeSettings==null)
 			{
@@ -61,8 +62,8 @@ namespace InspireSuperStore.Controllers
 			await _notificationServices.NotifyOnlineUsersUpdated();
 			await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Welcome! You are logged in.");
 
-			var res =await new ProjectRepository(_config, _onedb).GetProjectWiseReportAsync();
-            var userreport = await new ProjectRepository(_config, _onedb).GetUserWiseReportAsync();
+			var res =await new ProjectRepository(_config, _onedb,_sessionService).GetProjectWiseReportAsync();
+            var userreport = await new ProjectRepository(_config, _onedb,_sessionService).GetUserWiseReportAsync();
 			vm.UserReports = userreport;
             vm.ProjectReports = res;
             string message = "this is my message to send to admin@inspirenation.us";

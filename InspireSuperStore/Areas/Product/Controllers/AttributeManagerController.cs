@@ -18,18 +18,20 @@ namespace InspireSuperStore.Areas.Product.Controllers
         private readonly AttributeRepository _attrib;
         private readonly OneDb _oneDb;
         private readonly PagesViewModel vm = new PagesViewModel();
-        public AttributeManagerController(IConfiguration config, OneDb onedb)
+        private readonly ISessionService _sessionService;
+        public AttributeManagerController(IConfiguration config, OneDb onedb, ISessionService sessionService)
         {
             _config = config;
             _oneDb = onedb;
-            _attrib = new AttributeRepository(_config, _oneDb);
+            _sessionService = sessionService;
+            _attrib = new AttributeRepository(_config, _oneDb, _sessionService);
         }
         public async Task<IActionResult> DCSManager()
         {
 
             return View(vm);
         }
-       
+
         public async Task<IActionResult> _GetAddDepartmentForm()
         {
             return PartialView();
@@ -245,7 +247,7 @@ namespace InspireSuperStore.Areas.Product.Controllers
         }
         public async Task<IActionResult> BrandModel(BrandVM model)
         {
-            var brandModels= await _attrib.GetBrandModel(model.BrandId);
+            var brandModels = await _attrib.GetBrandModel(model.BrandId);
             return Json(brandModels);
         }
         public async Task<IActionResult> _AddBrandModel()

@@ -12,11 +12,13 @@ namespace MarketBal.Repository.SuppliersRP
         private readonly DBManager _db;
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
-        public SupplierRepository(IConfiguration config, OneDb oneDb)
+        private readonly ISessionService _sessionService;
+        public SupplierRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
+            _sessionService = sessionService;
             _onedb = oneDb;
         }
         public async Task<List<SupplierVM>> GetSuppliers()
@@ -68,7 +70,7 @@ namespace MarketBal.Repository.SuppliersRP
                 FirstName = s.Person.FirstName,
                 LastName = s.Person.LastName,
                 LaneAddresses = addresses,
-                Createdby = AppDataUtility.SessionUser.Id,
+                Createdby = _sessionService.SessionUser.Id,
                 CreatedOn = currentTime,
                 IsActive = true,
                 IsDeleted = false

@@ -13,12 +13,15 @@ namespace MarketBal.Repository.AccountingRP
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly DapperContext _dap;
-        public AccountsReceivableRepository(IConfiguration config, OneDb oneDb)
+        private readonly ISessionService _sessionService;
+
+        public AccountsReceivableRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
+            _sessionService = sessionService;
             _dap = new DapperContext(_config);
         }
         public async Task<int> AddCreditSale(InvoiceMaster invoiceMaster, Customer customer, JournalEntry journalEntry)
@@ -34,8 +37,8 @@ namespace MarketBal.Repository.AccountingRP
                 Balance = invoiceMaster.GrandTotal,    // Customer owes this much
                 DueDate = DateTime.Now.AddDays(10),       // Optional, if you track credit terms
                 Status = AppConstants.PaymentStatus.Pending.ToString(),
-                BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
-                CreatedBy = AppDataUtility.SessionUser.Id,
+                BranchId = _sessionService.SessionUser.Person.Branch.BranchId,
+                CreatedBy = _sessionService.SessionUser.Id,
                 CreatedAt = DateTime.UtcNow
             };
             await _onedb.AccountReceivables.AddAsync(ar);
@@ -67,8 +70,8 @@ namespace MarketBal.Repository.AccountingRP
                 // Optional (you can store reason in invoice.CancelReason)
                 DueDate = originalAR.DueDate,
 
-                BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
-                CreatedBy = AppDataUtility.SessionUser.Id,
+                BranchId = _sessionService.SessionUser.Person.Branch.BranchId,
+                CreatedBy = _sessionService.SessionUser.Id,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -150,7 +153,7 @@ namespace MarketBal.Repository.AccountingRP
                 ReferenceNumber = receivable.InvoiceId.ToString(),
                 Description = $"Payment received from {customer.Person.FirstName}",
                 BranchId = receivable.BranchId,
-                CreatedBy = AppDataUtility.SessionUser.Id,
+                CreatedBy = _sessionService.SessionUser.Id,
                 CreatedAt = DateTime.Now
             };
             await _onedb.JournalEntries.AddAsync(journalEntry);

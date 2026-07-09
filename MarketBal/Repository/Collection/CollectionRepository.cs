@@ -2,6 +2,7 @@
 using MainModels;
 using MainModels.DTOModels;
 using MainModels.Models;
+using MainModels.Util;
 using MarketBal.Repository.Account;
 
 namespace MarketBal.Repository.Collection
@@ -13,12 +14,14 @@ namespace MarketBal.Repository.Collection
         private readonly DBManager _db;
         private readonly OneDb _onedb;
         private readonly FileRepository _file;
-        public CollectionRepository(IConfiguration config, OneDb oneDb)
+        private readonly ISessionService _sessionService;
+        public CollectionRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _onedb = oneDb;
-            _file = new FileRepository();
+            _sessionService = sessionService;
+            _file = new FileRepository( _sessionService);
         }
         public async Task<List<CollectionMasterVM>> GetCollections()
         {

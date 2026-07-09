@@ -14,6 +14,7 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
     [Route("[controller]/[action]")]
     public class AccountingController : Controller
     {
+        private readonly ISessionService _sessionService;
         PagesViewModel vm = new PagesViewModel();
         private readonly ILogger<AccountingController> _logger;
         private readonly IConfiguration _configuration;
@@ -22,15 +23,16 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
         private readonly AccountsReceivableRepository _accountreceivable;
         private readonly AccountPayableRP _accountPayableRP;
         private readonly OneDb _onedb;
-        public AccountingController(ILogger<AccountingController> logger, IConfiguration configuration, OneDb onedb)
+        public AccountingController(ILogger<AccountingController> logger, IConfiguration configuration, OneDb onedb, ISessionService sessionService)
         {
             _logger = logger;
             _configuration = configuration;
             _onedb = onedb;
-            _accountreceivable = new AccountsReceivableRepository(_configuration, _onedb);
-            _journalRepo = new JournalsRepository(_configuration, _onedb);
+            _sessionService = sessionService;
+            _accountreceivable = new AccountsReceivableRepository(_configuration, _onedb, _sessionService);
+            _journalRepo = new JournalsRepository(_configuration, _onedb, _sessionService);
             _chartOfAccountRepo = new ChartOfAccountRepo(_configuration, _onedb);
-            _accountPayableRP = new AccountPayableRP(_configuration, _onedb);
+            _accountPayableRP = new AccountPayableRP(_configuration, _onedb, _sessionService);
         }
         public async Task<IActionResult> ChartOfAccounts()
         {
@@ -109,7 +111,7 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
                     Description = $"Payment received for Invoice {ar.InvoiceId}",
                     BranchId = ar.BranchId,
                     SourceModule = "AR Payment",
-                    CreatedBy = AppDataUtility.SessionUser.Id,
+                    CreatedBy = _sessionService.SessionUser.Id,
                     CreatedAt = DateTime.UtcNow,
                     EntryNumber = newVoucherNumber
                 };
@@ -232,7 +234,7 @@ namespace InspireSuperStore.Areas.AccountingArea.Controllers
                     Description = $"Payment made for Purchase Invoice {invoice.PurchaseNumber}",
                     BranchId = ap.BranchId,
                     SourceModule = "AP Payment",
-                    CreatedBy = AppDataUtility.SessionUser.Id,
+                    CreatedBy = _sessionService.SessionUser.Id,
                     CreatedAt = DateTime.UtcNow,
                     EntryNumber = newVoucherNumber
                 };

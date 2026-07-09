@@ -2,8 +2,10 @@ using Hangfire;
 using Hangfire.SqlServer;
 using InspireSuperStore.Areas.Notification.Data;
 using InspireSuperStore.Models;
+using MainModels.DTOModels;
 using MainModels.Models;
 using MainModels.Util;
+using MarketBal.Helper;
 using MarketBal.Repository.SystemJOBS;
 using MarketBal.Repository.SystemRP;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -50,7 +52,7 @@ builder.Services.AddHangfireServer();
 
 var cookieScheme = CookieAuthenticationDefaults.AuthenticationScheme + builder.Configuration.GetValue<string>("SystemSettings:CookieName");
 builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddSession(options =>
 {
     options.Cookie.Name = builder.Configuration.GetValue<string>("SystemSettings:CookieName");
@@ -120,7 +122,9 @@ app.UseRouting();
 
 
 app.UseAuthorization();
-AppDataUtility.Configure(app.Services.GetRequiredService<IHttpContextAccessor>());
+AppDataUtility.Configure(app.Services);
+CheckPermissions.Configure(app.Services);
+AppHelper.Configure(app.Services);
 app.UseSession();
 app.UseMiddleware<SessionCheckMiddleware>();
 app.UseHangfireDashboard();

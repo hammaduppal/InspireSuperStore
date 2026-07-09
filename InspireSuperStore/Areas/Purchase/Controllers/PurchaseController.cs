@@ -25,18 +25,19 @@ namespace InspireSuperStore.Areas.Purchase.Controllers
         private readonly IConfiguration _config;
         private readonly SupplierRepository _supplier;
         private readonly PurchaseRepository repository;
-
+        private readonly ISessionService _sessionService;
         private readonly OneDb _one;
         private readonly NotificationService _notificationServices;
         private readonly IHubContext<NotificationHub> _hubContext;
-        public PurchaseController(IConfiguration config, OneDb one, NotificationService notificationService, IHubContext<NotificationHub> hubContext)
+        public PurchaseController(IConfiguration config, OneDb one, NotificationService notificationService, IHubContext<NotificationHub> hubContext, ISessionService sessionService)
         {
             _one = one;
             vm = new PagesViewModel();
             _config = config;
-            _product = new ProductRepository(_config, _one);
-            _supplier = new SupplierRepository(_config, _one);
-            repository = new PurchaseRepository(_config, _one);
+            _sessionService = sessionService;
+            _product = new ProductRepository(_config, _one, _sessionService);
+            _supplier = new SupplierRepository(_config, _one, _sessionService);
+            repository = new PurchaseRepository(_config, _one, _sessionService);
             _notificationServices = notificationService;
             _hubContext = hubContext;
         }

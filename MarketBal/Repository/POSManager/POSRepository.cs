@@ -20,7 +20,6 @@ namespace MarketBal.Repository.POSManager
         private readonly DBManager _db;
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
-        private readonly AttributeRepository _attrib;
 
         public POSRepository(IConfiguration config, OneDb oneDb)
         {
@@ -28,7 +27,6 @@ namespace MarketBal.Repository.POSManager
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config,_onedb);
         }
 
 

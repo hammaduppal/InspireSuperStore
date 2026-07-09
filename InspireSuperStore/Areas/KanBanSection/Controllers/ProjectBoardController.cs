@@ -18,6 +18,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
     [Route("[controller]/[action]")]
     public class ProjectBoardController : Controller
     {
+        private readonly ISessionService _sessionService;
         private readonly IConfiguration _config;
         private readonly AdminPanelRepository _adminPanel;
         private readonly ProjectRepository _project;
@@ -26,13 +27,15 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
         private readonly OneDb _oneDb;
         private readonly NotificationService _notificationServices;
         private readonly IHubContext<NotificationHub> _hubContext;
-        public ProjectBoardController(IConfiguration config, OneDb oneDb, NotificationService notificationServices, IHubContext<NotificationHub> hubContext)
+        public ProjectBoardController(IConfiguration config, OneDb oneDb, NotificationService notificationServices, IHubContext<NotificationHub> hubContext, ISessionService sessionService)
         {
             _oneDb = oneDb;
             _config = config;
-            _file = new FileRepository();
-            _adminPanel = new AdminPanelRepository(_config, _oneDb);
-            _project = new ProjectRepository(_config, _oneDb);
+            _sessionService = sessionService;
+
+            _file = new FileRepository(_sessionService);
+            _adminPanel = new AdminPanelRepository(_config, _oneDb, _sessionService);
+            _project = new ProjectRepository(_config, _oneDb, _sessionService);
             _notificationServices = notificationServices;
             _hubContext = hubContext;
         }
@@ -584,7 +587,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                             TaskAttachmentId = newAttachmentId,
                             TaskId = model.TaskId,
                             AttachmentUrl = uploadResult.ImageUrl,
-                            UserId = AppDataUtility.SessionUser.Id,
+                            UserId = _sessionService.SessionUser.Id,
                             IsActive = true,
                             IsDeleted = false,
                             CreatedOn = DateTime.UtcNow
@@ -678,7 +681,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                 }
 
                 // FIXED: Extracting logged in user directly from your session utility configuration model properties trace
-                var activeUserSession = AppDataUtility.SessionUser;
+                var activeUserSession = _sessionService.SessionUser;
                 if (activeUserSession == null || activeUserSession.Id <= 0)
                 {
                     return Json(new { success = false, message = "User session has expired or is invalid." });
@@ -776,7 +779,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                 }
 
                 // 1. Authenticate user reference from local context cache checks
-                var activeUser = AppDataUtility.SessionUser;
+                var activeUser = _sessionService.SessionUser;
                 if (activeUser == null || activeUser.Id <= 0)
                 {
                     return Json(new { success = false, message = "User workspace session tracking details expired." });
@@ -796,7 +799,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
 
 
                 // Synchronize state down to active workspace session cache tracker context too
-                AppDataUtility.SessionUser.Person.ImageUrl = uploadResult.ImageUrl;
+                _sessionService.SessionUser.Person.ImageUrl = uploadResult.ImageUrl;
 
                 await _oneDb.SaveChangesAsync();
 
@@ -843,7 +846,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                     GroupName = "Projects",
                     IsRead = false,
                     Params = JsonConvert.SerializeObject(orderparam),
-                    UserId = AppDataUtility.SessionUser.Id,
+                    UserId = _sessionService.SessionUser.Id,
                     NotificationTypeId = 2
                 };
                 await _notificationServices.SendToUser(item.UserId.ToString(), JsonConvert.SerializeObject(Notification));
@@ -905,7 +908,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                     GroupName = "Projects",
                     IsRead = false,
                     Params = JsonConvert.SerializeObject(orderparam),
-                    UserId = AppDataUtility.SessionUser.Id,
+                    UserId = _sessionService.SessionUser.Id,
                     NotificationTypeId = 2
                 };
                 await _notificationServices.SendToUser(item.UserId.ToString(), JsonConvert.SerializeObject(Notification));
@@ -958,7 +961,7 @@ namespace InspireSuperStore.Areas.KanBanSection.Controllers
                     GroupName = "Projects",
                     IsRead = false,
                     Params = JsonConvert.SerializeObject(orderparam),
-                    UserId = AppDataUtility.SessionUser.Id,
+                    UserId = _sessionService.SessionUser.Id,
                     NotificationTypeId = 2
                 };
                 //await _notificationServices.SendToUser(item.UserId.ToString(), JsonConvert.SerializeObject(Notification));

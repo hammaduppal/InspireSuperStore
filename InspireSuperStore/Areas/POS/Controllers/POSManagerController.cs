@@ -28,17 +28,18 @@ namespace InspireSuperStore.Areas.POS.Controllers
         private readonly HumanRespourceRepository _hrm;
         private readonly NotificationService _notificationServices;
         private readonly NotificationRepository _notificationRepository;
+        private readonly ISessionService _sessionService;
 
-        public POSManagerController(IConfiguration config, OneDb oneDb, NotificationService notificationServices)
+        public POSManagerController(IConfiguration config, OneDb oneDb, NotificationService notificationServices, ISessionService sessionService)
         {
             _config = config;
             _oneDb = oneDb;
-            _attrib = new AttributeRepository(_config,_oneDb);
-            _account = new AccountRepository(_config);
-            _admin = new AdminPanelRepository(_config, _oneDb);
-            _assets = new AssetRepository(_config, _oneDb);
-            _hrm = new HumanRespourceRepository(_config, _oneDb);
-            _notificationServices = notificationServices;
+            _sessionService = sessionService;
+            _attrib = new AttributeRepository(_config,_oneDb,_sessionService);
+            _account = new AccountRepository(_config,_sessionService);
+            _admin = new AdminPanelRepository(_config, _oneDb,_sessionService);
+            _assets = new AssetRepository(_config, _oneDb,_sessionService);
+            _hrm = new HumanRespourceRepository(_config, _oneDb,_sessionService);
             _notificationRepository = new NotificationRepository(_oneDb);
         }
       

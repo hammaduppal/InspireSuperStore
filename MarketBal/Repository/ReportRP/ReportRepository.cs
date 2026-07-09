@@ -2,6 +2,7 @@
 using MainModels;
 using MainModels.DTOModels;
 using MainModels.Models;
+using MainModels.Util;
 using MarketBal.Repository.InvoiceRP;
 using MarketBal.Repository.Products;
 using Microsoft.EntityFrameworkCore;
@@ -10,21 +11,23 @@ namespace MarketBal.Repository.ReportRP
 {
     public class ReportRepository
     {
-
+        private readonly ISessionService _sessionService;
         private readonly IConfiguration _config;
         private readonly DBManager _db;
         private readonly ApiMethods _api;
+
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
         private readonly InvoiceRepository _invoiceRepository;
-        public ReportRepository(IConfiguration config, OneDb oneDb)
+        public ReportRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config, _onedb);
-            _invoiceRepository = new InvoiceRepository(_config, _onedb);
+            _sessionService = sessionService;
+            _attrib = new AttributeRepository(_config, _onedb, _sessionService);
+            _invoiceRepository = new InvoiceRepository(_config, _onedb, _sessionService);
         }
 
         public async Task<InvoiceChartDto> GetInvoiceChart()

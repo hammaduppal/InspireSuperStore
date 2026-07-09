@@ -13,10 +13,12 @@ namespace MarketBal.Repository.Account
 
         private readonly IConfiguration _config;
         private readonly DBManager _db;
-        public AccountRepository(IConfiguration config)
+        private readonly ISessionService _sessionService;
+        public AccountRepository(IConfiguration config, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
+            _sessionService = sessionService;
         }
         public async Task<LoginUserVM> ValidateLogin(LoginUserRequestModel model)
         {
@@ -151,8 +153,8 @@ namespace MarketBal.Repository.Account
 
                     CustomerCode = RandomHelper.GenerateRandomAlphaNumeric(),
                     PersonId = existingPerson.Id,
-                    BranchId = AppDataUtility.SessionUser.Person.BranchId,
-                    Createdby = AppDataUtility.SessionUser.Id,
+                    BranchId = _sessionService.SessionUser.Person.BranchId,
+                    Createdby = _sessionService.SessionUser.Id,
                     CreatedOn = DateTime.Now,
                     IsActive = true,
                     IsDeleted = false,
@@ -171,7 +173,7 @@ namespace MarketBal.Repository.Account
             {
                 model.IsActive = true;
                 model.CreatedOn = DateTime.Now;
-                model.BranchId = AppDataUtility.SessionUser.Person.BranchId;
+                model.BranchId = _sessionService.SessionUser.Person.BranchId;
                 insertQuery = $@"DECLARE @NewPersonId INT;
 
                     -- Get max PersonId and add 1 (handle null if table is empty)
@@ -194,8 +196,8 @@ namespace MarketBal.Repository.Account
                     CustomerId = Guid.NewGuid(), // updated to generate a new Guid
                     CustomerCode = RandomHelper.GenerateRandomAlphaNumeric(),
                     PersonId = personId,
-                    BranchId = AppDataUtility.SessionUser.Person.BranchId,
-                    Createdby = AppDataUtility.SessionUser.Id,
+                    BranchId = _sessionService.SessionUser.Person.BranchId,
+                    Createdby = _sessionService.SessionUser.Id,
                     CreatedOn = DateTime.Now,
                     IsActive = true,
                     IsDeleted = false,

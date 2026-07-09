@@ -17,19 +17,21 @@ namespace MarketBal.Repository.IPM
         private readonly OneDb _onedb;
         private readonly AttributeRepository _attrib;
         private readonly InvoiceRepository _invoiceRepository;
-        public ProjectRepository(IConfiguration config, OneDb oneDb)
+        private readonly ISessionService _sessionService;
+        public ProjectRepository(IConfiguration config, OneDb oneDb, ISessionService sessionService)
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
-            _attrib = new AttributeRepository(_config, _onedb);
-            _invoiceRepository = new InvoiceRepository(_config, _onedb);
+            _sessionService = sessionService;
+            _attrib = new AttributeRepository(_config, _onedb, _sessionService);
+            _invoiceRepository = new InvoiceRepository(_config, _onedb, _sessionService);
         }
 
         public async Task<List<ProjectVM>> GetUserBoards()
         {
-            var userId = AppDataUtility.SessionUser.Id;
+            var userId = _sessionService.SessionUser.Id;
             var boards = await _onedb.Projects
     .Where(x => x.ProjectUsers.Any(pu => pu.UserId == userId && pu.IsActive == true) && x.IsActive == true)
     .Select(pb => new ProjectVM
@@ -86,7 +88,7 @@ namespace MarketBal.Repository.IPM
                 {
                     ProjectId = newId,
                     ProjectName = model.ProjectName,
-                    BranchId = AppDataUtility.SessionUser.Person.Branch.BranchId,
+                    BranchId = _sessionService.SessionUser.Person.Branch.BranchId,
                     StartDate = DateTime.UtcNow,
                     IsActive = true,
                     IsModified = false,
@@ -158,7 +160,7 @@ namespace MarketBal.Repository.IPM
                 {
                     ProjectUserId = Guid.NewGuid(),
                     ProjectId = newId,
-                    UserId = AppDataUtility.SessionUser.Id,
+                    UserId = _sessionService.SessionUser.Id,
                     IsActive = true,
                     IsDeleted = false,
                     CreatedOn = DateTime.UtcNow

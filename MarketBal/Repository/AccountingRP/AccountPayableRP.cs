@@ -14,13 +14,15 @@ namespace MarketBal.Repository.AccountingRP
         private readonly ApiMethods _api;
         private readonly OneDb _onedb;
         private readonly DapperContext _dap;
-        public AccountPayableRP(IConfiguration config, OneDb oneDb)
+        private readonly ISessionService _sessionService;
+        public AccountPayableRP(IConfiguration config, OneDb oneDb, ISessionService sessionService  )
         {
             _config = config;
             _db = new DBManager(_config);
             _api = new ApiMethods();
             _onedb = oneDb;
             _dap = new DapperContext(_config);
+            _sessionService = sessionService;
         }
         public async Task<int> AddCreditPurchase(PurchaseMaster master,JournalEntry journalEntry)
         {
@@ -33,7 +35,7 @@ namespace MarketBal.Repository.AccountingRP
                 JournalEntryId = journalEntry.JournalEntryId,
                 BranchId = master.BranchId.Value,
                 CreatedAt = DateTime.UtcNow,
-                CreatedBy = AppDataUtility.SessionUser.Id,
+                CreatedBy = _sessionService.SessionUser.Id,
                 DueDate = DateTime.Now,
                 PurchaseId = master.PurchaseMasterId,
                 SupplierId = master.SupplierId.Value,
