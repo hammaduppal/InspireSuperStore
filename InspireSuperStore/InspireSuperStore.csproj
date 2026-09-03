@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="..\..\..\..\..\Pictures\Screenshots\contactus.png" Link="wwwroot\assets\img\RE\contactus.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.7" />
@@ -53,6 +57,7 @@
     <Folder Include="Areas\ReportingArea\Data\" />
     <Folder Include="Areas\ReportingArea\Models\" />
     <Folder Include="Areas\ReportingArea\Views\" />
+    <Folder Include="Areas\REstate\Data\" />
     <Folder Include="Repositories\" />
   </ItemGroup>
 

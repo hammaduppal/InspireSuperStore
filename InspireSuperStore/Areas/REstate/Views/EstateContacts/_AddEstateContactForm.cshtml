@@ -1,0 +1,143 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+    ViewData["Title"] = "AddUser";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var contactTypeName = ViewBag.ContactType as string ?? "";
+
+}
+<div class="page-header page-header-light">
+    <div class="page-header-content header-elements-md-inline">
+
+        <div class="d-flex">
+            <div class="breadcrumb">
+                <a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+                <span class="breadcrumb-item active">Add @contactTypeName</span>
+            </div>
+
+            <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+        </div>
+    </div>
+
+
+</div>
+<div class="content">
+    <!-- Form validation -->
+    <div id="ohMyCard" class="card shadow-5">
+        <div class="card-body">
+            <form id="estate-contact-form">
+                <fieldset>
+                    <input type="hidden" id="RecompanyContactId" name="RecompanyContactId" value="@Model.CompanyContact?.RecompanyContactId" />
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="FullName">Full Name</label>
+                            <input type="text" class="form-control" id="FullName" name="FullName" value="@Model.CompanyContact?.FullName" required />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="Cnic">CNIC</label>
+                            <input type="text" class="form-control" id="Cnic" name="Cnic" value="@Model.CompanyContact?.Cnic" />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="Email">Email</label>
+                            <input type="email" class="form-control" id="Email" name="Email" value="@Model.CompanyContact?.Email" />
+                        </div>
+                    </div>
+
+
+
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="MobileHome">Mobile</label>
+                            <input type="text" class="form-control" id="MobileHome" name="MobileHome" value="@Model.CompanyContact?.MobileHome" />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="MobileWork">Mobile Two</label>
+                            <input type="text" class="form-control" id="MobileWork" name="MobileWork" value="@Model.CompanyContact?.MobileWork" />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="LandLine">Landline</label>
+                            <input type="text" class="form-control" id="LandLine" name="LandLine" value="@Model.CompanyContact?.LandLine" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label for="MobileHome">Address</label>
+                            <textarea id="address" class="form-control">@Model?.CompanyContact?.Readdresses?.FirstOrDefault()?.ReaddressName</textarea>
+                        </div>
+
+                    </div>
+                    @await Html.PartialAsync("~/Views/Shared/CountryStateCity.cshtml", Model)
+                </fieldset>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="RecontactType">Contact Type</label>
+                        <input id="RecontactType" type="text" value="@contactTypeName" disabled />
+                    </div>
+                    <div class="form-group col-md-6 d-flex align-items-end">
+                        @if (Model.CompanyContact==null || Model.CompanyContact.RecompanyId==0)
+                        {
+                            <button type="submit" class="btn btn-primary btn-add ml-auto">Save</button>
+                        }
+                        else
+                        {
+
+                            <button type="submit" class="btn btn-primary ml-auto">Update</button>
+
+                        }
+
+                    </div>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+
+
+
+<script>
+
+
+    $('#estate-contact-form').on('submit', async function(e){
+            e.preventDefault();
+            Utility.startSpinner('#ohMyCard','Adding Contact Please Wait!.............');
+            const model = {
+                RecompanyContactId:$('#RecompanyContactId').val(),
+                FullName: $('#FullName').val(),
+                Cnic: $('#Cnic').val(),
+                Email: $('#Email').val(),
+                MobileHome: $('#MobileHome').val(),
+                MobileWork: $('#MobileWork').val(),
+                LandLine: $('#LandLine').val(),
+                Address: $('#address').val(),
+                RecontactTypeName: $('#RecontactType').val(),
+                CityId:$('#city').val()
+            };
+            var objectData = {
+                url:'/EstateContacts/AddContactPerson',
+                data:model
+            }
+
+            const res = await Utility.RequestDataAjax(objectData);
+            Utility.stopSpinner('#ohMyCard');
+
+            if(res.statusCode==="200")
+            {
+               Utility.successMessage(res.Message);
+                $('#estate-contact-form')[0].reset();
+                
+                
+            } else {
+               Utility.failMessage(res.Message);
+
+            }
+        });
+
+       
+   
+</script>
+
+

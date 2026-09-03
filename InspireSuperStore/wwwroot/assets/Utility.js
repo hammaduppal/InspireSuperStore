@@ -455,7 +455,7 @@ const Utility = {
 
     RequestDataAjax: async function (data) {
         try {
-            
+            debugger;
             const response = await $.ajax({
                 url: data.url,
                 data: data.data,

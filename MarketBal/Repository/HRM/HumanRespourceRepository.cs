@@ -44,5 +44,15 @@ namespace MarketBal.Repository.HRM
         {
             return await _onedb.Customers.Include(x => x.Person).Where(x => x.IsDeleted == false && x.IsActive == true).ToListAsync();
         }
+
+
+        public async Task<List<CityVM>> GetCitybyCountry(string countryName)
+        {
+            return await _onedb.Cities.Where(x=>x.StateProvince.Country.CountryName==countryName).Select(x => new CityVM
+            {
+                CityId = x.CityId,
+                CityName = x.CityName
+            }).ToListAsync();
+        }
     }
 }

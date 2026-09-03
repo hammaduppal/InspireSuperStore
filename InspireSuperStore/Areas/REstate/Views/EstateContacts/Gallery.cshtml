@@ -1,0 +1,106 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@using MarketBal.Helper
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Labour";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+    <div class="page-header-content header-elements-md-inline">
+
+        <div class="d-flex">
+            <div class="breadcrumb">
+                <a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+                <span class="breadcrumb-item active">Gallery</span>
+            </div>
+
+            <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- Content area -->
+<!-- Content area -->
+<div class="content">
+
+	<!-- Media library -->
+	<div class="card">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Gallery</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<a id="" href="/EstateContacts/AddGallery" class="btn btn-success ">Add Gallery</a>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<table class="table table-striped media-library">
+			<thead>
+				<tr>
+					<th><input type="checkbox" class="form-input-styled"></th>
+					<th>Preview</th>
+					<th>Name</th>
+					<th>Author</th>
+					<th>Date</th>
+					<th>File info</th>
+					<th class="text-center">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><input type="checkbox" class="form-input-styled"></td>
+					<td>
+						<a href="../../../../global_assets/images/placeholders/placeholder.jpg" data-popup="lightbox">
+							<img src="../../../../global_assets/images/placeholders/placeholder.jpg" alt="" class="img-preview rounded">
+						</a>
+					</td>
+					<td><span href="#">Ignorant saw her drawings</span></td>
+					<td><span href="#">Eugene Kopyov</span></td>
+					<td>Jun 10, 2015</td>
+					<td>
+						<ul class="list-unstyled mb-0">
+							<li><span class="font-weight-semibold">Size:</span> 215 Kb</li>
+							<li><span class="font-weight-semibold">Format:</span> .jpg</li>
+						</ul>
+					</td>
+					<td class="text-center">
+						<div class="list-icons">
+							<div class="list-icons-item dropdown">
+								<a href="#" class="list-icons-item caret-0 dropdown-toggle" data-toggle="dropdown">
+									<i class="icon-menu9"></i>
+								</a>
+
+								<div class="dropdown-menu dropdown-menu-right">
+									<a href="#" class="dropdown-item"><i class="icon-pencil7"></i> Edit file</a>
+									<a href="#" class="dropdown-item"><i class="icon-copy4"></i> Copy file</a>
+									<a href="#" class="dropdown-item"><i class="icon-eye-blocked"></i> Unpublish</a>
+									<div class="dropdown-divider"></div>
+									<a href="#" class="dropdown-item"><i class="icon-bin"></i> Move to trash</a>
+								</div>
+							</div>
+						</div>
+					</td>
+				</tr>
+
+				
+			</tbody>
+		</table>
+	</div>
+
+</div>
+<script>
+    $(document).ready(function(){
+        $('.table').DataTable();
+
+   
+    });
+</script>

@@ -1,0 +1,176 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+
+@{
+	ViewData["Title"] = "Business Entities";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+<!-- Content area -->
+<div class="content">
+	<!-- Default grid -->
+	<div class="row">
+		<div class="col-lg-6">
+			<div class="card">
+				<div class="card-header header-elements-inline">
+					<h6 class="card-title">Business Category Type</h6>
+
+				</div>
+
+				<div class="card-body">
+					<form id="businessCategory" action="#">
+						<div class="row">
+							<div class="col-md-2">
+								<div class="form-group">
+									<label>Entities</label>
+								</div>
+							</div>
+
+							<div class="col-md-10">
+								<div>
+									<select class="form-control select">
+										@foreach (var item in Model.BusinessCategories)
+										{
+											<option>@item.BusinessCategoryName</option>
+
+										}
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-2">
+								<div class="form-group">
+									<label>EntityType</label>
+								</div>
+							</div>
+
+							<div class="col-md-10">
+								<div class="form-group">
+									<input id="businessCategoryName" type="text" class="form-control" placeholder="Business Category Name" required />
+								</div>
+							</div>
+						</div>
+
+
+						<div class="text-right">
+							<button type="submit" class="btn btn-primary">Submit <i class="icon-paperplane ml-2"></i></button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-lg-6">
+			<div class="card">
+				<div class="card-header header-elements-inline">
+					<h6 class="card-title">Business Entity Type</h6>
+				</div>
+				<div class="card-body">
+					<form id="addEntityForm" action="#">
+						<div class="row">
+							<div class="col-md-2">
+								<div class="form-group">
+									<label>Entities</label>
+								</div>
+							</div>
+							<div class="col-md-10">
+								<div class="form-group">
+									<select class="form-control select">
+										@foreach (var item in Model.BusinessEntities)
+										{
+											<option>@item.BusinessEntityTypeName</option>
+										}
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-2">
+								<div class="form-group">
+									<label>EntityType</label>
+								</div>
+							</div>
+
+							<div class="col-md-10">
+								<div class="form-group">
+									<input id="businessEntityName" type="text" class="form-control" placeholder="Business Entity Type" required />
+								</div>
+							</div>
+						</div>
+
+
+						<div class="text-right">
+							<button type="submit" class="btn btn-primary">Submit <i class="icon-paperplane ml-2"></i></button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+
+
+</div>
+<script>
+	$('#addEntityForm').submit(function(e){
+		e.preventDefault();
+		debugger
+		var formData={
+			BusinessEntityTypeName:$('#businessEntityName').val()
+		}
+		$.ajax({
+			url:'/AdminPanel/AddBusinessEntity',
+			method:'POST',
+			data:formData,
+			success:function(result){
+				debugger
+				if(result.statusCode==='200')
+				{
+					Utility.successMessage('Record Saved Successfully');
+					location.reload();
+				}
+				else if(result.statusCode==='210'){
+					Utility.infoMessage('Already Exists');
+
+				}
+				else{
+					Utility.failMessage('Some Error in Application');
+
+				}
+			}
+		})
+	});
+		$('#businessCategory').submit(function(e){
+		e.preventDefault();
+		debugger
+		var formData={
+			BusinessCategoryName:$('#businessCategoryName').val()
+		}
+		$.ajax({
+			url:'/AdminPanel/AddBusinessCategory',
+			method:'POST',
+			data:formData,
+			success:function(result){
+				debugger
+				if(result.statusCode==='200')
+				{
+					Utility.successMessage('Record Saved Successfully');
+					setTimeout(function(){
+					location.reload();
+
+					},500)
+				}
+				else if(result.statusCode==='210'){
+					Utility.infoMessage('Already Exists');
+
+				}
+				else{
+					Utility.failMessage('Some Error in Application');
+
+				}
+			}
+		})
+	});
+</script>

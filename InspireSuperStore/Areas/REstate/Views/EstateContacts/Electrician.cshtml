@@ -1,0 +1,123 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@using MarketBal.Helper
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Labour";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+    <div class="page-header-content header-elements-md-inline">
+
+        <div class="d-flex">
+            <div class="breadcrumb">
+                <a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+                <span class="breadcrumb-item active">@ReContactType.Electrician.ToString()</span>
+            </div>
+
+            <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- Content area -->
+<div class="content">
+
+
+    <div class="card shadow-5">
+        <div class="card-header header-elements-inline">
+            <h5 class="card-title">@ReContactType.Electrician.ToString()</h5>
+            <div class="header-elements">
+
+                <div class="header-elements d-none">
+                    <div class="d-flex justify-content-center">
+                        <a id="addLabour" href="/EstateContacts/_AddEstateContactForm?contactType=@ReContactType.Electrician.ToString()" class="btn btn-success ">Add @ReContactType.Electrician.ToString()</a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Full Name</th>
+                        <th>CNIC</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+
+                        <th>Address</th>
+                        <th>Contact Type</th>
+                        <th>Manage</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.CompanyContacts)
+                    {
+                        <tr>
+                            <td>@item.RecompanyContactId</td>
+                            <td>@item.FullName</td>
+                            <td>@item.Cnic</td>
+                            <td>@item.Email</td>
+                            <td>@item.MobileHome <br /> @item.MobileWork <br /> @item.MobileHome)</td>
+                            <td>
+
+                                @foreach (var add in item.Readdresses)
+                                {
+                                    <span>@add.ReaddressName</span>
+                                    <br />
+                                    <span>@add.City.CityName</span>
+                                }
+
+                                @(item.Recompany != null ? item.Recompany.RecontactName : "")
+                            </td>
+                            <td>@(item.RecontactType != null ? item.RecontactType.RecontactTypeName : "")</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-secondary edit-contact" href="/EstateContacts/_AddEstateContactForm?contactType=@ReContactType.Electrician.ToString()&contactId=@item.RecompanyContactId" data-contactid="@item.RecompanyContactId">Edit</a>
+
+                            </td>
+
+                        </tr>
+
+                    }
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+
+</div>
+
+
+<!-- /content area -->
+<script>
+    $(document).ready(function(){
+        $('.table').DataTable();
+
+    $('#view-contact').click(async function(e){
+        e.preventDefault();
+        var contactId = $(this).attr('data-contactid');
+        const form =await Utility.RequestAjax('/EstateContacts/_ViewContact?contactType=Contractor')
+            $('.full-modal-title').html('Add Product');
+                        $('#modal-body-horizontal').html(form);
+                        $('.modal-title-horizontal').html('Add Employee Department');
+
+                        $('#modal_form_horizontal').modal(
+                        {
+                         backdrop: 'static',
+                            keyboard: false
+                        }
+                        );
+    });
+
+    });
+</script>

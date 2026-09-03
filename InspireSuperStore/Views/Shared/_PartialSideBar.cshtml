@@ -2,7 +2,7 @@
 @using MainModels.Util
 @model PagesViewModel
 @{
-	string application = "PM";
+	string[] application = ["REALESTATE"];
 }
 <div class="sidebar-content">
 
@@ -29,7 +29,7 @@
 					</span>
 				</a>
 			</li>
-			@if(application=="PM")
+			@if(application.Contains("PM"))
 			{
 				<li class="nav-item nav-item-submenu">
 					<a href="#" class="nav-link "><i class="icon-stack3 icon-2x  text-blue-300"></i><span>Board</span></a>
@@ -44,7 +44,7 @@
 					</ul>
 				</li>
 			}
-			else if(application=="test")
+			else if(application.Contains("POS"))
 			{
 				<li class="nav-item nav-item-submenu">
 					<a href="#" class="nav-link "><i class="icon-stack3 icon-2x  text-blue-300"></i><span>Board</span></a>
@@ -255,9 +255,103 @@
 						</ul>
 					</li>
 				}
-			
+
 			}
-			
+			else if (application.Contains("REALESTATE"))
+			{
+				<li class="nav-item">
+					<a href="/labour" class="nav-link ">
+						<i class="icon-construction  icon-2x text-primary-300"></i>
+						<span>
+							Labour Work
+						</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a href="/suppliers" class="nav-link ">
+						<i class="icon-truck icon-2x text-primary-300"></i>
+						<span>
+							Suppliers
+						</span>
+					</a>
+				</li>
+
+				<li class="nav-item">
+					<a href="/companies" class="nav-link ">
+						<i class="icon-briefcase3 icon-2x text-primary-300"></i>
+						<span>
+							Organizations
+						</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a href="/gallery" class="nav-link ">
+						<i class="icon-briefcase3 icon-2x text-primary-300"></i>
+						<span>
+							Gallery
+						</span>
+					</a>
+				</li>
+
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-stack3 icon-2x  text-blue-300"></i><span>Contacts</span></a>
+
+					<ul class="nav nav-group-sub" data-submenu-title="Estate">
+						<li class="nav-item"><a href="/EstateContacts/AllContacts" class="nav-link"><i class="icon-calendar icon-2x text-blue"></i> All Contacts</a></li>
+						@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+						{
+					<li class="nav-item"><a href="/EstateContacts/Labour" class="nav-link"><i class="icon-construction icon-2x text-blue"></i> Labour</a></li>
+					<li class="nav-item"><a href="/EstateContacts/LegalAdvisors" class="nav-link"><i class="icon-briefcase icon-2x text-blue"></i> Legal Advisors</a></li>
+					<li class="nav-item"><a href="/EstateContacts/Supplier" class="nav-link"><i class="icon-truck icon-2x text-blue"></i> Supplier</a></li>
+							<li class="nav-item"><a href="/EstateContacts/CivilEngineer" class="nav-link"><i class="icon-hammer-wrench icon-2x text-blue"></i> Civil Engineer</a></li>
+							<li class="nav-item"><a href="/EstateContacts/Electrician" class="nav-link"><i class="icon-hammer-wrench icon-2x text-blue"></i> Electrician</a></li>
+							<li class="nav-item"><a href="/EstateContacts/Plumber" class="nav-link"><i class="icon-hammer-wrench icon-2x text-blue"></i> Plumber</a></li>
+					<li class="nav-item"><a href="/EstateContacts/Carpenter" class="nav-link"><i class="icon-hammer-wrench icon-2x text-blue"></i> Carpenter</a></li>
+					<li class="nav-item"><a href="/EstateContacts/RealEstateAgent" class="nav-link"><i class="icon-briefcase3 icon-2x text-blue"></i> Real Estate Agent</a></li>
+					<li class="nav-item"><a href="/EstateContacts/PropertyOwner" class="nav-link"><i class="icon-home7 icon-2x text-blue"></i> Property Owner</a></li>
+					<li class="nav-item"><a href="/EstateContacts/Tenant" class="nav-link"><i class="icon-users4 icon-2x text-blue"></i> Tenant</a></li>
+					<li class="nav-item"><a href="/EstateContacts/Investor" class="nav-link"><i class="icon-coins icon-2x text-blue"></i> Investor</a></li>
+						
+						}
+
+					</ul>
+				</li>
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-office icon-2x text-emerald-400"></i><span>Estate & Properties</span></a>
+
+					<ul class="nav nav-group-sub" data-submenu-title="Properties">
+						<li class="nav-item"><a href="/EstateContacts/Index" class="nav-link"><i class="icon-city icon-2x text-success"></i> All Properties</a></li>
+
+						@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+						{
+							<li class="nav-item"><a href="/EstateContacts/Plots" class="nav-link"><i class="icon-location4 icon-2x text-success"></i> Plots</a></li>
+							<li class="nav-item"><a href="/EstateContacts/Flats" class="nav-link"><i class="icon-office icon-2x text-success"></i> Flats & Apartments</a></li>
+							<li class="nav-item"><a href="/EstateContacts/Houses" class="nav-link"><i class="icon-home7 icon-2x text-success"></i> Houses & Villas</a></li>
+							<li class="nav-item"><a href="/EstateContacts/Commercial" class="nav-link"><i class="icon-store icon-2x text-success"></i> Commercial Buildings</a></li>
+							<li class="nav-item"><a href="/EstateContacts/Shops" class="nav-link"><i class="icon-price-tag2 icon-2x text-success"></i> Shops & Plazas</a></li>
+							<li class="nav-item"><a href="/EstateContacts/Agriculture" class="nav-link"><i class="icon-tree7 icon-2x text-success"></i> Agricultural Land</a></li>
+						
+						}
+					</ul>
+				</li>
+				<li class="nav-item nav-item-submenu">
+					<a href="#" class="nav-link "><i class="icon-library2 icon-2x text-pink-400"></i><span>Bank & Finance</span></a>
+
+					<ul class="nav nav-group-sub" data-submenu-title="Banking">
+						<li class="nav-item"><a href="/BankFinance/Accounts" class="nav-link"><i class="icon-credit-card icon-2x text-pink"></i> Bank Accounts</a></li>
+						<li class="nav-item"><a href="/BankFinance/Balances" class="nav-link"><i class="icon-coins icon-2x text-pink"></i> Check Balances</a></li>
+						<li class="nav-item"><a href="/BankFinance/AddFunds" class="nav-link"><i class="icon-coin-dollar icon-2x text-pink"></i> Deposit / Add Funds</a></li>
+						<li class="nav-item"><a href="/BankFinance/TransferFunds" class="nav-link"><i class="icon-make-group icon-2x text-pink"></i> Transfer Funds</a></li>
+
+						@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+						{
+							<li class="nav-item"><a href="/BankFinance/Transactions" class="nav-link"><i class="icon-history icon-2x text-pink"></i> Transaction History</a></li>
+							<li class="nav-item"><a href="/BankFinance/Reconciliation" class="nav-link"><i class="icon-calculator2 icon-2x text-pink"></i> Bank Reconciliation</a></li>
+							<li class="nav-item"><a href="/BankFinance/Cheques" class="nav-link"><i class="icon-book2 icon-2x text-pink"></i> Cheque Management</a></li>
+						}
+					</ul>
+				</li>
+			}
 
 			@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.SuperAdmin))
 			{

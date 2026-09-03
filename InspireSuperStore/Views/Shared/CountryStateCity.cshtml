@@ -7,14 +7,14 @@
 	<div class="col-lg-4">
 		<div class="form-group">
 			<label>Country:</label>
-			<select id="country" data-placeholder="Enter 'Country'" class="form-control select-minimum" data-fouc>
+			<select style="color:black!important" id="country" data-placeholder="Enter 'Country'" class="form-control select-minimum" data-fouc>
 				<option>Select Country</option>
 				<optgroup label="Country">
 					@if (Model.Countries!= null)
 					{
 						@foreach (var country in Model.Countries)
 						{
-							<option value="@country.CountryId">@country.CountryName</option>
+							<option style="color:black!important" value="@country.CountryId">@country.CountryName</option>
 						}
 					}
 					

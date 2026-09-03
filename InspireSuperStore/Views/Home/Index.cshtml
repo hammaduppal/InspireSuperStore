@@ -2,10 +2,12 @@
 @using MainModels.Util
 @model PagesViewModel
 @{
-    ViewData["Title"] = "Home Page";
-    string application = "PM";
+    ViewData["Title"] = "ERP | Inspire Nation";
 }
-
+@{
+    //"PM,POS"
+    string[] application = ["REALESTATE"];
+}
 
 <div class="page-header page-header-light">
     <div class="page-header-content header-elements-md-inline">
@@ -28,8 +30,17 @@
 
 <div class="content">
 
+
+
+
+
+
+
+
+
+
     <div class="row">
-        @if (application == "PM")
+        @if (application.Contains("PM"))
         {
             if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.User))
             {
@@ -53,8 +64,8 @@
                     </a>
                 </div>
             }
-        }
-        else
+        } 
+        else if (application.Contains("POS"))
         {
             @if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.POSUser))
             {
@@ -197,10 +208,158 @@
 
 
         }
+        else if (application.Contains("REALESTATE"))
+        {
+            if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.User))
+            {
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 pb-2 shadow-2">
+                    <a href="/EstateContacts/AllContacts" class="text-decoration-none">
+                            <div class="card shadow-sm border-0  text-center h-100" style="border-radius: 10px;">
+                                <img src="~/assets/img/RE/contactus.png" alt="Contractors" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
+                                <div class="text-dark fw-semibold mt-auto">All Contacts</div>
+                            </div>
+                        </a>
+                    </div>
+             
+            }
+            if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+            {
+                <div class="col-1">
+                    <a href="/ProjectBoard/ProjectUsers" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 p-2 text-center" style="border-radius:10px;">
+                            <img src="~/assets/img/icons/supplierslist.png" alt="Project Users" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
+                            <div class="small text-dark fw-semibold">Project Users</div>
+                        </div>
+                    </a>
+                </div>
+            }
+        }
 
+     
 
     </div>
-    @if (application == "PM")
+    @if (application.Contains("PM"))
+    {
+        if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
+        {
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white header-elements-inline pb-2">
+                            <h5 class="card-title font-weight-bold text-dark"><i class="icon-stack2 mr-2 text-primary"></i> Project Delivery Matrix</h5>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle mb-0">
+                                <thead class="bg-light font-weight-semibold text-muted small text-uppercase">
+                                    <tr>
+                                        <th>Project Space</th>
+                                        <th class="text-center">Health</th>
+                                        <th class="text-center">Total Tasks</th>
+                                        <th class="text-center">Completed</th>
+                                        <th style="width: 25%;">Progress Burn</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.ProjectReports != null)
+                                    {
+                                        @foreach (var proj in Model.ProjectReports)
+                                        {
+                                            var statusBadge = proj.HealthStatus == "On Track" ? "badge-flat border-success text-success-600" :
+                                            proj.HealthStatus == "At Risk" ? "badge-flat border-danger text-danger-600 animate-pulse" :
+                                                                                                                                                                                                                                                                                                                            "badge-flat border-muted text-muted";
+                                            <tr>
+                                                <td><span class="font-weight-semibold text-body">@proj.ProjectName</span></td>
+                                                <td class="text-center"><span class="badge @statusBadge">@proj.HealthStatus</span></td>
+                                                <td class="text-center font-weight-semibold">@proj.TotalTasks</td>
+                                                <td class="text-center text-success font-weight-semibold">@proj.CompletedTasks</td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress w-100 mr-2 shadow-sm" style="height: 6px; border-radius:3px;">
+                                                            <div class="progress-bar bg-success" style="width: @proj.CompletionPercentage.ToString("0")%;"></div>
+                                                        </div>
+                                                        <span class="small font-weight-bold text-dark">@proj.CompletionPercentage.ToString("0")%</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
+
+                </div>
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white header-elements-inline pb-2">
+                            <h5 class="card-title font-weight-bold text-dark"><i class="icon-users4 mr-2 text-indigo"></i> Team Allocation & Workflow Loads</h5>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light font-weight-semibold text-muted small text-uppercase">
+                                    <tr>
+                                        <th>Team Member</th>
+                                        <th class="text-center">Total Tasks</th>
+                                        <th class="text-center">Backlog</th>
+                                        <th class="text-center">In Progress</th>
+                                        <th class="text-center">In Review</th>
+                                        <th class="text-center">QA / Testing</th>
+                                        <th class="text-center">Completed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.UserReports != null)
+                                    {
+                                        @foreach (var user in Model.UserReports)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="mr-2">
+                                                            @if (string.IsNullOrEmpty(user.ImageUrl))
+                                                            {
+                                                                <div class="avatar-placeholder bg-indigo text-white rounded-circle d-flex align-items-center justify-content-center font-weight-bold" style="width:32px; height:32px; font-size:10px;">@user.FullName.Substring(0, 1)</div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <img src="@PagesViewModel.SystemSettings.ContentAPIUrl/@user.ImageUrl" class="rounded-circle" style="width:32px; height:32px; object-fit:cover;" />
+                                                            }
+                                                        </div>
+                                                        <span class="font-weight-semibold text-body">@user.FullName</span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center font-weight-bold text-dark font-size-sm">@user.TotalAssigned</td>
+                                                <td class="text-center"><span class="badge badge-light badge-striped text-muted font-weight-semibold px-2">@user.BacklogCount</span></td>
+                                                <td class="text-center"><span class="badge badge-primary font-weight-semibold px-2">@user.InProgressCount</span></td>
+                                                <td class="text-center"><span class="badge badge-warning font-weight-semibold px-2">@user.ReviewCount</span></td>
+                                                <td class="text-center"><span class="badge badge-warning font-weight-semibold px-2">@user.QACount</span></td>
+
+                                                <td class="text-center"><span class="badge badge-success font-weight-semibold px-2">@user.CompletedCount</span></td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
+                </div>
+
+
+
+            </div>
+
+        }
+
+    }
+  
+    
+  
+    @if (application.Contains("REALESTATE"))
     {
         if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
         {
