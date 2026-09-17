@@ -72,7 +72,21 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="RecontactType">Contact Type</label>
-                        <input id="RecontactType" type="text" value="@contactTypeName" disabled />
+                        @if (contactTypeName != "all")
+                        {
+                            <input id="RecontactType" type="text" class="form-control" value="@contactTypeName" disabled />
+                        }
+                        else
+                        {
+                            <select id="RecontactType" class="form-control" required>
+                                <option value="">Please Select Contact Type</option>
+                                @foreach (var item in Model.ContactTypes)
+                                {
+                                    <option value="@item.RecontactTypeName">@item.RecontactTypeName</option>
+                                }
+                            </select>
+                        }
+                       
                     </div>
                     <div class="form-group col-md-6 d-flex align-items-end">
                         @if (Model.CompanyContact==null || Model.CompanyContact.RecompanyId==0)

@@ -20,16 +20,13 @@
 </div>
 
 <div class="content">
-    <div class="card">
+    <div id="ohMyCard" class="card">
         <div class="card-header header-elements-inline">
             <h5 class="card-title">Add Real Estate Property</h5>
         </div>
         <div class="card-body">
             <form id="AddPropertyForm" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
-
-
-                <!-- Removed asp-validation-summary and replaced asp-for bindings with plain name/id attributes -->
 
                 <div class="form-row">
                     <div class="form-group col-md-6">
@@ -324,8 +321,9 @@
         // Form Submission & Data Harvesting
         $('#AddPropertyForm').submit(async function(e) {
             e.preventDefault();
-            debugger
+            Utility.startSpinner('#ohMyCard', 'Adding Contact Please Wait!.............');
 
+            
             // Client-side required fields validation
             var requiredFields = [
                 { selector: '#Title', name: 'Title' },
@@ -414,12 +412,15 @@
                 data: formData,
                 type: 'POST'
             });
+            Utility.stopSpinner('#ohMyCard');
+            if (res.statusCode === "200") {
+                Utility.successMessage(res.Message);
+                $('#AddPropertyForm')[0].reset();
 
-            console.log('Server response:', res);
-            if (res && res.status === 'success') {
-                alert('Form submitted successfully (server acknowledged). Check console for details.');
+                
             } else {
-                alert('Server returned an error. Check console for details.');
+                Utility.failMessage(res.Message);
+
             }
         });
     });

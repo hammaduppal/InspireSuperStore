@@ -5,6 +5,7 @@
 @{
     ViewData["Title"] = "Labour";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    string contactType = ViewBag.ContactType;
 }
 
 <div class="page-header page-header-light">
@@ -35,7 +36,8 @@
 
                 <div class="header-elements d-none">
                     <div class="d-flex justify-content-center">
-                        <a id="addLabour" href="/EstateContacts/_AddEstateContactForm?contactType=all" class="btn btn-success ">Add New Contact</a>
+                        
+                            <a id="addLabour" href="/EstateContacts/_AddEstateContactForm?contactType=@contactType" class="btn btn-success ">Add New Contact</a>
 
                     </div>
                 </div>
@@ -49,10 +51,12 @@
                     <tr>
                         <th>Id</th>
                         <th>Full Name</th>
+                        <th>Mobile (Work)</th>
+                        <th>Mobile (Home)</th>
+                        <th>Landline</th>
                         <th>CNIC</th>
                         <th>Email</th>
-                        <th>Mobile</th>
-
+                      
                         <th>Address</th>
                         <th>Contact Type</th>
                         <th>Manage</th>
@@ -65,9 +69,47 @@
                         <tr>
                             <td>@item.RecompanyContactId</td>
                             <td>@item.FullName</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.MobileWork))
+                                {
+                                    <a href="tel:@item.MobileWork" class="text-default mr-1" title="Call Work Mobile">
+                                        <i class="icon-phone2 text-primary"></i>
+                                    </a>
+                                    <a href="https://wa.me/@item.MobileWork.Replace(" ", "").Replace("-", "").Replace("+", "")" target="_blank" class="text-default mr-1" title="WhatsApp Work Mobile">
+                                        <i class="icon-phone2 text-success"></i>
+                                    </a>
+                                    <span>@item.MobileWork</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.MobileHome))
+                                {
+                                    <a href="tel:@item.MobileHome" class="text-default mr-1" title="Call Home Mobile">
+                                        <i class="icon-phone2 text-primary"></i>
+                                    </a>
+                                    <a href="https://wa.me/@item.MobileHome.Replace(" ", "").Replace("-", "").Replace("+", "")" target="_blank" class="text-default mr-1" title="WhatsApp Home Mobile">
+                                        <i class="icon-phone2 text-success"></i>
+                                    </a>
+                                    <span>@item.MobileHome</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.LandLine))
+                                {
+                                    <a href="tel:@item.LandLine" class="text-default mr-1" title="Call Landline">
+                                        <i class="icon-phone2 text-primary"></i>
+                                    </a>
+                                    <span>@item.LandLine</span>
+                                }
+                            </td>
                             <td>@item.Cnic</td>
                             <td>@item.Email</td>
-                            <td>@item.MobileHome <br /> @item.MobileWork <br /> @item.MobileHome)</td>
+
+                         
+
+                        
+
                             <td>
 
                                 @foreach (var add in item.Readdresses)
@@ -100,24 +142,24 @@
 
 <!-- /content area -->
 <script>
-    $(document).ready(function(){
+    $(document).ready(function() {
         $('.table').DataTable();
 
-    $('#view-contact').click(async function(e){
-        e.preventDefault();
-        var contactId = $(this).attr('data-contactid');
-        const form =await Utility.RequestAjax('/EstateContacts/_ViewContact?contactType=Contractor')
+        $('#view-contact').click(async function(e) {
+            e.preventDefault();
+            var contactId = $(this).attr('data-contactid');
+            const form = await Utility.RequestAjax('/EstateContacts/_ViewContact?contactType=Contractor')
             $('.full-modal-title').html('Add Product');
-                        $('#modal-body-horizontal').html(form);
-                        $('.modal-title-horizontal').html('');
+            $('#modal-body-horizontal').html(form);
+            $('.modal-title-horizontal').html('');
 
-                        $('#modal_form_horizontal').modal(
-                        {
-                         backdrop: 'static',
-                            keyboard: false
-                        }
-                        );
-    });
+            $('#modal_form_horizontal').modal(
+                {
+                    backdrop: 'static',
+                    keyboard: false
+                }
+            );
+        });
 
     });
 </script>

@@ -3,6 +3,7 @@ using MainModels.Models;
 using MainModels.Util;
 using Microsoft.EntityFrameworkCore;
 using MarketBal.Repository.RealEstateRP.Models;
+using System.Collections.Immutable;
 
 namespace MarketBal.Repository.RealEstateRP
 {
@@ -16,6 +17,7 @@ namespace MarketBal.Repository.RealEstateRP
 
         }
 
+        #region ContactsDetails
         public List<RecompanyVM> GetCompanies()
         {
             return _onedb.Recompanies.Select(x => new RecompanyVM
@@ -24,99 +26,112 @@ namespace MarketBal.Repository.RealEstateRP
                 RecontactName = x.RecontactName,
             }).ToList();
         }
-        public List<RecompanyContactVM> GetContacts()
+        public async Task<List<RecompanyContactVM>> GetContacts()
         {
-            var query = _onedb.RecompanyContacts.AsQueryable();
-
-
-            return query.Select(x => new RecompanyContactVM
-            {
-                RecompanyContactId = x.RecompanyContactId,
-                FullName = x.FullName,
-                Cnic = x.Cnic,
-                RecontactTypeId = x.RecontactTypeId,
-                RecompanyId = x.RecompanyId,
-                CreatedOn = x.CreatedOn,
-                CreatedBy = x.CreatedBy,
-                ModifiedOn = x.ModifiedOn,
-                ModifiedBy = x.ModifiedBy,
-                Email = x.Email,
-                MobileHome = x.MobileHome,
-                MobileWork = x.MobileWork,
-                LandLine = x.LandLine,
-                Recompany = x.Recompany == null ? null : new RecompanyVM
+            return await _onedb.RecompanyContacts
+                .AsNoTracking()
+                .OrderByDescending(x => x.CreatedOn)
+                .Select(x => new RecompanyContactVM
                 {
-                    RecompanyId = x.Recompany.RecompanyId,
-                    RecontactName = x.Recompany.RecontactName
-                },
-                RecontactType = x.RecontactType == null ? null : new RecontactTypeVM
-                {
-                    RecontactTypeId = x.RecontactType.RecontactTypeId,
-                    RecontactTypeName = x.RecontactType.RecontactTypeName
-                },
-                Readdresses = x.Readdresses.Select(a => new ReaddressVM
-                {
-                    ReaddressId = a.ReaddressId,
-                    ReaddressName = a.ReaddressName,
-                    CityId = a.CityId,
-                    ReaddressType = a.ReaddressType,
-                    CreatedOn = a.CreatedOn,
-                    CreatedBy = a.CreatedBy,
-                    ModifiedOn = a.ModifiedOn,
-                    ModifiedBy = a.ModifiedBy,
-                    RecompanyContactId = a.RecompanyContactId,
-                    City = a.City == null ? null : new CityVM { CityId = a.City.CityId, CityName = a.City.CityName }
-                }).ToList()
-            }).ToList();
+                    RecompanyContactId = x.RecompanyContactId,
+                    FullName = x.FullName,
+                    Cnic = x.Cnic,
+                    RecontactTypeId = x.RecontactTypeId,
+                    RecompanyId = x.RecompanyId,
+                    CreatedOn = x.CreatedOn,
+                    CreatedBy = x.CreatedBy,
+                    ModifiedOn = x.ModifiedOn,
+                    ModifiedBy = x.ModifiedBy,
+                    Email = x.Email,
+                    MobileHome = x.MobileHome,
+                    MobileWork = x.MobileWork,
+                    LandLine = x.LandLine,
+                    Recompany = x.Recompany == null ? null : new RecompanyVM
+                    {
+                        RecompanyId = x.Recompany.RecompanyId,
+                        RecontactName = x.Recompany.RecontactName
+                    },
+                    RecontactType = x.RecontactType == null ? null : new RecontactTypeVM
+                    {
+                        RecontactTypeId = x.RecontactType.RecontactTypeId,
+                        RecontactTypeName = x.RecontactType.RecontactTypeName
+                    },
+                    Readdresses = x.Readdresses.Select(a => new ReaddressVM
+                    {
+                        ReaddressId = a.ReaddressId,
+                        ReaddressName = a.ReaddressName,
+                        CityId = a.CityId,
+                        ReaddressType = a.ReaddressType,
+                        CreatedOn = a.CreatedOn,
+                        CreatedBy = a.CreatedBy,
+                        ModifiedOn = a.ModifiedOn,
+                        ModifiedBy = a.ModifiedBy,
+                        RecompanyContactId = a.RecompanyContactId,
+                        City = a.City == null ? null : new CityVM
+                        {
+                            CityId = a.City.CityId,
+                            CityName = a.City.CityName
+                        }
+                    }).ToList()
+                })
+                .ToListAsync();
         }
 
-        public List<RecompanyContactVM> GetContacts(string contactType)
+        public async Task<List<RecompanyContactVM>> GetContacts(string contactType = null)
         {
-            var query = _onedb.RecompanyContacts.AsQueryable();
-            if (!string.IsNullOrEmpty(contactType))
+            var query = _onedb.RecompanyContacts.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(contactType))
             {
                 query = query.Where(x => x.RecontactType != null && x.RecontactType.RecontactTypeName == contactType);
             }
 
-            return query.Select(x => new RecompanyContactVM
-            {
-                RecompanyContactId = x.RecompanyContactId,
-                FullName = x.FullName,
-                Cnic = x.Cnic,
-                RecontactTypeId = x.RecontactTypeId,
-                RecompanyId = x.RecompanyId,
-                CreatedOn = x.CreatedOn,
-                CreatedBy = x.CreatedBy,
-                ModifiedOn = x.ModifiedOn,
-                ModifiedBy = x.ModifiedBy,
-                Email = x.Email,
-                MobileHome = x.MobileHome,
-                MobileWork = x.MobileWork,
-                LandLine = x.LandLine,
-                Recompany = x.Recompany == null ? null : new RecompanyVM
+            return await query
+                .OrderByDescending(x => x.CreatedOn)
+                .Select(x => new RecompanyContactVM
                 {
-                    RecompanyId = x.Recompany.RecompanyId,
-                    RecontactName = x.Recompany.RecontactName
-                },
-                RecontactType = x.RecontactType == null ? null : new RecontactTypeVM
-                {
-                    RecontactTypeId = x.RecontactType.RecontactTypeId,
-                    RecontactTypeName = x.RecontactType.RecontactTypeName
-                },
-                Readdresses = x.Readdresses.Select(a => new ReaddressVM
-                {
-                    ReaddressId = a.ReaddressId,
-                    ReaddressName = a.ReaddressName,
-                    CityId = a.CityId,
-                    ReaddressType = a.ReaddressType,
-                    CreatedOn = a.CreatedOn,
-                    CreatedBy = a.CreatedBy,
-                    ModifiedOn = a.ModifiedOn,
-                    ModifiedBy = a.ModifiedBy,
-                    RecompanyContactId = a.RecompanyContactId,
-                    City = a.City == null ? null : new CityVM { CityId = a.City.CityId, CityName = a.City.CityName }
-                }).ToList()
-            }).ToList();
+                    RecompanyContactId = x.RecompanyContactId,
+                    FullName = x.FullName,
+                    Cnic = x.Cnic,
+                    RecontactTypeId = x.RecontactTypeId,
+                    RecompanyId = x.RecompanyId,
+                    CreatedOn = x.CreatedOn,
+                    CreatedBy = x.CreatedBy,
+                    ModifiedOn = x.ModifiedOn,
+                    ModifiedBy = x.ModifiedBy,
+                    Email = x.Email,
+                    MobileHome = x.MobileHome,
+                    MobileWork = x.MobileWork,
+                    LandLine = x.LandLine,
+                    Recompany = x.Recompany == null ? null : new RecompanyVM
+                    {
+                        RecompanyId = x.Recompany.RecompanyId,
+                        RecontactName = x.Recompany.RecontactName
+                    },
+                    RecontactType = x.RecontactType == null ? null : new RecontactTypeVM
+                    {
+                        RecontactTypeId = x.RecontactType.RecontactTypeId,
+                        RecontactTypeName = x.RecontactType.RecontactTypeName
+                    },
+                    Readdresses = x.Readdresses.Select(a => new ReaddressVM
+                    {
+                        ReaddressId = a.ReaddressId,
+                        ReaddressName = a.ReaddressName,
+                        CityId = a.CityId,
+                        ReaddressType = a.ReaddressType,
+                        CreatedOn = a.CreatedOn,
+                        CreatedBy = a.CreatedBy,
+                        ModifiedOn = a.ModifiedOn,
+                        ModifiedBy = a.ModifiedBy,
+                        RecompanyContactId = a.RecompanyContactId,
+                        City = a.City == null ? null : new CityVM
+                        {
+                            CityId = a.City.CityId,
+                            CityName = a.City.CityName
+                        }
+                    }).ToList()
+                })
+                .ToListAsync();
         }
 
         public async Task<RecompanyContactVM> GetContact(int id)
@@ -323,6 +338,19 @@ namespace MarketBal.Repository.RealEstateRP
                 return false;
             }
         }
+        public async Task<List<RecontactTypeVM>> ContactTypes()
+        {
+            return await _onedb.RecontactTypes.Select(x => new RecontactTypeVM
+            {
+                RecontactTypeId = x.RecontactTypeId,
+                RecontactTypeName = x.RecontactTypeName
+
+            }).ToListAsync();
+        }
+        #endregion
+
+
+        #region PropertiesSection
 
         public async Task<List<RepropertyTypeVM>> GetPropertyTypes()
         {
@@ -340,6 +368,345 @@ namespace MarketBal.Repository.RealEstateRP
                 PurposeTypeName = a.PurposeTypeName,
             }).ToListAsync();
         }
+
+        public async Task<List<RepropertyVM>> GetAllProperties()
+        {
+            return await _onedb.Reproperties
+                .AsNoTracking()
+                .OrderByDescending(x => x.CreatedOn)
+                .Select(x => new RepropertyVM
+                {
+                    PropertyId = x.PropertyId,
+                    Title = x.Title,
+                    Description = x.Description,
+                    PropertyCode = x.PropertyCode,
+                    PropertyTypeId = x.PropertyTypeId,
+                    PurposeTypeId = x.PurposeTypeId,
+                    PropertyStatusTypeId = x.PropertyStatusTypeId,
+                    CityId = x.CityId,
+                    LocalityId = x.LocalityId,
+                    SubLocalityId = x.SubLocalityId,
+                    AddressDetails = x.AddressDetails,
+                    Latitude = x.Latitude,
+                    Longitude = x.Longitude,
+                    BaseSizeInSqFt = x.BaseSizeInSqFt,
+                    DisplayUnitId = x.DisplayUnitId,
+                    DimensionFront = x.DimensionFront,
+                    DimensionDepth = x.DimensionDepth,
+                    CoveredAreaSqFt = x.CoveredAreaSqFt,
+                    Price = x.Price,
+                    SecurityDeposit = x.SecurityDeposit,
+                    LeaseDurationMonths = x.LeaseDurationMonths,
+                    AdvanceRentMonths = x.AdvanceRentMonths,
+                    IsPriceNegotiable = x.IsPriceNegotiable,
+                    MaintenanceFee = x.MaintenanceFee,
+                    Bedrooms = x.Bedrooms,
+                    Bathrooms = x.Bathrooms,
+                    FloorsCount = x.FloorsCount,
+                    ParkingSpaces = x.ParkingSpaces,
+                    ConstructionStatusTypeId = x.ConstructionStatusTypeId,
+                    YearBuilt = x.YearBuilt,
+                    KhasraNumber = x.KhasraNumber,
+                    KhewatNumber = x.KhewatNumber,
+                    KhatoniNumber = x.KhatoniNumber,
+                    MouzaName = x.MouzaName,
+                    WaterSourceTypeId = x.WaterSourceTypeId,
+                    NocStatusTypeId = x.NocStatusTypeId,
+                    PossessionStatusTypeId = x.PossessionStatusTypeId,
+                    OwnershipTypeId = x.OwnershipTypeId,
+                    HasGas = x.HasGas,
+                    HasElectricity = x.HasElectricity,
+                    HasWaterSupply = x.HasWaterSupply,
+                    HasSewerage = x.HasSewerage,
+                    IsCornerPlot = x.IsCornerPlot,
+                    IsMainBoulevard = x.IsMainBoulevard,
+                    IsParkFacing = x.IsParkFacing,
+                    IsFeatured = x.IsFeatured,
+                    IsActive = x.IsActive,
+                    CreatedOn = x.CreatedOn,
+                    CreatedBy = x.CreatedBy,
+                    ModifiedOn = x.ModifiedOn,
+                    ModifiedBy = x.ModifiedBy,
+
+                    // Navigation Objects
+                    City = x.City == null ? null : new CityVM
+                    {
+                        CityId = x.City.CityId,
+                        CityName = x.City.CityName
+                    },
+                    Locality = x.Locality == null ? null : new LocalityVM
+                    {
+                        LocalityId = x.Locality.LocalityId,
+                        LocalityName = x.Locality.LocalityName
+                    },
+                    SubLocality = x.SubLocality == null ? null : new SubLocalityVM
+                    {
+                        SubLocalityId = x.SubLocality.SubLocalityId,
+                        SubLocalityName = x.SubLocality.SubLocalityName
+                    },
+
+                    // Child Collections
+                    PropertyMedia = x.PropertyMedia
+                        .OrderBy(m => m.DisplayOrder)
+                        .Select(m => new PropertyMediumVM
+                        {
+                            PropertyMediaId = m.PropertyMediaId,
+                            PropertyId = m.PropertyId,
+                            MediaTypeId = m.MediaTypeId,
+                            MediaUrl = m.MediaUrl,
+                            Caption = m.Caption,
+                            DisplayOrder = m.DisplayOrder,
+                            IsFeatured = m.IsFeatured,
+                            CreatedOn = m.CreatedOn
+                        }).ToList(),
+
+                    PropertyEnquiries = x.PropertyEnquiries.Select(e => new PropertyEnquiryVM
+                    {
+                        EnquiryId = e.EnquiryId,
+                        PropertyId = e.PropertyId,
+                        FullName = e.FullName,
+                        Email = e.Email,
+                        Phone = e.Phone,
+                        Message = e.Message,
+                        CreatedOn = e.CreatedOn
+                    }).ToList(),
+
+                    Amenities = x.Amenities.Select(a => new AmenityVM
+                    {
+                        AmenityId = a.AmenityId,
+                        AmenityName = a.AmenityName,
+                        IconClass = a.IconClass
+                    }).ToList()
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<RepropertyVM>> GetPropertiesByType(int propertyTypeId)
+        {
+            return await _onedb.Reproperties
+                .AsNoTracking()
+                .Where(x => x.PropertyTypeId == propertyTypeId)
+                .OrderByDescending(x => x.CreatedOn)
+                .Select(x => new RepropertyVM
+                {
+                    PropertyId = x.PropertyId,
+                    Title = x.Title,
+                    Description = x.Description,
+                    PropertyCode = x.PropertyCode,
+                    PropertyTypeId = x.PropertyTypeId,
+                    PurposeTypeId = x.PurposeTypeId,
+                    PropertyStatusTypeId = x.PropertyStatusTypeId,
+                    CityId = x.CityId,
+                    LocalityId = x.LocalityId,
+                    SubLocalityId = x.SubLocalityId,
+                    AddressDetails = x.AddressDetails,
+                    Latitude = x.Latitude,
+                    Longitude = x.Longitude,
+                    BaseSizeInSqFt = x.BaseSizeInSqFt,
+                    DisplayUnitId = x.DisplayUnitId,
+                    DimensionFront = x.DimensionFront,
+                    DimensionDepth = x.DimensionDepth,
+                    CoveredAreaSqFt = x.CoveredAreaSqFt,
+                    Price = x.Price,
+                    SecurityDeposit = x.SecurityDeposit,
+                    LeaseDurationMonths = x.LeaseDurationMonths,
+                    AdvanceRentMonths = x.AdvanceRentMonths,
+                    IsPriceNegotiable = x.IsPriceNegotiable,
+                    MaintenanceFee = x.MaintenanceFee,
+                    Bedrooms = x.Bedrooms,
+                    Bathrooms = x.Bathrooms,
+                    FloorsCount = x.FloorsCount,
+                    ParkingSpaces = x.ParkingSpaces,
+                    ConstructionStatusTypeId = x.ConstructionStatusTypeId,
+                    YearBuilt = x.YearBuilt,
+                    KhasraNumber = x.KhasraNumber,
+                    KhewatNumber = x.KhewatNumber,
+                    KhatoniNumber = x.KhatoniNumber,
+                    MouzaName = x.MouzaName,
+                    WaterSourceTypeId = x.WaterSourceTypeId,
+                    NocStatusTypeId = x.NocStatusTypeId,
+                    PossessionStatusTypeId = x.PossessionStatusTypeId,
+                    OwnershipTypeId = x.OwnershipTypeId,
+                    HasGas = x.HasGas,
+                    HasElectricity = x.HasElectricity,
+                    HasWaterSupply = x.HasWaterSupply,
+                    HasSewerage = x.HasSewerage,
+                    IsCornerPlot = x.IsCornerPlot,
+                    IsMainBoulevard = x.IsMainBoulevard,
+                    IsParkFacing = x.IsParkFacing,
+                    IsFeatured = x.IsFeatured,
+                    IsActive = x.IsActive,
+                    CreatedOn = x.CreatedOn,
+                    CreatedBy = x.CreatedBy,
+                    ModifiedOn = x.ModifiedOn,
+                    ModifiedBy = x.ModifiedBy,
+
+                    // Navigation Objects
+                    City = x.City == null ? null : new CityVM
+                    {
+                        CityId = x.City.CityId,
+                        CityName = x.City.CityName
+                    },
+                    Locality = x.Locality == null ? null : new LocalityVM
+                    {
+                        LocalityId = x.Locality.LocalityId,
+                        LocalityName = x.Locality.LocalityName
+                    },
+                    SubLocality = x.SubLocality == null ? null : new SubLocalityVM
+                    {
+                        SubLocalityId = x.SubLocality.SubLocalityId,
+                        SubLocalityName = x.SubLocality.SubLocalityName
+                    },
+
+                    // Child Collections
+                    PropertyMedia = x.PropertyMedia
+                        .OrderBy(m => m.DisplayOrder)
+                        .Select(m => new PropertyMediumVM
+                        {
+                            PropertyMediaId = m.PropertyMediaId,
+                            PropertyId = m.PropertyId,
+                            MediaTypeId = m.MediaTypeId,
+                            MediaUrl = m.MediaUrl,
+                            Caption = m.Caption,
+                            DisplayOrder = m.DisplayOrder,
+                            IsFeatured = m.IsFeatured,
+                            CreatedOn = m.CreatedOn
+                        }).ToList(),
+
+                    PropertyEnquiries = x.PropertyEnquiries.Select(e => new PropertyEnquiryVM
+                    {
+                        EnquiryId = e.EnquiryId,
+                        PropertyId = e.PropertyId,
+                        FullName = e.FullName,
+                        Email = e.Email,
+                        Phone = e.Phone,
+                        Message = e.Message,
+                        CreatedOn = e.CreatedOn
+                    }).ToList(),
+
+                    Amenities = x.Amenities.Select(a => new AmenityVM
+                    {
+                        AmenityId = a.AmenityId,
+                        AmenityName = a.AmenityName,
+                        IconClass = a.IconClass
+                    }).ToList()
+                })
+                .ToListAsync();
+        }
+
+        public async Task<RepropertyVM?> GetPropertyByIdAsync(long propertyId)
+        {
+            return await _onedb.Reproperties
+                .AsNoTracking()
+                .Where(x => x.PropertyId == propertyId)
+                .Select(x => new RepropertyVM
+                {
+                    PropertyId = x.PropertyId,
+                    Title = x.Title,
+                    Description = x.Description,
+                    PropertyCode = x.PropertyCode,
+                    PropertyTypeId = x.PropertyTypeId,
+                    PurposeTypeId = x.PurposeTypeId,
+                    PropertyStatusTypeId = x.PropertyStatusTypeId,
+                    CityId = x.CityId,
+                    LocalityId = x.LocalityId,
+                    SubLocalityId = x.SubLocalityId,
+                    AddressDetails = x.AddressDetails,
+                    Latitude = x.Latitude,
+                    Longitude = x.Longitude,
+                    BaseSizeInSqFt = x.BaseSizeInSqFt,
+                    DisplayUnitId = x.DisplayUnitId,
+                    DimensionFront = x.DimensionFront,
+                    DimensionDepth = x.DimensionDepth,
+                    CoveredAreaSqFt = x.CoveredAreaSqFt,
+                    Price = x.Price,
+                    SecurityDeposit = x.SecurityDeposit,
+                    LeaseDurationMonths = x.LeaseDurationMonths,
+                    AdvanceRentMonths = x.AdvanceRentMonths,
+                    IsPriceNegotiable = x.IsPriceNegotiable,
+                    MaintenanceFee = x.MaintenanceFee,
+                    Bedrooms = x.Bedrooms,
+                    Bathrooms = x.Bathrooms,
+                    FloorsCount = x.FloorsCount,
+                    ParkingSpaces = x.ParkingSpaces,
+                    ConstructionStatusTypeId = x.ConstructionStatusTypeId,
+                    YearBuilt = x.YearBuilt,
+                    KhasraNumber = x.KhasraNumber,
+                    KhewatNumber = x.KhewatNumber,
+                    KhatoniNumber = x.KhatoniNumber,
+                    MouzaName = x.MouzaName,
+                    WaterSourceTypeId = x.WaterSourceTypeId,
+                    NocStatusTypeId = x.NocStatusTypeId,
+                    PossessionStatusTypeId = x.PossessionStatusTypeId,
+                    OwnershipTypeId = x.OwnershipTypeId,
+                    HasGas = x.HasGas,
+                    HasElectricity = x.HasElectricity,
+                    HasWaterSupply = x.HasWaterSupply,
+                    HasSewerage = x.HasSewerage,
+                    IsCornerPlot = x.IsCornerPlot,
+                    IsMainBoulevard = x.IsMainBoulevard,
+                    IsParkFacing = x.IsParkFacing,
+                    IsFeatured = x.IsFeatured,
+                    IsActive = x.IsActive,
+                    CreatedOn = x.CreatedOn,
+                    CreatedBy = x.CreatedBy,
+                    ModifiedOn = x.ModifiedOn,
+                    ModifiedBy = x.ModifiedBy,
+
+                    // Navigation Objects
+                    City = x.City == null ? null : new CityVM
+                    {
+                        CityId = x.City.CityId,
+                        CityName = x.City.CityName
+                    },
+                    Locality = x.Locality == null ? null : new LocalityVM
+                    {
+                        LocalityId = x.Locality.LocalityId,
+                        LocalityName = x.Locality.LocalityName
+                    },
+                    SubLocality = x.SubLocality == null ? null : new SubLocalityVM
+                    {
+                        SubLocalityId = x.SubLocality.SubLocalityId,
+                        SubLocalityName = x.SubLocality.SubLocalityName
+                    },
+
+                    // Child Collections
+                    PropertyMedia = x.PropertyMedia
+                        .OrderBy(m => m.DisplayOrder)
+                        .Select(m => new PropertyMediumVM
+                        {
+                            PropertyMediaId = m.PropertyMediaId,
+                            PropertyId = m.PropertyId,
+                            MediaTypeId = m.MediaTypeId,
+                            MediaUrl = m.MediaUrl,
+                            Caption = m.Caption,
+                            DisplayOrder = m.DisplayOrder,
+                            IsFeatured = m.IsFeatured,
+                            CreatedOn = m.CreatedOn
+                        }).ToList(),
+
+                    PropertyEnquiries = x.PropertyEnquiries.Select(e => new PropertyEnquiryVM
+                    {
+                        EnquiryId = e.EnquiryId,
+                        PropertyId = e.PropertyId,
+                        FullName = e.FullName,
+                        Email = e.Email,
+                        Phone = e.Phone,
+                        Message = e.Message,
+                        CreatedOn = e.CreatedOn
+                    }).ToList(),
+
+                    Amenities = x.Amenities.Select(a => new AmenityVM
+                    {
+                        AmenityId = a.AmenityId,
+                        AmenityName = a.AmenityName,
+                        IconClass = a.IconClass
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
+        }
+
+
 
 
 
@@ -379,34 +746,31 @@ namespace MarketBal.Repository.RealEstateRP
                 };
 
                 List<PropertyMedium> pm = new List<MainModels.Models.PropertyMedium>();
-                foreach (var item in addProperty.VideoUrls)
-                {
-                    pm.Add(new PropertyMedium
-                    {
-                        MediaTypeId = 2,
-                        MediaUrl = item,
-                        CreatedOn = now
-                    });
-                }
                 foreach (var item in uploadResult)
                 {
                     pm.Add(new PropertyMedium
                     {
-                        MediaTypeId = 1,
+                        MediaTypeId = (int)PropertyMediumTypes.Images,
                         MediaUrl = item.ImageUrl,
                         CreatedOn = now
                     });
                 }
-                
+                foreach (var item in addProperty.VideoUrls)
+                {
+                    pm.Add(new PropertyMedium
+                    {
+                        MediaTypeId = (int)PropertyMediumTypes.Videos,
+                        MediaUrl = item,
+                        CreatedOn = now
+                    });
+                }
+
+
                 property.PropertyMedia = pm;
                 _onedb.Reproperties.Add(property);
 
                 await _onedb.SaveChangesAsync();
 
-                var mediums = new List<PropertyMedium>();
-                int priority = 1;
-
-               
 
 
                 return true;
@@ -416,5 +780,184 @@ namespace MarketBal.Repository.RealEstateRP
                 return false;
             }
         }
+
+        #endregion
+
+        #region LinksData
+
+        public async Task<List<RelinksDatumVM>> LinksData(string mediatype)
+        {
+            if (Enum.TryParse<RealEstateMediaTypes>(mediatype, ignoreCase: true, out var parsedMedia))
+            {
+                int mediaTypeId = (int)parsedMedia;
+
+                return await _onedb.RelinksData
+                    .Where(x => x.LinkDataTypeId == mediaTypeId)
+                    .Select(x => new RelinksDatumVM
+                    {
+                        RelinksDataId = x.RelinksDataId,
+                        Title = x.Title,
+                        Description = x.Description,
+                        RelinksFiles = x.RelinksFiles.Select(y => new RelinksFileVM
+                        {
+                            ReLinkFileUrl = y.ReLinkFileUrl,
+                            ReLinkFileCaption = y.ReLinkFileCaption,
+                            ReLinkFileSortOrder = y.ReLinkFileSortOrder
+                        }).ToList()
+                    })
+                    .ToListAsync();
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid media type: {mediatype}");
+            }
+        }
+
+        public async Task<RelinksDatumVM> GetLinksDataById(int mediaTypeId)
+        {
+
+
+            return await _onedb.RelinksData
+                .Where(x => x.RelinksDataId == mediaTypeId)
+                .Select(x => new RelinksDatumVM
+                {
+                    RelinksDataId = x.RelinksDataId,
+                    Title = x.Title,
+                    Description = x.Description,
+                    RelinksFiles = x.RelinksFiles.Select(y => new RelinksFileVM
+                    {
+
+                        ReLinkFileUrl = y.ReLinkFileUrl,
+                        ReLinkFileCaption = y.ReLinkFileCaption,
+                        ReLinkFileSortOrder = y.ReLinkFileSortOrder
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
+
+        }
+
+        public async Task<bool> AddMedia(PropertyMediumFormSubmit model, List<APIImageContentResponse> uploadResult)
+        {
+
+            DateTime now = DateTime.Now;
+            RelinksDatum um = new RelinksDatum();
+            um.Title = model.Title;
+            um.Description = model.Description;
+            um.LinkDataTypeId = model.SelectedMediaType;
+            if (model.RelinksDataId > 0)
+            {
+                // Update existing RelinksData entry: update title/description and append any newly added files/urls
+                var media = await _onedb.RelinksData
+                    .Include(r => r.RelinksFiles)
+                    .Where(x => x.RelinksDataId == model.RelinksDataId)
+                    .FirstOrDefaultAsync();
+
+                if (media == null)
+                {
+                    return false;
+                }
+
+                media.Title = model.Title;
+                media.Description = model.Description;
+
+                // Determine starting sort order
+                int i = 0;
+                if (media.RelinksFiles != null && media.RelinksFiles.Count > 0)
+                {
+                    try { i = media.RelinksFiles.Max(f => f.ReLinkFileSortOrder.Value); } catch { i = media.RelinksFiles.Count; }
+                }
+
+                // Append new video URLs (client should only send newly added URLs)
+                if (model.VideoUrls != null)
+                {
+                    foreach (var item in model.VideoUrls)
+                    {
+                        if (string.IsNullOrWhiteSpace(item)) continue;
+                        // avoid duplicate urls
+                        if (media.RelinksFiles != null && media.RelinksFiles.Any(f => f.ReLinkFileUrl == item)) continue;
+
+                        var rf = new RelinksFile
+                        {
+                            ReLinkFileUrl = item,
+                            ReLinkFileCaption = model.Title,
+                            ReLinkFileSortOrder = ++i,
+                            MediaTypeId = (int)PropertyMediumTypes.Images
+                        };
+
+                        media.RelinksFiles.Add(rf);
+                    }
+                }
+
+                // Append newly uploaded images
+                if (uploadResult != null)
+                {
+                    foreach (var item in uploadResult)
+                    {
+                        if (item == null || string.IsNullOrWhiteSpace(item.ImageUrl)) continue;
+                        if (media.RelinksFiles != null && media.RelinksFiles.Any(f => f.ReLinkFileUrl == item.ImageUrl)) continue;
+
+                        var rf = new RelinksFile
+                        {
+                            ReLinkFileUrl = item.ImageUrl,
+                            ReLinkFileCaption = model.Title,
+                            ReLinkFileSortOrder = ++i,
+                            MediaTypeId = (int)PropertyMediumTypes.Images
+                        };
+
+                        media.RelinksFiles.Add(rf);
+                    }
+                }
+
+                await _onedb.SaveChangesAsync();
+                return true;
+            }
+            else
+            {
+                List<RelinksFile> pm = new List<RelinksFile>();
+                int i = 1;
+                if (model.VideoUrls != null)
+                {
+                    foreach (var item in model.VideoUrls)
+                    {
+                        pm.Add(new RelinksFile
+                        {
+                            ReLinkFileUrl = item,
+                            ReLinkFileCaption = model.Title,
+                            ReLinkFileSortOrder = i++,
+                            MediaTypeId = (int)PropertyMediumTypes.Images
+                        });
+                    }
+
+                }
+                if (uploadResult != null)
+                {
+                    foreach (var item in uploadResult)
+                    {
+
+                        pm.Add(new RelinksFile
+                        {
+                            ReLinkFileUrl = item.ImageUrl,
+                            ReLinkFileCaption = model.Title,
+                            ReLinkFileSortOrder = i++,
+                            MediaTypeId = (int)PropertyMediumTypes.Images
+                        });
+                    }
+                }
+                um.RelinksFiles = pm;
+                _onedb.RelinksData.Add(um);
+                await _onedb.SaveChangesAsync();
+                return true;
+            }
+
+
+        }
+
+
+        #endregion
+
+
+
+
+
     }
 }

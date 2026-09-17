@@ -212,26 +212,26 @@
         {
             if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.User))
             {
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 pb-2 shadow-2">
+               @*      <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 pb-2 shadow-2">
                     <a href="/EstateContacts/AllContacts" class="text-decoration-none">
                             <div class="card shadow-sm border-0  text-center h-100" style="border-radius: 10px;">
                                 <img src="~/assets/img/RE/contactus.png" alt="Contractors" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                                 <div class="text-dark fw-semibold mt-auto">All Contacts</div>
                             </div>
                         </a>
-                    </div>
+                    </div> *@
              
             }
             if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
             {
-                <div class="col-1">
+             @*    <div class="col-1">
                     <a href="/ProjectBoard/ProjectUsers" class="text-decoration-none">
                         <div class="card shadow-sm border-0 p-2 text-center" style="border-radius:10px;">
                             <img src="~/assets/img/icons/supplierslist.png" alt="Project Users" class="img-fluid mb-1 mx-auto d-block" style="width: 40px; height: 40px;">
                             <div class="small text-dark fw-semibold">Project Users</div>
                         </div>
                     </a>
-                </div>
+                </div> *@
             }
         }
 
@@ -364,7 +364,7 @@
         if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
         {
             <div class="row">
-                <div class="col-lg-6">
+            @*     <div class="col-lg-6">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white header-elements-inline pb-2">
                             <h5 class="card-title font-weight-bold text-dark"><i class="icon-stack2 mr-2 text-primary"></i> Project Delivery Matrix</h5>
@@ -469,7 +469,7 @@
 
 
                 </div>
-
+ *@
 
 
             </div>

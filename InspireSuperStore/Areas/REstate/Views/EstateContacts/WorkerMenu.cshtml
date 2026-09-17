@@ -1,5 +1,6 @@
 ﻿@using MainModels.DTOModels
 @using MainModels.Util
+@using MarketBal.Helper
 @model PagesViewModel
 @{
     ViewData["Title"] = "Worker Menu";
@@ -34,7 +35,7 @@
     <div class="row">
         <div class="row g-3">
             <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-                <a href="/EstateContacts/Contractors" class="text-decoration-none">
+                <a href="/EstateContacts/AllContacts?contactType=@ReContactType.Contractor" class="text-decoration-none">
                     <div class="card shadow-sm border-0  text-center h-100" style="border-radius: 10px;">
                         <img src="~/assets/img/RE/contractors.png" alt="Contractors" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                         <div class="text-dark fw-semibold mt-auto">Contractors</div>
@@ -43,7 +44,7 @@
             </div>
 
             <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-                <a href="/EstateContacts/Masons" class="text-decoration-none">
+                <a href="/EstateContacts/AllContacts?contactType=@ReContactType.Mason" class="text-decoration-none">
                     <div class="card shadow-sm border-0   text-center h-100" style="border-radius: 10px;">
                         <img src="~/assets/img/re/masongood.png" alt="Mason Worker" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                         <div class="text-dark fw-semibold mt-auto">Mason Worker</div>
@@ -51,17 +52,10 @@
                 </a>
             </div>
 
-            <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-                <a href="/EstateContacts/Masons" class="text-decoration-none">
-                    <div class="card shadow-sm border-0   text-center h-100" style="border-radius: 10px;">
-                        <img src="~/assets/img/re/labourworker.png" alt="Labour Worker" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
-                        <div class="text-dark fw-semibold mt-auto">Labour Worker</div>
-                    </div>
-                </a>
-            </div>
+          
 
             <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-                <a href="/EstateContacts/CivilEngineer" class="text-decoration-none">
+                <a href="/EstateContacts/AllContacts?contactType=@ReContactType.CivilEngineer" class="text-decoration-none">
                     <div class="card shadow-sm border-0   text-center h-100" style="border-radius: 10px;">
                         <img src="~/assets/img/re/civilengineer.png" alt="Civil Engineer" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                         <div class="text-dark fw-semibold mt-auto">Civil Engineer</div>
@@ -70,7 +64,7 @@
             </div>
 
             <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-                <a href="/EstateContacts/Electrician" class="text-decoration-none">
+                <a href="/EstateContacts/AllContacts?contactType=@ReContactType.Electrician" class="text-decoration-none">
                     <div class="card shadow-sm border-0   text-center h-100" style="border-radius: 10px;">
                         <img src="~/assets/img/re/electrican.png" alt="Electric Worker" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                         <div class="text-dark fw-semibold mt-auto">Electric Worker</div>
@@ -79,7 +73,7 @@
             </div>
 
             <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-                <a href="/EstateContacts/Plumber" class="text-decoration-none">
+                <a href="/EstateContacts/AllContacts?contactType=@ReContactType.Plumber" class="text-decoration-none">
                     <div class="card shadow-sm border-0   text-center h-100" style="border-radius: 10px;">
                         <img src="~/assets/img/re/sanitaryworker.png" alt="Sanitary Worker" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                         <div class="text-dark fw-semibold mt-auto">Sanitary Worker</div>
@@ -88,7 +82,7 @@
             </div>
 
             <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-                <a href="/EstateContacts/Carpenter" class="text-decoration-none">
+                <a href="/EstateContacts/AllContacts?contactType=@ReContactType.Carpenter" class="text-decoration-none">
                     <div class="card shadow-sm border-0   text-center h-100" style="border-radius: 10px;">
                         <img src="~/assets/img/re/carpainter.png" alt="Carpenter Worker" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                         <div class="text-dark fw-semibold mt-auto">Carpenter Worker</div>

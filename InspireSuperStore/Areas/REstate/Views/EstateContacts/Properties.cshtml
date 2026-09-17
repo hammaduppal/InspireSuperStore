@@ -1,0 +1,121 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@using MarketBal.Helper
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Labour";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+    <div class="page-header-content header-elements-md-inline">
+
+        <div class="d-flex">
+            <div class="breadcrumb">
+                <a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+
+                <span class="breadcrumb-item active">Gallery</span>
+            </div>
+
+            <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- Content area -->
+<!-- Content area -->
+<div class="content">
+
+	<!-- Media library -->
+	<div class="card">
+		<div class="card-header header-elements-inline">
+			<h5 class="card-title">Gallery</h5>
+			<div class="header-elements">
+
+				<div class="header-elements d-none">
+					<div class="d-flex justify-content-center">
+						<a id="" href="/EstateContacts/AddProperty" class="btn btn-success ">Add Property</a>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<table class="table table-striped media-library">
+			<thead>
+				<tr>
+					<th><input type="checkbox" class="form-input-styled"></th>
+					<th>Preview</th>
+					<th>Name</th>
+					<th>Author</th>
+					<th>Date</th>
+					<th>File info</th>
+					<th class="text-center">Actions</th>
+				</tr>
+			</thead>
+            <tbody>
+                @foreach (var item in Model.Properties)
+                {
+                    // Retrieve the featured media or fallback to the first available image
+                    var mediaItem = item.PropertyMedia?.FirstOrDefault(m => m.IsFeatured == true)
+                                 ?? item.PropertyMedia?.FirstOrDefault();
+
+                    var imageUrl = !string.IsNullOrEmpty(mediaItem?.MediaUrl)
+                            ? mediaItem.MediaUrl
+                            : "/global_assets/images/placeholders/placeholder.jpg";
+
+                    <tr>
+                        <td><input type="checkbox" class="form-input-styled"></td>
+                        <td>
+                            <a class="text-black-50" href="@PagesViewModel.SystemSettings.ContentAPIUrl/@imageUrl" data-popup="lightbox">
+                                <img src="@PagesViewModel.SystemSettings.ContentAPIUrl/@imageUrl" alt="@(mediaItem?.Caption ?? item.Title)" class="img-preview rounded text-black-50" style="width: 60px; height: 60px; object-fit: cover;">
+                            </a>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("Details", "Property", new { id = item.PropertyId })" class="font-weight-semibold text-black-50">
+                                @(item.Title ?? "N/A")
+                            </a>
+                            <div class="text-muted font-size-sm">Code: @(item.PropertyCode ?? "-")</div>
+                        </td>
+                        <td><span>@(item.Price.HasValue ? item.Price.Value.ToString("N2") : "N/A")</span></td>
+                        <td>@(item.CreatedOn?.ToString("MMM dd, yyyy") ?? "-")</td>
+                        <td>
+                            <ul class="list-unstyled mb-0">
+                                <li><span class="font-weight-semibold">Size:</span> @(item.BaseSizeInSqFt?.ToString("N0") ?? "0") SqFt</li>
+                                <li><span class="font-weight-semibold">Beds/Baths:</span> @(item.Bedrooms ?? 0) / @(item.Bathrooms ?? 0)</li>
+                                <li><span class="font-weight-semibold">City:</span> @(item.City?.CityName ?? "N/A")</li>
+                            </ul>
+                        </td>
+                        <td class="text-center">
+                            <div class="list-icons">
+                                <div class="list-icons-item dropdown">
+                                    <a href="#" class="list-icons-item caret-0 dropdown-toggle" data-toggle="dropdown">
+                                        <i class="icon-menu9"></i>
+                                    </a>
+
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a href="@Url.Action("Edit", "Property", new { id = item.PropertyId })" class="dropdown-item"><i class="icon-pencil7"></i> Edit</a>
+                                        <a href="@Url.Action("Details", "Property", new { id = item.PropertyId })" class="dropdown-item"><i class="icon-eye"></i> View Details</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a href="#" class="dropdown-item text-danger"><i class="icon-bin"></i> Delete</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+			
+		</table>
+	</div>
+
+</div>
+<script>
+    $(document).ready(function(){
+        $('.table').DataTable();
+
+   
+    });
+</script>

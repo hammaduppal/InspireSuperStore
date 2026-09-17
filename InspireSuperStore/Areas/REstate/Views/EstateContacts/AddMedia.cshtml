@@ -1,0 +1,279 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@using MarketBal.Helper
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Add Property";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+    <div class="page-header-content header-elements-md-inline">
+        <div class="d-flex">
+            <div class="breadcrumb">
+                <a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+                <span class="breadcrumb-item active">Add Property</span>
+            </div>
+            <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="content">
+    <div id="ohMyCard" class="card">
+        <div class="card-header header-elements-inline">
+            <h5 class="card-title">Add Real Estate Property</h5>
+        </div>
+        <div class="card-body">
+            <form id="AddMediaForm" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Title</label>
+                        <input name="Title" id="Title" class="form-control" required />
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <label>Document Type</label>
+                        @Html.DropDownListFor(m => m.SelectedMediaType,Html.GetEnumSelectList<RealEstateMediaTypes>(), "-- Select Media Type --", new { @class = "form-control" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Media (images)</label>
+                    <div id="dropZone" class="border rounded p-4 text-center cursor-pointer" style="min-height:160px; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                        <p class="mb-2"><strong>Drag & drop images here</strong></p>
+                        <p class="text-muted mb-0">or click anywhere in this box to browse</p>
+                        <input type="file" id="propertyFilesInput" class="property7-media-input" name="PropertyMediaFiles" accept="image/*" multiple style="display:none;" />
+                    </div>
+                    <div id="previewContainer" class="mt-3 d-flex flex-wrap"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Video URLs</label>
+                    <div id="videoUrlsContainer">
+                        <div class="input-group mb-2 video-url-row" id="video_url_row_0">
+                            <input type="url" id="VideoUrl_0" name="VideoUrls" class="form-control video-url-input" placeholder="https://" />
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-success btn-add-video">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <small class="form-text text-muted">Add one or more video URLs (YouTube/Vimeo).</small>
+                </div>
+                <div class="form-group">
+                    <button type="button" id="btnSaveProperty" class="btn btn-primary">Save Property</button>
+                    <a href="/REstate/EstateContacts/Index" class="btn btn-secondary ml-2">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+   
+
+<style>
+    #dropZone {
+        width: 100%;
+        box-sizing: border-box;
+        cursor: pointer;
+    }
+
+    #previewContainer img {
+        max-width: 140px;
+        max-height: 120px;
+        margin: 6px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+</style>
+
+<script>
+    // Global array to manage dropped/browsed files reliably
+    var selectedFiles = [];
+    var videoCounter = 1;
+
+    $(document).ready(function() {
+        var dropZone = document.getElementById('dropZone');
+        var fileInput = document.getElementById('propertyFilesInput');
+        var previewContainer = document.getElementById('previewContainer');
+
+        // Setup DropZone Events
+        if (dropZone) {
+            dropZone.addEventListener('click', function() {
+                if (fileInput) fileInput.click();
+            });
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZone.classList.add('bg-light');
+            });
+            dropZone.addEventListener('dragleave', function() {
+                dropZone.classList.remove('bg-light');
+            });
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('bg-light');
+                handleNewFiles(e.dataTransfer.files);
+            });
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                handleNewFiles(e.target.files);
+            });
+        }
+
+        function handleNewFiles(files) {
+            if (!files || files.length === 0) return;
+
+            Array.from(files).forEach(function(file) {
+                if (!file.type.startsWith('image/')) return;
+
+                selectedFiles.push(file);
+                var fileIndex = selectedFiles.length - 1;
+
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    var wrap = document.createElement('div');
+                    wrap.style.position = 'relative';
+                    wrap.setAttribute('data-file-index', fileIndex);
+
+                    var img = document.createElement('img');
+                    img.src = ev.target.result;
+                    img.alt = file.name;
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn btn-sm btn-danger';
+                    removeBtn.style.position = 'absolute';
+                    removeBtn.style.right = '4px';
+                    removeBtn.style.top = '4px';
+                    removeBtn.textContent = 'x';
+
+                    removeBtn.addEventListener('click', function() {
+                        var index = parseInt(wrap.getAttribute('data-file-index'));
+                        selectedFiles[index] = null; // Mark removed
+                        previewContainer.removeChild(wrap);
+                    });
+
+                    wrap.appendChild(img);
+                    wrap.appendChild(removeBtn);
+                    previewContainer.appendChild(wrap);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            $(fileInput).val('');
+        }
+
+        // Dynamic Video URLs handlers
+        $(document).on('click', '.btn-add-video', function() {
+            var container = $('#videoUrlsContainer');
+            var rowId = 'video_url_row_' + videoCounter;
+            var inputId = 'VideoUrl_' + videoCounter;
+
+            var rowHtml = '<div class="input-group mb-2 video-url-row" id="' + rowId + '">' +
+                '<input type="url" id="' + inputId + '" name="VideoUrls" class="form-control video-url-input" placeholder="https://" />' +
+                '<div class="input-group-append">' +
+                '<button type="button" class="btn btn-outline-success btn-add-video">+</button>' +
+                '<button type="button" class="btn btn-outline-danger btn-remove-video">-</button>' +
+                '</div></div>';
+
+            container.append(rowHtml);
+            videoCounter++;
+        });
+
+        $(document).on('click', '.btn-remove-video', function() {
+            $(this).closest('.video-url-row').remove();
+        });
+
+        // Handle Click on Save Button directly
+        $('#btnSaveProperty').click(async function(e) {
+            e.preventDefault();
+
+            // Client-side required fields validation
+            var requiredFields = [
+                { selector: '#Title', name: 'Title' },
+                { selector: '#SelectedMediaType', name: 'Document Type' }
+            ];
+
+            var firstInvalid = null;
+            for (var i = 0; i < requiredFields.length; i++) {
+                var rf = requiredFields[i];
+                var $el = $(rf.selector);
+                if ($el.length) {
+                    var val = $el.val();
+                    if (val === undefined || val === null || (typeof val === 'string' && val.trim() === '')) {
+                        $el.addClass('is-invalid');
+                        if (!firstInvalid) firstInvalid = { el: $el, name: rf.name };
+                    } else {
+                        $el.removeClass('is-invalid');
+                    }
+                }
+            }
+
+            if (firstInvalid) {
+                firstInvalid.el.focus();
+                alert(firstInvalid.name + ' is required.');
+                return;
+            }
+
+            Utility.startSpinner('#ohMyCard', 'Adding Property Please Wait!.............');
+
+            var formData = new FormData();
+
+            // Direct Inputs harvesting by ID
+            formData.append("Title", $("#Title").val() || "");
+            formData.append("SelectedMediaType", $("#SelectedMediaType").val() || "");
+
+            $(".video-url-input").each(function() {
+                var urlVal = $(this).val();
+                if (urlVal && urlVal.trim() !== "") {
+                    formData.append("VideoUrls", urlVal.trim());
+                }
+            });
+
+            selectedFiles.forEach(function(file) {
+                if (file !== null) {
+                    formData.append("PropertyMediaFiles", file);
+                }
+            });
+
+            // Append Antiforgery token
+            var antiToken = $("input[name='__RequestVerificationToken']").val();
+            if (antiToken) {
+                formData.append('__RequestVerificationToken', antiToken);
+            }
+
+            var postUrl = '@Url.Action("AddMedia", "EstateContacts", new { area = "REstate" })';
+
+            try {
+                var res = await Utility.RequestFileAjax({
+                    url: postUrl,
+                    data: formData,
+                    type: 'POST'
+                });
+
+                Utility.stopSpinner('#ohMyCard');
+
+                if (res.statusCode === "200") {
+                    Utility.successMessage(res.Message);
+                    $('#AddMediaForm')[0].reset();
+                    $('#previewContainer').empty();
+                    selectedFiles = [];
+                } else {
+                    Utility.failMessage(res.Message);
+                }
+            } catch (err) {
+                Utility.stopSpinner('#ohMyCard');
+                Utility.failMessage("An error occurred while uploading media.");
+            }
+        });
+
+        // Remove validation marker on input change
+        $(document).on('input change', '#Title,#SelectedMediaType', function() {
+            $(this).removeClass('is-invalid');
+        });
+    });
+</script>

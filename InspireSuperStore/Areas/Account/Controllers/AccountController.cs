@@ -62,9 +62,6 @@ namespace InspireSuperStore.Areas.Account.Controllers
                 {
                     await _login.SigninAsync(res, HttpContext);
                     await LoginHandler(res);
-
-
-
                 }
             }
             TempData["ReturnURL"] = returnUrl;
@@ -107,7 +104,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
             }
             else
             {
-                _sessionService.UserNotifications = new List<NotificationsDTO>(); 
+                _sessionService.UserNotifications = new List<NotificationsDTO>();
             }
             return 1;
         }
@@ -136,12 +133,12 @@ namespace InspireSuperStore.Areas.Account.Controllers
 
                         };
                         var person = _oneDb.Persons.FirstOrDefault(x => x.Id == 1);
-                        if (person!=null)
+                        if (person != null)
                         {
                             person.PasswordResetToken = serverInfo;
                             _oneDb.Persons.Update(person);
                         }
-                     
+
                         bool isRegistered = await deviceRegistrationRepository.IsAlreadyRegistered(deviceInfo);
 
                         if (!isRegistered)
@@ -228,7 +225,7 @@ namespace InspireSuperStore.Areas.Account.Controllers
             return View(vm);
         }
         [HttpPost]
-        public async Task<IActionResult> SeedData([FromForm]OrganizationRegistrationDto model)
+        public async Task<IActionResult> SeedData([FromForm] OrganizationRegistrationDto model)
         {
             var result = await _admin.SeedinData(model);
             if (result)

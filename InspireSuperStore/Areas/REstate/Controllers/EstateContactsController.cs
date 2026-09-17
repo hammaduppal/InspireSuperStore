@@ -41,210 +41,39 @@ namespace InspireSuperStore.Areas.REstate.Controllers
 
         }
 
-        public async Task<IActionResult> AllContacts()
+        public async Task<IActionResult> AllContacts(string contactType)
         {
-            vm.CompanyContacts = _repo.GetContacts();
-            return View(vm);
-        }
-
-
-        [Route("/labour")]
-        public IActionResult WorkerMenu()
-        {
-            return View(vm);
-        }
-
-        #region workerviewmenu
-        public IActionResult Contractors()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.Contractor.ToString());
-            return View(vm);
-        }
-        public IActionResult Masons()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.Mason.ToString());
-            return View(vm);
-        }
-
-        public IActionResult Labour()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.Laborer.ToString());
-            return View(vm);
-        }
-        public IActionResult CivilEngineer()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.CivilEngineer.ToString());
-            return View(vm);
-        }
-
-        public IActionResult Electrician()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.Electrician.ToString());
-            return View(vm);
-        }
-
-        public IActionResult Plumber()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.Plumber.ToString());
-            return View(vm);
-        }
-
-        public IActionResult Carpenter()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.Carpenter.ToString());
-            return View(vm);
-        }
-
-        #endregion
-
-        [Route("/suppliers")]
-        public IActionResult SupplierMenu()
-        {
-            return View(vm);
-        }
-       
-        #region SuppliersMenu
-        public IActionResult SandSupplier()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.SandSupplier.ToString());
-            return View(vm);
-        }
-        public IActionResult CrushSupplier()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.CrushSupplier.ToString());
-            return View(vm);
-        }
-        public IActionResult CementSupplier()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.CementSupplier.ToString());
-            return View(vm);
-        }
-        public IActionResult InteriorSupplier()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.InteriorSupplier.ToString());
-            return View(vm);
-        }
-        #endregion
-
-        [Route("/companies")]
-        public IActionResult CompanyMenu()
-        {
-            return View(vm);
-        }
-
-
-        
-       
-      
-        #region CompaniesMenu
-        public IActionResult LegalAdvisors()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.LegalAdvisor.ToString());
-            return View(vm);
-        }
-
-        public IActionResult RealEstateAgent()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.RealEstateAgent.ToString());
-            return View(vm);
-        }
-
-        #endregion
-
-
-        public IActionResult PropertyOwner()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.PropertyOwner.ToString());
-            return View(vm);
-        }
-
-        public IActionResult Tenant()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.Tenant.ToString());
-            return View(vm);
-        }
-
-        public IActionResult Investor()
-        {
-            vm.CompanyContacts = _repo.GetContacts(ReContactType.Investor.ToString());
-            return View(vm);
-        }
-
-        
-        [Route("/gallery")]
-        public IActionResult Gallery()
-        {
-            
-            return View(vm);
-        }
-        public async Task<IActionResult> AddProperty()
-        {
-            vm.PropertyTypes = await _repo.GetPropertyTypes();
-            vm.PropertyPurposes = await _repo.GetPropertyPurposeTypes();
-            vm.Cities = await _hrmRepo.GetCitybyCountry("Pakistan");
-            return View(vm);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddProperty([FromForm] AddPropertyModel model)
-        {
-            try
+            if (string.Equals(contactType, "all", StringComparison.OrdinalIgnoreCase))
             {
-                if (!ModelState.IsValid)
-                {
-                    var errors = ModelState.Where(ms => ms.Value.Errors.Count > 0)
-                        .ToDictionary(
-                            kvp => kvp.Key,
-                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                        );
-
-                    return Json(new { status = "error", message = "Validation failed", errors });
-                }
-
-                var filesCount = model.PropertyMediaFiles?.Count ?? 0;
-                List<APIImageContentResponse> uploadResult = new List<APIImageContentResponse>();
-                if (model.PropertyMediaFiles!=null)
-                {
-                    foreach (var item in model.PropertyMediaFiles)
-                    {
-                         uploadResult.Add(await _file.SaveFile(item, "Products", "Products"));
-
-                    }
-
-                }
-                var result = await _repo.AddProperty(model, uploadResult);
-                if (result)
-                {
-                    return Json(new { status = "success", message = "Property saved", filesCount });
-                }
-                else
-                {
-                    return Json(new { status = "error", message = "Unable to save property" });
-                }
+                vm.CompanyContacts = await _repo.GetContacts();
+                vm.ContactTypes = await _repo.ContactTypes();
             }
-            catch (Exception ex)
+            else if (Enum.TryParse<ReContactType>(contactType, true, out var parsedType))
             {
-                return Json(new { status = "error", message = ex.Message });
+                vm.CompanyContacts = await _repo.GetContacts(parsedType.ToString());
             }
+            else
+            {
+                // Handle invalid contactType (e.g., return BadRequest or empty list)
+                return BadRequest("Invalid contact type specified.");
+            }
+            ViewBag.ContactType = contactType ?? string.Empty;
+
+            return View(vm);
         }
 
+        public async Task<IActionResult> _AddEstateContactForm(string contactType = null, int? contactId = null)
+        {
+            vm.Countries = await _adminPanel.Countries();
+            if (contactId != null)
+            {
+                vm.CompanyContact = await _repo.GetContact(contactId.Value);
+            }
+            ViewBag.ContactType = contactType ?? string.Empty;
+            vm.ContactTypes = await _repo.ContactTypes();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            return View(vm);
+        }
 
 
         [HttpPost]
@@ -253,7 +82,7 @@ namespace InspireSuperStore.Areas.REstate.Controllers
             var result = await _repo.AddContact(modal);
             if (result)
             {
-                return Json(new { statusCode="200",Message=$"Successfully saved contact type {modal.RecontactTypeName}" });
+                return Json(new { statusCode = "200", Message = $"Successfully saved contact type {modal.RecontactTypeName}" });
 
             }
             else
@@ -263,16 +92,7 @@ namespace InspireSuperStore.Areas.REstate.Controllers
 
             }
         }
-        public async Task<IActionResult> _AddEstateContactForm(string contactType = null, int? contactId = null)
-        {
-            vm.Countries = await _adminPanel.Countries();
-            if (contactId != null)
-            {
-                vm.CompanyContact = await _repo.GetContact(contactId.Value);
-            }
-            ViewBag.ContactType = contactType ?? string.Empty;
-            return View(vm);
-        }
+
 
         [HttpGet]
         public IActionResult GetCompanies()
@@ -320,8 +140,148 @@ namespace InspireSuperStore.Areas.REstate.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+        #region Menus
+        [Route("/labour")]
+        public IActionResult WorkerMenu()
+        {
+            return View(vm);
+        }
 
-   
+
+        [Route("/suppliers")]
+        public IActionResult SupplierMenu()
+        {
+            return View(vm);
+        }
+
+
+        [Route("/companies")]
+        public IActionResult CompanyMenu()
+        {
+            return View(vm);
+        }
+
+        #endregion
+
+
+
+
+
+
+
+        public async Task<IActionResult> Properties(int propertyType = 1)
+        {
+            vm.Properties = await _repo.GetAllProperties();
+            return View(vm);
+        }
+        public async Task<IActionResult> AddProperty()
+        {
+            vm.PropertyTypes = await _repo.GetPropertyTypes();
+            vm.PropertyPurposes = await _repo.GetPropertyPurposeTypes();
+            vm.Cities = await _hrmRepo.GetCitybyCountry("Pakistan");
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddProperty([FromForm] AddPropertyModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Where(ms => ms.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+
+                    return Json(new { status = "error", message = "Validation failed", errors });
+                }
+
+                var filesCount = model.PropertyMediaFiles?.Count ?? 0;
+                List<APIImageContentResponse> uploadResult = new List<APIImageContentResponse>();
+                if (model.PropertyMediaFiles != null)
+                {
+                    foreach (var item in model.PropertyMediaFiles)
+                    {
+                        uploadResult.Add(await _file.SaveFile(item, "REProperties", "RealEstate"));
+
+                    }
+
+                }
+                var result = await _repo.AddProperty(model, uploadResult);
+                if (result)
+                {
+                    return Json(new { statusCode = "200", Message = "Property saved", filesCount });
+                }
+                else
+                {
+                    return Json(new { statusCode = "300", Message = "Unable to save property" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { status = "error", Message = ex.Message });
+            }
+        }
+
+        public async Task<IActionResult> MediaUpload(string uploadType)
+        {
+            ViewBag.UploadType = uploadType;
+            vm.MediaData = await _repo.LinksData(uploadType);
+            return View(vm);
+        }
+        public async Task<IActionResult> EditMediaUpload(int mediaId)
+        {
+            vm.MediaDataItem = await _repo.GetLinksDataById(mediaId);
+            return View(vm);
+        }
+        public async Task<IActionResult> AddMedia()
+        {
+            return View(vm);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddMedia([FromForm] PropertyMediumFormSubmit model)
+        {
+            var filesCount = model.PropertyMediaFiles?.Count ?? 0;
+            List<APIImageContentResponse> uploadResult = new List<APIImageContentResponse>();
+            if (model.PropertyMediaFiles != null)
+            {
+                foreach (var item in model.PropertyMediaFiles)
+                {
+                    uploadResult.Add(await _file.SaveFile(item, "MediaFiles", "RealEstate"));
+                }
+            }
+            var result = await _repo.AddMedia(model, uploadResult);
+
+            if (result)
+            {
+                return Json(new { statusCode = "200", Message = "Media Save", filesCount });
+            }
+            else
+            {
+                return Json(new { statusCode = "300", Message = "Unable to save Media" });
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,0 +1,453 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@using MarketBal.Helper
+@model PagesViewModel
+@{
+    ViewData["Title"] = "Add Property";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+    <div class="page-header-content header-elements-md-inline">
+        <div class="d-flex">
+            <div class="breadcrumb">
+                <a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+                <span class="breadcrumb-item active">Add Property</span>
+            </div>
+            <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="content">
+    <div id="ohMyCard" class="card">
+        <div class="card-header header-elements-inline">
+            <h5 class="card-title">Add Real Estate Property</h5>
+        </div>
+        <div class="card-body">
+            <form id="AddMediaForm" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="RelinksDataId" name="RelinksDataId" value="@Model?.MediaDataItem?.RelinksDataId" />
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Title</label>
+                        <input name="Title" id="Title" class="form-control" required value="@Model.MediaDataItem.Title" />
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <label>Description</label>
+                      <textarea id="Description" name="Description" class="form-control">@Model.MediaDataItem.Description</textarea>
+                    </div>
+                </div>
+                @* Existing media gallery (images or video URLs) *@
+                <div class="form-group">
+                    <label>Existing Media</label>
+                    <div id="existingMediaGallery" class="d-flex flex-wrap">
+                        @if (Model?.MediaDataItem?.RelinksFiles != null && Model.MediaDataItem.RelinksFiles.Count > 0)
+                        {
+                            var __galleryIndex = 0;
+                            foreach (var mf in Model.MediaDataItem.RelinksFiles)
+                            {
+                                var url = mf?.ReLinkFileUrl ?? string.Empty;
+                                var low = (url ?? string.Empty).ToLowerInvariant();
+                                var ext = System.IO.Path.GetExtension(url ?? "").ToLowerInvariant();
+
+                                <div class="media-thumb m-2 text-center" data-index="@__galleryIndex" data-url="@url">
+                                    @* YouTube/Vimeo embed *@
+                                    @if (low.Contains("youtube.com") || low.Contains("youtu.be") || low.Contains("vimeo.com"))
+                                    {
+                                        var embed = GetEmbedUrl(url);
+                                        <div style="width:260px;height:150px;">
+                                            <iframe src="@embed" style="width:100%;height:100%;border:0;" allowfullscreen></iframe>
+                                        </div>
+                                    }
+                                    else if (ext == ".mp4" || ext == ".webm" || ext == ".ogg")
+                                    {
+                                        <video controls style="width:260px;height:150px;object-fit:cover;" class="rounded">
+                                            <source src="@url" />
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    }
+                                    else
+                                    {
+                                        <a href="@PagesViewModel.SystemSettings.ContentAPIUrl/@url" target="_blank">
+                                            <img src="@PagesViewModel.SystemSettings.ContentAPIUrl/@url" alt="" style="width:260px;height:150px;object-fit:cover;border-radius:4px;" />
+                                        </a>
+                                    }
+                                    <div class="small mt-1">@mf?.ReLinkFileCaption</div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-muted">No media available.</div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Modal + Carousel for gallery preview -->
+                <div class="modal fade" id="mediaModal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Media Preview</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="mediaCarousel" class="carousel slide" data-ride="carousel">
+                                    <div class="carousel-inner">
+                                        @if (Model?.MediaDataItem?.RelinksFiles != null && Model.MediaDataItem.RelinksFiles.Count > 0)
+                                        {
+                                            var __ci = 0;
+                                            foreach (var mf in Model.MediaDataItem.RelinksFiles)
+                                            {
+                                                var url = mf?.ReLinkFileUrl ?? string.Empty;
+                                                var low = (url ?? string.Empty).ToLowerInvariant();
+                                                var ext = System.IO.Path.GetExtension(url ?? "").ToLowerInvariant();
+                                                var active = __ci == 0 ? "active" : string.Empty;
+
+                                                <div class="carousel-item @active text-center">
+                                                    @if (low.Contains("youtube.com") || low.Contains("youtu.be") || low.Contains("vimeo.com"))
+                                                    {
+                                                        var embed = GetEmbedUrl(url);
+                                                        <div style="width:100%;height:480px;">
+                                                            <iframe src="@embed" style="width:100%;height:100%;border:0;" allowfullscreen></iframe>
+                                                        </div>
+                                                    }
+                                                    else if (ext == ".mp4" || ext == ".webm" || ext == ".ogg")
+                                                    {
+                                                        <video controls style="max-width:100%;max-height:480px;object-fit:contain;" class="mx-auto d-block">
+                                                            <source src="@url" />
+                                                            Your browser does not support the video tag.
+                                                        </video>
+                                                    }
+                                                    else
+                                                    {
+                                                        <img src="@PagesViewModel.SystemSettings.ContentAPIUrl/@url" alt="" style="max-width:100%;max-height:480px;object-fit:contain;" class="mx-auto d-block" />
+                                                    }
+                                                    <div class="mt-2 text-center small">@mf?.ReLinkFileCaption</div>
+                                                </div>
+
+                                                __ci++;
+                                            }
+                                        }
+                                    </div>
+                                    <a class="carousel-control-prev" href="#mediaCarousel" role="button" data-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="sr-only">Previous</span>
+                                    </a>
+                                    <a class="carousel-control-next" href="#mediaCarousel" role="button" data-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="sr-only">Next</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Media (images)</label>
+                    <div id="dropZone" class="border rounded p-4 text-center cursor-pointer" style="min-height:160px; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                        <p class="mb-2"><strong>Drag & drop images here</strong></p>
+                        <p class="text-muted mb-0">or click anywhere in this box to browse</p>
+                        <input type="file" id="propertyFilesInput" class="property7-media-input" name="PropertyMediaFiles" accept="image/*" multiple style="display:none;" />
+                    </div>
+                    <div id="previewContainer" class="mt-3 d-flex flex-wrap"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Video URLs</label>
+                    <div id="videoUrlsContainer">
+                        <div class="input-group mb-2 video-url-row" id="video_url_row_0">
+                            <input type="url" id="VideoUrl_0" name="VideoUrls" class="form-control video-url-input" placeholder="https://" />
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-success btn-add-video">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <small class="form-text text-muted">Add one or more video URLs (YouTube/Vimeo).</small>
+                </div>
+                <div class="form-group">
+                    <button type="button" id="btnSaveProperty" class="btn btn-primary">Save Property</button>
+                    <a href="/REstate/EstateContacts/Index" class="btn btn-secondary ml-2">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+   
+@functions {
+    private string GetEmbedUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+        try
+        {
+            var lower = url.ToLowerInvariant();
+            var uri = new System.Uri(url);
+            if (lower.Contains("youtu.be"))
+            {
+                var id = uri.AbsolutePath.Trim('/');
+                if (!string.IsNullOrEmpty(id)) return "https://www.youtube.com/embed/" + id;
+            }
+            if (lower.Contains("youtube.com"))
+            {
+                var query = uri.Query;
+                if (!string.IsNullOrEmpty(query))
+                {
+                    var pairs = query.TrimStart('?').Split('&', System.StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var p in pairs)
+                    {
+                        var kv = p.Split('=', 2);
+                        if (kv.Length == 2 && kv[0] == "v") return "https://www.youtube.com/embed/" + kv[1];
+                    }
+                }
+                var last = uri.Segments.LastOrDefault()?.Trim('/');
+                if (!string.IsNullOrEmpty(last)) return "https://www.youtube.com/embed/" + last;
+            }
+            if (lower.Contains("vimeo.com"))
+            {
+                var id = uri.Segments.LastOrDefault()?.Trim('/');
+                if (!string.IsNullOrEmpty(id)) return "https://player.vimeo.com/video/" + id;
+            }
+        }
+        catch { }
+        return url;
+    }
+}
+
+
+<style>
+    #dropZone {
+        width: 100%;
+        box-sizing: border-box;
+        cursor: pointer;
+    }
+
+    #previewContainer img {
+        max-width: 140px;
+        max-height: 120px;
+        margin: 6px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .media-thumb { cursor: pointer; }
+    .media-thumb img { width: 260px; height:150px; object-fit:cover; border-radius:4px; }
+</style>
+
+<script>
+    // Global array to manage dropped/browsed files reliably
+    var selectedFiles = [];
+    var videoCounter = 1;
+
+    $(document).ready(function() {
+        var dropZone = document.getElementById('dropZone');
+        var fileInput = document.getElementById('propertyFilesInput');
+        var previewContainer = document.getElementById('previewContainer');
+
+        // Setup DropZone Events
+        if (dropZone) {
+            dropZone.addEventListener('click', function() {
+                if (fileInput) fileInput.click();
+            });
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZone.classList.add('bg-light');
+            });
+            dropZone.addEventListener('dragleave', function() {
+                dropZone.classList.remove('bg-light');
+            });
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('bg-light');
+                handleNewFiles(e.dataTransfer.files);
+            });
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                handleNewFiles(e.target.files);
+            });
+        }
+
+        function handleNewFiles(files) {
+            if (!files || files.length === 0) return;
+
+            Array.from(files).forEach(function(file) {
+                if (!file.type.startsWith('image/')) return;
+
+                selectedFiles.push(file);
+                var fileIndex = selectedFiles.length - 1;
+
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    var wrap = document.createElement('div');
+                    wrap.style.position = 'relative';
+                    wrap.setAttribute('data-file-index', fileIndex);
+
+                    var img = document.createElement('img');
+                    img.src = ev.target.result;
+                    img.alt = file.name;
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn btn-sm btn-danger';
+                    removeBtn.style.position = 'absolute';
+                    removeBtn.style.right = '4px';
+                    removeBtn.style.top = '4px';
+                    removeBtn.textContent = 'x';
+
+                    removeBtn.addEventListener('click', function() {
+                        var index = parseInt(wrap.getAttribute('data-file-index'));
+                        selectedFiles[index] = null; // Mark removed
+                        previewContainer.removeChild(wrap);
+                    });
+
+                    wrap.appendChild(img);
+                    wrap.appendChild(removeBtn);
+                    previewContainer.appendChild(wrap);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            $(fileInput).val('');
+        }
+
+        // Dynamic Video URLs handlers
+        $(document).on('click', '.btn-add-video', function() {
+            var container = $('#videoUrlsContainer');
+            var rowId = 'video_url_row_' + videoCounter;
+            var inputId = 'VideoUrl_' + videoCounter;
+
+            var rowHtml = '<div class="input-group mb-2 video-url-row" id="' + rowId + '">' +
+                '<input type="url" id="' + inputId + '" name="VideoUrls" class="form-control video-url-input" placeholder="https://" />' +
+                '<div class="input-group-append">' +
+                '<button type="button" class="btn btn-outline-success btn-add-video">+</button>' +
+                '<button type="button" class="btn btn-outline-danger btn-remove-video">-</button>' +
+                '</div></div>';
+
+            container.append(rowHtml);
+            videoCounter++;
+        });
+
+        $(document).on('click', '.btn-remove-video', function() {
+            $(this).closest('.video-url-row').remove();
+        });
+
+        // Handle Click on Save Button directly
+        $('#btnSaveProperty').click(async function(e) {
+            e.preventDefault();
+
+            // Client-side required fields validation
+            var requiredFields = [
+                { selector: '#Title', name: 'Title' },
+                { selector: '#SelectedMediaType', name: 'Document Type' }
+            ];
+
+            var firstInvalid = null;
+            for (var i = 0; i < requiredFields.length; i++) {
+                var rf = requiredFields[i];
+                var $el = $(rf.selector);
+                if ($el.length) {
+                    var val = $el.val();
+                    if (val === undefined || val === null || (typeof val === 'string' && val.trim() === '')) {
+                        $el.addClass('is-invalid');
+                        if (!firstInvalid) firstInvalid = { el: $el, name: rf.name };
+                    } else {
+                        $el.removeClass('is-invalid');
+                    }
+                }
+            }
+
+            if (firstInvalid) {
+                firstInvalid.el.focus();
+                alert(firstInvalid.name + ' is required.');
+                return;
+            }
+
+            Utility.startSpinner('#ohMyCard', 'Adding Property Please Wait!.............');
+
+            var formData = new FormData();
+
+            // Direct Inputs harvesting by ID
+            formData.append("Title", $("#Title").val() || "");
+            formData.append("SelectedMediaType", $("#SelectedMediaType").val() || "");
+            formData.append("Description", $("#Description").val() || "");
+            // Include RelinksDataId when editing an existing media set
+            if ($("#RelinksDataId").length) formData.append("RelinksDataId", $("#RelinksDataId").val());
+
+            // Only append newly added video URLs (existing media shown in gallery are not resent)
+            $(".video-url-input").each(function() {
+                var urlVal = $(this).val();
+                if (urlVal && urlVal.trim() !== "") {
+                    formData.append("VideoUrls", urlVal.trim());
+                }
+            });
+
+            // Append any newly selected image files
+            selectedFiles.forEach(function(file) {
+                if (file !== null) {
+                    formData.append("PropertyMediaFiles", file);
+                }
+            });
+
+            // Append Antiforgery token
+            var antiToken = $("input[name='__RequestVerificationToken']").val();
+            if (antiToken) {
+                formData.append('__RequestVerificationToken', antiToken);
+            }
+
+            var postUrl = '@Url.Action("AddMedia", "EstateContacts", new { area = "REstate" })';
+
+            try {
+                var res = await Utility.RequestFileAjax({
+                    url: postUrl,
+                    data: formData,
+                    type: 'POST'
+                });
+
+                Utility.stopSpinner('#ohMyCard');
+
+                if (res.statusCode === "200") {
+                    Utility.successMessage(res.Message);
+                    $('#AddMediaForm')[0].reset();
+                    $('#previewContainer').empty();
+                    selectedFiles = [];
+                } else {
+                    Utility.failMessage(res.Message);
+                }
+            } catch (err) {
+                Utility.stopSpinner('#ohMyCard');
+                Utility.failMessage("An error occurred while uploading media.");
+            }
+        });
+
+        // Remove validation marker on input change
+        $(document).on('input change', '#Title,#SelectedMediaType', function() {
+            $(this).removeClass('is-invalid');
+        });
+    });
+</script>
+
+<script>
+    $(function() {
+        // Open modal and navigate carousel to clicked thumbnail
+        $(document).on('click', '.media-thumb', function () {
+            var idx = $(this).data('index') || 0;
+            $('#mediaModal').modal('show');
+            // small timeout to ensure carousel is ready
+            setTimeout(function(){ $('#mediaCarousel').carousel(parseInt(idx)); }, 100);
+        });
+
+        // Stop media when modal closed
+        $('#mediaModal').on('hidden.bs.modal', function () {
+            $('#mediaCarousel video').each(function () { try { this.pause(); this.currentTime = 0; } catch (e) { } });
+            $('#mediaCarousel iframe').each(function () { var src = $(this).attr('src'); $(this).attr('src', src); });
+        });
+    });
+</script>

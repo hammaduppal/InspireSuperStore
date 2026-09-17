@@ -1,5 +1,6 @@
 ﻿@using MainModels.DTOModels
 @using MainModels.Util
+@using MarketBal.Helper
 @model PagesViewModel
 @{
     ViewData["Title"] = "Supplier Menu";
@@ -33,7 +34,7 @@
 
     <div class="row g-3">
         <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-            <a href="/EstateContacts/SandSupplier" class="text-decoration-none">
+            <a href="/EstateContacts/AllContacts?contactType=@ReContactType.SandSupplier" class="text-decoration-none">
                 <div class="card shadow-sm border-0 text-center h-100" style="border-radius: 10px;">
                     <img src="~/assets/img/RE/sandprovidor.png" alt="Sand Supplier" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                     <div class="text-dark fw-semibold mt-auto">Sand Supplier</div>
@@ -42,7 +43,7 @@
         </div>
 
         <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-            <a href="/EstateContacts/CrushSupplier" class="text-decoration-none">
+            <a href="/EstateContacts/AllContacts?contactType=@ReContactType.CrushSupplier" class="text-decoration-none">
                 <div class="card shadow-sm border-0 text-center h-100" style="border-radius: 10px;">
                     <img src="~/assets/img/re/crushprovidor.png" alt="Crush Supplier" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                     <div class="text-dark fw-semibold mt-auto">Crush Supplier</div>
@@ -51,7 +52,7 @@
         </div>
 
         <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-            <a href="/EstateContacts/CementSupplier" class="text-decoration-none">
+            <a href="/EstateContacts/AllContacts?contactType=@ReContactType.CementSupplier" class="text-decoration-none">
                 <div class="card shadow-sm border-0 text-center h-100" style="border-radius: 10px;">
                     <img src="~/assets/img/re/cementprovider.png" alt="Cement Supplier" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                     <div class="text-dark fw-semibold mt-auto">Cement Supplier</div>
@@ -60,7 +61,7 @@
         </div>
 
         <div class="col-6 col-sm-4 col-md-3 col-lg-2 pt-2 shadow-2">
-            <a href="/EstateContacts/InteriorSupplier" class="text-decoration-none">
+            <a href="/EstateContacts/AllContacts?contactType=@ReContactType.InteriorSupplier" class="text-decoration-none">
                 <div class="card shadow-sm border-0 text-center h-100" style="border-radius: 10px;">
                     <img src="~/assets/img/re/interiorsupplier.png" alt="Interior Supplier" class="img-fluid mb-1 mx-auto d-block w-100 object-fit-cover" style="aspect-ratio: 16 / 10; max-height: 250px;">
                     <div class="text-dark fw-semibold mt-auto">Interior Supplier</div>
