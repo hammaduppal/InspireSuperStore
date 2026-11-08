@@ -2,7 +2,9 @@
 @using MainModels.Util
 @model PagesViewModel
 @{
-	string[] application = ["REALESTATE","POS"];
+	
+	string[] application = ["POS"];
+	//string[] application = ["REALESTATE","POS"];
 }
 <div class="sidebar-content">
 
@@ -46,25 +48,14 @@
 			}
 			else if(application.Contains("POS"))
 			{
-				<li class="nav-item nav-item-submenu">
-					<a href="#" class="nav-link "><i class="icon-stack3 icon-2x  text-blue-300"></i><span>Board</span></a>
-
-					<ul class="nav nav-group-sub" data-submenu-title="Board">
-						<li class="nav-item"><a href="/ProjectBoard/Boards" class="nav-link"><i class="icon-calendar icon-2x text-blue"></i> Board</a></li>
-						@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin))
-						{
-							<li class="nav-item"><a href="/ProjectBoard/ProjectUsers" class="nav-link"><i class="icon-users4 icon-2x text-blue"></i> Board Users</a></li>
-						}
-
-					</ul>
-				</li>
+				
 				@if (CheckPermissions.HasAnyRole(UserRolesConstants.Admin, UserRolesConstants.PowerUser, UserRolesConstants.POSUser))
 				{
 					<li class="nav-item nav-item-submenu">
 						<a href="#" class="nav-link "> <span><i class="icon-typewriter icon-2x  text-pink-300"></i> POS</span></a>
 
 						<ul class="nav nav-group-sub" data-submenu-title="Point of Sale">
-							@if (AppDataUtility.SystemPreferences.IsRestaurantApplication || AppDataUtility.SystemPreferences.IsEcommerece)
+							@if (AppDataUtility.SystemPreferences.IsRestaurantApplication || (AppDataUtility.SystemPreferences.IsEcommOnly))
 							{
 								<li class="nav-item">
 									<a href="/OrderManager/CreateOrder" class="nav-link">
@@ -117,6 +108,22 @@
 							<hr />
 							<li class="nav-item"><a href="/Purchase/PurchaseOrder" class="nav-link"><i class="icon-checkbox-partial2  icon-2x text-blue-400 "></i>Purchase Order</a></li>
 							<li class="nav-item"><a href="/Purchase/GoodReceivedNote" class="nav-link"><i class="icon-cart-add2  icon-2x text-blue-400 "></i>GRN</a></li>
+						</ul>
+					</li>
+
+					<li class="nav-item nav-item-submenu">
+						<a href="#" class="nav-link"><i class="icon-stack-text icon-2x text-blue-400"></i> <span>Stock Adjustments</span></a>
+
+						<ul class="nav nav-group-sub" data-submenu-title="Inventory Adjustment Section">
+							<!-- Active Links -->
+							<li class="nav-item"><a href="/StockAdjustment/OpeningStock" class="nav-link"><i class="icon-list3 icon-2x text-blue-400"></i>Opening Stock Entry</a></li>
+							<li class="nav-item"><a href="/StockAdjustment/CreateVoucher" class="nav-link"><i class="icon-file-plus2 icon-2x text-blue-400"></i>New Stock Adjustment</a></li>
+							<hr />
+
+							<!-- Disabled / Coming Soon Links -->
+							<li class="nav-item"><a href="#" class="nav-link disabled"><i class="icon-box-add icon-2x text-grey-400"></i>Stock In</a><span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></li>
+							<li class="nav-item"><a href="#" class="nav-link disabled"><i class="icon-box-remove icon-2x text-grey-400"></i>Stock Out</a><span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></li>
+							<li class="nav-item"><a href="#" class="nav-link disabled"><i class="icon-clipboard3 icon-2x text-grey-400"></i>Physical Audit / Count</a><span class="badge bg-transparent align-self-center ml-auto">Coming soon</span></li>
 						</ul>
 					</li>
 				}

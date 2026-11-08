@@ -3,6 +3,12 @@
 @{
 	ViewData["Title"] = "EditUser";
 	Layout = "~/Views/Shared/_Layout.cshtml";
+
+	// Safe local variable extractions to prevent null reference errors throughout the view
+	var loginUser = Model?.LoginUser;
+	var person = loginUser?.Person;
+	var addresses = person?.LaneAddress ?? new List<LaneAddressVM>();
+	var rolesList = loginUser?.Roles ?? new List<RolesVM>();
 }
 
 <div class="page-header page-header-light">
@@ -28,7 +34,7 @@
 			<div class="form-group row">
 				<div class="col-lg-3">
 					<div class="form-check">
-						@if (Model.LoginUser.IsActive)
+						@if (loginUser != null && loginUser.IsActive)
 						{
 							<label class="switch">
 								<input type="checkbox" checked id="isActive">
@@ -47,72 +53,76 @@
 				</div>
 				<div class="col-lg-6"></div>
 				<style>
-					/* Profile Image Container Area Rules */
-					.profile-avatar-wrapper {
-						position: relative;
-						width: 150px;
-						height: 150px;
-						margin: 0 auto;
-						border-radius: 50%;
-						overflow: hidden;
-						cursor: pointer;
-						border: 3px solid #fff;
-						box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-						transition: all 0.2s ease;
-					}
+									/* Profile Image Container Area Rules */
+									.profile-avatar-wrapper {
+										position: relative;
+										width: 150px;
+										height: 150px;
+										margin: 0 auto;
+										border-radius: 50%;
+										overflow: hidden;
+										cursor: pointer;
+										border: 3px solid #fff;
+										box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+										transition: all 0.2s ease;
+									}
 
-						.profile-avatar-wrapper:hover {
-							transform: scale(1.02);
-							box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-						}
+										.profile-avatar-wrapper:hover {
+											transform: scale(1.02);
+											box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+										}
 
-					/* Avatar Render Size Scaling */
-					.profile-avatar-img {
-						width: 100%;
-						height: 100%;
-						object-fit: cover;
-					}
+									/* Avatar Render Size Scaling */
+									.profile-avatar-img {
+										width: 100%;
+										height: 100%;
+										object-fit: cover;
+									}
 
-					/* Hover Action Interaction Overlay */
-					.avatar-upload-overlay {
-						position: absolute;
-						top: 0;
-						left: 0;
-						width: 100%;
-						height: 100%;
-						background: rgba(0, 0, 0, 0.6); /* Translucent dim screen */
-						color: #fff;
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						justify-content: center;
-						opacity: 0;
-						transition: opacity 0.25s ease;
-					}
+									/* Hover Action Interaction Overlay */
+									.avatar-upload-overlay {
+										position: absolute;
+										top: 0;
+										left: 0;
+										width: 100%;
+										height: 100%;
+										background: rgba(0, 0, 0, 0.6); /* Translucent dim screen */
+										color: #fff;
+										display: flex;
+										flex-direction: column;
+										align-items: center;
+										justify-content: center;
+										opacity: 0;
+										transition: opacity 0.25s ease;
+									}
 
-					.profile-avatar-wrapper:hover .avatar-upload-overlay {
-						opacity: 1;
-					}
+									.profile-avatar-wrapper:hover .avatar-upload-overlay {
+										opacity: 1;
+									}
 
-					.avatar-upload-overlay i {
-						font-size: 1.5rem;
-						margin-bottom: 4px;
-					}
+									.avatar-upload-overlay i {
+										font-size: 1.5rem;
+										margin-bottom: 4px;
+									}
 
-					.avatar-upload-overlay span {
-						font-size: 11px;
-						font-weight: 600;
-						text-uppercase: uppercase;
-						letter-spacing: 0.5px;
-					}
+									.avatar-upload-overlay span {
+										font-size: 11px;
+										font-weight: 600;
+										text-uppercase: uppercase;
+										letter-spacing: 0.5px;
+									}
 				</style>
 				<div class="col-lg-3 text-center">
 					<div class="profile-avatar-wrapper" id="btn-trigger-avatar-upload">
 
-						@if (string.IsNullOrEmpty(Model.LoginUser.Person.ImageUrl))
+						@{
+							var imageUrl = person?.ImageUrl;
+						}
+
+						@if (person != null && string.IsNullOrEmpty(imageUrl))
 						{
-							var fInit = !string.IsNullOrEmpty(Model.LoginUser.Person.FirstName) ? Model.LoginUser.Person.FirstName.Substring(0, 1).ToUpper() : "";
-							var lInit = !string.IsNullOrEmpty(Model.LoginUser.Person.LastName) ? Model.LoginUser.Person.LastName.Substring(0, 1).ToUpper() : "";
+							var fInit = !string.IsNullOrEmpty(person.FirstName) ? person.FirstName.Substring(0, 1).ToUpper() : "";
+							var lInit = !string.IsNullOrEmpty(person.LastName) ? person.LastName.Substring(0, 1).ToUpper() : "";
 							var initials = !string.IsNullOrEmpty(fInit + lInit) ? (fInit + lInit) : "?";
 
 							<div class="avatar-placeholder-md w-100 h-100 d-flex align-items-center justify-content-center font-weight-bold" style="font-size: 2.5rem; border-radius: 0;">@initials</div>
@@ -120,7 +130,7 @@
 						else
 						{
 							<img id="img-profile-avatar-view"
-								 src="@PagesViewModel.SystemSettings.ContentAPIUrl/@Model.LoginUser.Person.ImageUrl"
+								 src="@(!string.IsNullOrEmpty(imageUrl) ? $"{PagesViewModel.SystemSettings.ContentAPIUrl}/{imageUrl}" : "/images/default-avatar.png")"
 								 class="profile-avatar-img"
 								 alt="Profile Picture" />
 						}
@@ -136,81 +146,81 @@
 			</div>
 		</div>
 		<script>
-						$(document).ready(function() {
+					$(document).ready(function() {
 
-				// 1. Trigger the hidden file channel input box on container box click click
-				$(document).on('click', '#btn-trigger-avatar-upload', function() {
-					$('#avatar-file-uploader').click();
-				});
+						// 1. Trigger the hidden file channel input box on container box click click
+						$(document).on('click', '#btn-trigger-avatar-upload', function() {
+							$('#avatar-file-uploader').click();
+						});
 
-				// 2. Listen for the file picker selection change execution context
-				$(document).on('change', '#avatar-file-uploader', function() {
-					var fileInput = this;
-					if (fileInput.files.length === 0) return;
+						// 2. Listen for the file picker selection change execution context
+						$(document).on('change', '#avatar-file-uploader', function() {
+							var fileInput = this;
+							if (fileInput.files.length === 0) return;
 
-					var file = fileInput.files[0];
+							var file = fileInput.files[0];
 
-					// Basic Guardrail: Enforce image type formats validation rules checks
-					if (!file.type.startsWith('image/')) {
-						Utility.failMessage("Please select a valid image file configuration format.");
-						return;
-					}
-
-					var formData = new FormData();
-					formData.append("ProfileImage", file);
-
-					// Turn on loading overlay state appearance visual adjustments
-					$('.avatar-upload-overlay').css('opacity', '1')
-						.html('<i class="icon-spinner2 spinner"></i><span>Uploading...</span>');
-
-					$.ajax({
-						url: '/ProjectBoard/UploadProfilePicture', // Target controller route
-						type: 'POST',
-						data: formData,
-						processData: false, // Prevent conversion mechanisms parameters
-						contentType: false, // Let browser set true multi-part headers bounding tags
-						success: function(res) {
-							if (res.success) {
-								// Cache root API URL path reference token from global variables configuration settings
-								var contentApiRoot = '@PagesViewModel.SystemSettings.ContentAPIUrl';
-								var absolutePathUrl = contentApiRoot + "/" + res.newImageUrl;
-
-								// Swap or generate the profile avatar element display values tags
-								var wrapper = $('#btn-trigger-avatar-upload');
-								var placeholder = wrapper.find('.avatar-placeholder-md');
-
-								if (placeholder.length > 0) {
-									// Replace initials block container with a clean dynamic image tag context
-									placeholder.remove();
-									wrapper.prepend(`<img id="img-profile-avatar-view" src="${absolutePathUrl}" class="profile-avatar-img" alt="Profile Picture" />`);
-								} else {
-									// Update existing image target src canvas path attributes
-									$('#img-profile-avatar-view').attr('src', absolutePathUrl);
-								}
-
-								// BONUS: Dynamically find and update your navbar header picture icon simultaneously if it exists
-								$('.navbar-nav .rounded-circle, .sidebar-user img').attr('src', absolutePathUrl);
-
-								Utility.successMessage("Profile image updated successfully.");
-							} else {
-								Utility.failMessage("Could not process photo adjustment: " + res.message);
+							// Basic Guardrail: Enforce image type formats validation rules checks
+							if (!file.type.startsWith('image/')) {
+								Utility.failMessage("Please select a valid image file configuration format.");
+								return;
 							}
-						},
-						complete: function() {
-							// Restore baseline overlay presentation templates texts states
-							$('.avatar-upload-overlay').removeAttr('style')
-								.html('<i class="icon-camera2"></i><span>Change Photo</span>');
-							$('#avatar-file-uploader').val(''); // Clear form memory arrays block trace
-						}
+
+							var formData = new FormData();
+							formData.append("ProfileImage", file);
+
+							// Turn on loading overlay state appearance visual adjustments
+							$('.avatar-upload-overlay').css('opacity', '1')
+								.html('<i class="icon-spinner2 spinner"></i><span>Uploading...</span>');
+
+							$.ajax({
+								url: '/ProjectBoard/UploadProfilePicture', // Target controller route
+								type: 'POST',
+								data: formData,
+								processData: false, // Prevent conversion mechanisms parameters
+								contentType: false, // Let browser set true multi-part headers bounding tags
+								success: function(res) {
+									if (res.success) {
+										// Cache root API URL path reference token from global variables configuration settings
+										var contentApiRoot = '@PagesViewModel.SystemSettings.ContentAPIUrl';
+										var absolutePathUrl = contentApiRoot + "/" + res.newImageUrl;
+
+										// Swap or generate the profile avatar element display values tags
+										var wrapper = $('#btn-trigger-avatar-upload');
+										var placeholder = wrapper.find('.avatar-placeholder-md');
+
+										if (placeholder.length > 0) {
+											// Replace initials block container with a clean dynamic image tag context
+											placeholder.remove();
+											wrapper.prepend(`<img id="img-profile-avatar-view" src="${absolutePathUrl}" class="profile-avatar-img" alt="Profile Picture" />`);
+										} else {
+											// Update existing image target src canvas path attributes
+											$('#img-profile-avatar-view').attr('src', absolutePathUrl);
+										}
+
+										// BONUS: Dynamically find and update your navbar header picture icon simultaneously if it exists
+										$('.navbar-nav .rounded-circle, .sidebar-user img').attr('src', absolutePathUrl);
+
+										Utility.successMessage("Profile image updated successfully.");
+									} else {
+										Utility.failMessage("Could not process photo adjustment: " + res.message);
+									}
+								},
+								complete: function() {
+									// Restore baseline overlay presentation templates texts states
+									$('.avatar-upload-overlay').removeAttr('style')
+										.html('<i class="icon-camera2"></i><span>Change Photo</span>');
+									$('#avatar-file-uploader').val(''); // Clear form memory arrays block trace
+								}
+							});
+						});
 					});
-				});
-			});
 		</script>
 		<div class="card-body">
 
 			<form id="updateLoginForm" class="form-validate-jquery" action="#">
-				<input type="hidden" id="Id" value="@Model.LoginUser.Id" />
-				<input type="hidden" id="PersonId" value="@Model.LoginUser.Person.Id" />
+				<input type="hidden" id="Id" value="@loginUser?.Id" />
+				<input type="hidden" id="PersonId" value="@person?.Id" />
 
 				<fieldset class="mb-3">
 					<legend class="text-uppercase font-size-sm font-weight-bold">Edit Users</legend>
@@ -220,7 +230,7 @@
 							<div class="form-group row">
 								<label for="UserName" class="col-form-label col-lg-3">User Name <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
-									<input type="email" id="UserName" name="UserName" class="form-control" required placeholder="User Name" value="@Model.LoginUser.UserName" />
+									<input type="email" id="UserName" name="UserName" class="form-control" required placeholder="User Name" value="@loginUser?.UserName" />
 								</div>
 							</div>
 						</div>
@@ -229,7 +239,7 @@
 								<label for="Password" class="col-form-label col-lg-3">Password <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
 									<div class="form-group-feedback form-group-feedback-right">
-										<input type="password" id="Password" name="Passwords" class="form-control" required placeholder="Password" value="@Model.LoginUser.Password" />
+										<input type="password" id="Password" name="Passwords" class="form-control" required placeholder="Password" value="@loginUser?.Password" />
 										<div class="form-control-feedback">
 											<a id="viewPassword" href="#"><i class="icon-eye-blocked"></i></a>
 										</div>
@@ -244,7 +254,7 @@
 							<div class="form-group row">
 								<label for="FirstName" class="col-form-label col-lg-3">First Name <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
-									<input type="text" id="FirstName" name="FirstName" class="form-control" required placeholder="First Name" value="@Model.LoginUser.Person.FirstName" />
+									<input type="text" id="FirstName" name="FirstName" class="form-control" required placeholder="First Name" value="@person?.FirstName" />
 								</div>
 							</div>
 						</div>
@@ -253,7 +263,7 @@
 								<label for="LastName" class="col-form-label col-lg-3">Last Name <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
 									<div class="form-group-feedback form-group-feedback-right">
-										<input type="text" id="LastName" name="LastName" class="form-control" required placeholder="Last Name" value="@Model.LoginUser.Person.LastName" />
+										<input type="text" id="LastName" name="LastName" class="form-control" required placeholder="Last Name" value="@person?.LastName" />
 									</div>
 								</div>
 							</div>
@@ -265,7 +275,7 @@
 							<div class="form-group row">
 								<label for="Email" class="col-form-label col-lg-3">User Email <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
-									<input type="email" id="Email" name="Email" class="form-control" required placeholder="User Email" value="@Model.LoginUser.Person.Email" />
+									<input type="email" id="Email" name="Email" class="form-control" required placeholder="User Email" value="@person?.Email" />
 								</div>
 							</div>
 						</div>
@@ -274,7 +284,7 @@
 								<label for="Mobile" class="col-form-label col-lg-3">Mobile <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
 									<div class="form-group-feedback form-group-feedback-right">
-										<input type="text" id="Mobile" name="MobileNumber" class="form-control" required placeholder="Mobile" value="@Model.LoginUser.Person.MobileNumber" />
+										<input type="text" id="Mobile" name="MobileNumber" class="form-control" required placeholder="Mobile" value="@person?.MobileNumber" />
 									</div>
 								</div>
 							</div>
@@ -286,7 +296,7 @@
 							<div class="form-group row">
 								<label for="Cnic" class="col-form-label col-lg-3">User CNIC <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
-									<input type="text" id="Cnic" name="Cnic" class="form-control" required placeholder="User CNIC" value="@Model.LoginUser.Person.Cnic" />
+									<input type="text" id="Cnic" name="Cnic" class="form-control" required placeholder="User CNIC" value="@person?.Cnic" />
 								</div>
 							</div>
 						</div>
@@ -295,7 +305,7 @@
 								<label for="SocialSecurity" class="col-form-label col-lg-3">Social Security <span class="text-danger">*</span></label>
 								<div class="col-lg-9">
 									<div class="form-group-feedback form-group-feedback-right">
-										<input type="text" id="SocialSecurity" name="SocialSecurity" class="form-control" required placeholder="Social Security" value="@Model.LoginUser.Person.SocialSecurity" />
+										<input type="text" id="SocialSecurity" name="SocialSecurity" class="form-control" required placeholder="Social Security" value="@person?.SocialSecurity" />
 									</div>
 								</div>
 							</div>
@@ -315,7 +325,7 @@
 	</div>
 	<!-- /form validation -->
 	<div class="row">
-		@foreach (var item in Model.LoginUser.Person.LaneAddress)
+		@foreach (var item in addresses)
 		{
 			<div class="col-md-6">
 				<div class="card">
@@ -359,11 +369,14 @@
 									<div class="form-group">
 										<label>Country:</label>
 										<select id="country-@item.AddressType" data-placeholder="Enter 'Country'" class="form-control select-minimum" data-fouc>
-											<option value="@item.City.StateProvince.Country.CountryId">@item.City.StateProvince.Country.CountryName</option>
+											<option value="@item.City?.StateProvince?.Country?.CountryId">@item.City?.StateProvince?.Country?.CountryName</option>
 											<optgroup label="Country">
-												@foreach (var country in Model.Countries)
+												@if (Model?.Countries != null)
 												{
-													<option value="@country.CountryId">@country.CountryName</option>
+													@foreach (var country in Model.Countries)
+													{
+														<option value="@country.CountryId">@country.CountryName</option>
+													}
 												}
 											</optgroup>
 										</select>
@@ -375,7 +388,7 @@
 									<div class="form-group">
 										<label>State Province:</label>
 										<select id="province-@item.AddressType" data-placeholder="Enter 'State'" class="form-control select-minimum" data-fouc>
-											<option value="@item.City.StateProvince.StateProvinceId">@item.City.StateProvince.StateProvinceName</option>
+											<option value="@item.City?.StateProvince?.StateProvinceId">@item.City?.StateProvince?.StateProvinceName</option>
 											<optgroup label="State">
 
 											</optgroup>
@@ -386,7 +399,7 @@
 									<div class="form-group">
 										<label>City:</label>
 										<select id="city-@item.AddressType" data-placeholder="Enter 'cat'" class="form-control select-minimum" data-fouc>
-											<option value="@item.City.CityId">@item.City.CityName</option>
+											<option value="@item.City?.CityId">@item.City?.CityName</option>
 											<optgroup label="City">
 
 											</optgroup>
@@ -415,21 +428,14 @@
 		<div class="card-body">
 
 			<select id="rolesListBox" multiple="multiple" class="form-control listbox" data-fouc>
-				@foreach (var item in Model.Roles)
+				@if (Model?.Roles != null)
 				{
-					bool isSelected = Model.LoginUser.Roles.Any(x => x.Id == item.Id);
-					<option value="@item.Id" @(isSelected ? "selected" : "")>@item.Name</option>
-					@* var result = Model.LoginUser.Roles.Where(x => x.Id == item.Id).FirstOrDefault();
-					if (result != null)
+					@foreach (var item in Model.Roles)
 					{
-						<option value="@item.Id" selected>@item.Name</option>
+						bool isSelected = rolesList.Any(x => x.Id == item.Id);
+						<option value="@item.Id" @(isSelected ? "selected" : "")>@item.Name</option>
 					}
-					else
-					{
-						<option value="@item.Id">@item.Name</option>
-					} *@
 				}
-
 			</select>
 		</div>
 	</div>
@@ -439,226 +445,225 @@
 </div>
 
 <script>
-	$(document).ready(function(){
-			$('#isActive').on('change', async function () {
-		var isActive = $(this).is(':checked');
-		var formData={
-			IsActive:isActive,
-			Id:$('#Id').val()
-		}
-		var objectData={
-			data:formData,
-			url:'/AdminPanel/ActiveUnActiveUser'
-		}
-		const result = await Utility.RequestDataAjax(objectData);
-			if(result.statusCode==='200'){
+	$(document).ready(function() {
+		$('#isActive').on('change', async function() {
+			var isActive = $(this).is(':checked');
+			var formData = {
+				IsActive: isActive,
+				Id: $('#Id').val()
+			}
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/ActiveUnActiveUser'
+			}
+			const result = await Utility.RequestDataAjax(objectData);
+			if (result.statusCode === '200') {
 				Utility.successMessage(result.Message);
 			}
-			else{
+			else {
 				Utility.failMessage(result.Message);
 			}
-	});
+		});
 
-		$('#country-Shipping').change(async function(){
-			var CountryId=$(this).val();
-		var states = await GetStates(CountryId);
-
-
-							$('#province-Shipping').empty();
-							$('#city-Shipping').empty();
+		$('#country-Shipping').change(async function() {
+			var CountryId = $(this).val();
+			var states = await GetStates(CountryId);
 
 
-								  states.forEach(function(province) {
-										$('#province-Shipping').append(`<option value="${province.StateProvinceId}">${province.StateProvinceName}</option>`);
-								  });
-								  var firstState = states[0];
-								  var cities = await GetCities(firstState.StateProvinceId);
-									cities.forEach(function(city) {
-										$('#city-Shipping').append(`<option value="${city.CityId}">${city.CityName}</option>`);
-								  });
+			$('#province-Shipping').empty();
+			$('#city-Shipping').empty();
+
+
+			states.forEach(function(province) {
+				$('#province-Shipping').append(`<option value="${province.StateProvinceId}">${province.StateProvinceName}</option>`);
+			});
+			var firstState = states[0];
+			var cities = await GetCities(firstState.StateProvinceId);
+			cities.forEach(function(city) {
+				$('#city-Shipping').append(`<option value="${city.CityId}">${city.CityName}</option>`);
+			});
 		})
-		$('#province-Shipping').change(async function(){
+		$('#province-Shipping').change(async function() {
 
-			var StateId=$(this).val();
-			var formData={
-				StateProvinceId:StateId
+			var StateId = $(this).val();
+			var formData = {
+				StateProvinceId: StateId
 			}
-			var objectData={
-				data:formData,
-				url:'/AdminPanel/GetCityByStateId/'
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/GetCityByStateId/'
 			}
 			const result = await Utility.RequestDataAjax(objectData);
-							$('#city-Shipping').empty();
-								  result.forEach(function(province) {
-										$('#city-Shipping').append(`<option value="${province.CityId}">${province.CityName}</option>`);
-								  });
+			$('#city-Shipping').empty();
+			result.forEach(function(province) {
+				$('#city-Shipping').append(`<option value="${province.CityId}">${province.CityName}</option>`);
+			});
 		})
-		$('#country-Billing').change(async function(){
-			var CountryId=$(this).val();
-		var states = await GetStates(CountryId);
+		$('#country-Billing').change(async function() {
+			var CountryId = $(this).val();
+			var states = await GetStates(CountryId);
 
 
-							$('#province-Billing').empty();
-							$('#city-Billing').empty();
+			$('#province-Billing').empty();
+			$('#city-Billing').empty();
 
 
-								  states.forEach(function(province) {
-										$('#province-Billing').append(`<option value="${province.StateProvinceId}">${province.StateProvinceName}</option>`);
-								  });
-								  var firstState = states[0];
-								  var cities = await GetCities(firstState.StateProvinceId);
-									cities.forEach(function(city) {
-										$('#city-Billing').append(`<option value="${city.CityId}">${city.CityName}</option>`);
-								  });
+			states.forEach(function(province) {
+				$('#province-Billing').append(`<option value="${province.StateProvinceId}">${province.StateProvinceName}</option>`);
+			});
+			var firstState = states[0];
+			var cities = await GetCities(firstState.StateProvinceId);
+			cities.forEach(function(city) {
+				$('#city-Billing').append(`<option value="${city.CityId}">${city.CityName}</option>`);
+			});
 		})
-		$('#province-Billing').change(async function(){
+		$('#province-Billing').change(async function() {
 
-			var StateId=$(this).val();
-			var formData={
-				StateProvinceId:StateId
+			var StateId = $(this).val();
+			var formData = {
+				StateProvinceId: StateId
 			}
-			var objectData={
-				data:formData,
-				url:'/AdminPanel/GetCityByStateId/'
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/GetCityByStateId/'
 			}
 			const result = await Utility.RequestDataAjax(objectData);
-							$('#city-Billing').empty();
-								  result.forEach(function(province) {
-										$('#city-Billing').append(`<option value="${province.CityId}">${province.CityName}</option>`);
-								  });
+			$('#city-Billing').empty();
+			result.forEach(function(province) {
+				$('#city-Billing').append(`<option value="${province.CityId}">${province.CityName}</option>`);
+			});
 		})
 
 
 	})
-	async function GetCities(Id){
+	async function GetCities(Id) {
 
-			var formData={
-				StateProvinceId:Id
-			}
-			var objectData={
-				data:formData,
-				url:'/AdminPanel/GetCityByStateId/'
-			}
-			const result = await Utility.RequestDataAjax(objectData);
-			return result
+		var formData = {
+			StateProvinceId: Id
+		}
+		var objectData = {
+			data: formData,
+			url: '/AdminPanel/GetCityByStateId/'
+		}
+		const result = await Utility.RequestDataAjax(objectData);
+		return result
 	}
-	async function GetStates(Id){
+	async function GetStates(Id) {
 
-			var formData={
-				CountryId:Id
-			}
-			var objectData={
-				data:formData,
-				url:'/AdminPanel/GetStatesByCountryId/'
-			}
-			const result = await Utility.RequestDataAjax(objectData);
-			return result
+		var formData = {
+			CountryId: Id
+		}
+		var objectData = {
+			data: formData,
+			url: '/AdminPanel/GetStatesByCountryId/'
+		}
+		const result = await Utility.RequestDataAjax(objectData);
+		return result
 	}
-	$('#form-Shipping').submit(async function(e){
+	$('#form-Shipping').submit(async function(e) {
 		e.preventDefault();
-			var formData = {
-				AddressId:$('#id-Shipping').val(),
-				LaneAddressOne: $('#addressOne-Shipping').val(),
-				LaneAddressTwo: $('#addressTwo-Shipping').val(),
-				FamousPlace: $('#famousPlace-Shipping').val(),
-				Area: $('#area-Shipping').val(),
-				AddressType: "Shipping",
-				CityId: $('#city-Shipping').val(),
-				StateProvinceId: $('#province-Shipping').val(),
-				CountryId: $('#country-Shipping').val(),
-			};
-			var objectData={
-				data:formData,
-				url:'/AdminPanel/UpdateAddress/'
-			}
-			const result = await Utility.RequestDataAjax(objectData);
-		if(result.statusCode==='200'){
-				Utility.successMessage(result.Message);
-			}
-			else{
-				Utility.failMessage(result.Message);
-			}
+		var formData = {
+			AddressId: $('#id-Shipping').val(),
+			LaneAddressOne: $('#addressOne-Shipping').val(),
+			LaneAddressTwo: $('#addressTwo-Shipping').val(),
+			FamousPlace: $('#famousPlace-Shipping').val(),
+			Area: $('#area-Shipping').val(),
+			AddressType: "Shipping",
+			CityId: $('#city-Shipping').val(),
+			StateProvinceId: $('#province-Shipping').val(),
+			CountryId: $('#country-Shipping').val(),
+		};
+		var objectData = {
+			data: formData,
+			url: '/AdminPanel/UpdateAddress/'
+		}
+		const result = await Utility.RequestDataAjax(objectData);
+		if (result.statusCode === '200') {
+			Utility.successMessage(result.Message);
+		}
+		else {
+			Utility.failMessage(result.Message);
+		}
 
 	});
-	$('#form-Billing').submit(async function(e){
+	$('#form-Billing').submit(async function(e) {
 		e.preventDefault();
-				var formDataBilling = {
-					AddressId:$('#id-Billing').val(),
-					LaneAddressOne: $('#addressOne-Billing').val(),
-					LaneAddressTwo: $('#addressTwo-Billing').val(),
-					FamousPlace: $('#famousPlace-Billing').val(),
-					Area: $('#area-Billing').val(),
-					AddressType: "Billing",
+		var formDataBilling = {
+			AddressId: $('#id-Billing').val(),
+			LaneAddressOne: $('#addressOne-Billing').val(),
+			LaneAddressTwo: $('#addressTwo-Billing').val(),
+			FamousPlace: $('#famousPlace-Billing').val(),
+			Area: $('#area-Billing').val(),
+			AddressType: "Billing",
 
-					CityId: $('#city-Billing').val(),
-					StateProvinceId: $('#province-Billing').val(),
-					CountryId: $('#country-Billing').val(),
+			CityId: $('#city-Billing').val(),
+			StateProvinceId: $('#province-Billing').val(),
+			CountryId: $('#country-Billing').val(),
 
 
 		};
 
-			var objectData={
-				data:formDataBilling,
-				url:'/AdminPanel/UpdateAddress/'
-			}
-			const result = await Utility.RequestDataAjax(objectData);
-			if(result.statusCode==='200'){
-				Utility.successMessage(result.Message);
-			}
-			else{
-				Utility.failMessage(result.Message);
-			}
+		var objectData = {
+			data: formDataBilling,
+			url: '/AdminPanel/UpdateAddress/'
+		}
+		const result = await Utility.RequestDataAjax(objectData);
+		if (result.statusCode === '200') {
+			Utility.successMessage(result.Message);
+		}
+		else {
+			Utility.failMessage(result.Message);
+		}
 
 
 	});
 
-	$('#updateLoginForm').submit(async function(e){
+	$('#updateLoginForm').submit(async function(e) {
 		e.preventDefault();
-			var formData = {
-				Id:$('#Id').val(),
-				UserName: $('#UserName').val(),
-				Password: $('#Password').val(),
-				Person:{
-					Id:$('#PersonId').val(),
+		var formData = {
+			Id: $('#Id').val(),
+			UserName: $('#UserName').val(),
+			Password: $('#Password').val(),
+			Person: {
+				Id: $('#PersonId').val(),
 				FirstName: $('#FirstName').val(),
 				LastName: $('#LastName').val(),
 				Email: $('#Email').val(),
 				MobileNumber: $('#Mobile').val(),
 				Cnic: $('#Cnic').val(),
 				SocialSecurity: $('#SocialSecurity').val()
-				}
-			};
-			var objectData={
-				data:formData,
-				url:'/AdminPanel/UpdateLoginUser'
 			}
-			const result = await Utility.RequestDataAjax(objectData);
-			if(result.statusCode==='200'){
-				Utility.successMessage(result.Message);
-			}
-			else{
-				Utility.failMessage(result.Message);
-			}
+		};
+		var objectData = {
+			data: formData,
+			url: '/AdminPanel/UpdateLoginUser'
+		}
+		const result = await Utility.RequestDataAjax(objectData);
+		if (result.statusCode === '200') {
+			Utility.successMessage(result.Message);
+		}
+		else {
+			Utility.failMessage(result.Message);
+		}
 	})
-	$(document).ready(function () {
-		$('#rolesListBox').on('change', async function () {
+	$(document).ready(function() {
+		$('#rolesListBox').on('change', async function() {
 			var selectedValues = $(this).val();
 			var id = $('#Id').val();
-			var formData={
-				RoleIds:selectedValues,
-				Id:id
+			var formData = {
+				RoleIds: selectedValues,
+				Id: id
 			}
-			var objectData={
-				data:formData,
-				url:'/AdminPanel/AssignUserRoles'
+			var objectData = {
+				data: formData,
+				url: '/AdminPanel/AssignUserRoles'
 			}
 
 			const result = await Utility.RequestDataAjax(objectData);
-			if(result.statusCode==='200')
-			{
+			if (result.statusCode === '200') {
 				Utility.successMessage(result.Message);
 			}
-			else{
+			else {
 				Utility.failMessage(result.Message);
 			}
 		});

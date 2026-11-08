@@ -193,7 +193,11 @@ namespace InspireSuperStore.Areas.Product.Controllers
                 return Json(new { statusCode = "400" });
             }
         }
-
+        public async Task<IActionResult> GetAllSubUom()
+        {
+            var subuoms = await _attrib.GetSubUOMs();
+            return Json(subuoms);
+        }
         public async Task<IActionResult> _GetAddMaterialForm()
         {
             return PartialView();

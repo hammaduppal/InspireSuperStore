@@ -18,7 +18,7 @@ namespace InspireSuperStore.Models
             string path = context.Request.Path.Value?.ToLower();
 
             // Skip session check for login and validation endpoints
-            if (path == "/account/login" || path == "/account/validatelogin/")
+            if (path == "/account/login" || path == "/account/validatelogin/" || path == "/account/startupsettings" || path == "/account/seeddata")
             {
                 await _next(context);
                 return;

@@ -509,6 +509,14 @@ namespace MarketBal.Repository.Products
             var result = await _db.GetDataListWithQueryAndParam<UomsubVM>(query,param);
             return result.ToList();
         }
+        public async Task<List<UomsubVM>> GetSubUOMs()
+        {
+            string query = $@"select SubUOMId, UOMId, SubUOMName, ConversionFactor from Inv.UOMSub order by ConversionFactor ASC";
+
+            var result = await _db.GetDataListWithQueryAndParam<UomsubVM>(query);
+            return result.ToList();
+        }
+
         public async Task<List<SizeVM>> GetSizes()
         {
             string query = $@"select * from Inv.Sizes where SizeName is not null and IsActive =1";

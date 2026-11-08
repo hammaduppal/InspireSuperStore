@@ -34,84 +34,124 @@ namespace MarketBal.Repository
 
         public async Task<List<LoginUserVM>> GetLoginUser()
         {
-            var r = await _onedb.LoginUsers
-      .Where(x => x.Id != 1)
-      .Select(x => new LoginUserVM
-      {
-          Id = x.Id,
-          UserName = x.UserName,
-          IsActive = x.IsActive.Value,
-          CreatedOn = x.CreatedOn,
-          Person = new PersonVM
-          {
-              FirstName = x.Person.FirstName,
-              LastName = x.Person.LastName,
-              Email = x.Person.Email,
-              MobileNumber = x.Person.MobileNumber,
-              IsActive = x.IsActive,
-              CreatedOn = x.CreatedOn,
-              Branch = new BranchVM
-              {
-                  BranchId = x.Person.Branch.BranchId,
-                  BranchName = x.Person.Branch.BranchName,
-                  Organization = new OrganizationVM
-                  {
-                      OrganizationId = x.Person.Branch.Organization.OrganizationId,
-                      OrganizationName = x.Person.Branch.Organization.OrganizationName
-                  }
-              }
-          }
-      })
-      .ToListAsync();
-            return r;
-            //string query = $@"select  * from Hrm.LoginUsers l where l.Id !=1";
-            //var result = await _db.ExecuteQueryList<LoginUserVM>(query);
-            //return result.ToList();
+            try
+            {
+                var sessionUser = AppDataUtility.SessionUser;
+
+                bool isSuperAdmin = sessionUser?.UserName != null &&
+                                    sessionUser.UserName.Contains("superadmin", StringComparison.OrdinalIgnoreCase);
+
+                var query = _onedb.LoginUsers
+                    .Where(x => x.Id != 1);
+
+                // Apply branch filter only for non-superadmin users
+                if (!isSuperAdmin && sessionUser?.Person?.BranchId != null)
+                {
+                    var branchId = sessionUser.Person.BranchId;
+                    query = query.Where(x => x.Person != null && x.Person.BranchId == branchId);
+                }
+
+                var r = await query
+                    .Select(x => new LoginUserVM
+                    {
+                        Id = x.Id,
+                        UserName = x.UserName ?? string.Empty,
+                        IsActive = x.IsActive ?? false,
+                        CreatedOn = x.CreatedOn,
+                        Person = x.Person != null ? new PersonVM
+                        {
+                            FirstName = x.Person.FirstName ?? string.Empty,
+                            LastName = x.Person.LastName ?? string.Empty,
+                            Email = x.Person.Email ?? string.Empty,
+                            MobileNumber = x.Person.MobileNumber ?? string.Empty,
+                            IsActive = x.IsActive,
+                            CreatedOn = x.CreatedOn,
+                            Branch = x.Person.Branch != null ? new BranchVM
+                            {
+                                BranchId = x.Person.Branch.BranchId,
+                                BranchName = x.Person.Branch.BranchName ?? string.Empty,
+                                Organization = x.Person.Branch.Organization != null ? new OrganizationVM
+                                {
+                                    OrganizationId = x.Person.Branch.Organization.OrganizationId,
+                                    OrganizationName = x.Person.Branch.Organization.OrganizationName ?? string.Empty
+                                } : null
+                            } : null
+                        } : null
+                    })
+                    .ToListAsync();
+
+                return r ?? new List<LoginUserVM>();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception if logger is available
+                throw new InvalidOperationException("An error occurred while retrieving login users.", ex);
+            }
         }
         public async Task<List<EmployeeVM>> GetEmployees()
         {
-            var r = await _onedb.Employees
+            try
+            {
+                var sessionUser = AppDataUtility.SessionUser;
 
-      .Select(x => new EmployeeVM
-      {
-          EmployeeId = x.EmployeeId,
-          EmployeeCode = x.EmployeeCode,
-          IsSalePerson = x.IsSalePerson.Value,
-          IsActive = x.IsActive.Value,
-          CreatedOn = x.CreatedOn,
-            EmployeeDepartment=new EmployeeDepartmentVM
+                // Superadmin is global and sees all employees (bypasses branch filter)
+                bool isSuperAdmin = sessionUser?.UserName != null &&
+                                    sessionUser.UserName.Contains("superadmin", StringComparison.OrdinalIgnoreCase);
+
+                IQueryable<Employee> query = _onedb.Employees;
+
+                // Apply branch filter only for non-superadmin users
+                if (!isSuperAdmin && sessionUser?.Person?.BranchId != null)
+                {
+                    var branchId = sessionUser.Person.BranchId;
+                    query = query.Where(x => x.Person != null && x.Person.BranchId == branchId);
+                }
+
+                var r = await query
+                    .Select(x => new EmployeeVM
+                    {
+                        EmployeeId = x.EmployeeId,
+                        EmployeeCode = x.EmployeeCode ?? string.Empty,
+                        IsSalePerson = x.IsSalePerson ?? false,
+                        IsActive = x.IsActive ?? false,
+                        CreatedOn = x.CreatedOn,
+                        EmployeeDepartment = x.Department != null ? new EmployeeDepartmentVM
+                        {
+                            Title = x.Department.Title ?? string.Empty
+                        } : null,
+                        EmployeeDesignation = x.Designation != null ? new EmployeeDesignationVM
+                        {
+                            Title = x.Designation.Title ?? string.Empty
+                        } : null,
+                        Person = x.Person != null ? new PersonVM
+                        {
+                            FirstName = x.Person.FirstName ?? string.Empty,
+                            LastName = x.Person.LastName ?? string.Empty,
+                            Email = x.Person.Email ?? string.Empty,
+                            MobileNumber = x.Person.MobileNumber ?? string.Empty,
+                            IsActive = x.IsActive,
+                            CreatedOn = x.CreatedOn,
+                            Branch = x.Person.Branch != null ? new BranchVM
+                            {
+                                BranchId = x.Person.Branch.BranchId,
+                                BranchName = x.Person.Branch.BranchName ?? string.Empty,
+                                Organization = x.Person.Branch.Organization != null ? new OrganizationVM
+                                {
+                                    OrganizationId = x.Person.Branch.Organization.OrganizationId,
+                                    OrganizationName = x.Person.Branch.Organization.OrganizationName ?? string.Empty
+                                } : null
+                            } : null
+                        } : null
+                    })
+                    .ToListAsync();
+
+                return r ?? new List<EmployeeVM>();
+            }
+            catch (Exception ex)
             {
-                 Title=x.Department.Title
-            },
-            EmployeeDesignation = new EmployeeDesignationVM
-            {
-                 Title=x.Designation.Title
-            },
-          Person = new PersonVM
-          {
-              FirstName = x.Person.FirstName,
-              LastName = x.Person.LastName,
-              Email = x.Person.Email,
-              MobileNumber = x.Person.MobileNumber,
-              IsActive = x.IsActive,
-              CreatedOn = x.CreatedOn,
-              Branch = new BranchVM
-              {
-                  BranchId = x.Person.Branch.BranchId,
-                  BranchName = x.Person.Branch.BranchName,
-                  Organization = new OrganizationVM
-                  {
-                      OrganizationId = x.Person.Branch.Organization.OrganizationId,
-                      OrganizationName = x.Person.Branch.Organization.OrganizationName
-                  }
-              }
-          }
-      })
-      .ToListAsync();
-            return r;
-            //string query = $@"select  * from Hrm.LoginUsers l where l.Id !=1";
-            //var result = await _db.ExecuteQueryList<LoginUserVM>(query);
-            //return result.ToList();
+                // Log the exception if logger is available
+                throw new InvalidOperationException("An error occurred while retrieving employees.", ex);
+            }
         }
         public async Task<int> EmployeeIsSalePerson(EmployeeVM model)
         {
@@ -155,87 +195,92 @@ namespace MarketBal.Repository
         }
         public async Task<LoginUserVM> GetLoginUser(int Id)
         {
-            //var rr = _onedb.LoginUsers.Where(x => x.Id == Id).Select(lu => new LoginUserVM
-            //{
-            //    UserName = lu.UserName,
-            //    PersonId = lu.PersonId,
-            //    Id = lu.Id,
-            //    Passwords = lu.Passwords,
-            //    PersonVM = new PersonVM
-            //    {
-            //        Id = lu.Person.Id,
-            //        FirstName = lu.Person.FirstName,
-            //        LastName = lu.Person.LastName,
-            //        Cnic = lu.Person.Cnic,
-            //        SocialSecurity = lu.Person.SocialSecurity,
-            //        Email = lu.Person.Email,
-            //        MobileNumber = lu.Person.MobileNumber,
-
-            //    }
-
-
-            //}).FirstOrDefault();
-            string query = $@"select * from Hrm.LoginUsers lu  where lu.Id= @Id";
-            var loginparam = new
+            try
             {
-                Id
-            };
-            var loginUser = await _db.ExecuteQuery<LoginUserVM>(query, loginparam);
-            loginUser.Password = EncryptionPasses.Decrypt(loginUser.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);
-            query = "select * from HRM.Persons where HRM.Persons.Id=@PersonId";
-            var personParam = new
-            {
-                loginUser.PersonId
-            };
-            var person = await _db.ExecuteQuery<PersonVM>(query, personParam);
-            loginUser.Person = person;
-            query = $"select * from SYSTEM.AssignedRoles ar join SYSTEM.Roles r on ar.RoleId=r.Id where ar.LoginId={loginUser.Id}";
-            var roles = await _db.ExecuteQueryList<RolesVM>(query);
-            loginUser.Roles = roles.ToList();
+                // 1. Fetch Login User
+                string query = @"select * from Hrm.LoginUsers lu where lu.Id = @Id";
+                var loginparam = new { Id };
+                var loginUser = await _db.ExecuteQuery<LoginUserVM>(query, loginparam);
 
-            query = "select * from Hrm.LaneAddresses where PersonId =@PersonId";
-            var addressParam = new
-            {
-                loginUser.PersonId
-            };
-            var addresses = await _db.GetDataListWithQueryAndParam<LaneAddressVM>(query, addressParam);
-            loginUser.Person.LaneAddress = addresses.ToList();
-
-
-
-            foreach (var item in addresses)
-            {
-                query = "select * from HRM.Cities where HRM.Cities.CityId=@CityId";
-                var cityParam = new
+                // Handle case where user is not found
+                if (loginUser == null)
                 {
-                    item.CityId
-                };
-                var city = await _db.GetSingleItemDatatWithQueryAndParam<CityVM>(query, cityParam);
-                item.City = city;
-                query = "select * from HRM.StateProvince where StateProvinceId =@StateProvinceId";
-                var stateParam = new
+                    return null;
+                }
+
+                // Safely decrypt password if it exists
+                if (!string.IsNullOrEmpty(loginUser.Password))
                 {
-                    city.StateProvinceId
-                };
-                var state = await _db.GetSingleItemDatatWithQueryAndParam<StateProvinceVM>(query, stateParam);
-                city.StateProvince = state;
+                    loginUser.Password = EncryptionPasses.Decrypt(
+                        loginUser.Password,
+                        PassesCore.INIT_VECTOR,
+                        PassesCore.PASS_PHRASE,
+                        PassesCore.KEY_SIZE
+                    );
+                }
 
-
-                query = "select * from HRM.Countries where CountryId= @CountryId";
-                var countryParam = new
+                // 2. Fetch Person
+                if (loginUser.PersonId > 0)
                 {
-                    state.CountryId
-                };
-                var country = await _db.GetSingleItemDatatWithQueryAndParam<CountryVM>(query, countryParam);
+                    query = "select * from HRM.Persons where HRM.Persons.Id = @PersonId";
+                    var personParam = new { loginUser.PersonId };
+                    var person = await _db.ExecuteQuery<PersonVM>(query, personParam);
+                    loginUser.Person = person;
 
-                state.Country = country;
+                    if (loginUser.Person != null)
+                    {
+                        // 3. Fetch Addresses
+                        query = "select * from Hrm.LaneAddresses where PersonId = @PersonId";
+                        var addressParam = new { loginUser.PersonId };
+                        var addresses = await _db.GetDataListWithQueryAndParam<LaneAddressVM>(query, addressParam);
 
+                        if (addresses != null)
+                        {
+                            loginUser.Person.LaneAddress = addresses.ToList();
 
+                            // 4. Loop through addresses to fetch City, State, and Country safely
+                            foreach (var item in addresses)
+                            {
+                                if (item == null) continue;
 
+                                query = "select * from HRM.Cities where HRM.Cities.CityId = @CityId";
+                                var cityParam = new { item.CityId };
+                                var city = await _db.GetSingleItemDatatWithQueryAndParam<CityVM>(query, cityParam);
+                                item.City = city;
 
+                                if (city != null)
+                                {
+                                    query = "select * from HRM.StateProvince where StateProvinceId = @StateProvinceId";
+                                    var stateParam = new { city.StateProvinceId };
+                                    var state = await _db.GetSingleItemDatatWithQueryAndParam<StateProvinceVM>(query, stateParam);
+                                    city.StateProvince = state;
 
+                                    if (state != null)
+                                    {
+                                        query = "select * from HRM.Countries where CountryId = @CountryId";
+                                        var countryParam = new { state.CountryId };
+                                        var country = await _db.GetSingleItemDatatWithQueryAndParam<CountryVM>(query, countryParam);
+                                        state.Country = country;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 5. Fetch Roles
+                query = "select * from SYSTEM.AssignedRoles ar join SYSTEM.Roles r on ar.RoleId = r.Id where ar.LoginId = @LoginId";
+                var roleParam = new { LoginId = loginUser.Id };
+                var roles = await _db.GetDataListWithQueryAndParam<RolesVM>(query, roleParam); // Updated to use parameterized query for safety
+                loginUser.Roles = roles?.ToList() ?? new List<RolesVM>();
+
+                return loginUser;
             }
-            return loginUser;
+            catch (Exception ex)
+            {
+                // Log the exception (e.g., _logger.LogError(ex, "Error fetching login user ID {Id}", Id));
+                throw new InvalidOperationException($"An error occurred while retrieving login user with ID {Id}.", ex);
+            }
         }
 
         public async Task<List<RolesVM>> GetRoles()

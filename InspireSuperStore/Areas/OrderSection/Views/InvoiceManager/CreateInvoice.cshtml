@@ -295,6 +295,8 @@
 								<tr>
 									<th class="text-center">Name</th>
 									<th class="text-center">Size</th>
+									<th class="text-center">UOM</th>
+
 									<th class="text-center">Qty</th>
 									<th class="text-center">Price</th>
 
@@ -424,22 +426,48 @@
 				}
 			}
 
+			// const items = [];
+			// $rows.each(function () {
+			// 	const $tr = $(this);
+				
+			// 	const $firstTd = $tr.find('td').first();
+
+			// 	const qty = parseFloat($tr.find('.lineqty').val()) || 0;
+			// 	const unitPrice = parseFloat($tr.find('.currentPrice').val()) || 0;
+			// 	const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
+			// 	const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
+			// 	const lineTotal = unitPrice * qty; // without tax
+			// 	const lineTotalWithTax = lineTotal + taxAmount;
+
+			// 	items.push({
+			// 		ProductId: $firstTd.data('productid'),
+			// 		VariantId: $firstTd.data('variantid'),
+			// 		Quantity: qty,
+			// 		UnitPrice: unitPrice,
+			// 		TaxRate: taxRate,
+			// 		TaxAmount: taxAmount,
+			// 		LineTotal: lineTotal,
+			// 		LineTotalWithTax: lineTotalWithTax
+			// 	});
+			// });
+
 			const items = [];
 			$rows.each(function () {
 				const $tr = $(this);
-				
 				const $firstTd = $tr.find('td').first();
 
 				const qty = parseFloat($tr.find('.lineqty').val()) || 0;
 				const unitPrice = parseFloat($tr.find('.currentPrice').val()) || 0;
+				const subUomId = $tr.find('.subUomSelect').val() || null; // <--- Capture selected packaging SubUomId
 				const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
 				const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
-				const lineTotal = unitPrice * qty; // without tax
+				const lineTotal = unitPrice * qty; 
 				const lineTotalWithTax = lineTotal + taxAmount;
 
 				items.push({
 					ProductId: $firstTd.data('productid'),
 					VariantId: $firstTd.data('variantid'),
+					SubUomId: subUomId, 
 					Quantity: qty,
 					UnitPrice: unitPrice,
 					TaxRate: taxRate,
@@ -964,49 +992,37 @@
 		  });
 
 		function appendProductToTable(result) {
-			if (!result) return;
+    if (!result) return;
 
+    let isDuplicate = false;
+    let incomingBarcode = String(result.BarCode);
+    let incomingSubUomId = result.SubUomId || '';
 
-			let isDuplicate = false;
-			let incomingBarcode = String(result.BarCode); // ensure barcode is string
+    $('#invoiceTable tbody tr').each(function () {
+        const barcode = String($(this).find('td').eq(0).data('barcode'));
+        const rowSubUomId = $(this).find('.subUomSelect').val() || '';
 
-			$('#invoiceTable tbody tr').each(function () {
-				const barcode = String($(this).find('td').eq(0).data('barcode')); // barcode stored in first <td>
+        if (barcode === incomingBarcode && rowSubUomId === incomingSubUomId) {
+            isDuplicate = true;
 
-				if (barcode === incomingBarcode) {
-					isDuplicate = true;
+            let qtyInput = $(this).find('.lineqty');
+            let currentQty = parseFloat(qtyInput.val()) || 0;
+            let newQty = currentQty + 1;
+            qtyInput.val(newQty);
 
-					let qtyInput = $(this).find('td').eq(2).find('input');
-					let currentQty = parseFloat(qtyInput.val()) || 0;
-					let newQty = currentQty + 1;
-					qtyInput.val(newQty);
+            updateRowTotal($(this));
+            return false; 
+        }
+    });
 
-					// Get unit price and tax rate from row
-					let unitPrice = parseFloat($(this).find('.currentPrice').val()) || 0;
-					let taxRate = parseFloat($(this).find('.taxPercent').text()) || 0;
+    if (isDuplicate) {
+        return; 
+    }
 
-					// Recalculate
-					let lineAmount = unitPrice * newQty;
-					let taxAmount = (lineAmount * taxRate) / 100;
-					let total = lineAmount + taxAmount;
-
-					// Update row cells
-					$(this).find('.taxAmount').text(taxAmount.toFixed(2));
-					$(this).find('.lineTotal').text(total.toFixed(2));
-
-					setTotalPrice();
-					return false; // break loop
-				}
-			});
-
-			if (isDuplicate) {
-				return; // No need to append new row
-			}
-
-			appendRow(result,incomingBarcode);
-			setTotalPrice();
-			scrollInvoiceTableToBottom();
-		}
+    appendRow(result, incomingBarcode);
+    setTotalPrice();
+    scrollInvoiceTableToBottom();
+}
 
 			$(document).on('input', '.lineqty, .currentPrice', function () {
 		let row = $(this).closest('tr');
@@ -1096,123 +1112,176 @@
 			return data.text;
 		}
 
-		function appendRow(result, incomingBarcode) {
-		// -----------------------------
-		// Variables & calculations
-		// -----------------------------
-		debugger
-		let unitPrice = parseFloat(result.CurrentPrice) || 0;
+	// 	function appendRow(result, incomingBarcode) {
+	// 	// -----------------------------
+	// 	// Variables & calculations
+	// 	// -----------------------------
+	// 	debugger
+	// 	let unitPrice = parseFloat(result.CurrentPrice) || 0;
+	// 	let taxRate = parseFloat(result.TaxRate) || 0;
+	// 	let qty = 1; // default for new row
+	// 	if(result.Quantity)
+	// 	{
+	// 		qty=result.Quantity
+	// 	}
+
+	// 	let lineAmount = unitPrice * qty;
+	// 	let taxAmount = (lineAmount * taxRate) / 100;
+	// 	let total = lineAmount + taxAmount;
+
+	// 	// Server-side flag injected into JS
+	// 	let enableTax = @AppDataUtility.SystemPreferences.EnableTax.ToString().ToLower();
+	// 	// true / false
+
+	// 	let row = "";
+
+	// 	// -----------------------------
+	// 	// HTML structure
+	// 	// -----------------------------
+	// 	if (enableTax) {
+	// 		// With tax columns
+	// 		row = `
+	// 			<tr>
+	// 				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+	// 					${result.ProductName}
+	// 				</td>
+	// 				<td class="text-center">${result.SizeName}</td>
+	// 				<td class="text-center">
+	// 					<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+	// 				</td>
+	// 				<td class='text-right'>
+	// 					<input class='currentPrice text-center' type='number' min='1' step='1' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
+	// 				</td>
+	// 				<td class='taxPercent text-right'>${taxRate.toFixed(2)}</td>
+	// 				<td class='taxAmount text-right'> ${taxAmount.toFixed(2)}</td>
+	// 				<td class='lineTotal text-right'>${total.toFixed(2)}</td>
+	// 				<td class="text-center">
+	// 					<div class="list-icons">
+	// 						<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
+	// 						   class="list-icons-item text-danger-600 removeRow text-center">
+	// 						   <i class="icon-trash"></i>
+	// 						</a>
+	// 					</div>
+	// 				</td>
+	// 			</tr>`;
+	// 	} else {
+	// 		// Without tax columns
+	// 		row = `
+	// 			<tr>
+	// 				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+	// 					${result.ProductName}
+	// 				</td>
+	// 				<td class="text-center">${result.SizeName}</td>
+	// 				<td class="text-center">
+	// 					<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+	// 				</td>
+	// 					<td class='text-right'>
+	// 					<input class='currentPrice text-center' type='text'  value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
+	// 				</td>
+					
+	// 				<td class='lineTotal text-right'>${lineAmount.toFixed(2)}</td>
+	// 				<td class="text-center">
+	// 					<div class="list-icons">
+	// 						<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
+	// 						   class="list-icons-item text-danger-600 removeRow text-center">
+	// 						   <i class="icon-trash"></i>
+	// 						</a>
+	// 					</div>
+	// 				</td>
+	// 			</tr>`;
+	// 	}
+
+	// 	// -----------------------------
+	// 	// Append row
+	// 	// -----------------------------
+	// 	$('#invoiceTable tbody').append(row);
+	// }
+		
+function appendRow(result, incomingBarcode) {
+		let unitPrice = parseFloat(result.CurrentPrice || result.RetailPrice) || 0;
 		let taxRate = parseFloat(result.TaxRate) || 0;
-		let qty = 1; // default for new row
-		if(result.Quantity)
-		{
-			qty=result.Quantity
-		}
+		
+		// Use result.Qty with fallback to 1 for new cart additions
+		let qty = (result.Qty !== undefined && result.Qty !== null && result.Qty !== 0) ? parseFloat(result.Qty) : 1;
+
+		// Correct property mapping matching your exact JSON casing
+		let assignedSubUomId = result.SubUomId || result.SubUomid || result.subUomId || result.subuomid || '';
+		let productUomId = result.UomId || result.Uomid || result.uomId || result.uomid || result.UOMId || '';
+
+		let subUoms = getSubUomsForProduct(productUomId);
+		let dropdownData = buildSubUomDropdownHtml(subUoms, assignedSubUomId);
+		let subUomOptions = dropdownData.optionsHtml;
+		let initialFactor = dropdownData.initialFactor;
+
+		let baseUnitPrice = calculateBaseUnitPrice(unitPrice, initialFactor);
 
 		let lineAmount = unitPrice * qty;
 		let taxAmount = (lineAmount * taxRate) / 100;
 		let total = lineAmount + taxAmount;
 
-		// Server-side flag injected into JS
 		let enableTax = @AppDataUtility.SystemPreferences.EnableTax.ToString().ToLower();
-		// true / false
-
 		let row = "";
 
-		// -----------------------------
-		// HTML structure
-		// -----------------------------
 		if (enableTax) {
-			// With tax columns
 			row = `
-				<tr>
-					<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
-						${result.ProductName}
-					</td>
-					<td class="text-center">${result.SizeName}</td>
-					<td class="text-center">
-						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
-					</td>
-					<td class='text-right'>
-						<input class='currentPrice text-center' type='number' min='1' step='1' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
-					</td>
-					<td class='taxPercent text-right'>${taxRate.toFixed(2)}</td>
-					<td class='taxAmount text-right'> ${taxAmount.toFixed(2)}</td>
-					<td class='lineTotal text-right'>${total.toFixed(2)}</td>
-					<td class="text-center">
-						<div class="list-icons">
-							<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
-							   class="list-icons-item text-danger-600 removeRow text-center">
-							   <i class="icon-trash"></i>
-							</a>
-						</div>
-					</td>
-				</tr>`;
+			<tr data-base-unit-price="${baseUnitPrice}" data-current-factor="${initialFactor}">
+				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+					${result.ProductName}
+				</td>
+				<td class="text-center">${result.SizeName || ''}</td>
+				<td class="text-center">
+					<select class="form-control form-control-sm subUomSelect" style="max-width:110px;">
+						${subUomOptions}
+					</select>
+				</td>
+				<td class="text-center">
+					<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+				</td>
+				<td class='text-right'>
+					<input class='currentPrice text-center' type='number' min='0.01' step='any' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
+				</td>
+				<td class='taxPercent text-right'>${taxRate.toFixed(2)}</td>
+				<td class='taxAmount text-right'> ${taxAmount.toFixed(2)}</td>
+				<td class='lineTotal text-right'>${total.toFixed(2)}</td>
+				<td class="text-center">
+					<div class="list-icons">
+						<a href="#" class="list-icons-item text-danger-600 removeRow text-center">
+						   <i class="icon-trash"></i>
+						</a>
+					</div>
+				</td>
+			</tr>`;
 		} else {
-			// Without tax columns
 			row = `
-				<tr>
-					<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
-						${result.ProductName}
-					</td>
-					<td class="text-center">${result.SizeName}</td>
-					<td class="text-center">
-						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
-					</td>
-						<td class='text-right'>
-						<input class='currentPrice text-center' type='text'  value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
-					</td>
-					
-					<td class='lineTotal text-right'>${lineAmount.toFixed(2)}</td>
-					<td class="text-center">
-						<div class="list-icons">
-							<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
-							   class="list-icons-item text-danger-600 removeRow text-center">
-							   <i class="icon-trash"></i>
-							</a>
-						</div>
-					</td>
-				</tr>`;
+			<tr data-base-unit-price="${baseUnitPrice}" data-current-factor="${initialFactor}">
+				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+					${result.ProductName}
+				</td>
+				<td class="text-center">${result.SizeName || ''}</td>
+				<td class="text-center">
+					<select class="form-control form-control-sm subUomSelect" style="max-width:110px;">
+						${subUomOptions}
+					</select>
+				</td>
+				<td class="text-center">
+					<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+				</td>
+				<td class='text-right'>
+					<input class='currentPrice text-center' type='text' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
+				</td>
+				<td class='lineTotal text-right'>${lineAmount.toFixed(2)}</td>
+				<td class="text-center">
+					<div class="list-icons">
+						<a href="#" class="list-icons-item text-danger-600 removeRow text-center">
+						   <i class="icon-trash"></i>
+						</a>
+					</div>
+				</td>
+			</tr>`;
 		}
 
-		// -----------------------------
-		// Append row
-		// -----------------------------
 		$('#invoiceTable tbody').append(row);
 	}
-
-
-		function setTotalPrice() {
-		let totalAmount = 0;
-		let totalTax = 0;
-
-		$('#invoiceTable tbody tr').each(function () {
-			let qty = parseFloat($(this).find('.lineqty').val()) || 0;
-			let unitPrice = parseFloat($(this).find('.currentPrice').val()) || 0;
-			let taxRate = parseFloat($(this).find('.taxPercent').text()) || 0;
-
-			let lineTotal = unitPrice * qty;
-			let taxAmount = (lineTotal * taxRate) / 100;
-
-			totalAmount += lineTotal;
-			totalTax += taxAmount;
-		});
-
-		let grandTotal = totalAmount + totalTax;
-
-		// discount (allow numeric input, default 0)
-		let discount = parseFloat($('#discount').val()) || 0;
-		if (discount > grandTotal) discount = grandTotal; // prevent negative payable
-
-		let payable = grandTotal - discount;
-
-		// Update UI
-		$('#totalAmount').val(totalAmount.toFixed(2));
-		$('#totalTax').val(totalTax.toFixed(2));
-		$('#grandTotal').val(grandTotal.toFixed(2));
-		$('#totalPayable').val(payable.toFixed(2));
-	}
-
 
 
 			function updateGrandTotal(invoiceTotal) {
@@ -1252,8 +1321,175 @@
 
 	})
 		
+	$(document).ready(async function () {
+    await initializeSubUomsCache();
+});
+	async function initializeSubUomsCache() {
+		// 1. Check if sub-UOMs already exist in localStorage
+		let cachedData = localStorage.getItem('cached_sub_uoms');
 
+		if (cachedData) {
+			console.log("Sub-UOMs loaded from localStorage cache.");
+			return JSON.parse(cachedData);
+		}
 
+		try {
+			// 2. If not cached, fetch from the server
+			var res = await Utility.RequestAjax('/AttributeManager/GetAllSubUom');
 
+			if (res) {
+				// 3. Save to localStorage as a JSON string
+				localStorage.setItem('cached_sub_uoms', JSON.stringify(res));
+				console.log("Sub-UOMs fetched from server and cached.", res);
+				return res;
+			}
+		} catch (error) {
+			console.error("Failed to fetch sub-UOMs for cache:", error);
+		}
 
+		return [];
+	}
+	function getSubUomsForProduct(uomId) {
+		let allSubUoms = JSON.parse(localStorage.getItem('cached_sub_uoms')) || [];
+		debugger
+		// Filter matching UOMId
+		return allSubUoms.filter(sub => sub.UOMId === uomId);
+	}
+
+	$(document).on('change', '.subUomSelect', function () {
+    let row = $(this).closest('tr');
+    let selectedOption = $(this).find(':selected');
+    let newFactor = parseFloat(selectedOption.data('factor')) || 1;
+
+    let baseUnitPrice = parseFloat(row.attr('data-base-unit-price')) || 0;
+    if (!baseUnitPrice) {
+        let currentPrice = parseFloat(row.find('.currentPrice').val()) || 0;
+        let oldFactor = parseFloat(row.attr('data-current-factor')) || 1;
+        baseUnitPrice = oldFactor > 0 ? currentPrice / oldFactor : currentPrice;
+        row.attr('data-base-unit-price', baseUnitPrice);
+    }
+
+    // Scale unit price according to new package conversion factor
+    let newUnitPrice = baseUnitPrice * newFactor;
+    row.find('.currentPrice').val(newUnitPrice.toFixed(2));
+    row.attr('data-current-factor', newFactor);
+
+    updateRowTotal(row);
+});
+$(document).on('input', '.lineqty, .currentPrice', function () {
+    let row = $(this).closest('tr');
+
+    // If cashier manually overrides unit price, re-evaluate base unit price
+    if ($(this).hasClass('currentPrice')) {
+        let currentPrice = parseFloat(row.find('.currentPrice').val()) || 0;
+        let currentFactor = parseFloat(row.attr('data-current-factor')) || 1;
+        let baseUnitPrice = currentFactor > 0 ? currentPrice / currentFactor : currentPrice;
+        row.attr('data-base-unit-price', baseUnitPrice);
+    }
+
+    updateRowTotal(row);
+});
+
+function updateRowTotal(row) {
+    let qty = parseFloat(row.find('.lineqty').val()) || 0;
+    let unitPrice = parseFloat(row.find('.currentPrice').val()) || 0;
+    
+    let taxRate = 0;
+    let $taxPercent = row.find('.taxPercent');
+    if ($taxPercent.length > 0) {
+        taxRate = parseFloat($taxPercent.text()) || 0;
+    }
+
+    let lineAmount = unitPrice * qty;
+    let taxAmount = (lineAmount * taxRate) / 100;
+    let total = lineAmount + taxAmount;
+
+    let $taxAmount = row.find('.taxAmount');
+    if ($taxAmount.length > 0) {
+        $taxAmount.text(taxAmount.toFixed(2));
+    }
+    row.find('.lineTotal').text(total.toFixed(2));
+
+    setTotalPrice();
+}
+
+function setTotalPrice() {
+    let totalAmount = 0;
+    let totalTax = 0;
+
+    $('#invoiceTable tbody tr').each(function () {
+        let qty = parseFloat($(this).find('.lineqty').val()) || 0;
+        let unitPrice = parseFloat($(this).find('.currentPrice').val()) || 0;
+        
+        let taxRate = 0;
+        let $taxPercent = $(this).find('.taxPercent');
+        if ($taxPercent.length > 0) {
+            taxRate = parseFloat($taxPercent.text()) || 0;
+        }
+
+        let lineTotal = unitPrice * qty;
+        let taxAmount = (lineTotal * taxRate) / 100;
+
+        totalAmount += lineTotal;
+        totalTax += taxAmount;
+    });
+
+    let grandTotal = totalAmount + totalTax;
+
+    let discount = parseFloat($('#discount').val()) || 0;
+    if (discount > grandTotal) discount = grandTotal; 
+
+    let payable = grandTotal - discount;
+
+    $('#totalAmount').val(totalAmount.toFixed(2));
+    $('#totalTax').val(totalTax.toFixed(2));
+    $('#grandTotal').val(grandTotal.toFixed(2));
+    $('#totalPayable').val(payable.toFixed(2));
+}
+
+// 1. Get filtered sub-UOMs for a given product UOM ID from cache
+function getSubUomsForProduct(uomId) {
+    let allSubUoms = JSON.parse(localStorage.getItem('cached_sub_uoms')) || [];
+    if (!uomId) return [];
+    return allSubUoms.filter(sub => String(sub.UOMId) === String(uomId));
+}
+
+// 2. Build HTML options string for the dropdown, ensuring the variant's specific SubUomId is selected
+function buildSubUomDropdownHtml(subUoms, selectedSubUomId) {
+    let optionsHtml = '';
+    let initialFactor = 1;
+    let foundSelected = false;
+
+    if (subUoms && subUoms.length > 0) {
+        subUoms.forEach(sub => {
+            let isSelected = (selectedSubUomId && String(sub.SubUomId) === String(selectedSubUomId));
+            if (isSelected) {
+                initialFactor = parseFloat(sub.ConversionFactor) || 1;
+                foundSelected = true;
+            }
+            optionsHtml += `<option value="${sub.SubUomId}" data-factor="${sub.ConversionFactor}" ${isSelected ? 'selected' : ''}>${sub.SubUOMName}</option>`;
+        });
+
+        // Fallback: If no matching SubUomId was found, default to the first option
+        if (!foundSelected && subUoms.length > 0) {
+            initialFactor = parseFloat(subUoms[0].ConversionFactor) || 1;
+            // Force the 'selected' attribute onto the first option if it wasn't marked
+            optionsHtml = optionsHtml.replace('value="' + subUoms[0].SubUomId + '"', 'value="' + subUoms[0].SubUomId + '" selected');
+        }
+    } else {
+        optionsHtml = `<option value="" data-factor="1" selected>Default Unit</option>`;
+        initialFactor = 1;
+    }
+
+    return {
+        optionsHtml: optionsHtml,
+        initialFactor: initialFactor
+    };
+}
+
+// 3. Calculate base unit price safely
+function calculateBaseUnitPrice(unitPrice, conversionFactor) {
+    let factor = conversionFactor > 0 ? conversionFactor : 1;
+    return unitPrice / factor;
+}
 </script>

@@ -1,0 +1,380 @@
+﻿@using MainModels.DTOModels
+@using MainModels.Util
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Stock Adjustment / Opening Stock";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header page-header-light">
+	<div class="row mt-1 pt-1">
+		<!-- Barcode Input -->
+		<div class="col-md-3">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text"><i class="icon-barcode2"></i></span>
+				</div>
+				<input type="text" id="barCode" name="barCode" class="form-control" autocomplete="off" placeholder="Search BarCode........." />
+			</div>
+		</div>
+		<!-- Manual Search Input -->
+		<div class="col-md-3">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text"><i class="icon-search4"></i></span>
+				</div>
+				<div class="form-group-feedback form-group-feedback-right">
+					<select id="productSearch" style="width: 100%" class="form-control"></select>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-1">
+			<div id="clock" style="font-size: 24px; font-weight: bold;"></div>
+		</div>
+		<div class="col-md-2">
+			<div id="date" style="font-size: 18px; color: gray;"></div>
+		</div>
+	</div>
+</div>
+
+<!-- Content area -->
+<div class="content">
+	<form id="formVariant" name="formVariant" style="display:block" action="#">
+		<div class="card">
+			<div class="row p-2">
+				<div class="col-lg-3">
+					<div class="form-group">
+						<label>Company:</label>
+						<select id="company" data-placeholder="Enter 'Company'" class="form-control select-minimum" data-fouc required>
+							<option value="@AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationId">
+								@AppDataUtility.SessionUser.Person.Branch.Organization.OrganizationName
+							</option>
+							<optgroup label="Company"></optgroup>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-3">
+					<div class="form-group">
+						<label>Branch:</label>
+						<select id="branch" data-placeholder="Enter 'Branch'" class="form-control select-minimum" data-fouc required>
+							<option value="@AppDataUtility.SessionUser.Person.Branch.BranchId">@AppDataUtility.SessionUser.Person.Branch.BranchName</option>
+							<optgroup label="Branch"></optgroup>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-3">
+					<div class="form-group">
+						<label>Purchase Type (Adjustment Type):</label>
+						<select id="purchaseTypeId" data-placeholder="Select PurchaseType'" class="form-control required">
+							@foreach (var item in Model.PurchaseTypes)
+							{
+								<option value="@item.PurchaseTypeId"> @item.Name</option>
+							}
+						</select>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="invoiceRowSection" class="card shadow-5">
+			<table id="purchaseRequisitionTable" class="table table-bordered table-responsive p-2">
+				<thead>
+					<tr>
+						<th>BarCode</th>
+						<th>Name</th>
+						<th>Color</th>
+						<th>Size</th>
+						<th>Material</th>
+						<th>Qty</th>
+						<th>Unit Price</th>
+						<th>Total Price</th>
+						<th>Manage</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+
+		<div>
+			<div class="row">
+				<div class="col-lg-8"></div>
+				<div class="col-lg-4">
+					<div class="card shadow-5 p-2">
+						<div class="row">
+							<div class="col-lg-3"><label><br />Total:</label></div>
+							<div class="col-lg-8">
+								<div class="form-group">
+									<input id="invoiceTotal" type="text" placeholder="Total" class="form-control" readonly />
+								</div>
+							</div>
+							<div class="col-lg-1"></div>
+						</div>
+						<div class="row">
+							<div class="col-lg-3"><label><br /> Discount:</label></div>
+							<div class="col-lg-8">
+								<div class="form-group">
+									<input id="discount" value="0" type="text" placeholder="Discount" class="form-control" />
+								</div>
+							</div>
+							<div class="col-lg-1"></div>
+						</div>
+						<div class="row">
+							<div class="col-lg-3"><label><br /> Grand Total:</label></div>
+							<div class="col-lg-8">
+								<div class="form-group">
+									<input id="grandTotal" type="text" placeholder="Grand Total" class="form-control" readonly />
+								</div>
+							</div>
+							<div class="col-lg-1"></div>
+						</div>
+
+						<div class="card-footer d-flex justify-content-between align-items-center bg-white">
+							<button id="requisitionsubmitBtn" type="submit" class="btn bg-blue">Submit form <i class="icon-paperplane ml-2"></i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+<!-- /content area -->
+
+<script>
+	$(document).ready(function() {
+		$('#barCode').focus();
+
+		$(document).on('keydown', '#barCode', async function(e) {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				var barCode = $(this).val();
+
+				const data = await Utility.RequestDataAjax({
+					data: { BarCode: barCode },
+					url: '/Products/GetVariantbyBarCode'
+				});
+
+				if (data) {
+					appendProductToTable(data);
+					$('#barCode').focus();
+					$('#barCode').val('');
+				} else {
+					alert('Product not found!');
+					$(this).val('');
+				}
+			}
+		});
+
+		// Recalculate when quantity or unit price changes
+		$(document).on('input', '.lineqty, .lineprice', function() {
+			let row = $(this).closest('tr');
+			let qty = parseFloat(row.find('.lineqty').val()) || 0;
+			let unitPrice = parseFloat(row.find('.lineprice').val()) || 0;
+
+			let lineTotal = unitPrice * qty;
+			row.find('.lineTotal').text(lineTotal.toFixed(2));
+
+			setTotalPrice();
+		});
+
+		$(document).on('input', '#discount', function() {
+			setTotalPrice();
+		});
+
+		function scrollInvoiceTableToBottom() {
+			let container = $('#invoiceRowSection');
+			container.scrollTop(container[0].scrollHeight);
+		}
+
+		$(document).on('click', '.removeRow', function(e) {
+			e.preventDefault();
+			$(this).closest('tr').remove();
+			setTotalPrice();
+		});
+
+		$('#productSearch').select2({
+			placeholder: 'Search product by name, size, color, material...',
+			minimumInputLength: 2,
+			ajax: {
+				url: '/Products/SearchProducts',
+				type: 'POST',
+				dataType: 'json',
+				delay: 300,
+				data: function(params) {
+					return { SearchParams: params.term };
+				},
+				processResults: function(data) {
+					return {
+						results: data.map(function(item) {
+							return {
+								id: item.BarCode,
+								text: `${item.ProductName} - ${item.SizeName || ''} ${item.ColorName || ''} ${item.MaterialName || ''}`,
+								fullData: item
+							};
+						})
+					};
+				},
+				cache: true
+			},
+			templateResult: formatProductResult,
+			templateSelection: formatProductSelection
+		})
+			.on('select2:select', function(e) {
+				const data = e.params.data;
+				appendProductToTable(data.fullData);
+				$(this).val(null).trigger('change');
+			});
+
+		function formatProductSelection(data) {
+			return data.text;
+		}
+
+		function formatProductResult(data) {
+			if (data.loading) return data.text;
+			return $(`<div>
+						<strong>${data.text}</strong><br/>
+						<small>Price: ${data.fullData?.Cost || data.fullData?.RetailPrice || 'N/A'}</small>
+					</div>`);
+		}
+
+		function appendProductToTable(result) {
+			if (!result) return;
+
+			let isDuplicate = false;
+			let incomingBarcode = String(result.BarCode);
+
+			$('#purchaseRequisitionTable tbody tr').each(function() {
+				const barcode = String($(this).find('.barCode').data('barcode'));
+				if (barcode === incomingBarcode) {
+					isDuplicate = true;
+
+					let qtyInput = $(this).find('.lineqty');
+					let currentQty = parseFloat(qtyInput.val()) || 0;
+					let newQty = currentQty + 1;
+					qtyInput.val(newQty);
+
+					let unitPrice = parseFloat($(this).find('.lineprice').val()) || 0;
+					$(this).find('.lineTotal').text((unitPrice * newQty).toFixed(2));
+
+					setTotalPrice();
+					return false;
+				}
+			});
+
+			if (isDuplicate) return;
+
+			appendRow(result, incomingBarcode);
+			setTotalPrice();
+			scrollInvoiceTableToBottom();
+		}
+
+		function appendRow(result, incomingBarcode) {
+			let defaultCost = parseFloat(result.Cost) || 0;
+			let row = `
+					<tr>
+						<td class='barCode' data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+							${result.BarCode}
+						</td>
+						<td>${result.ProductName}</td>
+						<td>${result.ColorName || ''}</td>
+						<td>${result.SizeName || ''}</td>
+						<td>${result.MaterialName || ''}</td>
+						<td><input class='lineqty form-control form-control-sm' type='number' min='1' step='1' value='1' style='max-width:70px;'/></td>
+						<td><input class='lineprice form-control form-control-sm' type='number' step='0.01' value='${defaultCost.toFixed(2)}' style='max-width:90px;'/></td>
+						<td class='lineTotal text-center font-weight-bold'>${defaultCost.toFixed(2)}</td>
+						<td>
+							<div class="list-icons text-center">
+								<a href="#" class="list-icons-item text-danger-600 removeRow"><i class="icon-trash"></i></a>
+							</div>
+						</td>
+					</tr>
+				`;
+			$('#purchaseRequisitionTable tbody').append(row);
+		}
+
+		function setTotalPrice() {
+			let invoiceTotal = 0;
+			$('.lineTotal').each(function() {
+				const val = parseFloat($(this).text()) || 0;
+				invoiceTotal += val;
+			});
+			$('#invoiceTotal').val(invoiceTotal.toFixed(2));
+			updateGrandTotal(invoiceTotal);
+		}
+
+		function updateGrandTotal(invoiceTotal) {
+			const discountAmount = parseFloat($('#discount').val()) || 0;
+			let subTotal = invoiceTotal - discountAmount;
+			$('#grandTotal').val(subTotal.toFixed(2));
+		}
+
+		$('#formVariant').submit(async function(e) {
+			e.preventDefault();
+
+			const items = [];
+			$('#purchaseRequisitionTable tbody tr').each(function() {
+				const row = $(this);
+				const barCode = row.find('.barCode').data('barcode');
+				const productId = row.find('.barCode').data('productid');
+				const variantId = row.find('.barCode').data('variantid');
+				const qty = parseFloat(row.find('.lineqty').val()) || 0;
+				const purchasePrice = parseFloat(row.find('.lineprice').val()) || 0;
+				const totalPrice = parseFloat(row.find('.lineTotal').text()) || 0;
+
+				if (barCode) {
+					items.push({
+						BarCode: barCode,
+						Quantity: qty,
+						PurchasePrice: purchasePrice,
+						TotalPrice: totalPrice,
+						ProductId: productId,
+						VariantId: variantId
+					});
+				}
+			});
+
+			const discount = parseFloat($('#discount').val()) || 0;
+			const grandTotal = parseFloat($('#grandTotal').val()) || 0;
+			const branchId = $('#branch').val();
+			const purchaseTypeId = $('#purchaseTypeId').val();
+
+			Utility.SpinnerMessageParent('requisitionsubmitBtn', 'Loading..');
+			const payload = {
+				Items: items,
+				Discount: discount,
+				GrandTotal: grandTotal,
+				BranchId: branchId,
+				PurchaseTypeId: purchaseTypeId
+			};
+
+			const result = await Utility.RequestDataAjax({
+				data: payload,
+				url: '/StockAdjustment/CreateStockVoucherSubmit'
+			});
+			Utility.StopSpinnerMessageParent('requisitionsubmitBtn');
+
+			if (result && result.statusCode === '200') {
+				Utility.successMessage('Stock Adjustment Saved Successfully');
+				$('#formVariant')[0].reset();
+				$('#purchaseRequisitionTable tbody').empty();
+			} else {
+				Utility.infoMessage(result?.message || 'Error saving record');
+			}
+		});
+	});
+</script>
+
+<script>
+	function updateDateTime() {
+		const now = new Date();
+		const hours = String(now.getHours()).padStart(2, '0');
+		const minutes = String(now.getMinutes()).padStart(2, '0');
+		const seconds = String(now.getSeconds()).padStart(2, '0');
+		document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+
+		const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+		document.getElementById('date').textContent = now.toLocaleDateString(undefined, options);
+	}
+	updateDateTime();
+	setInterval(updateDateTime, 1000);
+</script>

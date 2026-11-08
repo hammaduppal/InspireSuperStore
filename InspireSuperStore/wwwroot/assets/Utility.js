@@ -91,7 +91,24 @@ function decrypt(cipherText) {
     return decrypted.toString(CryptoJS.enc.Utf8);
 }
 
-
+/**
+ * Idle Auto-Logout Timer Configuration:
+ * ---------------------------------------------------------------------------
+ * The timer checks for user activity (mouse movement, keypress, scroll) every 
+ * 200 milliseconds and increments the 'idleTime' counter.
+ * 
+ * To change the total inactivity timeout duration, adjust the threshold value 
+ * (currently set to 4500):
+ * 
+ * Formula: (Desired Minutes * 60 * 1000) / Interval Milliseconds = Threshold
+ * 
+ * Examples:
+ *   - 5 Minutes  = (5 * 60 * 1000) / 200 = 1500
+ *   - 10 Minutes = (10 * 60 * 1000) / 200 = 3000
+ *   - 15 Minutes = (15 * 60 * 1000) / 200 = 4500 (Current Default)
+ *   - 30 Minutes = (30 * 60 * 1000) / 200 = 9000
+ * ---------------------------------------------------------------------------
+ */
 var idleTime = 0;
 $(document).ready(function () {
     $(document).on('mousemove keydown scroll', function () {

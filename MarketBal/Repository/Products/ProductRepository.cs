@@ -547,14 +547,16 @@ public async Task<ProductVariantVM> GetProductVariant(string BarCode)
             m.MaterialName,
             s.SizeName,
             uom.UOMName,
+            uom.UOMId,
             uoms.SubUOMName,
             pv.QuantityPerUnit,
             pv.VariantImageId,
             b.BrandName,
-ts.Rate as TaxRate,
-pv.BarCode,
-pv.PriceFormat,
+            ts.Rate as TaxRate,
+            pv.BarCode,
+            pv.PriceFormat,
             pv.VariantId,
+            pv.SubUOMId,
             bs.BranchStockId,
             bs.SalePrice,
             bs.RetailPrice,
@@ -635,12 +637,14 @@ SELECT
     m.MaterialName,
     s.SizeName,
     uom.UOMName,
+    uom.UOMId,
     uoms.SubUOMName,
 pv.BarCode,
 
     pv.QuantityPerUnit,
     pv.VariantImageId,
     b.BrandName,
+    pv.SubUOMId,
     pv.VariantId,
     bs.BranchStockId,
     bs.SalePrice,
@@ -1017,6 +1021,7 @@ public List<ProductVariantVM> UpdateCurrentPrice(List<ProductVariantVM> model)
         {
             item.CurrentPrice = item.RetailPrice;
         }
+
     }
 
     return model;

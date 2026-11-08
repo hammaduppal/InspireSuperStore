@@ -243,6 +243,8 @@ namespace MarketBal.Repository.PurchaseRP
             }
         }
 
+     
+
         //Get Single Requisition
         public async Task<PurchaseMasterVM> GetSingleRequisition(Guid Id, AppConstants.PurchaseType purchaseType)
         {
@@ -330,7 +332,7 @@ namespace MarketBal.Repository.PurchaseRP
 
         public async Task<List<PurchaseTypeVM>> GetPurchaseTypes()
         {
-            return await _onedb.PurchaseTypes.Select(pt => new PurchaseTypeVM
+            return await _onedb.PurchaseTypes.Where(x=>x.Id==1).Select(pt => new PurchaseTypeVM
             {
                 PurchaseTypeId = pt.Id,
                 Name= pt.Name,
@@ -339,7 +341,16 @@ namespace MarketBal.Repository.PurchaseRP
             }).ToListAsync();
         }
 
-
+        public async Task<List<PurchaseTypeVM>> GetStockAdjustTypes()
+        {
+            return await _onedb.PurchaseTypes.Where(x => x.Id != 1).Select(pt => new PurchaseTypeVM
+            {
+                PurchaseTypeId = pt.Id,
+                Name = pt.Name,
+                Code = pt.Code,
+                IsActive = pt.IsActive
+            }).ToListAsync();
+        }
 
 
 

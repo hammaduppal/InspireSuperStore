@@ -189,7 +189,8 @@ namespace MarketBal.Repository.InvoiceRP
                         decimal lineTotal = detail.UnitPrice * detail.Quantity;
                         decimal taxAmount = (detail.TaxRate) * lineTotal / 100;
                         decimal lineTotalWithTax = lineTotal + taxAmount;
-
+                        var factorization = await _onedb.Uomsubs.Where(x => x.SubUomid == detail.SubUomId).FirstOrDefaultAsync();
+                        
                         var invoiceDetail = new InvoiceDetail
                         {
                             InvoiceDetailId = Guid.NewGuid(),
@@ -198,8 +199,8 @@ namespace MarketBal.Repository.InvoiceRP
                             VariantId = (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
                                             ? detail.VariantId
                                             : null,
-
-                            Quantity = detail.Quantity,
+                            SubUomid=detail.SubUomId,
+                            Quantity = factorization.ConversionFactor.Value * detail.Quantity,
                             UnitPrice = detail.UnitPrice,
                             Discount = detail.Discount ?? 0,
                             TaxRate = detail.TaxRate,
@@ -210,7 +211,7 @@ namespace MarketBal.Repository.InvoiceRP
                         };
                         invoiceMaster.InvoiceDetails.Add(invoiceDetail);
                         _onedb.InvoiceDetails.Add(invoiceDetail);
-
+                      
                         // ---------- Update Inventory ----------
                         if (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
                         {
@@ -221,20 +222,22 @@ namespace MarketBal.Repository.InvoiceRP
 
                             if (branchstock != null)
                             {
-                                branchstock.Qty -= detail.Quantity;
+                                // Subtract the total base units directly
+                                branchstock.Qty -= (factorization.ConversionFactor.Value * detail.Quantity);
                                 _onedb.BranchStocks.Update(branchstock);
                             }
                         }
 
                         var product = await _onedb.Products
-                            .FirstOrDefaultAsync(p => p.ProductId == detail.ProductId);
-
+                         .FirstOrDefaultAsync(p => p.ProductId == detail.ProductId);
                         if (product != null)
                         {
-                            product.Qoh -= detail.Quantity;
+                            product.Qoh = (product.Qoh ?? 0m) - (factorization.ConversionFactor.Value * detail.Quantity);
+
                             _onedb.Products.Update(product);
                         }
                     }
+
                     bool isCashINvoice = false;
                     if (invoiceMaster.PaymentStatusId == 1)
                     {
@@ -547,8 +550,8 @@ namespace MarketBal.Repository.InvoiceRP
                 {_sessionService.SystemPreferences.CompanyName}
             </h3>
             <p style='font-size:11px; margin:0;'>
-                Phone: +33311123123<br>
-                Email: info@company.com
+                Phone:  {AppDataUtility.SessionUser.Person.Branch.Phone}<br>
+                Email: {AppDataUtility.SessionUser.Person.Branch.Email}
             </p>
         </div>
     </div>
