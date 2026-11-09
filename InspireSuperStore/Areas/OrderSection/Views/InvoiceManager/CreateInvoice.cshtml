@@ -1093,10 +1093,15 @@
 
 		function formatProductResult(data) {
 			if (data.loading) return data.text;
+
+			let qty = data.fullData?.Qty ?? 0;
+			let qtyClass = (qty <= 0) ? 'text-danger font-weight-bold' : 'text-muted';
+
 			return $(`<div>
-				<strong>${data.text}</strong><br/>
-				<small>Price: ${data.fullData?.RetailPrice || 'N/A'}</small>
-			</div>`);
+					<strong>${data.text}</strong><br/>
+					<small>Price: ${data.fullData?.RetailPrice || 'N/A'}</small> |
+					<small class="${qtyClass}">Quantity: ${qty}</small>
+				</div>`);
 		}
 
 
@@ -1112,177 +1117,145 @@
 			return data.text;
 		}
 
-	// 	function appendRow(result, incomingBarcode) {
-	// 	// -----------------------------
-	// 	// Variables & calculations
-	// 	// -----------------------------
-	// 	debugger
-	// 	let unitPrice = parseFloat(result.CurrentPrice) || 0;
-	// 	let taxRate = parseFloat(result.TaxRate) || 0;
-	// 	let qty = 1; // default for new row
-	// 	if(result.Quantity)
-	// 	{
-	// 		qty=result.Quantity
-	// 	}
-
-	// 	let lineAmount = unitPrice * qty;
-	// 	let taxAmount = (lineAmount * taxRate) / 100;
-	// 	let total = lineAmount + taxAmount;
-
-	// 	// Server-side flag injected into JS
-	// 	let enableTax = @AppDataUtility.SystemPreferences.EnableTax.ToString().ToLower();
-	// 	// true / false
-
-	// 	let row = "";
-
-	// 	// -----------------------------
-	// 	// HTML structure
-	// 	// -----------------------------
-	// 	if (enableTax) {
-	// 		// With tax columns
-	// 		row = `
-	// 			<tr>
-	// 				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
-	// 					${result.ProductName}
-	// 				</td>
-	// 				<td class="text-center">${result.SizeName}</td>
-	// 				<td class="text-center">
-	// 					<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
-	// 				</td>
-	// 				<td class='text-right'>
-	// 					<input class='currentPrice text-center' type='number' min='1' step='1' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
-	// 				</td>
-	// 				<td class='taxPercent text-right'>${taxRate.toFixed(2)}</td>
-	// 				<td class='taxAmount text-right'> ${taxAmount.toFixed(2)}</td>
-	// 				<td class='lineTotal text-right'>${total.toFixed(2)}</td>
-	// 				<td class="text-center">
-	// 					<div class="list-icons">
-	// 						<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
-	// 						   class="list-icons-item text-danger-600 removeRow text-center">
-	// 						   <i class="icon-trash"></i>
-	// 						</a>
-	// 					</div>
-	// 				</td>
-	// 			</tr>`;
-	// 	} else {
-	// 		// Without tax columns
-	// 		row = `
-	// 			<tr>
-	// 				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
-	// 					${result.ProductName}
-	// 				</td>
-	// 				<td class="text-center">${result.SizeName}</td>
-	// 				<td class="text-center">
-	// 					<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
-	// 				</td>
-	// 					<td class='text-right'>
-	// 					<input class='currentPrice text-center' type='text'  value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
-	// 				</td>
-					
-	// 				<td class='lineTotal text-right'>${lineAmount.toFixed(2)}</td>
-	// 				<td class="text-center">
-	// 					<div class="list-icons">
-	// 						<a href="#" data-variantId="${result.VariantId}" data-productId="${result.ProductId}"
-	// 						   class="list-icons-item text-danger-600 removeRow text-center">
-	// 						   <i class="icon-trash"></i>
-	// 						</a>
-	// 					</div>
-	// 				</td>
-	// 			</tr>`;
-	// 	}
-
-	// 	// -----------------------------
-	// 	// Append row
-	// 	// -----------------------------
-	// 	$('#invoiceTable tbody').append(row);
-	// }
+	
 		
-function appendRow(result, incomingBarcode) {
-		let unitPrice = parseFloat(result.CurrentPrice || result.RetailPrice) || 0;
-		let taxRate = parseFloat(result.TaxRate) || 0;
-		
-		// Use result.Qty with fallback to 1 for new cart additions
-		let qty = (result.Qty !== undefined && result.Qty !== null && result.Qty !== 0) ? parseFloat(result.Qty) : 1;
+		async function appendRow(result, incomingBarcode) {
+			let unitPrice = parseFloat(result.CurrentPrice || result.RetailPrice) || 0;
+			let taxRate = parseFloat(result.TaxRate) || 0;
 
-		// Correct property mapping matching your exact JSON casing
-		let assignedSubUomId = result.SubUomId || result.SubUomid || result.subUomId || result.subuomid || '';
-		let productUomId = result.UomId || result.Uomid || result.uomId || result.uomid || result.UOMId || '';
+			let rawQty = result.Qty;
+			let qty = 1;
+			let isOutOfStock = false;
 
-		let subUoms = getSubUomsForProduct(productUomId);
-		let dropdownData = buildSubUomDropdownHtml(subUoms, assignedSubUomId);
-		let subUomOptions = dropdownData.optionsHtml;
-		let initialFactor = dropdownData.initialFactor;
+			// Check if quantity is null, undefined, or 0 (Out of stock check)
+			if (rawQty === undefined || rawQty === null || parseFloat(rawQty) === 0) {
+				let confirmProceed = await new Promise((resolve) => {
+					let dialog = Utility.confirmBootBox("This item is currently out of stock (Qty: 0). Do you want to proceed and add it anyway with 1 quantity?");
 
-		let baseUnitPrice = calculateBaseUnitPrice(unitPrice, initialFactor);
+					// Listen for Enter keypress while the bootbox modal is active
+					setTimeout(() => {
+						$('.bootbox.modal').off('keydown.shortcut').on('keydown.shortcut', function(e) {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								// Find and trigger the confirm (Yes/Success) button
+								$('.bootbox .btn-success').trigger('click');
+							}
+						});
+					}, 100);
 
-		let lineAmount = unitPrice * qty;
-		let taxAmount = (lineAmount * taxRate) / 100;
-		let total = lineAmount + taxAmount;
+					// Resolve through the existing callback wrapper
+					Utility.confirmBootBox("This item is currently out of stock (Qty: 0). Do you want to proceed and add it anyway with 1 quantity?").then(resolve);
+				});
 
-		let enableTax = @AppDataUtility.SystemPreferences.EnableTax.ToString().ToLower();
-		let row = "";
+				// Note: To cleanly tie it into your existing Utility function without rewriting it:
+				// Let's use the direct call below:
+			}
 
-		if (enableTax) {
-			row = `
-			<tr data-base-unit-price="${baseUnitPrice}" data-current-factor="${initialFactor}">
-				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
-					${result.ProductName}
-				</td>
-				<td class="text-center">${result.SizeName || ''}</td>
-				<td class="text-center">
-					<select class="form-control form-control-sm subUomSelect" style="max-width:110px;">
-						${subUomOptions}
-					</select>
-				</td>
-				<td class="text-center">
-					<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
-				</td>
-				<td class='text-right'>
-					<input class='currentPrice text-center' type='number' min='0.01' step='any' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
-				</td>
-				<td class='taxPercent text-right'>${taxRate.toFixed(2)}</td>
-				<td class='taxAmount text-right'> ${taxAmount.toFixed(2)}</td>
-				<td class='lineTotal text-right'>${total.toFixed(2)}</td>
-				<td class="text-center">
-					<div class="list-icons">
-						<a href="#" class="list-icons-item text-danger-600 removeRow text-center">
-						   <i class="icon-trash"></i>
-						</a>
-					</div>
-				</td>
-			</tr>`;
-		} else {
-			row = `
-			<tr data-base-unit-price="${baseUnitPrice}" data-current-factor="${initialFactor}">
-				<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
-					${result.ProductName}
-				</td>
-				<td class="text-center">${result.SizeName || ''}</td>
-				<td class="text-center">
-					<select class="form-control form-control-sm subUomSelect" style="max-width:110px;">
-						${subUomOptions}
-					</select>
-				</td>
-				<td class="text-center">
-					<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
-				</td>
-				<td class='text-right'>
-					<input class='currentPrice text-center' type='text' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
-				</td>
-				<td class='lineTotal text-right'>${lineAmount.toFixed(2)}</td>
-				<td class="text-center">
-					<div class="list-icons">
-						<a href="#" class="list-icons-item text-danger-600 removeRow text-center">
-						   <i class="icon-trash"></i>
-						</a>
-					</div>
-				</td>
-			</tr>`;
+			// Let's write the clean version using your exact Utility method with Enter key listener:
+			if (rawQty === undefined || rawQty === null || parseFloat(rawQty) === 0) {
+
+				// Open bootbox and bind Enter key to 'Yes'
+				let confirmPromise = Utility.confirmBootBox("This item is currently out of stock (Qty: 0). Do you want to proceed and add it anyway with 1 quantity?");
+
+				// Auto-bind Enter key to confirm button immediately after render
+				setTimeout(() => {
+					$('.bootbox.modal').off('keydown.shortcut').on('keydown.shortcut', function(e) {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							$('.bootbox .btn-success').click();
+						}
+					});
+				}, 100);
+
+				let confirmProceed = await confirmPromise;
+
+				if (!confirmProceed) {
+					return;
+				}
+				qty = 1;
+				isOutOfStock = true;
+			} else {
+				qty = parseFloat(rawQty);
+			}
+
+			let assignedSubUomId = result.SubUomId || result.SubUomid || result.subUomId || result.subuomid || '';
+			let productUomId = result.UomId || result.Uomid || result.uomId || result.uomid || result.UOMId || '';
+
+			let subUoms = getSubUomsForProduct(productUomId);
+			let dropdownData = buildSubUomDropdownHtml(subUoms, assignedSubUomId);
+			let subUomOptions = dropdownData.optionsHtml;
+			let initialFactor = dropdownData.initialFactor;
+
+			let baseUnitPrice = calculateBaseUnitPrice(unitPrice, initialFactor);
+
+			let lineAmount = unitPrice * qty;
+			let taxAmount = (lineAmount * taxRate) / 100;
+			let total = lineAmount + taxAmount;
+
+			let enableTax = @AppDataUtility.SystemPreferences.EnableTax.ToString().ToLower();
+			let row = "";
+			let rowClass = isOutOfStock ? 'table-danger' : '';
+
+			if (enableTax) {
+				row = `
+				<tr class="${rowClass}" data-base-unit-price="${baseUnitPrice}" data-current-factor="${initialFactor}">
+					<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+						${result.ProductName}
+					</td>
+					<td class="text-center">${result.SizeName || ''}</td>
+					<td class="text-center">
+						<select class="form-control form-control-sm subUomSelect" style="max-width:110px;">
+							${subUomOptions}
+						</select>
+					</td>
+					<td class="text-center">
+						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+					</td>
+					<td class='text-right'>
+						<input class='currentPrice text-center' type='number' min='0.01' step='any' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
+					</td>
+					<td class='taxPercent text-right'>${taxRate.toFixed(2)}</td>
+					<td class='taxAmount text-right'> ${taxAmount.toFixed(2)}</td>
+					<td class='lineTotal text-right'>${total.toFixed(2)}</td>
+					<td class="text-center">
+						<div class="list-icons">
+							<a href="#" class="list-icons-item text-danger-600 removeRow text-center">
+							   <i class="icon-trash"></i>
+							</a>
+						</div>
+					</td>
+				</tr>`;
+			} else {
+				row = `
+				<tr class="${rowClass}" data-base-unit-price="${baseUnitPrice}" data-current-factor="${initialFactor}">
+					<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+						${result.ProductName}
+					</td>
+					<td class="text-center">${result.SizeName || ''}</td>
+					<td class="text-center">
+						<select class="form-control form-control-sm subUomSelect" style="max-width:110px;">
+							${subUomOptions}
+						</select>
+					</td>
+					<td class="text-center">
+						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+					</td>
+					<td class='text-right'>
+						<input class='currentPrice text-center' type='text' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
+					</td>
+					<td class='lineTotal text-right'>${lineAmount.toFixed(2)}</td>
+					<td class="text-center">
+						<div class="list-icons">
+							<a href="#" class="list-icons-item text-danger-600 removeRow text-center">
+							   <i class="icon-trash"></i>
+							</a>
+						</div>
+					</td>
+				</tr>`;
+			}
+
+			$('#invoiceTable tbody').append(row);
 		}
-
-		$('#invoiceTable tbody').append(row);
-	}
-
 
 			function updateGrandTotal(invoiceTotal) {
 					const discountAmount = parseFloat($('#discount').val()) || 0;
