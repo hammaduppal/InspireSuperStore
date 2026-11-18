@@ -1,315 +1,388 @@
 ﻿@using MainModels.DTOModels
 @model PagesViewModel
-<div class="card">
 
+<div class="card border-0 shadow-sm rounded-lg overflow-hidden theme-color mb-0">
+	<div class="card-header header-elements-inline py-3 border-bottom">
+		<div class="d-flex align-items-center">
+			<div class="mr-3 rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px; background-color: rgba(33, 150, 243, 0.12); border: 1px solid rgba(33, 150, 243, 0.25);">
+				<i class="icon-cube2 text-primary font-size-lg"></i>
+			</div>
+			<div>
+				<h6 class="card-title font-weight-bold mb-0">Product Details</h6>
+				<span class="text-muted font-size-xs">Configure core product identity, classification & attributes</span>
+			</div>
+		</div>
+	</div>
 
 	<div class="card-body">
 		<form id="addProduct" action="#">
-			<div class="row">
-				<div class="col-md-12">
-					<fieldset>
-						<legend class="font-weight-semibold"><i class="icon-home "></i> Product details</legend>
+			<!-- Section 1: Basic Identity & Description -->
+			<div class="mb-4">
+				<div class="d-flex align-items-center mb-3 pb-1 border-bottom">
+					<i class="icon-price-tag2 text-primary mr-2"></i>
+					<span class="font-weight-semibold text-uppercase font-size-xs text-primary" style="letter-spacing: 0.5px;">Basic Information</span>
+				</div>
 
-						<div class="form-group">
-							<label>Product Name</label>
-							<input id="productName" type="text" class="form-control" placeholder="Enter Product Name" required />
+				<div class="form-group mb-3">
+					<label class="form-label font-weight-semibold text-uppercase font-size-xs">Product Name <span class="text-danger">*</span></label>
+					<div class="form-group-feedback form-group-feedback-left">
+						<input id="productName" name="ProductName" type="text" class="form-control" placeholder="e.g., Wireless Noise-Cancelling Headphones" required />
+						<div class="form-control-feedback form-control-feedback-left">
+							<i class="icon-box text-primary"></i>
 						</div>
+					</div>
+				</div>
 
-					@* 	<div class="form-group">
-							<label>Product Description</label>
-							<textarea id="description" class="form-control" placeholder="Product Description" required></textarea>
-						</div> *@
+				<!-- AI Description Toggle Card -->
+				<div class="p-3 rounded mb-3" style="background-color: rgba(103, 58, 183, 0.06); border: 1px dashed rgba(103, 58, 183, 0.3);">
+					<div class="d-flex align-items-center justify-content-between">
+						<div class="d-flex align-items-center">
+							<div class="mr-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background-color: rgba(103, 58, 183, 0.15);">
+								<i class="icon-magic-wand text-purple-400"></i>
+							</div>
+							<div>
+								<label for="useAiDescription" class="font-weight-semibold mb-0 cursor-pointer">
+									Auto-Generate Description with AI
+								</label>
+								<div class="text-muted font-size-xs">Let AI craft a rich, SEO-friendly product description automatically</div>
+							</div>
+						</div>
+						<div class="custom-control custom-switch custom-control-right">
+							<input type="checkbox" class="custom-control-input" id="useAiDescription" name="UseAiDescription">
+							<label class="custom-control-label font-weight-semibold text-purple-400" for="useAiDescription"></label>
+						</div>
+					</div>
+				</div>
 
+				<!-- Manual Description Textarea (Shown by default when AI checkbox is unchecked) -->
+				<div id="descriptionGroup" class="form-group mb-0">
+					<label class="form-label font-weight-semibold text-uppercase font-size-xs">Product Description <span class="text-danger">*</span></label>
+					<textarea id="description" name="ProductDescription" rows="3" class="form-control" placeholder="Enter detailed product specifications, features, and highlights..." required></textarea>
+				</div>
+			</div>
 
+			<!-- Section 2: DCS Hierarchy Classification -->
+			<div class="mb-4">
+				<div class="d-flex align-items-center mb-3 pb-1 border-bottom">
+					<i class="icon-tree7 text-teal mr-2"></i>
+					<span class="font-weight-semibold text-uppercase font-size-xs text-teal" style="letter-spacing: 0.5px;">Category Hierarchy (DCS)</span>
+				</div>
+
+				<div class="row">
+					<!-- Department -->
+					<div class="col-md-12">
 						<div class="form-group">
+							<label class="form-label font-weight-semibold text-uppercase font-size-xs">Department <span class="text-danger">*</span></label>
 							<div class="input-group">
 								<select id="dep" class="form-control" required>
-									<option value=""> Select Department</option>
-									@foreach (var item in Model.Departments)
+									<option value="">Select Department</option>
+									@if (Model.Departments != null)
 									{
-										<option value="@item.DepartmentId	">@item.DepartmentName </option>
-
+										@foreach (var item in Model.Departments)
+										{
+											<option value="@item.DepartmentId">@item.DepartmentName</option>
+										}
 									}
 								</select>
 								<div class="input-group-append">
-									<a id="" href="/AttributeManager/_GetAddDepartmentForm" class="btn btn-light adddcs"><i class="icon-database-add mr-1"></i></a>
-									<a id="" href="/AttributeManager/GetDepartments" data-selectName="dep" class="btn btn-light refreshdcs"><i class="icon-database-refresh  mr-1"></i></a>
-
-
-
+									<a href="/AttributeManager/_GetAddDepartmentForm" class="btn bg-teal-400 text-white adddcs" title="Add New Department">
+										<i class="icon-database-add"></i>
+									</a>
+									<a href="/AttributeManager/GetDepartments" data-selectName="dep" class="btn bg-info-400 text-white refreshdcs" title="Refresh Departments">
+										<i class="icon-database-refresh"></i>
+									</a>
 								</div>
 							</div>
 						</div>
+					</div>
+
+					<!-- Category -->
+					<div class="col-md-6">
 						<div class="form-group">
+							<label class="form-label font-weight-semibold text-uppercase font-size-xs">Category <span class="text-danger">*</span></label>
 							<div class="input-group">
 								<select id="cat" class="form-control" required>
-									<option value=""> Select Category</option>
-
+									<option value="">Select Category</option>
 								</select>
-
 								<div class="input-group-append">
-									<a id="" href="/AttributeManager/_GetAddCategoryForm" class="btn btn-light adddcs"><i class="icon-database-add mr-1"></i></a>
-									<a id="" href="/AttributeManager/GetCategorybyDepartment" data-selectName="cat" class="btn btn-light refreshdcs"><i class="icon-database-refresh  mr-1"></i></a>
-
-
-
+									<a href="/AttributeManager/_GetAddCategoryForm" class="btn bg-teal-400 text-white adddcs" title="Add New Category">
+										<i class="icon-database-add"></i>
+									</a>
+									<a href="/AttributeManager/GetCategorybyDepartment" data-selectName="cat" class="btn bg-info-400 text-white refreshdcs" title="Refresh Categories">
+										<i class="icon-database-refresh"></i>
+									</a>
 								</div>
 							</div>
 						</div>
+					</div>
 
+					<!-- Sub Category -->
+					<div class="col-md-6">
 						<div class="form-group">
+							<label class="form-label font-weight-semibold text-uppercase font-size-xs">Sub Category <span class="text-danger">*</span></label>
 							<div class="input-group">
-								<select id="subcat" class="form-control" required="required">
-									<option value=""> Select SubCategory</option>
+								<select id="subcat" class="form-control" required>
+									<option value="">Select Sub Category</option>
 								</select>
 								<div class="input-group-append">
-									<a id="" href="/AttributeManager/_GetAddSubCategoryForm" class="btn btn-light adddcs"><i class="icon-database-add mr-1"></i></a>
-									<a id="" href="/AttributeManager/GetSubCategorybyCategory" data-selectName="subcat" class="btn btn-light refreshdcs"><i class="icon-database-refresh  mr-1"></i></a>
+									<a href="/AttributeManager/_GetAddSubCategoryForm" class="btn bg-teal-400 text-white adddcs" title="Add New Sub Category">
+										<i class="icon-database-add"></i>
+									</a>
+									<a href="/AttributeManager/GetSubCategorybyCategory" data-selectName="subcat" class="btn bg-info-400 text-white refreshdcs" title="Refresh Sub Categories">
+										<i class="icon-database-refresh"></i>
+									</a>
 								</div>
 							</div>
 						</div>
-						<div class="row">
-							<div class="col-md-6">
-								<div class="form-group">
-									<div class="input-group">
-										<select id="uom" class="form-control" required>
-											<option value=""> Select Uom</option>
-											@foreach (var item in Model.UOMs)
-											{
-												<option value="@item.Uomid">@item.UOMName</option>
-
-											}
-										</select>
-
-
-									</div>
-								</div>
-
-							</div>
-
-							<div class="col-md-6">
-								<div class="form-group">
-									<div class="input-group">
-										<select id="brand" class="form-control" required>
-											<option value=""> Select Brand</option>
-											@foreach (var item in Model.Brands)
-											{
-												<option value="@item.BrandId">@item.BrandName</option>
-
-											}
-										</select>
-
-
-									</div>
-								</div>
-
-							</div>
-							<div class="col-md-6">
-								<div class="form-group">
-									<div class="input-group">
-										<select id="brandModel" class="form-control" required>
-											<option value=""> Select Model</option>
-
-										</select>
-
-
-									</div>
-								</div>
-
-							</div>
-
-
-						</div>
-
-					</fieldset>
+					</div>
 				</div>
-
-				<script>
-					$('#brand').change(async function () {
-						var brandId = $(this).val();
-
-						// Always clear the dropdown first
-						$('#brandModel').empty();
-						$('#brandModel').append('<option value="">Select Model</option>');
-
-						if (!brandId) return; // Stop if no brand is selected
-
-						var formData = { BrandId: brandId };
-						var objectData = {
-							data: formData,
-							url: '/AttributeManager/BrandModel'
-						};
-
-						try {
-							var result = await Utility.RequestDataAjax(objectData);
-
-							if (result && result.length > 0) {
-								$.each(result, function (i, item) {
-									$('#brandModel').append(
-										`<option value="${item.BrandModelId}">${item.ModelName}</option>`
-									);
-								});
-							} else {
-								$('#brandModel').append('<option value="">No models found</option>');
-							}
-						} catch (error) {
-							console.error('Error loading brand models:', error);
-							$('#brandModel').append('<option value="">Error loading models</option>');
-						}
-					});
-
-				</script>
 			</div>
 
-			<div class="text-right">
-				<button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
+			<!-- Section 3: Specifications (UoM, Brand, Model) -->
+			<div class="mb-3">
+				<div class="d-flex align-items-center mb-3 pb-1 border-bottom">
+					<i class="icon-versions text-indigo mr-2"></i>
+					<span class="font-weight-semibold text-uppercase font-size-xs text-indigo" style="letter-spacing: 0.5px;">Unit & Brand Specifications</span>
+				</div>
 
-				<button id="btnSubmit" type="submit" class="btn btn-primary">Submit form <i class="icon-paperplane ml-2"></i></button>
+				<div class="row">
+					<!-- UoM -->
+					<div class="col-md-4">
+						<div class="form-group">
+							<label class="form-label font-weight-semibold text-uppercase font-size-xs">Unit of Measure <span class="text-danger">*</span></label>
+							<div class="form-group-feedback form-group-feedback-left">
+								<select id="uom" class="form-control" required>
+									<option value="">Select UoM</option>
+									@if (Model.UOMs != null)
+									{
+										@foreach (var item in Model.UOMs)
+										{
+											<option value="@item.Uomid">@item.UOMName</option>
+										}
+									}
+								</select>
+								<div class="form-control-feedback form-control-feedback-left">
+									<i class="icon-ruler text-warning"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Brand -->
+					<div class="col-md-4">
+						<div class="form-group">
+							<label class="form-label font-weight-semibold text-uppercase font-size-xs">Brand <span class="text-danger">*</span></label>
+							<div class="form-group-feedback form-group-feedback-left">
+								<select id="brand" class="form-control" required>
+									<option value="">Select Brand</option>
+									@if (Model.Brands != null)
+									{
+										@foreach (var item in Model.Brands)
+										{
+											<option value="@item.BrandId">@item.BrandName</option>
+										}
+									}
+								</select>
+								<div class="form-control-feedback form-control-feedback-left">
+									<i class="icon-certificate text-success"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Brand Model -->
+					<div class="col-md-4">
+						<div class="form-group">
+							<label class="form-label font-weight-semibold text-uppercase font-size-xs">Brand Model <span class="text-danger">*</span></label>
+							<div class="form-group-feedback form-group-feedback-left">
+								<select id="brandModel" class="form-control" required>
+									<option value="">Select Model</option>
+								</select>
+								<div class="form-control-feedback form-control-feedback-left">
+									<i class="icon-barcode2 text-info"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Footer Buttons -->
+			<div class="d-flex justify-content-end align-items-center pt-3 border-top">
+				<button type="button" class="btn btn-light rounded-pill px-3 mr-2 font-weight-semibold" data-dismiss="modal">
+					<i class="icon-cross2 mr-1"></i> Close
+				</button>
+				<button id="btnSubmit" type="submit" class="btn bg-primary btn-labeled btn-labeled-left rounded-pill px-4 font-weight-semibold shadow-sm">
+					<b><i class="icon-paperplane"></i></b> Save & Continue
+				</button>
 			</div>
 		</form>
 	</div>
 </div>
+
 <script>
-	$(document).ready(function(){
-		$('#addProduct').submit(async function(e){
+	$(document).ready(function () {
+		// Toggle Manual Description vs AI Description
+		$('#useAiDescription').change(function () {
+			if ($(this).is(':checked')) {
+				$('#descriptionGroup').slideUp(200);
+				$('#description').prop('required', false).val('');
+			} else {
+				$('#descriptionGroup').slideDown(200);
+				$('#description').prop('required', true);
+			}
+		});
+
+		// Load Brand Models on Brand Change
+		$('#brand').change(async function () {
+			var brandId = $(this).val();
+			$('#brandModel').empty().append('<option value="">Select Model</option>');
+
+			if (!brandId) return;
+
+			var objectData = {
+				data: { BrandId: brandId },
+				url: '/AttributeManager/BrandModel'
+			};
+
+			try {
+				var result = await Utility.RequestDataAjax(objectData);
+				if (result && result.length > 0) {
+					$.each(result, function (i, item) {
+						$('#brandModel').append(`<option value="${item.BrandModelId}">${item.ModelName}</option>`);
+					});
+				} else {
+					$('#brandModel').append('<option value="">No models found</option>');
+				}
+			} catch (error) {
+				console.error('Error loading brand models:', error);
+				$('#brandModel').append('<option value="">Error loading models</option>');
+			}
+		});
+
+		// Submit Form
+		$('#addProduct').submit(async function (e) {
 			e.preventDefault();
 
 			const validate = Utility.validateFormAndInputs('#addProduct');
-				const isFormValid = validate();
+			const isFormValid = validate();
 
-				if(isFormValid)
-				{
-					var formData={
-						ProductName:$('#productName').val(),
-						//ProductDescription:$('#description').val(),
-						SubCategoryId:$('#subcat').val(),
-						Uomid:$('#uom').val(),
-						BrandId:$('#brand').val(),
-						BrandModelId:$('#brandModel').val()
+			if (isFormValid) {
+				var isAiChecked = $('#useAiDescription').is(':checked');
+				var formData = {
+					ProductName: $('#productName').val(),
+					UseAiDescription: isAiChecked,
+					ProductDescription: isAiChecked ? '' : $('#description').val(),
+					SubCategoryId: $('#subcat').val(),
+					Uomid: $('#uom').val(),
+					BrandId: $('#brand').val(),
+					BrandModelId: $('#brandModel').val()
+				};
 
-					}
-					debugger
-					var endPoint = '/Products/AddProduct'
-					var sendObject={
-						url:endPoint,
-						data:formData
-					}
-					const result = await Utility.RequestDataAjax(sendObject);
-					console.log(result);
-					if(result.statusCode==='200'){
+				Utility.SpinnerMessageParent('btnSubmit', 'Saving...');
+				var sendObject = {
+					url: '/Products/AddProduct',
+					data: formData
+				};
 
-						window.location.href='/Products/EditProduct?productId='+result.ProductId;
-					}
-					else{
-								Utility.failMessage('Please Try Again Later');
-
-					}
+				const result = await Utility.RequestDataAjax(sendObject);
+				if (result && result.statusCode === '200') {
+					window.location.href = '/Products/EditProduct?productId=' + result.ProductId;
+				} else {
+					Utility.failMessage('Please Try Again Later');
+					Utility.StopSpinnerMessageParent('btnSubmit');
 				}
+			}
 		});
 
-		$('.adddcs').click(function(e){
+		// Open Mini Modal for Quick DCS Creation
+		$('.adddcs').click(function (e) {
 			e.preventDefault();
 			var url = $(this).attr('href');
 			$.ajax({
-				url:url,
-				type:'POST',
-				success:function(result){
-
-						$('.mini-modal-title').html('Add Attribute');
-						$('.mini-modal-body').html(result);
-						$('#modal_mini').modal(
-						{
-						 backdrop: 'static',
-						 keyboard: false
-						}
-						);
-
-
+				url: url,
+				type: 'POST',
+				success: function (result) {
+					$('.modal-title').html('Add Attribute');
+					$('.modal-body').html(result);
+					$('#modal_subtitle').modal({
+						backdrop: 'static',
+						keyboard: false
+					});
 				}
-			})
+			});
 		});
 
+		// Cascade: Department -> Category
 		$('#dep').change(async function () {
-			var id = $(this).val(); // "this" refers correctly to the changed element
-			var formData = {
-				DepartmentId: id
-			};
-			var dataObject = {
+			var id = $(this).val();
+			$('#cat').empty().append('<option value="">Select Category</option>');
+			$('#subcat').empty().append('<option value="">Select Sub Category</option>');
+			if (!id) return;
+
+			var result = await Utility.RequestDataAjax({
 				url: '/AttributeManager/GetCategorybyDepartment',
-				data: formData
-			};
-			var result = await Utility.RequestDataAjax(dataObject);
-				$('#cat').empty();
-				$('#cat').append(`<option>Select Category</option>`);
-								  result.forEach(function(resu) {
-										$('#cat').append(`<option value="${resu.CategoryId}">${resu.CategoryName}</option>`);
-								  });
+				data: { DepartmentId: id }
+			});
+			if (result) {
+				result.forEach(function (resu) {
+					$('#cat').append(`<option value="${resu.CategoryId}">${resu.CategoryName}</option>`);
+				});
+			}
 		});
 
-				$('#cat').change(async function () {
-					var id = $(this).val(); // "this" refers correctly to the changed element
-					var formData = {
-						CategoryId: id
-					};
-					var dataObject = {
-						url: '/AttributeManager/GetSubCategorybyCategory',
-						data: formData
-					};
-					var result = await Utility.RequestDataAjax(dataObject);
-						$('#subcat').empty();
-							$('#subcat').append(`<option>Select Category</option>`);
-										  result.forEach(function(resu) {
-										$('#subcat').append(`<option value="${resu.SubCategoryId}">${resu.SubCategoryName}</option>`);
-					  });
+		// Cascade: Category -> SubCategory
+		$('#cat').change(async function () {
+			var id = $(this).val();
+			$('#subcat').empty().append('<option value="">Select Sub Category</option>');
+			if (!id) return;
+
+			var result = await Utility.RequestDataAjax({
+				url: '/AttributeManager/GetSubCategorybyCategory',
+				data: { CategoryId: id }
+			});
+			if (result) {
+				result.forEach(function (resu) {
+					$('#subcat').append(`<option value="${resu.SubCategoryId}">${resu.SubCategoryName}</option>`);
 				});
+			}
+		});
 
-
-		$('.refreshdcs').click(async function(e){
+		// Refresh DCS Dropdowns
+		$('.refreshdcs').click(async function (e) {
 			e.preventDefault();
-
 			var url = $(this).attr('href');
 			var selectItem = $(this).attr('data-selectName');
-			if(selectItem==='cat'){
+
+			if (selectItem === 'cat') {
 				var depId = $('#dep').val();
-				var formData={
-					DepartmentId : depId
+				if (!depId) return;
+				var result = await Utility.RequestDataAjax({ url: url, data: { DepartmentId: depId } });
+				$('#cat').empty().append('<option value="">Select Category</option>');
+				if (result) {
+					result.forEach(function (res) {
+						$('#cat').append(`<option value="${res.CategoryId}">${res.CategoryName}</option>`);
+					});
 				}
-				var dataObject= {
-					url:url,
-					data:formData
+			} else if (selectItem === 'subcat') {
+				var catId = $('#cat').val();
+				if (!catId) return;
+				var result = await Utility.RequestDataAjax({ url: url, data: { CategoryId: catId } });
+				$('#subcat').empty().append('<option value="">Select Sub Category</option>');
+				if (result) {
+					result.forEach(function (res) {
+						$('#subcat').append(`<option value="${res.SubCategoryId}">${res.SubCategoryName}</option>`);
+					});
 				}
-				var result = await Utility.RequestDataAjax(dataObject);
-				$(`#${selectItem}`).empty();
-				result.forEach(function(res){
-					$(`#${selectItem}`).append(`<option value="${res.CategoryId}">${res.CategoryName}</option>`);
-				});
-			}
-			else if(selectItem === 'subcat'){
-
-					var catId = $('#cat').val();
-				var formData={
-					CategoryId : catId
-				}
-				var dataObject= {
-					url:url,
-					data:formData
-				}
-				var result = await Utility.RequestDataAjax(dataObject);
-				$(`#${selectItem}`).empty();
-				result.forEach(function(res){
-					$(`#${selectItem}`).append(`<option value="${res.SubCategoryId}">${res.SubCategoryName}</option>`);
-				});
-			}
-			else{
+			} else {
 				var result = await Utility.RequestAjax(url);
-					$('#dep').empty();
-				result.forEach(function(res){
-					$(`#${selectItem}`).append(`<option value="${res.DepartmentId}">${res.DepartmentName}</option>`);
-				});
+				$('#dep').empty().append('<option value="">Select Department</option>');
+				if (result) {
+					result.forEach(function (res) {
+						$('#dep').append(`<option value="${res.DepartmentId}">${res.DepartmentName}</option>`);
+					});
+				}
 			}
-
-
-		})
-
-	})
+		});
+	});
 </script>

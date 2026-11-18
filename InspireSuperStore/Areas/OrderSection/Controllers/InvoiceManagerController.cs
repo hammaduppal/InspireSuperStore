@@ -11,12 +11,13 @@ using MarketBal.Repository.POSManager;
 using MarketBal.Repository.Products;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ZXing;
 
 namespace InspireSuperStore.Areas.OrderSection.Controllers
 {
-    [Authorize(Roles = UserRolesConstants.Admin + "," + UserRolesConstants.DataEntry + "," + UserRolesConstants.Product + "," + UserRolesConstants.Purchase)]
+    [Authorize(Roles = UserRolesConstants.Admin + "," +  UserRolesConstants.Product + "," + UserRolesConstants.POSUser)]
     [Area("OrderSection")]
     [Route("InvoiceManager/[action]")]
     public class InvoiceManagerController : Controller
@@ -51,9 +52,16 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
             _env = env;
             _invoicesRepo = new InvoiceRepository(_config, _oneDb,_sessionService);
         }
+        public short GetActiveTill()
+        {
+            string activeTill = HttpContext.Session.GetString("ActiveTill") ?? "Till-1";
+            short till = short.Parse(activeTill.Split('-')[1]);
+            return till;
+        }
         public async Task<IActionResult> Invoices()
         {
-            vm.Invoices = await _invoicesRepo.GetInvoices();
+            short tillId =  GetActiveTill();
+            vm.Invoices = await _invoicesRepo.GetInvoices(tillId);
             return View(vm);
         }
         public async Task<IActionResult> CreateInvoice()
@@ -69,6 +77,8 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
         }
         public async Task<IActionResult> SaveInvoice(InvoiceMasterVM model)
         {
+            
+            model.TillNo = GetActiveTill();
             var result = await _invoicesRepo.SaveInvoice(model);
             try
             {
@@ -114,20 +124,134 @@ namespace InspireSuperStore.Areas.OrderSection.Controllers
 
         }
 
+        [HttpPost]
         public async Task<IActionResult> CancelInvoice(InvoiceMasterVM model)
         {
-            var result = await _invoicesRepo.CancelInvoice(model.InvoiceMasterId, "");
-            if (result)
+            try
             {
-                return Json(new { statusCode="200" });
+                // Check if model is null or InvoiceMasterId is empty/default GUID
+                if (model == null || model.InvoiceMasterId == Guid.Empty)
+                {
+                    return Json(new { statusCode = "400", message = "Invalid or missing Invoice ID." });
+                }
 
+                var result = await _invoicesRepo.CancelInvoice(model.InvoiceMasterId, "");
+
+                if (result)
+                {
+                    return Json(new { statusCode = "200", message = "Invoice cancelled successfully." });
+                }
+                else
+                {
+                    return Json(new { statusCode = "300", message = "Failed to cancel the invoice." });
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return Json(new { statusCode="300" });
-
+                // Log the exception here if you have a logger (e.g., _logger.LogError(ex, ...))
+                return Json(new { statusCode = "500", message = "An error occurred while processing the cancellation." });
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> CreateReturn(Guid invoiceMasterId)
+        {
+            try
+            {
+                if (invoiceMasterId == Guid.Empty)
+                {
+                    return RedirectToAction("Index");
+                }
+                var tillId = GetActiveTill();
+                // Fetch original invoice with its details, customer, and product variants
+                var invoice = await _oneDb.InvoiceMasters
+                    .Include(i => i.Customer).
+                    Include(i=>i.Customer.Person)
+                    .Include(i => i.InvoiceDetails)
+                        .ThenInclude(d => d.Product)
+                    .Include(i => i.InvoiceDetails)
+                        .ThenInclude(d => d.Variant)
+                    .FirstOrDefaultAsync(i => i.InvoiceMasterId == invoiceMasterId);
+
+                if (invoice == null)
+                {
+                    TempData["Error"] = "Invoice not found.";
+                    return RedirectToAction("Index");
+                }
+
+                // Map directly to your existing InvoiceMasterVM
+                vm.Invoice = new InvoiceMasterVM
+                {
+                    InvoiceMasterId = invoice.InvoiceMasterId, // This will act as the Parent reference when posting back
+                    Customer = invoice.Customer != null ? new CustomerVM
+                    {
+                        CustomerId = invoice.Customer.CustomerId,
+                        FirstName = invoice.Customer.Person.FirstName,
+                        LastName = invoice.Customer.Person.LastName
+                    } : null,
+                    CreatedDate = invoice.CreatedDate.Value,
+                    GrandTotal = invoice.GrandTotal ?? 0,
+                    TillNo = tillId,
+                    InvoiceDetails = invoice.InvoiceDetails.Select(d => new InvoiceDetailVM
+                    {
+                        InvoiceDetailId = d.InvoiceDetailId,
+                        InvoiceMasterId = d.InvoiceMasterId,
+                        ProductId = d.ProductId,
+                        VariantId = d.VariantId,
+                        Product = d.Product != null ? new ProductVM { ProductName = d.Product.ProductName } : null,
+                        Variant = d.Variant != null ? new ProductVariantVM { ProductName = d.Variant.Product.ProductName } : null,
+                        Quantity = d.Quantity, // Original purchased quantity
+                        UnitPrice = d.UnitPrice,
+                        Cost = d.Cost ?? 0m,
+                        LineTotal = d.LineTotal
+                    }).ToList()
+                };
+                vm.PaymentMethods = await _assets.PaymentMethods();
+                return View(vm); // Looks for Views/InvoiceManager/CreateReturn.cshtml
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "An error occurred while loading the return page.";
+                return RedirectToAction("Index");
+            }
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> SubmitReturn([FromBody] InvoiceMasterVM model)
+        {
+            try
+            {
+                model.TillNo = GetActiveTill();
+                var savedReturn = await _invoicesRepo.SaveReturnInvoice(model);
+
+                if (savedReturn != null)
+                {
+                    return Json(new { statusCode = "200", message = "Return processed and inventory restocked successfully." });
+                }
+
+                return Json(new { statusCode = "300", message = "Failed to process return." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { statusCode = "500", message = ex.Message });
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,9 +1,10 @@
 ﻿@using MainModels.DTOModels
 @using MainModels.Util
 @using MarketBal.Helper
+
 <div class="navbar-brand">
 	<a href="/" class="d-inline-block">
-		<img src="/assets/img/logo/logo_main.jpg"  alt="Inspire E-Comm" />
+		<img src="/assets/img/logo/logo_main.jpg" alt="Inspire E-Comm" style="max-height: 36px;" />
 	</a>
 </div>
 
@@ -19,172 +20,176 @@
 <div class="collapse navbar-collapse" id="navbar-mobile">
 	<ul class="navbar-nav">
 		<li class="nav-item">
-			<a id="toggleSideBar" href="#" class="navbar-nav-link sidebar-control sidebar-main-toggle d-none d-md-block">
+			<a id="toggleSideBar" href="#" class="navbar-nav-link sidebar-control sidebar-main-toggle d-none d-md-block" title="Toggle Sidebar">
 				<i class="icon-paragraph-justify3"></i>
 			</a>
 		</li>
 	</ul>
 
-	<span class="navbar-text ml-md-3">
-		<span class="badge badge-mark border-orange-300 mr-2"></span>
-		@if(string.IsNullOrEmpty(AppDataUtility.SessionUser.WelcomeMessage))
-		{
-			@GreetingHelper.GetGreeting();
-		}
-		else
-		{
-			@AppDataUtility.SessionUser.WelcomeMessage;
-		}
+	<!-- Welcome Message & Branch Status Badge -->
+	<span class="navbar-text ml-md-3 d-flex align-items-center">
+		<span class="badge badge-mark border-success mr-2"></span>
+		<span class="font-weight-semibold">
+			@if(string.IsNullOrEmpty(AppDataUtility.SessionUser.WelcomeMessage))
+			{
+				@GreetingHelper.GetGreeting();
+			}
+			else
+			{
+				@AppDataUtility.SessionUser.WelcomeMessage;
+			}
+		</span>
+		<span class="badge badge-light border ml-2 px-2 py-1 text-muted font-weight-bold">
+			@if (AppDataUtility.SessionUser.Person != null)
+			{
+				@AppDataUtility.SessionUser.Person.Branch.BranchName
+			}
+			else
+			{
+				@:Super Admin
+			}
+		</span>
 	</span>
-	&nbsp;&nbsp;&nbsp; 
-	@if (AppDataUtility.SessionUser.Person != null)
-	{
-		<span>(@AppDataUtility.SessionUser.Person.Branch.BranchName) </span>
-	}
-	else
-	{
-		<span> (Super Admin) </span>
-	}
 
-	<ul class="navbar-nav ml-md-auto">
+	<ul class="navbar-nav ml-md-auto align-items-center">
+		
+		<!-- Theme Picker Dropdown -->
 		<li class="nav-item dropdown">
-			<a href="#" class="navbar-nav-link dropdown-toggle" data-toggle="dropdown">
-				<i class="icon-paint-format mr-2"></i>
-				Theme
+			<a href="#" class="navbar-nav-link dropdown-toggle font-weight-semibold" data-toggle="dropdown">
+				<i class="icon-paint-format mr-2 text-primary"></i>
+				<span>Theme</span>
 			</a>
 
-			<div class="dropdown-menu dropdown-menu-right dropdown-content wmin-md-250">
-				<div class="dropdown-content-body p-2">
+			<div class="dropdown-menu dropdown-menu-right dropdown-content wmin-md-250 shadow-lg border-0" style="border-radius: 12px;">
+				<div class="dropdown-content-body p-3">
 					<div class="row no-gutters text-center">
-
 						@{
-							var themes = new[] {  "blue", "green", "teal", "purple", "orange", "danger", "dark","light" };
+							var themes = new[] { "blue", "green", "teal", "purple", "orange", "danger", "dark", "light" };
 							foreach (var color in themes)
 							{
-								<div class="col-3">
-									<a href="#" class="d-block ripple-dark rounded p-2" onclick="changeTheme('@color')">
-										<div class="rounded-circle mx-auto mb-1 bg-@color" style="width:30px; height:30px;"></div>
-										<div class="font-size-xs text-uppercase">@color</div>
+								<div class="col-3 mb-2">
+									<a href="#" class="d-block ripple-dark rounded p-2 text-decoration-none transition-hover" onclick="changeTheme('@color')">
+										<div class="rounded-circle mx-auto mb-1 bg-@color shadow-xs" style="width:28px; height:28px; border: 2px solid rgba(0,0,0,0.05);"></div>
+										<div class="font-size-xs text-uppercase font-weight-bold text-muted" style="font-size: 10px;">@color</div>
 									</a>
 								</div>
 							}
 						}
-
 					</div>
 				</div>
 			</div>
 		</li>
 
-		
+		<!-- Applications SSO Dropdown -->
 		<li class="nav-item dropdown">
-			<a href="#" class="navbar-nav-link  dropdown-toggle" data-toggle="dropdown">
-				<i class="icon-make-group mr-2"></i>
-				Applications
+			<a href="#" class="navbar-nav-link dropdown-toggle font-weight-semibold" data-toggle="dropdown">
+				<i class="icon-make-group mr-2 text-indigo"></i>
+				<span>Applications</span>
 			</a>
 
-			<div class="dropdown-menu dropdown-menu-right dropdown-content wmin-md-350">
-				<div class="dropdown-content-body p-2">
+			<div class="dropdown-menu dropdown-menu-right dropdown-content wmin-md-350 shadow-lg border-0" style="border-radius: 12px;">
+				<div class="dropdown-content-body p-3">
 					<div class="row no-gutters">
-						<div class="col-12 col-sm-4">
-							@if (PagesViewModel.Settings.Where(x=>x.ApplicationId==1001).Any())
+						<div class="col-6 pr-1">
+							@if (PagesViewModel.Settings.Where(x => x.ApplicationId == 1001).Any())
 							{
 								var cmssetting = PagesViewModel.Settings.Where(x => x.ApplicationId == 1001).FirstOrDefault();
-								<a href="@AppHelper.CreateSSOURL(1001)" class="d-block text-default text-center ripple-dark rounded p-3">
-									<i class="icon-diff-added text-blue-400 icon-2x"></i>
-									<div class="font-size-sm font-weight-semibold text-uppercase mt-2">@cmssetting.ApplicationName</div>
+								<a href="@AppHelper.CreateSSOURL(1001)" class="d-block text-default text-center bg-light rounded p-3 mb-2 text-decoration-none transition-hover">
+									<i class="icon-diff-added text-blue-400 icon-2x mb-1"></i>
+									<div class="font-size-sm font-weight-bold text-dark mt-1">@cmssetting.ApplicationName</div>
 								</a>
 							}
 							@if (PagesViewModel.Settings.Where(x => x.ApplicationId == 1003).Any())
 							{
 								var websetupsetting = PagesViewModel.Settings.Where(x => x.ApplicationId == 1003).FirstOrDefault();
-								<a href="@AppHelper.CreateSSOURL(1003)" class="d-block text-default text-center ripple-dark rounded p-3">
-									<i class="icon-versions icon-2x"></i>
-									<div class="font-size-sm font-weight-semibold text-uppercase mt-2">@websetupsetting.ApplicationName</div>
+								<a href="@AppHelper.CreateSSOURL(1003)" class="d-block text-default text-center bg-light rounded p-3 text-decoration-none transition-hover">
+									<i class="icon-versions text-warning-400 icon-2x mb-1"></i>
+									<div class="font-size-sm font-weight-bold text-dark mt-1">@websetupsetting.ApplicationName</div>
 								</a>
-								
 							}
-							
-							
 						</div>
 
-						<div class="col-12 col-sm-4">
-							
+						<div class="col-6 pl-1">
 							@if (PagesViewModel.Settings.Where(x => x.ApplicationId == 1002).Any())
 							{
 								var marketsetting = PagesViewModel.Settings.Where(x => x.ApplicationId == 1002).FirstOrDefault();
-								<a href="@AppHelper.CreateSSOURL(1002)" class="d-block text-default text-center ripple-dark rounded p-3">
-									<i class="icon-store text-pink-400 icon-2x"></i>
-									<div class="font-size-sm font-weight-semibold text-uppercase mt-2">@marketsetting.ApplicationName</div>
+								<a href="@AppHelper.CreateSSOURL(1002)" class="d-block text-default text-center bg-light rounded p-3 mb-2 text-decoration-none transition-hover">
+									<i class="icon-store text-pink-400 icon-2x mb-1"></i>
+									<div class="font-size-sm font-weight-bold text-dark mt-1">@marketsetting.ApplicationName</div>
 								</a>
-
 							}
 							@if (PagesViewModel.Settings.Where(x => x.ApplicationId == 1004).Any())
 							{
 								var setting = PagesViewModel.Settings.Where(x => x.ApplicationId == 1004).FirstOrDefault();
-								<a href="@AppHelper.CreateSSOURL(1004)" class="d-block text-default text-center ripple-dark rounded p-3">
-									<i class="icon-store2 text-success-400 icon-2x"></i>
-									<div class="font-size-sm font-weight-semibold text-uppercase mt-2">@setting.ApplicationName</div>
+								<a href="@AppHelper.CreateSSOURL(1004)" class="d-block text-default text-center bg-light rounded p-3 text-decoration-none transition-hover">
+									<i class="icon-store2 text-success-400 icon-2x mb-1"></i>
+									<div class="font-size-sm font-weight-bold text-dark mt-1">@setting.ApplicationName</div>
 								</a>
-
 							}
-
-							
 						</div>
-
 					</div>
 				</div>
 			</div>
 		</li>
 
+		<!-- Notifications Dropdown -->
 		<li class="nav-item dropdown">
-			<a href="#" class="navbar-nav-link dropdown-toggle" data-toggle="dropdown">
-				<i class="icon-pulse2 mr-2"></i>
-				Notification
+			<a href="#" class="navbar-nav-link dropdown-toggle font-weight-semibold" data-toggle="dropdown">
+				<i class="icon-pulse2 mr-2 text-danger"></i>
+				<span>Notification</span>
+				@if (AppDataUtility.UserNotifications != null && AppDataUtility.UserNotifications.Count > 0)
+				{
+					<span class="badge badge-danger badge-pill ml-1">@AppDataUtility.UserNotifications.Count</span>
+				}
 			</a>
 
-			<div class="dropdown-menu dropdown-menu-right dropdown-content wmin-md-350">
-				<div class="dropdown-content-header">
-					<span class="font-size-sm line-height-sm text-uppercase font-weight-semibold">Latest activity</span>
+			<div class="dropdown-menu dropdown-menu-right dropdown-content wmin-md-350 shadow-lg border-0" style="border-radius: 12px;">
+				<div class="dropdown-content-header bg-light py-2 px-3 border-bottom rounded-top">
+					<span class="font-size-sm line-height-sm text-uppercase font-weight-bold text-muted">Latest activity</span>
 				</div>
 
-				<div class="dropdown-content-body dropdown-scrollable">
-					<ul class="media-list notificationList">
-						@if(AppDataUtility.UserNotifications==null  || AppDataUtility.UserNotifications.Count==0)
+				<div class="dropdown-content-body dropdown-scrollable p-2" style="max-height: 280px;">
+					<ul class="media-list notificationList mb-0">
+						@if (AppDataUtility.UserNotifications == null || AppDataUtility.UserNotifications.Count == 0)
 						{
-							<li class="media">
+							<li class="media py-2 px-2">
 								<div class="mr-3">
-									<a href="#" class="btn bg-success-400 rounded-round btn-icon"><i class="icon-mention"></i></a>
+									<a href="#" class="btn bg-success-400 rounded-round btn-icon btn-sm"><i class="icon-mention"></i></a>
 								</div>
-
-								<div class="media-body">
-									No Notification
+								<div class="media-body align-self-center text-muted font-size-sm">
+									No New Notifications
 								</div>
 							</li>
 						}
-						
-					
-
-					
-
-					
 					</ul>
 				</div>
 
-				<div class="dropdown-content-footer bg-light">
-					<a href="#" class="font-size-sm line-height-sm text-uppercase font-weight-semibold text-grey mr-auto">All activity</a>
+				<div class="dropdown-content-footer bg-light py-2 px-3 border-top rounded-bottom d-flex justify-content-between align-items-center">
+					<a href="#" class="font-size-sm text-uppercase font-weight-bold text-grey">All activity</a>
 					<div>
-						<a href="#" class="text-grey" data-popup="tooltip" title="Clear list"><i class="icon-checkmark3"></i></a>
-						<a href="#" class="text-grey ml-2" data-popup="tooltip" title="Settings"><i class="icon-gear"></i></a>
+						<a href="#" class="text-grey p-1" data-popup="tooltip" title="Clear list"><i class="icon-checkmark3"></i></a>
+						<a href="#" class="text-grey p-1 ml-1" data-popup="tooltip" title="Settings"><i class="icon-gear"></i></a>
 					</div>
 				</div>
 			</div>
 		</li>
 
-		<li class="nav-item">
-			<a href="/Account/Logout" class="navbar-nav-link">
-				<i class="icon-switch2"></i>
-				<span class="d-md-none ml-2">Logout</span>
+		<!-- Logout Button -->
+		<li class="nav-item ml-2">
+			<a href="/Account/Logout" class="navbar-nav-link btn btn-outline-danger btn-sm text-danger px-3 py-1 font-weight-semibold d-flex align-items-center" style="border-radius: 6px;">
+				<i class="icon-switch2 mr-1"></i>
+				<span>Logout</span>
 			</a>
 		</li>
 	</ul>
 </div>
+
+<style>
+	.transition-hover {
+		transition: all 0.2s ease-in-out;
+	}
+	.transition-hover:hover {
+		background-color: #e3f2fd !important;
+		transform: translateY(-2px);
+	}
+</style>

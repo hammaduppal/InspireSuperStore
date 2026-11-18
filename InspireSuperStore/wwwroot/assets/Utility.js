@@ -470,6 +470,22 @@ const Utility = {
         $(block).unblock(); // Unblock the element
     },
 
+    RequestCustomDataAjax: async function (data) {
+        try {
+            debugger;
+            const response = await $.ajax({
+                url: data.url,
+                data: data.data,
+                type: data.type || 'POST',
+                contentType: data.contentType !== undefined ? data.contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
+                dataType: data.dataType || 'json'
+            });
+            return response;
+        } catch (error) {
+            console.error("AJAX error:", error);
+            return null;
+        }
+    },
     RequestDataAjax: async function (data) {
         try {
             debugger;
@@ -480,7 +496,7 @@ const Utility = {
             });
             return response;
         } catch (error) {
-            
+
             console.error("AJAX error:", error);
             return null;
         }

@@ -458,9 +458,35 @@ namespace MarketBal.Repository.Products
         #region DCS
         public async Task<List<DepartmentVM>> GetDepartment()
         {
-            string query = $@"select DepartmentId,DepartmentName from Inv.Departments where IsActive =1";
-            var result = await _db.ExecuteQueryList<DepartmentVM>(query);
-            return result.ToList();
+            return await _onedb.Departments
+                .AsNoTracking()
+                .AsSplitQuery() // Prevents Cartesian explosion across nested Categories & SubCategories
+                .Where(x => x.IsActive == true)
+                .OrderBy(x => x.DepartmentName)
+                .Select(x => new DepartmentVM
+                {
+                    DepartmentId = x.DepartmentId,
+                    DepartmentName = x.DepartmentName,
+                    Categories = x.Categories
+                        .Where(c => c.IsActive == true)
+                        .OrderBy(c => c.CategoryName)
+                        .Select(c => new CategoryVM
+                        {
+                            CategoryId = c.CategoryId,
+                            CategoryName = c.CategoryName,
+                            SubCategories = c.SubCategories
+                                .Where(sub => sub.IsActive == true)
+                                .OrderBy(sub => sub.SubCategoryName)
+                                .Select(sub => new SubCategoryVM
+                                {
+                                    SubCategoryId = sub.SubCategoryId,
+                                    SubCategoryName = sub.SubCategoryName
+                                })
+                                .ToList()
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
         }
 
         public async Task<List<CategoryVM>> GetCategory()
@@ -494,9 +520,26 @@ namespace MarketBal.Repository.Products
 
         public async Task<List<UomVM>> GetUOM()
         {
-            string query = $@"select UOMId,UOMName from Inv.UOM where IsActive = 1";
-            var result = await _db.ExecuteQueryList<UomVM>(query);
-            return result.ToList();
+            return await _onedb.Uoms
+                .AsNoTracking()
+                .AsSplitQuery() 
+                .Where(x => x.IsActive == true)
+                .OrderBy(x => x.Uomname)
+                .Select(x => new UomVM
+                {
+                    Uomid = x.Uomid,
+                    UOMName = x.Uomname,
+                    subUom = x.Uomsubs 
+                        .Where(sub => sub.IsActive == true)
+                        .OrderBy(sub => sub.SubUomname) 
+                        .Select(sub => new UomsubVM
+                        {
+                            SubUomId = sub.SubUomid,
+                            SubUOMName = sub.SubUomname, ConversionFactor=sub.ConversionFactor
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
         }
 
         public async Task<List<UomsubVM>> GetSubUOMs(Guid? UomId)

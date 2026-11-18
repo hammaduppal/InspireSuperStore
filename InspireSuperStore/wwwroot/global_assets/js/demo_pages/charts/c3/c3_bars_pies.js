@@ -169,55 +169,79 @@ var С3BarsPies = function() {
         }
 
         // Stacked bar chart
-        if(bar_stacked_chart_element) {
+        if (bar_stacked_chart_element) {
 
-            // Generate chart
+            // Generate initial chart with empty/placeholder structure matching your naming convention
             var bar_stacked_chart = c3.generate({
                 bindto: bar_stacked_chart_element,
                 size: { height: 400 },
                 color: {
-                    pattern: ['#FF9800', '#F44336', '#009688', '#4CAF50']
+                    pattern: ['#2196F3', '#26A69A', '#FF9800', '#F44336']
                 },
                 data: {
+                    x: 'x',
                     columns: [
-                        ['data1', -30, 200, 200, 400, -150, 250],
-                        ['data2', 130, 100, -100, 200, -150, 50],
-                        ['data3', -230, 200, 200, -300, 250, 250]
+                        ['x'],
+                        ['Sales'],
+                        ['Profit']
                     ],
                     type: 'bar',
                     groups: [
-                        ['data1', 'data2']
+                        ['Sales', 'Profit']
                     ]
+                },
+                axis: {
+                    x: {
+                        type: 'category',
+                        tick: {
+                            rotate: 0,
+                            multiline: false
+                        }
+                    },
+                    y: {
+                        grid: { show: true }
+                    }
                 },
                 grid: {
                     x: {
                         show: true
                     },
                     y: {
-                        lines: [{value:0}]
+                        lines: [{ value: 0 }]
                     }
                 }
             });
+            
+            $.ajax({
+                url: '/Reports/GetDailySalesAndProfitChart',
+                type: 'GET',
+                success: function (response) {
+                    if (response && response.days && response.days.length > 0) {
+                        var xData = ['x'].concat(response.days);
+                        var salesData = ['Sales'].concat(response.sales);
+                        var profitData = ['Profit'].concat(response.profit);
 
-            // Change data
-            setTimeout(function () {
-                bar_stacked_chart.groups([['data1', 'data2', 'data3']])
-            }, 4000);
-            setTimeout(function () {
-                bar_stacked_chart.load({
-                    columns: [['data4', 100, -50, 150, 200, -300, -100]]
-                });
-            }, 8000);
-            setTimeout(function () {
-                bar_stacked_chart.groups([['data1', 'data2', 'data3', 'data4']])
-            }, 10000);
+                        bar_stacked_chart.load({
+                            columns: [
+                                xData,
+                                salesData,
+                                profitData
+                            ]
+                        });
+                    } else {
+                        console.warn('No daily sales and profit data found.');
+                    }
+                },
+                error: function (err) {
+                    console.error('Error fetching daily sales and profit chart data:', err);
+                }
+            });
 
             // Resize chart on sidebar width change
-            $('.sidebar-control').on('click', function() {
+            $('.sidebar-control').on('click', function () {
                 bar_stacked_chart.resize();
             });
         }
-
         // Combined chart
         if(combined_chart_element) {
 
@@ -226,7 +250,7 @@ var С3BarsPies = function() {
                 bindto: combined_chart_element,
                 size: { height: 400 },
                 color: {
-                    pattern: ['#FF9800', '#F44336', '#009688', '#4CAF50', '#03A9F4', '#8BC34A']
+                    pattern: ['#2196F3', '#26A69A', '#FF9800', '#F44336']
                 },
                 data: {
                     columns: [

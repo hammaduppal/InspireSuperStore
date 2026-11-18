@@ -1,72 +1,135 @@
-﻿	<div class="card shadow-5">
-				<div class="card-header header-elements-inline">
-					<h5 class="card-title">Material</h5>
-					<div class="header-elements">
-						<div class="list-icons">
-							<a class="list-icons-item" data-action="collapse"></a>
-						</div>
-					</div>
-				</div>
+﻿@using MainModels.DTOModels
+@model PagesViewModel
 
-				<div class="card-body">
-					<form id="addmaterialForm" action="#">
-						<div class="form-group row">
-							<label class="col-lg-3 col-form-label">Material:</label>
-							<div class="col-lg-9">
-								<input id="materialName" type="text" class="form-control" placeholder="Material">
+<div class="row">
+	<!-- Left Column: Add Material Form -->
+	<div class="col-lg-4">
+		<div class="card border-0 shadow-sm rounded-lg overflow-hidden theme-color">
+			<div class="card-header header-elements-inline py-3 border-bottom">
+				<h6 class="card-title font-weight-semibold mb-0">
+					<i class="icon-plus-circle2 mr-2 text-teal"></i> Add Material
+				</h6>
+			</div>
+			<div class="card-body">
+				<form id="addmaterialForm" action="#">
+					<div class="form-group mb-3">
+						<label class="form-label font-weight-semibold text-uppercase font-size-xs">Material Name</label>
+						<div class="form-group-feedback form-group-feedback-left">
+							<input id="materialName" name="MaterialName" type="text" class="form-control" placeholder="e.g., Cotton, Polyester, Steel, Leather">
+							<div class="form-control-feedback form-group-feedback-left">
+								<i class="icon-cube3 text-muted"></i>
 							</div>
 						</div>
-						<div class="text-right">
-							<button id="addMaterialBtn" type="submit" class="btn btn-primary">Submit form <i class="icon-paperplane ml-2"></i></button>
-						</div>
-					</form>
-				</div>
-				<script>
-					$(document).ready(function(){
+						<div id="MessageBox" class="mt-2 font-size-sm"></div>
+					</div>
 
-						$('#addmaterialForm').submit(function(e){
-							e.preventDefault();
-								if(!$('#materialName').val() ){
-									$('#MessageBox').html('<span style=\"color: red;\">Empty not Allowed</span>');
-													Utility.infoMessage('Empty Not Allowed');
-								}
-								else{
-									var formData={
-										MaterialName : $('#materialName').val()
-									}
-
-									debugger
-									console.log(formData);
-									Utility.SpinnerMessageParent('addMaterialBtn','Loading..');
-									$.ajax({
-										url:'/AttributeManager/AddMaterial',
-										type:'POST',
-										data:formData,
-										success:function(result){
-											if(result.statusCode==='200'){
-												Utility.successMessage('Record Added');
-												$('#addmaterialForm')[0].reset();
-											$('#MessageBox').html('');
-
-											}else if(result.statusCode==='300'){
-													Utility.infoMessage('Record Already Exist');
-											$('#MessageBox').html('<span style=\"color: red;\">This value already exists. Duplicate entries are not allowed.</span>');
-
-											}
-											else{
-												Utility.failMessage('Please Try Again Later');
-											$('#MessageBox').html('<span style=\"color: red;\">Some Error</span>');
-											}
-												setTimeout(function(){
-													Utility.StopSpinnerMessageParent('addMaterialBtn');
-												},500);
-										}
-									});
-								}
-						});
-
-					});
-
-				</script>
-
+					<div class="text-right">
+						<button id="addMaterialBtn" type="submit" class="btn bg-teal-400 btn-labeled btn-labeled-left btn-sm font-weight-semibold rounded-pill px-3">
+							<b><i class="icon-paperplane"></i></b> Save Material
+						</button>
+					</div>
+				</form>
 			</div>
+		</div>
+	</div>
+
+	<!-- Right Column: Existing Materials Directory -->
+	<div class="col-lg-8">
+		<div class="card border-0 shadow-sm rounded-lg overflow-hidden theme-color">
+			<div class="card-header header-elements-inline py-3 border-bottom">
+				<h6 class="card-title font-weight-semibold mb-0">
+					<i class="icon-list3 mr-2"></i> Material Directory
+				</h6>
+			</div>
+
+			<div class="table-responsive">
+				<table id="materialTable" class="table table-striped table-hover mb-0">
+					<thead>
+						<tr class="font-size-xs text-uppercase font-weight-bold">
+							<th style="width: 15%;">#</th>
+							<th style="width: 85%;">Material Name</th>
+						</tr>
+					</thead>
+					<tbody>
+						@{
+							int i = 1;
+						}
+						@if (Model.Materials != null && Model.Materials.Any())
+						{
+							@foreach (var item in Model.Materials)
+							{
+								<tr>
+									<td class="font-size-sm">@i</td>
+									<td class="font-weight-semibold">@item.MaterialName</td>
+								</tr>
+								i++;
+							}
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	$(document).ready(function() {
+		if (!$.fn.DataTable.isDataTable('#materialTable')) {
+			$('#materialTable').DataTable({
+				autoWidth: false,
+				dom: '<"datatable-header"fl><"datatable-scroll"t><"datatable-footer"ip>',
+				language: {
+					search: '<span>Filter:</span> _INPUT_',
+					searchPlaceholder: 'Type to filter...',
+					lengthMenu: '<span>Show:</span> _MENU_',
+					paginate: { 'first': 'First', 'last': 'Last', 'next': $('html').attr('dir') == 'rtl' ? '&larr;' : '&rarr;', 'previous': $('html').attr('dir') == 'rtl' ? '&rarr;' : '&larr;' }
+				}
+			});
+		}
+
+		$('#addmaterialForm').submit(function(e) {
+			e.preventDefault();
+			var materialVal = $.trim($('#materialName').val());
+
+			if (!materialVal) {
+				$('#MessageBox').html('<span class="text-danger"><i class="icon-cancel-circle2 mr-1"></i> Material name cannot be empty.</span>');
+				Utility.infoMessage('Empty Not Allowed');
+			}
+			else {
+				var formData = {
+					MaterialName: materialVal
+				};
+
+				Utility.SpinnerMessageParent('addMaterialBtn', 'Loading..');
+				$.ajax({
+					url: '/AttributeManager/AddMaterial',
+					type: 'POST',
+					data: formData,
+					success: function(result) {
+						if (result.statusCode === '200') {
+							Utility.successMessage('Material Added Successfully');
+							$('#addmaterialForm')[0].reset();
+							$('#MessageBox').html('');
+						} else if (result.statusCode === '300') {
+							Utility.infoMessage('Record Already Exists');
+							$('#MessageBox').html('<span class="text-danger"><i class="icon-warning2 mr-1"></i> This material already exists.</span>');
+						} else {
+							Utility.failMessage('Please Try Again Later');
+							$('#MessageBox').html('<span class="text-danger"><i class="icon-cancel-circle2 mr-1"></i> An error occurred.</span>');
+						}
+						setTimeout(function() {
+							Utility.StopSpinnerMessageParent('addMaterialBtn');
+						}, 500);
+					},
+					error: function() {
+						Utility.failMessage('Please Try Again Later');
+						$('#MessageBox').html('<span class="text-danger"><i class="icon-cancel-circle2 mr-1"></i> Server connection error.</span>');
+						setTimeout(function() {
+							Utility.StopSpinnerMessageParent('addMaterialBtn');
+						}, 500);
+					}
+				});
+			}
+		});
+	});
+</script>

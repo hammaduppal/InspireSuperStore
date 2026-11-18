@@ -2,377 +2,356 @@
 @using MainModels.Util
 @model PagesViewModel
 @{
-	ViewData["Title"] = "Invoices";
-	Layout = "~/Views/Shared/_Layout.cshtml";
-	int count = 1;
+    ViewData["Title"] = "Invoices";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    int count = 1;
 }
-<div class="page-header page-header-light">
-	<div class="page-header-content header-elements-md-inline">
 
-		<div class="d-flex">
-			<div class="breadcrumb">
-				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
+<div class="page-header page-header-light border-bottom-0">
+    <div class="page-header-content header-elements-md-inline py-3">
+        <div class="d-flex align-items-center">
+            <div class="mr-3 rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; background-color: rgba(63, 81, 181, 0.12); border: 1px solid rgba(63, 81, 181, 0.25);">
+                <i class="icon-file-text2 text-indigo font-size-xl"></i>
+            </div>
+            <div>
+                <h4 class="font-weight-extrabold mb-1" style="letter-spacing: -0.5px;">Sale Invoices</h4>
+                <div class="breadcrumb bg-transparent p-0 mb-0 font-size-sm">
+                    <a href="/" class="breadcrumb-item text-muted"><i class="icon-home2 mr-1"></i> Home</a>
+                    <span class="breadcrumb-item active font-weight-semibold text-indigo">Billing & Invoices</span>
+                </div>
+            </div>
+        </div>
 
-				<span class="breadcrumb-item active">Sale Invoices</span>
-			</div>
+        <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
 
-			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
-		</div>
-	</div>
-
-
+        <div class="header-elements d-none d-md-block mt-2 mt-md-0">
+            <a id="addOrders" href="/InvoiceManager/CreateInvoice" class="btn bg-primary btn-labeled btn-labeled-left rounded-pill px-4 font-weight-semibold shadow-sm">
+                <b><i class="icon-plus-circle2"></i></b> Create New Invoice
+            </a>
+        </div>
+    </div>
 </div>
 
-<!-- Content area -->
-<div class="content">
+<!-- Content Area -->
+<div class="content pt-0">
+    <div class="card border-0 shadow-lg rounded-xl overflow-hidden theme-color" style="backdrop-filter: blur(10px); border-top: 3px solid #3F51B5 !important;">
+        <div class="card-header bg-transparent header-elements-inline py-3 border-bottom">
+            <div class="d-flex align-items-center">
+                <span class="badge badge-primary badge-pill mr-2 px-2 py-1 font-size-xs">
+                    @(Model.Invoices?.Count() ?? 0)
+                </span>
+                <h6 class="card-title font-weight-bold mb-0">Invoice Directory</h6>
+            </div>
+            <div class="header-elements">
+                <span class="badge badge-flat border-indigo text-indigo font-size-xs rounded-pill px-2 mr-2">Live Invoices</span>
+                <div class="list-icons">
+                    <a class="list-icons-item" data-action="collapse"></a>
+                    <a class="list-icons-item" data-action="reload"></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="invoiceTable" class="table table-hover text-nowrap mb-0">
+                    <thead>
+                        <tr class="text-uppercase font-size-xs text-muted border-bottom">
+                            <th class="pl-3" style="width: 50px;">#</th>
+                            <th>Invoice No</th>
+                            <th>Customer</th>
+                            <th>Source</th>
+                            <th>Payment Status</th>
+                            <th>Method</th>
+                            @if (AppDataUtility.SystemPreferences.EnableTax)
+                            {
+                                <th class="text-right">Total Tax</th>
+                            }
+                            <th class="text-right">Grand Total</th>
+                            <th>Invoice Date</th>
+                            <th class="text-center pr-3">Manage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Invoices != null)
+                        {
+                            // 1. Separate Parent invoices from Child Return invoices
+                            var parentInvoices = Model.Invoices.Where(i => !i.ParentInvoiceId.HasValue || i.ParentInvoiceId == Guid.Empty).ToList();
+                            var childReturns = Model.Invoices.Where(i => i.ParentInvoiceId.HasValue && i.ParentInvoiceId != Guid.Empty).GroupBy(i => i.ParentInvoiceId).ToDictionary(g => g.Key, g => g.ToList());
+
+                            foreach (var item in parentInvoices)
+                            {
+                                // Determine sleek theme-safe styling based on PaymentStatusId
+                                string badgeClass = "border-secondary text-secondary";
+                                string statusIcon = "icon-primitive-dot";
+                                string rowAccent = "transparent";
+
+                                if (item.PaymentStatusId == 1 || item.PaymentStatusId == 3) // Paid / Completed
+                                {
+                                    badgeClass = "border-success text-success";
+                                    statusIcon = "icon-checkmark-circle";
+                                    rowAccent = "#4CAF50";
+                                }
+                                else if (item.PaymentStatusId == 2) // Pending / Partial
+                                {
+                                    badgeClass = "border-warning text-warning";
+                                    statusIcon = "icon-hour-glass2";
+                                    rowAccent = "#FF9800";
+                                }
+                                else if (item.PaymentStatusId == 5) // Cancelled
+                                {
+                                    badgeClass = "border-danger text-danger";
+                                    statusIcon = "icon-cancel-circle2";
+                                    rowAccent = "#F44336";
+                                }
+
+                                string customerFullName = $"{item?.Customer?.FirstName} {item?.Customer?.LastName}".Trim();
+                                if (string.IsNullOrWhiteSpace(customerFullName))
+                                {
+                                    customerFullName = "Walk-in Customer";
+                                }
+
+                                
+                                <tr style="border-left: 3px solid @rowAccent;">
+                                    <td class="pl-3 font-weight-semibold text-muted">@count</td>
+                                    <td>
+                                        <span class="font-weight-bold text-dark">@item.InvoiceNo</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center mr-2 font-weight-bold text-primary font-size-xs" style="width: 30px; height: 30px; background-color: rgba(33, 150, 243, 0.12);">
+                                                <i class="icon-user"></i>
+                                            </div>
+                                            <span class="font-weight-semibold">@customerFullName</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-light text-muted font-size-xs px-2 py-1">
+                                            <i class="icon-store2 mr-1 font-size-xs"></i> @(item?.InvoiceSource?.SourceName ?? "POS")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-flat @badgeClass rounded-pill px-2 py-1 font-size-xs font-weight-semibold">
+                                            <i class="@statusIcon mr-1 font-size-xs"></i> @(item?.PaymentStatus?.Name ?? "Unknown")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="font-size-sm">
+                                            <i class="icon-credit-card text-info mr-1"></i> @(item?.PaymentMethod?.Name ?? "-")
+                                        </span>
+                                    </td>
+
+                                    @if (AppDataUtility.SystemPreferences.EnableTax)
+                                    {
+                                        <td class="text-right font-size-sm text-muted">
+                                            @(item?.TotalTax?.ToString("N2") ?? "0.00")
+                                        </td>
+                                    }
+
+                                    <td class="text-right">
+                                        <span class="font-weight-bold font-size-base text-primary">
+                                            @item?.GrandTotal.ToString("N2")
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="text-muted font-size-xs">
+                                            <i class="icon-calendar2 mr-1"></i> @TimeHelper.GetFormattedTimeSpan(item.CreatedDate)
+                                        </span>
+                                    </td>
+                                    <td class="text-center pr-3">
+                                        <div class="d-inline-flex align-items-center">
+                                            @if (item.PaymentStatusId == 1 || item.PaymentStatusId == 3)
+                                            {
+                                                <a href="/PosManager/Order/@item.InvoiceMasterId" class="btn btn-outline-primary btn-icon btn-sm rounded-circle mr-1" title="Edit / View Order">
+                                                    <i class="icon-pencil7"></i>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-outline-secondary btn-icon btn-sm rounded-circle mr-1 disabled" disabled title="Cannot Edit">
+                                                    <i class="icon-pencil7"></i>
+                                                </button>
+                                            }
+
+                                            <button type="button" class="btn btn-outline-success btn-icon btn-sm rounded-circle mr-1 printInvoice" data-invoiceId="@item.InvoiceMasterId" title="Print PDF Invoice">
+                                                <i class="icon-printer"></i>
+                                            </button>
+
+                                            @if (item.PaymentStatusId == 1 || item.PaymentStatusId == 3)
+                                            {
+                                                <a href="/InvoiceManager/CreateReturn?invoiceMasterId=@item.InvoiceMasterId"
+                                                   class="btn btn-outline-warning btn-icon btn-sm rounded-circle mr-1"
+                                                   title="Process Return / Refund">
+                                                    <i class="icon-undo2"></i>
+                                                </a>
+                                            }
+
+                                            @if (item.PaymentStatusId == 1 || item.PaymentStatusId == 3)
+                                            {
+                                                <a href="/InvoiceManager/CancelInvoice"
+                                                   data-invoiceId="@item.InvoiceMasterId"
+                                                   data-status="@item.PaymentStatusId"
+                                                   class="btn btn-outline-danger btn-icon btn-sm rounded-circle cancelInvoice"
+                                                   title="Cancel Full Invoice">
+                                                    <i class="icon-trash"></i>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-outline-secondary btn-icon btn-sm rounded-circle disabled" disabled title="Already Cancelled, Refunded, or Ineligible">
+                                                    <i class="icon-blocked"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                // ---------- CHILD RETURN / REFUND ROWS (EXACT COLUMN MATCH - NO COLSPAN) ----------
+                                if (childReturns.ContainsKey(item.InvoiceMasterId))
+                                {
+                                    foreach (var ret in childReturns[item.InvoiceMasterId])
+                                    {
+                                        <tr class="bg-light font-size-sm" style="border-left: 3px solid #FF9800; opacity: 0.95;">
+                                            <!-- 1. # (Tree Icon) -->
+                                            <td class="pl-4 text-center text-warning">
+                                                <i class="icon-corner-down-right font-size-sm"></i>
+                                            </td>
+
+                                            <!-- 2. InvoiceNo (Return Ref No) -->
+                                            <td>
+                                                <span class="font-weight-bold text-warning">@ret.InvoiceNo</span>
+                                            </td>
+
+                                            <!-- 3. Customer Column (Displays Refund Badge & Remarks instead of empty space) -->
+                                            <td class="py-2">
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge badge-warning badge-pill mr-2 px-2">REFUND</span>
+                                                    <span class="text-muted font-size-xs">(@ret.CustomerRemarks)</span>
+                                                </div>
+                                            </td>
+
+                                            <!-- 4. Empty Cell for Source (Skipped due to colspan above) -->
+                                          <td></td>
+                                          <td></td>
+                                          <td></td>
 
 
-	<div class="card shadow-5">
-		<div class="card-header header-elements-inline">
-			<h5 class="card-title">Sale Invoices</h5>
-			<div class="header-elements">
+                                           
+                                            @if (AppDataUtility.SystemPreferences.EnableTax)
+                                            {
+                                                <td class="text-right text-muted">@ret.TotalTax?.ToString("N2")</td>
+                                            }
 
-				<div class="header-elements d-none">
-					<div class="d-flex justify-content-center">
-						<a id="addOrders" href="/InvoiceManager/CreateInvoice" class="btn btn-success ">Add Invoice</a>
+                                            <!-- 8. Grand Total (Negative Refund Value) -->
+                                            <td class="text-right">
+                                                <span class="font-weight-bold text-danger">-@ret.GrandTotal.ToString("N2")</span>
+                                            </td>
 
-					</div>
-				</div>
-			</div>
-		</div>
+                                            <!-- 9. Invoice Date -->
+                                            <td>
+                                                <span class="text-muted font-size-xs">@TimeHelper.GetFormattedTimeSpan(ret.CreatedDate)</span>
+                                            </td>
 
-		<div class="table-responsive">
-			<table id="invoiceTable" class="table">
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Customer Name</th>
+                                            <!-- 10. Manage (Print Button for Return Slip) -->
+                                            <td class="text-center pr-3">
+                                                <button type="button" class="btn btn-outline-success btn-icon btn-xs rounded-circle printInvoice" data-invoiceId="@ret.InvoiceMasterId" title="Print Return Slip">
+                                                    <i class="icon-printer"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
 
-						<th>Invoice Source</th>
-						<th>Payment Status</th>
-						<th>Payment Method</th>
-						<th>Invoice Status</th>
-						@if (AppDataUtility.SystemPreferences.EnableTax)
-						{
-							<th>Total Tax</th>
+                                count++;
+                            }
+                        }
 
-						}
-
-						<th>Grand Total</th>
-						<th>Invoice Date</th>
-
-						<th>Manage</th>
-
-
-					</tr>
-				</thead>
-				<tbody>
-					@foreach (var item in Model.Invoices)
-					{
-						if (item.PaymentStatusId==1)
-						{
-							<tr class="table-success">
-								<td>@count</td>
-								<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
-								<td>@item?.InvoiceSource?.SourceName</td>
-								<td>@item?.PaymentStatus?.Name</td>
-
-								<td>@item?.PaymentMethod.Name</td>
-								<td>
-									<select data-ordermasterid="@item?.InvoiceMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
-										@foreach (AppConstants.PaymentStatus status in Enum.GetValues(typeof(AppConstants.PaymentStatus)))
-										{
-											<option value="@((int)status)" @(item?.PaymentStatusId == (int)status ? "selected" : "")>
-												@status.ToString()
-											</option>
-										}
-									</select>
-								</td>
-
-								@if (AppDataUtility.SystemPreferences.EnableTax)
-								{
-									<td>@item?.TotalTax</td>
-
-								}
-								<td>@item?.GrandTotal.ToString("N2")</td>
-
-								<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate)</td>
-								<td>
-
-									<div class="list-icons">
-										<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
-										@if (item.PaymentStatusId == 5)
-										{
-											<a class="list-icons-item text-danger "><i class="icon-trash"></i></a>
-										}
-										else
-										{
-											<a href="/InvoiceManager/CancelInvoice" data-invoiceId="@item.InvoiceMasterId" class="list-icons-item text-danger cancelInvoice"><i class="icon-trash "></i></a>
-										}
-										&nbsp;
-										<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
-
-
-									</div>
-
-								</td>
-							</tr>
-
-						}
-						else if(item.PaymentStatusId==2)
-						{
-							<tr class="table-warning">
-								<td>@count</td>
-								<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
-								<td>@item?.InvoiceSource?.SourceName</td>
-								<td>@item?.PaymentStatus?.Name</td>
-
-								<td>@item?.PaymentMethod.Name</td>
-								<td>
-									<select data-ordermasterid="@item?.InvoiceMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
-										@foreach (AppConstants.PaymentStatus status in Enum.GetValues(typeof(AppConstants.PaymentStatus)))
-										{
-											<option value="@((int)status)" @(item?.PaymentStatusId == (int)status ? "selected" : "")>
-												@status.ToString()
-											</option>
-										}
-									</select>
-								</td>
-
-								@if (AppDataUtility.SystemPreferences.EnableTax)
-								{
-									<td>@item?.TotalTax</td>
-
-								}
-								<td>@item?.GrandTotal.ToString("N2")</td>
-
-								<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate)</td>
-								<td>
-
-									<div class="list-icons">
-										<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
-										@if (item.PaymentStatusId == 5)
-										{
-											<a class="list-icons-item text-danger "><i class="icon-trash"></i></a>
-										}
-										else
-										{
-											<a href="/InvoiceManager/CancelInvoice" data-invoiceId="@item.InvoiceMasterId" class="list-icons-item text-danger cancelInvoice"><i class="icon-trash "></i></a>
-										}
-										&nbsp;
-										<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
-
-
-									</div>
-
-								</td>
-							</tr>
-
-						}
-						else if(item.PaymentStatusId==3)
-						{
-							<tr class="table-success">
-								<td>@count</td>
-								<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
-								<td>@item?.InvoiceSource?.SourceName</td>
-								<td>@item?.PaymentStatus?.Name</td>
-
-								<td>@item?.PaymentMethod.Name</td>
-								<td>
-									<select data-ordermasterid="@item?.InvoiceMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
-										@foreach (AppConstants.PaymentStatus status in Enum.GetValues(typeof(AppConstants.PaymentStatus)))
-										{
-											<option value="@((int)status)" @(item?.PaymentStatusId == (int)status ? "selected" : "")>
-												@status.ToString()
-											</option>
-										}
-									</select>
-								</td>
-
-								@if (AppDataUtility.SystemPreferences.EnableTax)
-								{
-									<td>@item?.TotalTax</td>
-
-								}
-								<td>@item?.GrandTotal.ToString("N2")</td>
-
-								<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate)</td>
-								<td>
-
-									<div class="list-icons">
-										<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
-										@if (item.PaymentStatusId == 5)
-										{
-											<a class="list-icons-item text-danger "><i class="icon-trash"></i></a>
-										}
-										else
-										{
-											<a href="/InvoiceManager/CancelInvoice" data-invoiceId="@item.InvoiceMasterId" class="list-icons-item text-danger cancelInvoice"><i class="icon-trash "></i></a>
-										}
-										&nbsp;
-										<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
-
-
-									</div>
-
-								</td>
-							</tr>
-
-						}
-						else if(item.PaymentStatusId==5)
-						{
-							<tr class="table-danger">
-								<td>@count</td>
-								<td>@item?.Customer?.FirstName @item?.Customer?.LastName</td>
-								<td>@item?.InvoiceSource?.SourceName</td>
-								<td>@item?.PaymentStatus?.Name</td>
-
-								<td>@item?.PaymentMethod.Name</td>
-								<td>
-									<select data-ordermasterid="@item?.InvoiceMasterId" id="orderStatusId" class="form-control" name="OrderStatusId">
-										@foreach (AppConstants.PaymentStatus status in Enum.GetValues(typeof(AppConstants.PaymentStatus)))
-										{
-											<option value="@((int)status)" @(item?.PaymentStatusId == (int)status ? "selected" : "")>
-												@status.ToString()
-											</option>
-										}
-									</select>
-								</td>
-
-								@if (AppDataUtility.SystemPreferences.EnableTax)
-								{
-									<td>@item?.TotalTax</td>
-
-								}
-								<td>@item?.GrandTotal.ToString("N2")</td>
-
-								<td>@TimeHelper.GetFormattedTimeSpan(item.CreatedDate)</td>
-								<td>
-
-									<div class="list-icons">
-										<a href="/PosManager/Order/@item.InvoiceMasterId" class="list-icons-item text-primary-600"><i class="icon-pencil7"></i></a> &nbsp;
-										@if (item.PaymentStatusId == 5)
-										{
-											<a class="list-icons-item text-danger "><i class="icon-trash"></i></a>
-										}
-										else
-										{
-											<a href="/InvoiceManager/CancelInvoice" data-invoiceId="@item.InvoiceMasterId" class="list-icons-item text-danger cancelInvoice"><i class="icon-trash "></i></a>
-										}
-										&nbsp;
-										<a href="#" class="list-icons-item text-success-600 printInvoice" data-invoiceId="@item.InvoiceMasterId"><i class="icon-printer"></i></a>
-
-
-									</div>
-
-								</td>
-							</tr>
-
-						}
-					
-
-						
-						count++;
-					}
-				</tbody>
-			</table>
-
-		</div>
-	</div>
-
-
+                    
+                    
+                    
+                    
+                    
+                    
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
-
-<!-- /content area -->
 <script>
-	$(document).ready(function(){
+    $(document).ready(function() {
+        // Initialize DataTable cleanly
+        window.invoiceTable = new DataTable('#invoiceTable', {
+            pageLength: 25,
+            order: [[0, 'asc']],
+            language: {
+                search: '_INPUT_',
+                searchPlaceholder: 'Search invoices, customers, status...'
+            }
+        });
 
-		$('.printInvoice').click(function(e){
-			e.preventDefault();
-			var invoiceId = $(this).attr('data-invoiceid');
-			var payload={
-				InvoiceMasterId:invoiceId
-			}
-				$.ajax({
-					url: '/InvoiceManager/GetDuplicateInvoice',
-					type: 'POST',
-					data: payload,
+        // Delegated Print PDF Handler (works across all DataTable pages)
+        $(document).on('click', '.printInvoice', function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var invoiceId = $btn.attr('data-invoiceId');
+            var originalHtml = $btn.html();
 
-					xhrFields: {
-						responseType: 'blob'  // expecting PDF back
-					},
-					success: function (data) {
-						console.log('Hello Dumpling');
+            $btn.prop('disabled', true).html('<i class="icon-spinner2 spinner"></i>');
 
-						console.log(data);
-						var blob = new Blob([data], { type: "application/pdf" });
-						var url = URL.createObjectURL(blob);
-						window.open(url, "_blank");
-					},
-					error: function (xhr, status, error) {
-						alert("Error saving invoice: " + error);
-					}
-				});
-		})
+            $.ajax({
+                url: '/InvoiceManager/GetDuplicateInvoice',
+                type: 'POST',
+                data: { InvoiceMasterId: invoiceId },
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(data) {
+                    var blob = new Blob([data], { type: "application/pdf" });
+                    var url = URL.createObjectURL(blob);
+                    window.open(url, "_blank");
+                },
+                error: function(xhr, status, error) {
+                    Utility.failMessage("Error generating invoice PDF: " + error);
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html(originalHtml);
+                }
+            });
+        });
 
+        // Delegated Cancel Invoice Handler with Status Guard Clause
+        $(document).on('click', '.cancelInvoice', function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var url = $btn.attr('href');
+            var invoiceId = $btn.attr('data-invoiceId');
+            var paymentStatusId = parseInt($btn.attr('data-status') || '0', 10);
 
-		$('.cancelInvoice').click(async function(e){
-			e.preventDefault();
-			var url= $(this).attr('href');
-					var invoiceId = $(this).attr('data-invoiceId');
-			Utility.confirmBootBox('Do you Want to Cancel Invoice').then(async function(bootresult){
-				if(bootresult){
-					
-					console.log(url);
-					console.log(invoiceId);
-					var formData={
-						InvoiceMasterId:invoiceId
-					}
-					var objectDaa={
-						url:url,
-						data:formData
-					}
+            // FRONTEND GUARD: Prevent triggering cancellation if already cancelled
+            if (paymentStatusId === 5) {
+                Utility.failMessage("This invoice is already cancelled.");
+                return;
+            }
 
-					const respo = await Utility.RequestDataAjax(objectDaa);
-				}else
-				{
-						console.log("User clicked NO");
-						// cancel logic
-				}
+            Utility.confirmBootBox('Are you sure you want to cancel this invoice?').then(async function(bootresult) {
+                if (bootresult) {
+                    const respo = await Utility.RequestDataAjax({
+                        url: url,
+                        data: { InvoiceMasterId: invoiceId }
+                    });
 
-
-			});
-
-		});
-
-
-
-
-
-		$('#orderStatusId').change(async function(){
-			var newstatusId = $(this).val();
-			var omid = $(this).attr('data-ordermasterid');
-
-			const result = await Utility.RequestDataAjax({
-				url:'/OrderManager/UpdateOrderStatus',
-				data:{
-					OrderStatusId:newstatusId,
-					OrderMasterId:omid
-				}
-			})
-			if(result.statusCode==='200')
-			{
-			Utility.successMessage(result.Message);
-
-			}
-			else{
-			Utility.failMessage(result.Message);
-
-			}
-
-		});
-
-		window.invoiceTable=new DataTable('#invoiceTable');
-	});
+                    if (respo && respo.statusCode === "200") {
+                        Utility.successMessage(respo.message || "Invoice cancelled successfully.");
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        Utility.failMessage(respo?.message || "Failed to cancel invoice.");
+                    }
+                }
+            });
+        });
+    });
 </script>

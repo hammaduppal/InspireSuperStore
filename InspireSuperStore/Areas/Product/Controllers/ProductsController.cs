@@ -91,8 +91,12 @@ namespace InspireSuperStore.Areas.Product.Controllers
                 return Json(new { statusCode = "300" });
 
             }
-            product.ProductDescription = await _datarepo.GenerateProductDescription(product.ProductName);
-            product.AdditionalInformation = await _datarepo.ProductAdditionalInformation(product.ProductName);
+            if (product.UseAiDescription)
+            {
+                product.ProductDescription = await _datarepo.GenerateProductDescription(product.ProductName);
+                product.AdditionalInformation = await _datarepo.ProductAdditionalInformation(product.ProductName);
+            }
+          
 
             var result = await _product.AddProduct(product, ProductType.PhysicalInventory);
 

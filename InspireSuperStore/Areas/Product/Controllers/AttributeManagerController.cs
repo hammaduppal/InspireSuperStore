@@ -34,7 +34,8 @@ namespace InspireSuperStore.Areas.Product.Controllers
 
         public async Task<IActionResult> _GetAddDepartmentForm()
         {
-            return PartialView();
+            vm.Departments = await _attrib.GetDepartment();
+            return PartialView(vm);
         }
         public async Task<IActionResult> AddDepartment(DepartmentVM model)
         {
@@ -105,7 +106,8 @@ namespace InspireSuperStore.Areas.Product.Controllers
 
         public async Task<IActionResult> _GetAddColorForm()
         {
-            return PartialView();
+            vm.Colors = await _attrib.GetColors();
+            return PartialView(vm);
         }
         public async Task<IActionResult> AddColor(ColorVM model)
         {
@@ -127,8 +129,8 @@ namespace InspireSuperStore.Areas.Product.Controllers
 
         public async Task<IActionResult> _GetAddSizeForm()
         {
-
-            return PartialView();
+            vm.Sizes = await _attrib.GetSizes();
+            return PartialView(vm);
         }
         public async Task<IActionResult> AddSize(SizeVM model)
         {
@@ -150,7 +152,8 @@ namespace InspireSuperStore.Areas.Product.Controllers
 
         public async Task<IActionResult> _GetAddUOMForm()
         {
-            return PartialView();
+            vm.UOMs = await _attrib.GetUOM();
+            return PartialView(vm);
         }
         public async Task<IActionResult> AddUOM(UomVM model)
         {
@@ -200,7 +203,8 @@ namespace InspireSuperStore.Areas.Product.Controllers
         }
         public async Task<IActionResult> _GetAddMaterialForm()
         {
-            return PartialView();
+            vm.Materials = await _attrib.GetMaterials();
+            return PartialView(vm);
         }
         public async Task<IActionResult> AddMaterial(MaterialVM model)
         {
@@ -224,7 +228,8 @@ namespace InspireSuperStore.Areas.Product.Controllers
 
         public async Task<IActionResult> _GetAddBrandForm()
         {
-            return PartialView();
+            vm.Brands = await _attrib.GetBrands();
+            return PartialView(vm);
         }
         public async Task<IActionResult> AddBrand(BrandVM model)
         {

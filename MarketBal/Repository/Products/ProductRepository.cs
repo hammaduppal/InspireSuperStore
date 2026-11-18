@@ -749,10 +749,12 @@ public async Task<SearchTopProductResult> ProductsBySubCategories(Guid subCatego
      MaterialId = pv.MaterialId,
      ColorId = pv.ColorId,
      SizeId = pv.SizeId,
-     ProductId = pv.ProductId,
+     ProductId = pv.ProductId, 
 
      // If branchStock is null use sensible fallbacks
      QoH = branchStock != null ? branchStock.Qty : 0M,
+     Qty = branchStock != null ? branchStock.Qty : 0M,
+
      Cost = branchStock != null ? branchStock.Cost : 0M,
      SalePrice = branchStock != null ? branchStock.SalePrice : 0M,
      PromotionPrice = branchStock != null ? branchStock.PromotionPrice : 0M,

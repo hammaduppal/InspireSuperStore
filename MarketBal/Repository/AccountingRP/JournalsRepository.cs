@@ -347,8 +347,135 @@ namespace MarketBal.Repository.AccountingRP
 
 
 
+        public async Task<int> AddReturnJournals(InvoiceMaster returnMaster, bool isCash, Customer customer, decimal cost)
+        {
+            try
+            {
+                var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
 
+                var journalEntry = new JournalEntry
+                {
+                    JournalEntryId = Guid.NewGuid(),
+                    EntryDate = commonParams.CreatedOn.Value,
+                    ReferenceNumber = returnMaster.InvoiceNo,
+                    Description = "Sales Return from " + (customer?.Person?.FirstName ?? "") + " (" + (customer?.CustomerCode ?? "") + ")",
+                    BranchId = _sessionService.SessionUser.Person.Branch.BranchId,
+                    CreatedBy = _sessionService.SessionUser.Id,
+                    CreatedAt = commonParams.CreatedOn.Value,
+                    SourceModule = "Sales Return",
+                    EntryNumber = await GetNewJournalNumber()
+                };
 
+                await _onedb.JournalEntries.AddAsync(journalEntry);
+
+                // -----------------------------------------------------------
+                // 1️⃣  Sales Income Reversal (Debit Revenue)
+                // -----------------------------------------------------------
+                await _onedb.JournalLines.AddAsync(new JournalLine
+                {
+                    JournalLineId = Guid.NewGuid(),
+                    JournalEntryId = journalEntry.JournalEntryId,
+                    CoaId = CoaAccounts.SalesIncome,
+                    Description = "Sales Return Revenue Reduction",
+                    Debit = returnMaster.TotalAmount,
+                    Credit = 0,
+                    ReferenceType = "InvoiceReturn",
+                    ReferenceId = returnMaster.InvoiceMasterId
+                });
+
+                // -----------------------------------------------------------
+                // 2️⃣  Tax Payable Reversal (Debit Output VAT)
+                // -----------------------------------------------------------
+                if (_sessionService.SystemPreferences.EnableTax && returnMaster.TaxAmount > 0)
+                {
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = CoaAccounts.TaxesPayable,
+                        Description = "Output VAT Reversal on Return",
+                        Debit = returnMaster.TaxAmount,
+                        Credit = 0,
+                        ReferenceType = "InvoiceReturn",
+                        ReferenceId = returnMaster.InvoiceMasterId
+                    });
+                }
+
+                // -----------------------------------------------------------
+                // 3️⃣  Cash Outflow OR Accounts Receivable Reduction (Credit)
+                // -----------------------------------------------------------
+                if (isCash)
+                {
+                    // Cash Refund → Credit Cash on Hand
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = CoaAccounts.CashOnHand,
+                        Description = "Cash Refund for Return",
+                        Debit = 0,
+                        Credit = returnMaster.GrandTotal,
+                        ReferenceType = "InvoiceReturn",
+                        ReferenceId = returnMaster.InvoiceMasterId
+                    });
+                }
+                else
+                {
+                    // Credit Customer Return → Credit Accounts Receivable
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = CoaAccounts.AccountsReceivable,
+                        Description = "Accounts Receivable Reduction for Return",
+                        Debit = 0,
+                        Credit = returnMaster.GrandTotal,
+                        ReferenceType = "InvoiceReturn",
+                        ReferenceId = returnMaster.InvoiceMasterId
+                    });
+                }
+
+                // -----------------------------------------------------------
+                // 4️⃣  Inventory Restoration (Debit Inventory)
+                // -----------------------------------------------------------
+                if (cost > 0)
+                {
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = CoaAccounts.Inventory,
+                        Description = "Inventory Restoration from Return",
+                        Debit = cost,
+                        Credit = 0,
+                        ReferenceType = "InvoiceReturn",
+                        ReferenceId = returnMaster.InvoiceMasterId
+                    });
+
+                    // -----------------------------------------------------------
+                    // 5️⃣  COGS Reversal (Credit COGS)
+                    // -----------------------------------------------------------
+                    await _onedb.JournalLines.AddAsync(new JournalLine
+                    {
+                        JournalLineId = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.JournalEntryId,
+                        CoaId = CoaAccounts.COGS,
+                        Description = "Cost of Goods Sold Reversal",
+                        Debit = 0,
+                        Credit = cost,
+                        ReferenceType = "InvoiceReturn",
+                        ReferenceId = returnMaster.InvoiceMasterId
+                    });
+                }
+
+                await _onedb.SaveChangesAsync();
+                return 1;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
 
 

@@ -363,3 +363,9 @@ MigrationBackup/
 FodyWeavers.xsd
 /InspireSuperStore/wwwroot/chrome-win
 /InspireSuperStore/wwwroot
+/docs
+/api
+/_site
+/docfx.json
+/index.md
+/toc.yml

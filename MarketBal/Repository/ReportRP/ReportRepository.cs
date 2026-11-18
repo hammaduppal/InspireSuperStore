@@ -88,7 +88,7 @@ namespace MarketBal.Repository.ReportRP
                     var details = invoice.InvoiceDetails?.ToList() ?? new List<InvoiceDetail>();
 
                     // Await cost function
-                    monthlyCost += await _invoiceRepository.GetCostofGoods(details);
+                    monthlyCost += await _invoiceRepository.GetCostofGoodsFromInvoice(details);
                 }
 
                 decimal monthlyProfit = monthlySales - monthlyCost;
@@ -107,5 +107,7 @@ namespace MarketBal.Repository.ReportRP
             };
         }
 
+
+       
     }
 }

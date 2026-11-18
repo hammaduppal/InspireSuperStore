@@ -2,206 +2,159 @@
 @model PagesViewModel
 @{
 	Layout = "~/Views/Shared/_Layout.cshtml";
-	ViewData["Title"] = "DCSManager";
+	ViewData["Title"] = "DCS Manager";
 }
 
-<div class="page-header page-header-light">
-	<div class="page-header-content header-elements-md-inline">
-
-		<div class="d-flex">
-			<div class="breadcrumb">
-				<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Home</a>
-				<span class="breadcrumb-item active">DCS Manager</span>
+<!-- Page header -->
+<div class="page-header page-header-light border-bottom-0">
+	<div class="page-header-content header-elements-md-inline py-3">
+		<!-- Title & Breadcrumb Section -->
+		<div class="d-flex align-items-center">
+			<div class="mr-3 rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 46px; height: 46px; background-color: rgba(38, 166, 154, 0.1); border: 1px solid rgba(38, 166, 154, 0.2);">
+				<i class="icon-cogs text-teal font-size-xl"></i>
 			</div>
-
-			<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
-		</div>
-	</div>
-
-
-</div>
-<!-- Content area -->
-<div class="content">
-
-	<!-- Horizontal form options -->
-
-	<div class="row">
-
-		<div id="adddepdiv" class="col-md-6">
-		</div>
-
-
-
-		<div id="addcolordiv" class="col-md-6">
-		</div>
-
-
-		<div id="addcatdiv" class="col-md-6">
-
-			<!-- Basic layout-->
-
-		</div>
-
-
-
-		<div id="adduomdiv" class="col-md-6">
-	
-		</div>
-
-
-
-		<div id="addsubcatdiv" class="col-md-6">
-
-			<!-- Basic layout-->
-		
-		</div>
-
-
-
-
-		<div id="addsubuomdiv" class="col-md-6">
-	
-		</div>
-
-
-
-
-
-
-
-
-
-
-		<div id="addsizediv" class="col-md-6">
-		
-		</div>
-
-		<div id="addmaterialdiv" class="col-md-6">
-		
-		</div>
-		<div id="addBrandDiv" class="col-md-6">
-		</div>
-	</div>
-
-	<div class="card shadow-5">
-		<div class="card-header header-elements-inline">
-			<h5 class="card-title">Manage</h5>
-			<div class="header-elements">
-				<div class="list-icons">
-					<a class="list-icons-item" data-action="collapse"></a>
+			<div>
+				<h4 class="font-weight-extrabold mb-1" style="letter-spacing: -0.5px;">DCS Manager</h4>
+				<div class="breadcrumb bg-transparent p-0 mb-0 font-size-sm">
+					<a href="/" class="breadcrumb-item text-muted"><i class="icon-home2 mr-1"></i> Home</a>
+					<span class="breadcrumb-item active font-weight-semibold text-teal-400">Master Data Configuration</span>
 				</div>
 			</div>
 		</div>
 
+		<!-- Mobile Toggle & Header Actions -->
+		<a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
+
+		<div class="header-elements d-none d-md-block mt-2 mt-md-0">
+			<button id="updateSlug" class="btn btn-outline-success btn-sm font-weight-semibold rounded-pill px-3 shadow-sm">
+				<i class="icon-sync mr-2"></i> Update All Slugs
+			</button>
+		</div>
+	</div>
+</div>
+<!-- /page header -->
+<!-- Content area -->
+<div class="content">
+
+	<!-- Modern Highlighted Tabs Navigation -->
+	<div class="card">
+		<div class="card-header header-elements-inline bg-white">
+			<h6 class="card-title font-weight-semibold text-muted">Master Data Configuration</h6>
+		</div>
+
+		<div class="card-body pb-0">
+			<ul class="nav nav-tabs nav-tabs-highlight nav-justified">
+				<li class="nav-item"><a href="#tab-departments" class="nav-link active font-weight-semibold" data-toggle="tab"><i class="icon-office mr-2"></i> Departments</a></li>
+				<li class="nav-item"><a href="#tab-brands" class="nav-link font-weight-semibold" data-toggle="tab"><i class="icon-certificate mr-2"></i> Brands</a></li>
+				<li class="nav-item"><a href="#tab-categories" class="nav-link font-weight-semibold" data-toggle="tab"><i class="icon-tree7 mr-2"></i> Categories</a></li>
+				<li class="nav-item"><a href="#tab-subcategories" class="nav-link font-weight-semibold" data-toggle="tab"><i class="icon-git-branch mr-2"></i> Sub Categories</a></li>
+				<li class="nav-item"><a href="#tab-colors" class="nav-link font-weight-semibold" data-toggle="tab"><i class="icon-color-sampler mr-2"></i> Colors</a></li>
+				<li class="nav-item"><a href="#tab-uom" class="nav-link font-weight-semibold" data-toggle="tab"><i class="icon-ruler mr-2"></i> UOM</a></li>
+				<li class="nav-item"><a href="#tab-subuom" class="nav-link font-weight-semibold" data-toggle="tab"><i class="icon-ruler mr-2"></i> SubUOM</a></li>
+
+				<li class="nav-item"><a href="#tab-sizes" class="nav-link font-weight-semibold" data-toggle="tab"><i class="icon-versions mr-2"></i> Sizes</a></li>
+				<li class="nav-item"><a href="#tab-materials" class="nav-link font-weight-semibold" data-toggle="tab"><i class="icon-cube3 mr-2"></i> Materials</a></li>
+			</ul>
+		</div>
+
+		<!-- Tab Content Containers (Lazy-loaded via AJAX for peak performance) -->
 		<div class="card-body">
-			<div class="row">
-				<button id="updateSlug" class="btn btn-outline-success">Update Slug</button>
+			<div class="tab-content">
+				<div class="tab-pane fade show active" id="tab-departments">
+					<div id="adddepdiv">
+						<div class="text-center py-4"><i class="spinner-border text-teal-400"></i><p class="text-muted mt-2">Loading Departments...</p></div>
+					</div>
+				</div>
+
+				<div class="tab-pane fade" id="tab-brands">
+					<div id="addBrandDiv"></div>
+				</div>
+
+				<div class="tab-pane fade" id="tab-categories">
+					<div id="addcatdiv"></div>
+				</div>
+
+				<div class="tab-pane fade" id="tab-subcategories">
+					<div id="addsubcatdiv"></div>
+				</div>
+
+				<div class="tab-pane fade" id="tab-colors">
+					<div id="addcolordiv"></div>
+				</div>
+
+				<div class="tab-pane fade" id="tab-uom">
+					<div id="adduomdiv"></div>
+				</div>
+				<div class="tab-pane fade" id="tab-subuom">
+					<div id="addsubuomdiv"></div>
+				</div>
+
+				<div class="tab-pane fade" id="tab-sizes">
+					<div id="addsizediv"></div>
+				</div>
+
+				<div class="tab-pane fade" id="tab-materials">
+					<div id="addmaterialdiv"></div>
+				</div>
 			</div>
 		</div>
 	</div>
 
 </div>
-
-
 <!-- /content area -->
+
 <script>
+	// Slug update action
 	$('#updateSlug').on('click', async function() {
-		// Add your function to update the slug here
-		Utility.SpinnerMessage('updateSlug','Loading..');
+		Utility.SpinnerMessage('updateSlug', 'Loading..');
 		const result = await Utility.RequestAjax("/AttributeManager/UpdateSlugs");
-		if(result.statusCode==='200'){
+		if (result.statusCode === '200') {
 			Utility.successMessage('Slugs Updated Successfully');
 			Utility.StopSpinnerMessage('updateSlug');
-		}
-		else{
+		} else {
 			Utility.failMessage('Error Updating Slugs');
 		}
 	});
-	$(document).ready(function(){
+
+	// Load active tab data on page load (Departments)
+	$(document).ready(function() {
+		loadTabContent('/AttributeManager/_GetAddDepartmentForm', '#adddepdiv');
+
+		// Lazy load other tabs when clicked for optimal page speed
+		$('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+			var target = $(e.target).attr("href");
+			if (target === '#tab-brands' && $('#addBrandDiv').is(':empty')) {
+				loadTabContent('/AttributeManager/_GetAddBrandForm', '#addBrandDiv');
+			} else if (target === '#tab-categories' && $('#addcatdiv').is(':empty')) {
+				loadTabContent('/AttributeManager/_GetAddCategoryForm', '#addcatdiv');
+			} else if (target === '#tab-subcategories' && $('#addsubcatdiv').is(':empty')) {
+				loadTabContent('/AttributeManager/_GetAddSubCategoryForm', '#addsubcatdiv');
+			} else if (target === '#tab-colors' && $('#addcolordiv').is(':empty')) {
+				loadTabContent('/AttributeManager/_GetAddColorForm', '#addcolordiv');
+			} else if (target === '#tab-uom' && $('#adduomdiv').is(':empty')) {
+				loadTabContent('/AttributeManager/_GetAddUOMForm', '#adduomdiv');
+			}
+			else if (target === '#tab-subuom' && $('#addsubuomdiv').is(':empty')) {
+				loadTabContent('/AttributeManager/_GetAddSubUOMForm', '#addsubuomdiv');
+			}
+			else if (target === '#tab-sizes' && $('#addsizediv').is(':empty')) {
+				loadTabContent('/AttributeManager/_GetAddSizeForm', '#addsizediv');
+			} else if (target === '#tab-materials' && $('#addmaterialdiv').is(':empty')) {
+				loadTabContent('/AttributeManager/_GetAddMaterialForm', '#addmaterialdiv');
+			}
+		});
+	});
+
+	function loadTabContent(url, container) {
 		$.ajax({
-			url:'/AttributeManager/_GetAddDepartmentForm',
-			type:'POST',
-			success:function(result){
-				$('#adddepdiv').html(result)
+			url: url,
+			type: 'POST',
+			success: function(result) {
+				$(container).html(result);
+			},
+			error: function() {
+				$(container).html('<div class="alert alert-danger">Failed to load content. Please try again.</div>');
 			}
-
-
-		})
-			$.ajax({
-			url:'/AttributeManager/_GetAddBrandForm',
-			type:'POST',
-			success:function(result){
-				$('#addBrandDiv').html(result)
-			}
-
-
-		})
-			$.ajax({
-			url:'/AttributeManager/_GetAddColorForm',
-			type:'POST',
-			success:function(result){
-				$('#addcolordiv').html(result)
-			}
-
-
-			})
-			$.ajax({
-			url:'/AttributeManager/_GetAddCategoryForm',
-			type:'POST',
-			success:function(result){
-				$('#addcatdiv').html(result)
-				}
-
-
-			})
-					$.ajax({
-			url:'/AttributeManager/_GetAddUOMForm',
-			type:'POST',
-			success:function(result){
-				$('#adduomdiv').html(result)
-				}
-
-
-			})
-					$.ajax({
-			url:'/AttributeManager/_GetAddSubCategoryForm',
-			type:'POST',
-			success:function(result){
-				$('#addsubcatdiv').html(result)
-				}
-
-
-			})
-					$.ajax({
-			url:'/AttributeManager/_GetAddSubUOMForm',
-			type:'POST',
-			success:function(result){
-				$('#addsubuomdiv').html(result)
-				}
-
-
-			})
-						$.ajax({
-			url:'/AttributeManager/_GetAddSizeForm',
-			type:'POST',
-			success:function(result){
-				$('#addsizediv').html(result)
-				}
-
-
-			})
-							$.ajax({
-			url:'/AttributeManager/_GetAddMaterialForm',
-			type:'POST',
-			success:function(result){
-				$('#addmaterialdiv').html(result)
-				}
-
-
-			})
-	})
+		});
+	}
 </script>
-
-
-
-		

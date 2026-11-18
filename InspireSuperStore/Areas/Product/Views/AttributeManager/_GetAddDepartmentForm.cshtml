@@ -1,66 +1,123 @@
-﻿<div class="card shadow-5">
-	<div class="card-header header-elements-inline">
-		<h5 class="card-title">Department</h5>
-		<div class="header-elements">
-			<div class="list-icons">
-				<a class="list-icons-item" data-action="collapse"></a>
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+
+<div class="row">
+	<!-- Left Column: Add Department Form -->
+	<div class="col-lg-4">
+		<div class="card border-0 shadow-sm rounded-lg overflow-hidden">
+			<div class="card-header bg-white header-elements-inline py-3 border-bottom border-light">
+				<h6 class="card-title font-weight-semibold text-default mb-0">
+					<i class="icon-plus-circle2 mr-2 text-teal"></i> Add Department
+				</h6>
+			</div>
+			<div class="card-body">
+				<form id="addDepartmentForm" action="#">
+					<div class="form-group mb-3">
+						<label class="form-label font-weight-semibold text-muted text-uppercase font-size-xs">Department Name</label>
+						<div class="form-group-feedback form-group-feedback-left">
+							<input type="text" id="DepartmentName" name="DepartmentName" class="form-control" placeholder="e.g., Electronics, Apparel">
+							<div class="form-control-feedback form-control-feedback-left">
+								<i class="icon-office text-muted"></i>
+							</div>
+						</div>
+						<div id="MessageBox" class="mt-2 font-size-sm"></div>
+					</div>
+					<div class="text-right">
+						<button type="submit" id="departmentSubmitbtn" class="btn bg-teal-400 btn-labeled btn-labeled-left btn-sm font-weight-semibold rounded-pill px-3">
+							<b><i class="icon-paperplane"></i></b> Save Department
+							<span id="departmentLoader"></span>
+						</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>
 
-	<div class="card-body">
-		<form id="addDepartmentForm" action="#">
-			<div class="form-group row">
-				<label class="col-lg-3 col-form-label">Department:</label>
-				<div class="col-lg-9">
-					<input type="text" id="DepartmentName" name="DepartmentName" class="form-control" placeholder="Department">
+	<!-- Right Column: Existing Departments Directory -->
+	<div class="col-lg-8">
+		<div class="card border-0 shadow-sm rounded-lg overflow-hidden">
+			<div class="card-header bg-white header-elements-inline py-3 border-bottom border-light">
+				<h6 class="card-title font-weight-semibold text-default mb-0">
+					<i class="icon-list3 mr-2 text-primary"></i> Department Directory
+				</h6>
+				<div class="header-elements">
+					<span class="badge bg-primary-800 badge-pill font-weight-semibold px-2 py-1">
+						Total: @(Model.Departments?.Count ?? 0)
+					</span>
 				</div>
 			</div>
-			<div class="text-right">
-				<button type="submit" id="departmentSubmitbtn" class="btn btn-primary">Submit form <i class="icon-paperplane ml-2"></i><span id="departmentLoader"> </span></button>
+
+			<div class="table-responsive">
+				<table class="table table-striped table-hover datatable-basic mb-0">
+					<thead>
+						<tr class="bg-light text-muted font-size-xs text-uppercase font-weight-bold">
+							<th style="width: 15%;">#</th>
+							<th style="width: 85%;">Department Name</th>
+						</tr>
+					</thead>
+					<tbody>
+						@{
+							int i = 1;
+						}
+						@if (Model.Departments != null && Model.Departments.Any())
+						{
+							@foreach (var item in Model.Departments)
+							{
+								<tr>
+									<td class="text-muted font-size-sm">@i</td>
+									<td class="font-weight-semibold text-default">@item.DepartmentName</td>
+								</tr>
+								i++;
+							}
+						}
+						else
+						{
+							<tr>
+								<td colspan="2" class="text-center py-4 text-muted font-italic">
+									<i class="icon-folder-open3 d-block font-size-lg mb-1 opacity-50"></i>
+									No departments added yet.
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
 			</div>
-		</form>
+		</div>
 	</div>
 </div>
 
 <script>
-	$(document).ready(function(){
-		$('#addDepartmentForm').submit(function(e){
+	$(document).ready(function() {
+		$('#addDepartmentForm').submit(function(e) {
 			e.preventDefault();
-				if(!$('#DepartmentName').val()){
-					$('#MessageBox').html('<span style=\"color: red;\">Empty not Allowed</span>');
-									Utility.infoMessage('Empty Not Allowed');
-				}
-				else{
-					var formData=$(this).serialize();
-					Utility.SpinnerMessageParent('departmentSubmitbtn','Loading..');
-					$.ajax({
-						url:'/AttributeManager/AddDepartment',
-						type:'POST',
-						data:formData,
-						success:function(result){
-							if(result.statusCode==='200'){
-								Utility.successMessage('Record Added');
-								$('#addDepartmentForm')[0].reset();
+			if (!$('#DepartmentName').val()) {
+				$('#MessageBox').html('<span class="text-danger"><i class="icon-cancel-circle2 mr-1"></i> Department name cannot be empty.</span>');
+				Utility.infoMessage('Empty Not Allowed');
+			} else {
+				var formData = $(this).serialize();
+				Utility.SpinnerMessageParent('departmentSubmitbtn', 'Loading..');
+				$.ajax({
+					url: '/AttributeManager/AddDepartment',
+					type: 'POST',
+					data: formData,
+					success: function(result) {
+						if (result.statusCode === '200') {
+							Utility.successMessage('Department Added Successfully');
+							$('#addDepartmentForm')[0].reset();
 							$('#MessageBox').html('');
-
-							}else if(result.statusCode==='300'){
-									Utility.infoMessage('Record Already Exist');
-							$('#MessageBox').html('<span style=\"color: red;\">This value already exists. Duplicate entries are not allowed.</span>');
-
-							}
-							else{
-								Utility.failMessage('Please Try Again Later');
-							$('#MessageBox').html('<span style=\"color: red;\">Some Error</span>');
-							}
-								setTimeout(function(){
-									Utility.StopSpinnerMessageParent('departmentSubmitbtn');
-								},500);
+						} else if (result.statusCode === '300') {
+							Utility.infoMessage('Record Already Exists');
+							$('#MessageBox').html('<span class="text-danger"><i class="icon-warning2 mr-1"></i> This department already exists.</span>');
+						} else {
+							Utility.failMessage('Please Try Again Later');
+							$('#MessageBox').html('<span class="text-danger"><i class="icon-cancel-circle2 mr-1"></i> An error occurred.</span>');
 						}
-					});
-				}
+						setTimeout(function() {
+							Utility.StopSpinnerMessageParent('departmentSubmitbtn');
+						}, 500);
+					}
+				});
+			}
 		});
-
 	});
-
 </script>

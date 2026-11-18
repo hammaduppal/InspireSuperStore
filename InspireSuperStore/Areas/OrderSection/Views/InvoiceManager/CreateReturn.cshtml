@@ -1,0 +1,325 @@
+﻿@using MainModels.DTOModels
+@model PagesViewModel
+@{
+	ViewData["Title"] = "Process Return / Refund";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Page Header -->
+<div class="page-header page-header-light border-bottom-0">
+	<div class="page-header-content header-elements-md-inline py-3">
+		<div class="d-flex align-items-center">
+			<div class="mr-3 rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; background-color: rgba(255, 152, 0, 0.12); border: 1px solid rgba(255, 152, 0, 0.25);">
+				<i class="icon-undo2 text-warning font-size-xl"></i>
+			</div>
+			<div>
+				<h4 class="font-weight-extrabold mb-1" style="letter-spacing: -0.5px;">Process Return & Refund</h4>
+				<div class="breadcrumb bg-transparent p-0 mb-0 font-size-sm">
+					<a href="/" class="breadcrumb-item text-muted"><i class="icon-home2 mr-1"></i> Home</a>
+					<a href="/InvoiceManager/Invoices" class="breadcrumb-item text-muted">Invoices</a>
+					<span class="breadcrumb-item active font-weight-semibold text-warning">Return Order</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="header-elements d-none d-md-block">
+			<a href="/InvoiceManager/Index" class="btn btn-light rounded-pill px-3 font-weight-semibold">
+				<i class="icon-arrow-left7 mr-1"></i> Back to Invoices
+			</a>
+		</div>
+	</div>
+</div>
+
+<!-- Content Area -->
+<div class="content pt-0">
+	<form id="returnForm" action="/InvoiceManager/SubmitReturn" method="POST">
+		<!-- Hidden Parent Reference ID -->
+		<input type="hidden" name="ParentInvoiceId" value="@Model?.Invoice?.InvoiceMasterId" />
+		<input type="hidden" name="IsReturn" value="true" />
+
+		<div class="row">
+			<!-- Left/Main Column: Return Items Table -->
+			<div class="col-lg-8">
+				<div class="card border-0 shadow-lg rounded-xl overflow-hidden theme-color mb-4" style="backdrop-filter: blur(10px); border-top: 3px solid #FF9800 !important;">
+					<div class="card-header bg-transparent header-elements-inline py-3 border-bottom">
+						<div class="d-flex align-items-center">
+							<i class="icon-cart text-warning mr-2"></i>
+							<h6 class="card-title font-weight-bold mb-0">Original Invoice Items</h6>
+						</div>
+						<!-- Search filter box for long item lists -->
+						<div class="header-elements">
+							<div class="form-group-feedback form-group-feedback-right mb-0">
+								<input type="text" id="returnSearchInput" class="form-control form-control-sm rounded-pill px-3" placeholder="Search items in invoice...">
+								<div class="form-control-feedback form-control-feedback-right">
+									<i class="icon-search4 font-size-sm text-muted"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="card-body p-0">
+						<div class="table-responsive">
+							<table id="returnItemsTable" class="table table-hover text-nowrap mb-0">
+								<thead>
+									<tr class="text-uppercase font-size-xs text-muted border-bottom">
+										<th class="pl-3">Item Description</th>
+										<th class="text-center">Purchased Qty</th>
+										<th class="text-right">Unit Price</th>
+										<th class="text-center" style="width: 130px;">Return Qty</th>
+										<th class="text-right pr-3">Refund Total</th>
+									</tr>
+								</thead>
+								<tbody>
+									@if (Model?.Invoice?.InvoiceDetails != null && Model.Invoice.InvoiceDetails.Any())
+									{
+										int index = 0;
+										foreach (var item in Model.Invoice.InvoiceDetails)
+										{
+											string itemName = item.Product?.ProductName ?? "Unknown Product";
+											if (!string.IsNullOrEmpty(item.Variant?.ProductName))
+											{
+												itemName += $" ({item.Variant.ProductName})";
+											}
+
+											<tr>
+												<td class="pl-3">
+													<div class="font-weight-semibold text-dark">@itemName</div>
+													<input type="hidden" name="InvoiceDetails[@index].ProductId" value="@item.ProductId" />
+													<input type="hidden" name="InvoiceDetails[@index].VariantId" value="@item.VariantId" />
+													<input type="hidden" name="InvoiceDetails[@index].UnitPrice" value="@item.UnitPrice" />
+													<input type="hidden" name="InvoiceDetails[@index].Cost" value="@item.Cost" />
+													<input type="hidden" name="InvoiceDetails[@index].InvoiceDetailId" value="@item.InvoiceDetailId" />
+												</td>
+												<td class="text-center">
+													<span class="badge badge-light font-weight-bold px-2 py-1">@item.Quantity</span>
+												</td>
+												<td class="text-right text-muted">
+													@item.UnitPrice.ToString("N2")
+												</td>
+												<td class="text-center">
+													<!-- Return Quantity Input bounded by Max Purchased Qty -->
+													<input type="number" 
+														   name="InvoiceDetails[@index].Quantity" 
+														   class="form-control form-control-sm text-center return-qty-input font-weight-bold" 
+														   value="0" 
+														   min="0" 
+														   max="@item.Quantity" 
+														   step="1" 
+														   data-price="@item.UnitPrice" />
+												</td>
+												<td class="text-right pr-3">
+													<span class="font-weight-bold text-warning row-refund-total">0.00</span>
+												</td>
+											</tr>
+											index++;
+										}
+									}
+									else
+									{
+										<tr>
+											<td colspan="5" class="text-center text-muted py-4">No items found in this invoice.</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Right Column: Summary & Execution Box -->
+			<div class="col-lg-4">
+				<div class="card border-0 shadow-lg rounded-xl overflow-hidden theme-color" style="backdrop-filter: blur(10px); border-top: 3px solid #3F51B5 !important;">
+					<div class="card-header bg-transparent header-elements-inline py-3 border-bottom">
+						<h6 class="card-title font-weight-bold mb-0"><i class="icon-receipt mr-2 text-indigo"></i>Return Summary</h6>
+					</div>
+					<div class="card-body">
+						<div class="mb-3 pb-3 border-bottom">
+							<div class="d-flex justify-content-between mb-2">
+								<span class="text-muted">Original Invoice #:</span>
+								<span class="font-weight-semibold">@Model?.Invoice?.InvoiceMasterId.ToString().Substring(0, 8).ToUpper()</span>
+							</div>
+							<div class="d-flex justify-content-between mb-2">
+								<span class="text-muted">Customer:</span>
+								<span class="font-weight-semibold">@(Model?.Invoice?.Customer != null ? $"{Model.Invoice.Customer.FirstName} {Model.Invoice.Customer.LastName}" : "Walk-in")</span>
+							</div>
+							<div class="d-flex justify-content-between">
+								<span class="text-muted">Invoice Date:</span>
+								<span class="font-weight-semibold">@Model?.Invoice?.CreatedDate.ToString("dd MMM yyyy")</span>
+							</div>
+						</div>
+
+						<!-- Refund Remarks -->
+						<div class="form-group mb-4">
+							<label class="form-label font-weight-semibold text-uppercase font-size-xs">Return / Refund Reason <span class="text-danger">*</span></label>
+							<textarea name="CustomerRemarks" class="form-control" rows="3" placeholder="Enter reason for return (e.g. Defective item, wrong size)..." required></textarea>
+						</div>
+						<div class="form-group mb-4">
+							<label class="form-label font-weight-semibold text-uppercase font-size-xs">Refund Payment Method <span class="text-danger">*</span></label>
+							<div class="form-group-feedback form-group-feedback-left">
+								<select name="PaymentMethodId" class="form-control rounded-pill px-3 bg-light border-0 shadow-sm" required style="height: auto; padding-top: 0.5rem; padding-bottom: 0.5rem;">
+									<option value="" disabled selected>Select refund medium...</option>
+									@if (Model.PaymentMethods != null)
+									{
+										@foreach (var item in Model.PaymentMethods)
+										{
+											<option value="@item.PaymentMethodId">@item.Name</option>
+										}
+									}
+								</select>
+								<div class="form-control-feedback form-control-feedback-left">
+									<i class="icon-cash3 text-muted"></i>
+								</div>
+							</div>
+						</div>
+						<!-- Totals Calculation -->
+						<div class="d-flex justify-content-between align-items-center mb-3">
+							<span class="font-weight-bold font-size-lg">Total Refund Amount:</span>
+							<span id="grandRefundTotal" class="font-weight-extrabold font-size-xl text-warning">0.00</span>
+						</div>
+
+						<button type="submit" id="btnSubmitReturn" class="btn bg-warning btn-block btn-labeled btn-labeled-left rounded-pill font-weight-semibold shadow-sm py-2">
+							<b><i class="icon-checkmark3"></i></b> Confirm & Process Return
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+
+<script>
+	$(document).ready(function() {
+		// Live search filter across items in the return table
+		$('#returnSearchInput').on('keyup', function() {
+			var value = $(this).val().toLowerCase();
+			$('#returnItemsTable tbody tr').filter(function() {
+				$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+			});
+		});
+
+		// Live calculation when return quantity changes
+		$('.return-qty-input').on('input', function() {
+			var $input = $(this);
+			var qty = parseFloat($input.val()) || 0;
+			var maxQty = parseFloat($input.attr('max')) || 0;
+			var price = parseFloat($input.attr('data-price')) || 0;
+
+			// Validate input doesn't exceed purchased quantity
+			if (qty > maxQty) {
+				Utility.failMessage("Return quantity cannot exceed purchased quantity (" + maxQty + ")");
+				$input.val(maxQty);
+				qty = maxQty;
+			}
+			if (qty < 0) {
+				$input.val(0);
+				qty = 0;
+			}
+
+			// Calculate row total
+			var rowTotal = qty * price;
+			$input.closest('tr').find('.row-refund-total').text(rowTotal.toFixed(2));
+
+			// Calculate Grand Total Refund
+			var grandTotal = 0;
+			$('.return-qty-input').each(function() {
+				var q = parseFloat($(this).val()) || 0;
+				var p = parseFloat($(this).attr('data-price')) || 0;
+				grandTotal += (q * p);
+			});
+
+			$('#grandRefundTotal').text(grandTotal.toFixed(2));
+		});
+
+		// Submit Return via Utility.RequestDataAjax
+		$('#returnForm').submit(async function(e) {
+			e.preventDefault();
+
+			// 1. Collect form data
+			var formDataArray = $(this).serializeArray();
+			var formDataObj = {};
+			var detailsList = [];
+			var detailsMap = {};
+
+			formDataArray.forEach(function(item) {
+				if (item.name.startsWith("InvoiceDetails[")) {
+					var match = item.name.match(/InvoiceDetails\[(\d+)\]\.(.+)/);
+					if (match) {
+						var idx = match[1];
+						var prop = match[2];
+
+						if (!detailsMap[idx]) {
+							detailsMap[idx] = {};
+						}
+						detailsMap[idx][prop] = item.value;
+					}
+				} else {
+					// This will cleanly capture PaymentMethodId, CustomerRemarks, ParentInvoiceId, IsReturn, etc.
+					formDataObj[item.name] = item.value;
+				}
+			});
+
+			// Filter only details where return Quantity > 0
+			Object.keys(detailsMap).forEach(function(idx) {
+				var detail = detailsMap[idx];
+				var qty = parseFloat(detail.Quantity) || 0;
+				if (qty > 0) {
+					detailsList.push({
+						InvoiceDetailId: detail.InvoiceDetailId,
+						ProductId: detail.ProductId,
+						VariantId: detail.VariantId && detail.VariantId !== "" ? detail.VariantId : null,
+						Quantity: qty,
+						UnitPrice: parseFloat(detail.UnitPrice) || 0,
+						Cost: parseFloat(detail.Cost) || 0,
+						TaxRate: parseFloat(detail.TaxRate) || 0,
+						SubUomid: detail.SubUomid && detail.SubUomid !== "" ? detail.SubUomid : null
+					});
+				}
+			});
+
+			if (detailsList.length === 0) {
+				Utility.failMessage("Please specify a return quantity greater than 0 for at least one item.");
+				return;
+			}
+
+			// Ensure PaymentMethodId is present
+			if (!formDataObj.PaymentMethodId) {
+				Utility.failMessage("Please select a refund payment method.");
+				return;
+			}
+
+			// Attach filtered details and return flag
+			formDataObj.InvoiceDetails = detailsList;
+			formDataObj.IsReturn = true;
+
+			// 2. Fire AJAX request using your JSON content setup
+			Utility.SpinnerMessageParent('btnSubmitReturn', 'Processing Return...');
+
+			var sendObject = {
+				url: '/InvoiceManager/SubmitReturn',
+				type: 'POST',
+				contentType: 'application/json; charset=utf-8',
+				dataType: 'json',
+				data: JSON.stringify(formDataObj)
+			};
+
+			try {
+				const result = await Utility.RequestCustomDataAjax(sendObject);
+
+				if (result && (result.statusCode === '200' || result.statusCode === 200)) {
+					Utility.successMessage(result.message || "Return processed successfully!");
+					setTimeout(function() {
+						window.location.href = '/InvoiceManager/Index';
+					}, 1200);
+				} else {
+					Utility.failMessage(result?.message || "Failed to process return. Please try again.");
+					Utility.StopSpinnerMessageParent('btnSubmitReturn');
+				}
+			} catch (error) {
+				console.error('Error submitting return:', error);
+				Utility.failMessage("An error occurred while processing the return.");
+				Utility.StopSpinnerMessageParent('btnSubmitReturn');
+			}
+		});
+	});
+</script>

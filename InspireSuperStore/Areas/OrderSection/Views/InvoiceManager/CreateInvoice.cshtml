@@ -5,375 +5,381 @@
 	ViewData["Title"] = "CreateInvoice";
 	Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<div class="page-header page-header-light pt-2 mt-2">
-	<div class="row">
-		<!-- Barcode Input -->
-		<div class="col-md-3">
-			<div class="input-group">
-				<div class="input-group-prepend">
-					<span class="input-group-text"><i class="icon-barcode2"></i></span>
-				</div>
-				<input type="text" id="barCode" name="barCode" class="form-control" autocomplete="off" placeholder="Search BarCode........." />
-			</div>
-		</div>
-		<!-- Manual Search Input -->
-		<div class="col-md-3">
-			<div class="input-group">
-				<div class="input-group-prepend">
-					<span class="input-group-text"><i class="icon-search4"></i></span>
-				</div>
-				<div class="form-group-feedback form-group-feedback-right">
-					<select id="productSearch" style="width: 100%" class="form-control"></select>
 
-				</div>
-			</div>
-		</div>
-		<div class="col-lg-2">
-			<div class="input-group">
-				<select id="customer" class="form-control">
-					@foreach (var item in Model.Customers)
-					{
-						<option value="@item.CustomerId">@item.CustomerName + @item.Mobile </option>
+<style>
+	/* POS Workspace Styling for Limitless Bootstrap 4 */
+	.pos-top-bar {
+		background: #fff;
+		border-bottom: 1px solid #ddd;
+		padding: 10px 15px;
+		margin-bottom: 12px;
+		border-radius: 4px;
+		box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+	}
 
-					}
-				</select>
-				<div class="input-group-append">
-					<button id="addCustomer" class="btn btn-light" type="button"><i class="icon-user-plus"></i></button>
-				</div>
-			</div>
-		</div>
-		@if (AppDataUtility.SystemPreferences.IsAffilatedInvoice)
-		{
-			<div class="col-lg-2">
+	#invoiceTable th {
+		background-color: #f8f9fa;
+		font-size: 11px;
+		text-transform: uppercase;
+		letter-spacing: 0.4px;
+		color: #555;
+		padding: 6px 4px !important;
+		border-bottom: 2px solid #dee2e6;
+		white-space: nowrap;
+	}
+
+	#invoiceTable td {
+		padding: 5px 4px !important;
+		vertical-align: middle !important;
+		font-size: 12.5px;
+	}
+
+	.pos-summary-box {
+		background-color: #f9fafb;
+		border-top: 2px solid #e2e8f0;
+		padding: 10px 12px;
+	}
+
+	.pos-summary-label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		color: #64748b;
+		margin-bottom: 2px;
+		display: block;
+	}
+
+	.pos-readonly-input {
+		background-color: #eef2f6 !important;
+		font-weight: 600;
+		color: #1e293b;
+		border-color: #cbd5e1;
+		height: 30px;
+		font-size: 13px;
+	}
+
+	.pos-editable-input {
+		background-color: #ffffff !important;
+		font-weight: 600;
+		border-color: #94a3b8;
+		height: 30px;
+		font-size: 13px;
+	}
+
+	.pos-payable-highlight {
+		background-color: #e0f2fe !important;
+		border-color: #0284c7 !important;
+		color: #0369a1 !important;
+		font-weight: 700 !important;
+		font-size: 14px !important;
+	}
+
+	.pos-balance-highlight {
+		background-color: #ecfdf5 !important;
+		border-color: #10b981 !important;
+		color: #047857 !important;
+		font-weight: 700 !important;
+		font-size: 14px !important;
+	}
+
+	.product-tile {
+		transition: all 0.15s ease-in-out;
+		border: 1px solid #e2e8f0;
+	}
+
+	.product-tile:hover {
+		border-color: #2196f3;
+		box-shadow: 0 3px 8px rgba(33, 150, 243, 0.15);
+		transform: translateY(-1px);
+	}
+</style>
+
+<div class="content pt-2">
+	<!-- Top Operational Bar: Scanners, Search & Customer Context -->
+	<div class="pos-top-bar">
+		<div class="row align-items-center">
+			<!-- Barcode Input -->
+			<div class="col-md-3 mb-2 mb-md-0">
 				<div class="input-group">
-					<select id="salesPerson" class="form-control" required>
-						@foreach (var item in Model.Employees)
-						{
-							<option value="@item.EmployeeId">@item.EmployeeCode</option>
-						}
-					</select>
-				</div>
-			</div>
-		}
-
-		@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
-		{
-			<div class="col-lg-2">
-				<div class="input-group">
-					<select id="servingTable" class="form-control" required>
-						@foreach (var item in Model.ServingTables)
-						{
-							<option value="@item.ServingTableId">@item.TableName</option>
-						}
-					</select>
-				</div>
-			</div>
-		}
-
-	</div>
-
-	<script>
-		$('#addCustomer').on('click',async function () {
-			var result = await Utility.RequestAjax('/Account/_AddCustomerForm');
-			$('.modal-title-horizontal').html('Add New Customer');
-			$('#modal-body-horizontal').html(result);
-			$('#modal_form_horizontal').modal();
-		});
-			$(document).on('submit','#addNewCustomer',async function(e){
-			  e.preventDefault();
-				 var formData = {
-					FirstName: $('#firstName').val(),
-					LastName: $('#lastName').val(),
-					MobileNumber: $('#mobile').val(),
-					Email: $('#email').val(),
-					Address: $('#address').val(),
-					CityId: $('#city').val()
-				};
-
-				var objectData={
-					url:'/Account/AddNewCustomer',
-					data:formData,
-				}
-				var result =await Utility.RequestDataAjax(objectData);
-				if(result.statusCode==='200'){
-
-					$('#modal_form_horizontal').modal('hide');
-					var customers = await Utility.RequestAjax('/AdminPanel/GetCustomers');
-					var $select = $('#customers');
-					$select.empty();
-
-					// Populate new options
-					customers.forEach(function (item) {
-						var isSelected = item.CustomerId === result.CustomerId; // check if it's the newly added
-						var option = $('<option>', {
-							value: item.CustomerId,
-							text: item.CustomerName + ' ' + item.Mobile,
-							selected: isSelected
-						});
-						$select.append(option);
-					});
-
-				}
-			})
-
-	</script>
-
-
-</div>
-
-
-
-<div class="content">
-
-
-
-
-	<div class="">
-		<style>
-			#invoiceSummary * {
-				padding-top: 0 !important;
-				padding-bottom: 0 !important;
-			}
-		</style>
-		<div class="card" id="invoiceSummary">
-
-			<div class="card-body ">
-				<style>
-					#invoice-section label,
-					#invoice-section .form-control {
-						margin: 0 !important;
-						padding: 2px 4px; /* Optional: tighter spacing */
-					}
-				</style>
-				<div id="invoice-section" class="row">
-					<div class="col-lg-1 text-center">
-						<label>Sub Total</label>
-						<input readonly id="totalAmount" onchange="Utility.validateNumericValue(this, 2)" type="text" value="0.00" class="form-control text-center" />
+					<div class="input-group-prepend">
+						<span class="input-group-text bg-primary text-white border-primary"><i class="icon-barcode2"></i></span>
 					</div>
-					@if (AppDataUtility.SystemPreferences.EnableTax)
-					{
-						<div class="col-lg-1 text-center">
-							<label>Total Tax</label>
-							<input readonly id="totalTax" type="text" value="0.00" class="form-control text-center" />
+					<input type="text" id="barCode" name="barCode" class="form-control border-primary font-weight-semibold" autocomplete="off" placeholder="Scan Barcode..." />
+				</div>
+			</div>
+
+			<!-- Manual Search Input -->
+			<div class="col-md-4 mb-2 mb-md-0">
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text bg-light"><i class="icon-search4 text-muted"></i></span>
+					</div>
+					<div class="flex-grow-1">
+						<select id="productSearch" style="width: 100%" class="form-control"></select>
+					</div>
+				</div>
+			</div>
+
+			<!-- Customer Selection -->
+			<div class="col-md-3 mb-2 mb-md-0">
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text bg-light"><i class="icon-user text-muted"></i></span>
+					</div>
+					<select id="customer" class="form-control">
+						@foreach (var item in Model.Customers)
+						{
+							<option value="@item.CustomerId">@item.CustomerName - @item.Mobile</option>
+						}
+					</select>
+					<div class="input-group-append">
+						<button id="addCustomer" class="btn btn-outline-primary" type="button" title="Add New Customer"><i class="icon-user-plus"></i></button>
+					</div>
+				</div>
+			</div>
+
+			<!-- Conditional Salesperson / Restaurant Table -->
+			@if (AppDataUtility.SystemPreferences.IsAffilatedInvoice)
+			{
+				<div class="col-md-2">
+					<div class="input-group">
+						<div class="input-group-prepend">
+							<span class="input-group-text bg-light"><i class="icon-user-tie text-muted"></i></span>
 						</div>
-					}
-					<div class="col-lg-1 text-center">
-						<label style="font-weight:700;">Grand Total</label>
-						<input readonly id="grandTotal" type="text" value="0.00" class="form-control text-center" />
-					</div>
-
-					<div class="col-lg-1 text-center">
-						<label>Discount</label>
-						<input id="discount" onchange="Utility.validateNumericValue(this, 2)" type="text" class="form-control text-center" />
-					</div>
-
-					<div class="col-lg-1 text-center">
-						<label style="font-weight:700;">Payable</label>
-						<input readonly id="totalPayable" type="text" value="0.00" class="form-control text-center" />
-					</div>
-
-					<div class="col-lg-1 text-center">
-						<label>Payment</label>
-						<input id="cashReceived" type="text" class="form-control text-center" />
-					</div>
-
-					<div class="col-lg-1  text-center">
-						<label>Balance</label>
-						<input id="balance" type="text" class="form-control text-right" />
-					</div>
-
-					<div class="col-lg-2  text-center">
-						<label>Payment Method</label>
-						<select id="paymentMethod" class="form-control">
-							@foreach (var item in Model.PaymentMethods)
+						<select id="salesPerson" class="form-control" required title="Sales Person">
+							@foreach (var item in Model.Employees)
 							{
-								<option value="@item.PaymentMethodId">@item.Name</option>
-							}
-						</select>
-					</div>
-					<div class="col-lg-2  text-center">
-						<label>Payment Status</label>
-						<select id="paymentStatusId" class="form-control">
-							@foreach (var item in Model.PaymentStatuses)
-							{
-								<option value="@item.PaymentStatusId">@item.Name</option>
+								<option value="@item.EmployeeId">@item.EmployeeCode</option>
 							}
 						</select>
 					</div>
 				</div>
+			}
 
-			</div>
+			@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
+			{
+				<div class="col-md-2">
+					<div class="input-group">
+						<div class="input-group-prepend">
+							<span class="input-group-text bg-light"><i class="icon-furniture text-muted"></i></span>
+						</div>
+						<select id="servingTable" class="form-control" required title="Serving Table">
+							@foreach (var item in Model.ServingTables)
+							{
+								<option value="@item.ServingTableId">@item.TableName</option>
+							}
+						</select>
+					</div>
+				</div>
+			}
 		</div>
 	</div>
+
+	<!-- Main Split Workspace -->
 	<div class="row">
-		<!-- Left Side: Dynamic Product Area (Grid / Search) -->
-		<div class="col-lg-7">
-			<div class="card h-100">
-				<!-- Navigation for Grid/Search -->
-				<div class="card-header">
-					<ul class="nav nav-tabs nav-tabs-solid card-header-tabs">
-						<li class="nav-item"><a href="#pos-grid" class="nav-link active" data-toggle="tab">Product Grid</a></li>
-						<li class="nav-item"><a href="#pos-search-results" class="nav-link" data-toggle="tab">Search Results</a></li>
+		<!-- Left Side: Product Catalog & Search Results -->
+		<div class="col-lg-7 mb-3 mb-lg-0">
+			<div class="card h-100 mb-0 shadow-sm">
+				<div class="card-header bg-white header-elements-inline py-2 border-bottom">
+					<ul class="nav nav-tabs nav-tabs-solid nav-tabs-rounded mb-0 border-0">
+						<li class="nav-item">
+							<a href="#pos-grid" class="nav-link active py-1 px-3" data-toggle="tab">
+								<i class="icon-grid5 mr-1"></i> Product Grid
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="#pos-search-results" class="nav-link py-1 px-3" data-toggle="tab">
+								<i class="icon-list-unordered mr-1"></i> Search Results
+							</a>
+						</li>
 					</ul>
+					<div class="header-elements">
+						<button id="backbtn" type="button" class="btn btn-light btn-sm font-weight-semibold">
+							<i class="icon-arrow-left8 mr-1"></i> Departments
+						</button>
+					</div>
 				</div>
 
-				<!-- Tab content -->
-				<div class="tab-content card-body">
+				<div class="tab-content card-body p-3">
 					<!-- Product Grid Pane -->
-					<button id="backbtn">Back</button>
-
-					<div class="tab-pane fade show active" id="pos-grid" style="max-height: 50vh; overflow-y: auto;">
-						<div class="mb-2">
+					<div class="tab-pane fade show active" id="pos-grid" style="max-height: 68vh; overflow-y: auto;">
+						<div class="mb-3">
 							@if (Model.Departments != null)
 							{
-								<div id="dcs" class="row g-2">
+								<div id="dcs" class="row">
 									@foreach (var item in Model.Departments)
 									{
-										<div class="col-md-3 col-sm-6 pt-1">
-											<button data-depid="@item.DepartmentId" class="btn btn-primary depBtn w-100">
+										<div class="col-md-3 col-sm-6 mb-2">
+											<button data-depid="@item.DepartmentId" class="btn btn-primary depBtn w-100 text-truncate shadow-xs">
 												@item.DepartmentName
 											</button>
 										</div>
 									}
 								</div>
 							}
-
-
-
 						</div>
-						<div id="topfiveProducts" class="row">
-						</div>
-
+						<hr class="my-2" />
+						<div id="topfiveProducts" class="row pt-1"></div>
 					</div>
 
-					<!-- Search Results Pane (Initially Hidden) -->
-					<div class="tab-pane fade" id="pos-search-results" style="max-height: 50vh; overflow-y: auto; overflow-x:auto">
+					<!-- Search Results Pane -->
+					<div class="tab-pane fade" id="pos-search-results" style="max-height: 68vh; overflow-y: auto; overflow-x:auto;">
 						<div class="table-responsive">
-							<table id="searchResultTable" class="table table-hover">
-								<thead>
+							<table id="searchResultTable" class="table table-hover table-striped table-sm">
+								<thead class="thead-light">
 									<tr>
 										<th>Product</th>
-										<th>SKU</th>
+										<th>SKU / Barcode</th>
 										<th class="text-center">Stock</th>
 										<th class="text-right">Price</th>
-										<th></th>
+										<th class="text-center">Action</th>
 									</tr>
 								</thead>
-								<tbody>
-								</tbody>
+								<tbody></tbody>
 							</table>
 						</div>
 					</div>
-
-
 				</div>
 			</div>
-
 		</div>
-		<!-- /left side -->
-		<!-- /left side -->
-		<!-- Right Side: Bill & Actions with new class -->
-		<div class="col-lg-5 pos-fixed-sidebar">
-			<!--
-			PASTE YOUR ENTIRE RIGHT-SIDE HTML HERE
-			(The code you provided in your prompt)
-			-->
-			<div class="card h-100 d-flex flex-column">
-				<style>
-					/* Apply only to invoiceTable */
-					#invoiceTable tr,
-					#invoiceTable td,
-					#invoiceTable th {
-						padding: 0 !important;
-					}
-				</style>
 
-				<div class="card-body border-top">
-					<div id="invoiceRowSection" class="table-responsive " style="max-height:50vh;min-height:50vh;overflow-x:auto">
-						<table id="invoiceTable" class="table table-border-dashed">
+		<!-- Right Side: Active Cart, Financial Totals & Checkout -->
+		<div class="col-lg-5 pos-fixed-sidebar">
+			<div class="card h-100 d-flex flex-column mb-0 shadow-sm border-top-2 border-top-primary">
+				<!-- Cart Header -->
+				<div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center border-bottom">
+					<span class="font-weight-bold text-uppercase text-slate-700" style="font-size: 12px;">
+						<i class="icon-cart5 mr-1 text-primary"></i> Current Invoice Items
+					</span>
+					<span class="badge badge-primary badge-pill">POS Terminal</span>
+				</div>
+
+				<!-- Scrollable Invoice Items Table -->
+				<div class="card-body p-0 flex-grow-1">
+					<div id="invoiceRowSection" class="table-responsive" style="max-height: 40vh; min-height: 40vh; overflow-y: auto; overflow-x: auto;">
+						<table id="invoiceTable" class="table table-hover mb-0">
 							<thead>
 								<tr>
-									<th class="text-center">Name</th>
+									<th class="text-left pl-2">Name</th>
 									<th class="text-center">Size</th>
 									<th class="text-center">UOM</th>
-
 									<th class="text-center">Qty</th>
 									<th class="text-center">Price</th>
-
-									<!-- shorter tax labels -->
 									@if (AppDataUtility.SystemPreferences.EnableTax)
 									{
 										<th class="text-center">Tax %</th>
-										<th class="text-center">Tax Amt</th>
-
+										<th class="text-center">Tax</th>
 									}
-
-									<th class="text-center">Total</th>
-									<th class="text-center">Manage</th>
+									<th class="text-right">Total</th>
+									<th class="text-center"><i class="icon-cog3"></i></th>
 								</tr>
-
-
 							</thead>
 							<tbody>
 								<!-- Cart items will be added here -->
-
 							</tbody>
 						</table>
 					</div>
-
 				</div>
 
-				<!-- Numpad & Final Actions -->
-				<div class="card-footer bg-white">
-					@* <div class="row no-gutters text-center mb-0">
-						<div class="col-3 p-1"><button class="btn btn-light btn-block">1</button></div>
-						<div class="col-3 p-1"><button class="btn btn-light btn-block">2</button></div>
-						<div class="col-3 p-1"><button class="btn btn-light btn-block">3</button></div>
-						<div class="col-3 p-1"><button class="btn btn-light btn-block font-weight-bold">Qty</button></div>
-						<div class="col-3 p-1"><button class="btn btn-light btn-block">4</button></div>
-						<div class="col-3 p-1"><button class="btn btn-light btn-block">5</button></div>
-						<div class="col-3 p-1"><button class="btn btn-light btn-block">6</button></div>
-						<div class="col-3 p-1"><button class="btn btn-info btn-block">Disc</button></div>
-						<div class="col-3 p-1"><button class="btn btn-light btn-block">7</button></div>
-						<div class="col-3 p-1"><button class="btn btn-light btn-block">8</button></div>
-						<div class="col-3 p-1"><button class="btn btn-light btn-block">9</button></div>
-						<div class="col-3 p-1"><button class="btn btn-danger btn-block"><i class="icon-arrow-left8"></i></button></div>
-						<div class="col-6 p-1"><button class="btn btn-light btn-block">0</button></div>
-						<div class="col-6 p-1"><button class="btn btn-light btn-block">.</button></div>
-					</div> *@
-					<div class="row">
+				<!-- Integrated Billing Summary & Payment Controls -->
+				<div class="pos-summary-box">
+					<div id="invoice-section" class="form-row mb-2">
+						<div class="@(AppDataUtility.SystemPreferences.EnableTax ? "col-3" : "col-4")">
+							<label class="pos-summary-label text-center">Sub Total</label>
+							<input readonly id="totalAmount" onchange="Utility.validateNumericValue(this, 2)" type="text" value="0.00" class="form-control pos-readonly-input text-center" />
+						</div>
+
+						@if (AppDataUtility.SystemPreferences.EnableTax)
+						{
+							<div class="col-3">
+								<label class="pos-summary-label text-center">Total Tax</label>
+								<input readonly id="totalTax" type="text" value="0.00" class="form-control pos-readonly-input text-center" />
+							</div>
+						}
+
+						<div class="@(AppDataUtility.SystemPreferences.EnableTax ? "col-3" : "col-4")">
+							<label class="pos-summary-label text-center">Grand Total</label>
+							<input readonly id="grandTotal" type="text" value="0.00" class="form-control pos-readonly-input text-center" />
+						</div>
+
+						<div class="@(AppDataUtility.SystemPreferences.EnableTax ? "col-3" : "col-4")">
+							<label class="pos-summary-label text-center text-danger">Discount (F3)</label>
+							<input id="discount" onchange="Utility.validateNumericValue(this, 2)" type="text" placeholder="0.00" class="form-control pos-editable-input text-center" />
+						</div>
 					</div>
+
+					<div class="form-row mb-2">
+						<div class="col-4">
+							<label class="pos-summary-label text-center text-primary">Net Payable</label>
+							<input readonly id="totalPayable" type="text" value="0.00" class="form-control pos-payable-highlight text-center" />
+						</div>
+
+						<div class="col-4">
+							<label class="pos-summary-label text-center text-success">Payment (F2)</label>
+							<input id="cashReceived" type="text" placeholder="0.00" class="form-control pos-editable-input text-center" />
+						</div>
+
+						<div class="col-4">
+							<label class="pos-summary-label text-center text-info">Balance</label>
+							<input readonly id="balance" type="text" value="0.00" class="form-control pos-balance-highlight text-center" />
+						</div>
+					</div>
+
+					<div class="form-row">
+						<div class="col-6">
+							<label class="pos-summary-label">Payment Method</label>
+							<select id="paymentMethod" class="form-control form-control-sm font-weight-semibold">
+								@foreach (var item in Model.PaymentMethods)
+								{
+									<option value="@item.PaymentMethodId">@item.Name</option>
+								}
+							</select>
+						</div>
+
+						<div class="col-6">
+							<label class="pos-summary-label">Payment Status</label>
+							<select id="paymentStatusId" class="form-control form-control-sm font-weight-semibold">
+								@foreach (var item in Model.PaymentStatuses)
+								{
+									<option value="@item.PaymentStatusId">@item.Name</option>
+								}
+							</select>
+						</div>
+					</div>
+				</div>
+
+				<!-- Primary Checkout Action Buttons -->
+				<div class="card-footer bg-white p-2 border-top">
 					<div class="btn-group w-100">
-						<button id="btn-submit-hold" type="button" class="btn btn-warning" style="flex-grow: 1;">Hold/UnHold </button>
+						<button id="btn-submit-hold" type="button" class="btn btn-warning font-weight-semibold" style="flex-grow: 1;" title="Hold / Show Held Invoices">
+							<i class="icon-pause2 mr-1"></i> Hold/UnHold
+						</button>
 						@if (AppDataUtility.SystemPreferences.IsRestaurantApplication)
 						{
-							<button id="btn-submit-order" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">Place Order</button>
-
+							<button id="btn-submit-order" type="button" class="btn btn-success btn-lg font-weight-bold" style="flex-grow: 2;">
+								<i class="icon-checkmark-circle mr-1"></i> Place Order
+							</button>
 						}
 						else
 						{
-							<button id="btn-submit-invoice" type="button" class="btn btn-success btn-lg" style="flex-grow: 2;">PAY</button>
-
+							<button id="btn-submit-invoice" type="button" class="btn btn-success btn-lg font-weight-bold" style="flex-grow: 2;" title="Complete Checkout (F4)">
+								<i class="icon-cash3 mr-1"></i> PAY &amp; PRINT (F4)
+							</button>
 						}
 					</div>
 				</div>
 			</div>
 		</div>
-		<!-- /right side -->
-
-
-
-
 	</div>
-
-
 </div>
+
+<!-- Held Invoices Modal -->
 <div class="modal fade" id="heldInvoicesModal" tabindex="-1" role="dialog" aria-labelledby="heldInvoicesModalLabel" aria-hidden="true">
-	<div class="modal-dialog" role="document">
+	<div class="modal-dialog modal-dialog-centered" role="document">
 		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title" id="heldInvoicesModalLabel">Held Invoices</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			<div class="modal-header bg-primary text-white py-2">
+				<h5 class="modal-title" id="heldInvoicesModalLabel"><i class="icon-stack-text mr-2"></i>Held Invoices</h5>
+				<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
@@ -383,20 +389,77 @@
 		</div>
 	</div>
 </div>
+
 <script>
-	$(document).ready(function(){
+	$('#addCustomer').on('click', async function () {
+		var result = await Utility.RequestAjax('/Account/_AddCustomerForm');
+		$('.modal-title-horizontal').html('Add New Customer');
+		$('#modal-body-horizontal').html(result);
+		$('#modal_form_horizontal').modal();
+	});
+
+	$(document).on('submit', '#addNewCustomer', async function (e) {
+		e.preventDefault();
+		var formData = {
+			FirstName: $('#firstName').val(),
+			LastName: $('#lastName').val(),
+			MobileNumber: $('#mobile').val(),
+			Email: $('#email').val(),
+			Address: $('#address').val(),
+			CityId: $('#city').val()
+		};
+
+		var objectData = {
+			url: '/Account/AddNewCustomer',
+			data: formData,
+		};
+		var result = await Utility.RequestDataAjax(objectData);
+		if (result.statusCode === '200') {
+			$('#modal_form_horizontal').modal('hide');
+			var customers = await Utility.RequestAjax('/AdminPanel/GetCustomers');
+			var $select = $('#customer');
+			$select.empty();
+
+			customers.forEach(function (item) {
+				var isSelected = item.CustomerId === result.CustomerId;
+				var option = $('<option>', {
+					value: item.CustomerId,
+					text: item.CustomerName + ' - ' + item.Mobile,
+					selected: isSelected
+				});
+				$select.append(option);
+			});
+		}
+	});
+
+	$(document).ready(function () {
 		setTotalPrice();
-			
 
 		$(document).on('click', '#btn-submit-invoice', function () {
 			submitInvoice();
 		});
-		
-		// $(document).on('click', '#btn-submit-hold', function () {
-		// 	holdInvoice();
-		// });
 
-			function submitInvoice() {
+		// Global Keyboard Shortcuts for POS Efficiency
+		$(document).on('keydown', function (e) {
+			if (e.key === 'F2') {
+				e.preventDefault();
+				$('#cashReceived').focus().select();
+			}
+			else if (e.key === 'F3') {
+				e.preventDefault();
+				$('#discount').focus().select();
+			}
+			else if (e.key === 'F4') {
+				e.preventDefault();
+				$('#btn-submit-invoice').click();
+			}
+			else if (e.key === 'Enter' && document.activeElement.id === 'cashReceived') {
+				e.preventDefault();
+				$('#btn-submit-invoice').click();
+			}
+		});
+
+		function submitInvoice() {
 			const $rows = $('#invoiceTable tbody tr');
 			if ($rows.length === 0) {
 				alert('Please add at least one product.');
@@ -414,42 +477,16 @@
 			const customerId = $('#customer').val() || null;
 			const paymentMethodId = $('#paymentMethod').val() || null;
 			const paymentStatusId = parseFloat($('#paymentStatusId').val()) || null;
-		
-				
-			const CASH_PAYMENT_ID = 1;
-			const Payment_Status_Id= 1;
 
-			if (paymentMethodId == CASH_PAYMENT_ID && paymentStatusId===Payment_Status_Id) {
+			const CASH_PAYMENT_ID = 1;
+			const Payment_Status_Id = 1;
+
+			if (paymentMethodId == CASH_PAYMENT_ID && paymentStatusId === Payment_Status_Id) {
 				if (cashReceived < totalPayable) {
 					alert('Cash received is less than payable total. Please collect full payment.');
 					return;
 				}
 			}
-
-			// const items = [];
-			// $rows.each(function () {
-			// 	const $tr = $(this);
-				
-			// 	const $firstTd = $tr.find('td').first();
-
-			// 	const qty = parseFloat($tr.find('.lineqty').val()) || 0;
-			// 	const unitPrice = parseFloat($tr.find('.currentPrice').val()) || 0;
-			// 	const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
-			// 	const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
-			// 	const lineTotal = unitPrice * qty; // without tax
-			// 	const lineTotalWithTax = lineTotal + taxAmount;
-
-			// 	items.push({
-			// 		ProductId: $firstTd.data('productid'),
-			// 		VariantId: $firstTd.data('variantid'),
-			// 		Quantity: qty,
-			// 		UnitPrice: unitPrice,
-			// 		TaxRate: taxRate,
-			// 		TaxAmount: taxAmount,
-			// 		LineTotal: lineTotal,
-			// 		LineTotalWithTax: lineTotalWithTax
-			// 	});
-			// });
 
 			const items = [];
 			$rows.each(function () {
@@ -458,16 +495,16 @@
 
 				const qty = parseFloat($tr.find('.lineqty').val()) || 0;
 				const unitPrice = parseFloat($tr.find('.currentPrice').val()) || 0;
-				const subUomId = $tr.find('.subUomSelect').val() || null; // <--- Capture selected packaging SubUomId
+				const subUomId = $tr.find('.subUomSelect').val() || null;
 				const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
 				const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
-				const lineTotal = unitPrice * qty; 
+				const lineTotal = unitPrice * qty;
 				const lineTotalWithTax = lineTotal + taxAmount;
 
 				items.push({
 					ProductId: $firstTd.data('productid'),
 					VariantId: $firstTd.data('variantid'),
-					SubUomId: subUomId, 
+					SubUomId: subUomId,
 					Quantity: qty,
 					UnitPrice: unitPrice,
 					TaxRate: taxRate,
@@ -482,279 +519,148 @@
 				TotalTax: totalTax,
 				GrandTotal: grandTotal,
 				DiscountAmount: discount,
-				NetAmount: totalPayable, // after discount
+				NetAmount: totalPayable,
 				CashReceived: cashReceived,
 				PaymentMethodId: paymentMethodId,
 				EmployeeId: salesPersonId,
 				ServingTableId: tableId,
 				CustomerId: customerId,
-				PaymentStatusId:paymentStatusId,
+				PaymentStatusId: paymentStatusId,
 				InvoiceDetails: items
 			};
-			Utility.startSpinner('#btn-submit-invoice','Saving Invoice');
+			Utility.startSpinner('#btn-submit-invoice', 'Saving Invoice');
 
 			$.ajax({
 				url: '/InvoiceManager/SaveInvoice',
 				type: 'POST',
 				data: payload,
-
 				xhrFields: {
-					responseType: 'blob'  // expecting PDF back
+					responseType: 'blob'
 				},
 				success: function (data) {
-						$('#invoiceTable tbody').empty();
-						setTotalPrice();
+					$('#invoiceTable tbody').empty();
+					$('#cashReceived').val('');
+					$('#discount').val('');
+					$('#balance').val('0.00');
+					setTotalPrice();
 					var blob = new Blob([data], { type: "application/pdf" });
 					var url = URL.createObjectURL(blob);
 					window.open(url, "_blank");
-			Utility.stopSpinner('#btn-submit-invoice'	);
-
+					Utility.stopSpinner('#btn-submit-invoice');
+					$('#barCode').focus();
 				},
 				error: function (xhr, status, error) {
 					alert("Error saving invoice: " + error);
-			Utility.stopSpinner('#btn-submit-invoice'	);
-
+					Utility.stopSpinner('#btn-submit-invoice');
 				}
 			});
-
-	}
-
-		function submitOrder() {
-				const $rows = $('#invoiceTable tbody tr');
-				if ($rows.length === 0) {
-					alert('Please add at least one product.');
-					return;
-				}
-				debugger
-				const totalAmount = parseFloat($('#totalAmount').val()) || 0;
-				const totalTax = parseFloat($('#totalTax').val()) || 0;
-				const grandTotal = parseFloat($('#grandTotal').val()) || 0;
-				const totalPayable = parseFloat($('#totalPayable').val()) || 0;
-				const discount = parseFloat($('#discount').val()) || 0;
-
-				const salesPersonId = $('#salesPerson').val() || null;
-				const tableId = $('#servingTable').val() || null;
-				const customerId = $('#customer').val() || null;
-				const paymentMethodId = $('#paymentMethod').val() || null;
-
-
-
-				const items = [];
-				$rows.each(function () {
-					const $tr = $(this);
-					debugger
-					const $firstTd = $tr.find('td').first();
-
-					const qty = parseFloat($tr.find('.lineqty').val()) || 0;
-					const unitPrice = parseFloat($tr.find('.currentPrice').val()) || 0;
-					const taxRate = parseFloat($tr.find('.taxPercent').text()) || 0;
-					const taxAmount = parseFloat($tr.find('.taxAmount').text()) || 0;
-					const lineTotal = unitPrice * qty; // without tax
-					const lineTotalWithTax = lineTotal + taxAmount;
-
-					items.push({
-						ProductId: $firstTd.data('productid'),
-						VariantId: $firstTd.data('variantid'),
-						Quantity: qty,
-						UnitPrice: unitPrice,
-						TaxRate: taxRate,
-						TaxAmount: taxAmount,
-						LineTotal: lineTotal,
-						LineTotalWithTax: lineTotalWithTax
-					});
-				});
-
-				const payload = {
-					TotalAmount: totalAmount,
-					TotalTax: totalTax,
-					GrandTotal: grandTotal,
-					DiscountAmount: discount,
-					NetAmount: totalPayable, // after discount
-					CashReceived: cashReceived,
-					PaymentMethodId: paymentMethodId,
-					EmployeeId: salesPersonId,
-					ServingTableId: tableId,
-					CustomerId: customerId,
-					InvoiceDetails: items
-				};
-
-				$.ajax({
-					url: '/InvoiceManager/SaveOrder',
-					type: 'POST',
-					data: payload,
-
-					xhrFields: {
-						responseType: 'blob'  // expecting PDF back
-					},
-					success: function (data) {
-						console.log('Hello Dumpling');
-
-						console.log(data);
-						var blob = new Blob([data], { type: "application/pdf" });
-						var url = URL.createObjectURL(blob);
-						window.open(url, "_blank");
-					},
-					error: function (xhr, status, error) {
-						alert("Error saving invoice: " + error);
-					}
-				});
-		}
-
-		async function printInvoice(invoiceId) {
-		try {
-			// Connect to QZ Tray
-			await qz.websocket.connect();
-
-			// Fetch invoice HTML from server
-			const response = await fetch(`/Invoices/GetInvoiceHtml?invoiceId=${invoiceId}`);
-			const html = await response.text();
-
-			// Configure printer (replace with your printer name)
-			const config = qz.configs.create("Your Printer Name");
-
-			// Prepare print data
-			const data = [{
-				type: 'html',
-				format: 'plain',
-				data: html
-			}];
-
-			// Send to printer silently
-			await qz.print(config, data);
-
-			console.log("Invoice printed successfully!");
-		} catch (err) {
-			console.error("Print error:", err);
-		} finally {
-			qz.websocket.disconnect();
-		}
 		}
 
 		$(document).on('click', '.depBtn', async function () {
-				var departmentId = $(this).data('depid');
-				var categories = await Utility.RequestDataAjax({
-					url:'/AttributeManager/GetCategorybyDepartment',
-					data:{
-						DepartmentId:departmentId
-					}
-				})
-				var html = '';
-						if (categories && categories.length > 0) {
-							categories.forEach(function (cat) {
-							html += `
-		<div class="col-md-3 col-sm-6 pt-1">
-			<button type="button"
-					class="btn btn-success catBtn w-100"
-					data-catid="${cat.CategoryId}">
-				${cat.CategoryName}
-			</button>
-		</div>`;
-
-							});
-						} else {
-							html = '<p>No categories found.</p>';
-						}
-						// Replace department buttons with category buttons
-						$('#dcs').html(html);
-
+			var departmentId = $(this).data('depid');
+			var categories = await Utility.RequestDataAjax({
+				url: '/AttributeManager/GetCategorybyDepartment',
+				data: { DepartmentId: departmentId }
+			});
+			var html = '';
+			if (categories && categories.length > 0) {
+				categories.forEach(function (cat) {
+					html += `
+						<div class="col-md-3 col-sm-6 mb-2">
+							<button type="button" class="btn btn-success catBtn w-100 text-truncate" data-catid="${cat.CategoryId}">
+								${cat.CategoryName}
+							</button>
+						</div>`;
+				});
+			} else {
+				html = '<div class="col-12 text-muted">No categories found.</div>';
+			}
+			$('#dcs').html(html);
 		});
 
 		$(document).on('click', '.catBtn', async function () {
-				var categoryId = $(this).data('catid');
-				var subcategories = await Utility.RequestDataAjax({
-					url:'/AttributeManager/GetSubCategorybyCategory',
-					data:{
-						CategoryId:categoryId
-					}
-				})
-				var html = '';
-						if (subcategories && subcategories.length > 0) {
-							subcategories.forEach(function (cat) {
-								html += `
-								<div class="col-md-3 col-sm-6 pt-1">
-								<button type="button" class="btn btn-danger subcatBtn w-100" data-subcatid="${cat.SubCategoryId}">
-											${cat.SubCategoryName}
-							   </button> </div>`;
-							});
-						} else {
-							html = '<p>No SubCategories found.</p>';
-						}
-						// Replace department buttons with category buttons
-						$('#dcs').html(html);
-
+			var categoryId = $(this).data('catid');
+			var subcategories = await Utility.RequestDataAjax({
+				url: '/AttributeManager/GetSubCategorybyCategory',
+				data: { CategoryId: categoryId }
+			});
+			var html = '';
+			if (subcategories && subcategories.length > 0) {
+				subcategories.forEach(function (cat) {
+					html += `
+						<div class="col-md-3 col-sm-6 mb-2">
+							<button type="button" class="btn btn-info subcatBtn w-100 text-truncate" data-subcatid="${cat.SubCategoryId}">
+								${cat.SubCategoryName}
+							</button>
+						</div>`;
+				});
+			} else {
+				html = '<div class="col-12 text-muted">No SubCategories found.</div>';
+			}
+			$('#dcs').html(html);
 		});
 
 		$(document).on('click', '.subcatBtn', async function () {
-				var subcategoryId = $(this).data('subcatid');
-				var getsubcatProducts = await Utility.RequestDataAjax({
-					url:'/Products/GetProductBySubCategoryId',
-					data:{
-						SubCategoryId:subcategoryId
-					}
-				})
+			var subcategoryId = $(this).data('subcatid');
+			var getsubcatProducts = await Utility.RequestDataAjax({
+				url: '/Products/GetProductBySubCategoryId',
+				data: { SubCategoryId: subcategoryId }
+			});
 
-				renderTopFiveProducts(getsubcatProducts.TopProducts);
-				renderAllProducts(getsubcatProducts.AllProducts);
-
+			renderTopFiveProducts(getsubcatProducts.TopProducts);
+			renderAllProducts(getsubcatProducts.AllProducts);
 		});
 
 		function renderTopFiveProducts(topProducts) {
-					const $wrap = $('#topfiveProducts');
+			const $wrap = $('#topfiveProducts');
+			if (!Array.isArray(topProducts) || topProducts.length === 0) {
+				$wrap.html('<div class="col-12 text-muted">No top products found.</div>');
+				return;
+			}
 
-					if (!Array.isArray(topProducts) || topProducts.length === 0) {
-					$wrap.html('<div class="col-12 text-muted">No top products found.</div>');
-					return;
-					}
+			const html = topProducts.slice(0, 5).map(p => {
+				const price = (p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0);
+				const priceText = Number(price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-					const html = topProducts.slice(0, 5).map(p => {
-					const price =
-						(p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0);
-					const priceText = Number(price).toLocaleString(undefined, {
-						minimumFractionDigits: 2,
-						maximumFractionDigits: 2
-					});
+				return `
+					<div class="col-md-4 col-sm-6 mb-2">
+						<div class="card card-body text-center p-2 h-100 product-tile mb-0"
+							style="cursor: pointer;"
+							data-barcode="${p.BarCode || ''}"
+							data-product-id="${p.ProductId || ''}"
+							data-variant-id="${p.VariantId || ''}"
+							data-sizename='${p.SizeName || ''}'
+							data-taxrate='${p.TaxRate || 0}'
+							data-uomid='${p.Uomid || ''}'
+							data-subuomid='${p.SubUomid || ''}'
+							data-qty='${p.Qty ?? 0}'>
+							<h6 class="font-weight-semibold mb-1 text-dark" style="font-size: 13px;">
+								${escapeHtml(p.ProductName ?? 'Unnamed')}
+							</h6>
+							<span class="badge badge-light text-primary font-weight-bold">$${priceText}</span>
+						</div>
+					</div>`;
+			}).join('');
 
-					return `
-									<div class="col-md-3 mb-3">
-									<div class="card card-body text-center p-2 h-100 product-tile"
-										style="cursor: pointer;"
-										data-barcode="${p.BarCode || ''}"
-										data-product-id="${p.ProductId || ''}"
-										data-variant-id="${p.VariantId || ''}" data-sizename='${p.SizeName}' data-taxrate='${p.TaxRate}'>
-										<h6 class="font-weight-semibold mb-0">
-											${escapeHtml(p.ProductName ?? 'Unnamed')}
-										</h6>
-										<span class="text-muted">$${priceText}</span>
-									</div>
-								</div>
-								`;
-					}).join('');
-
-					$wrap.html(html);
+			$wrap.html(html);
 		}
 
 		function renderAllProducts(allProducts) {
 			const $tbody = $('#searchResultTable tbody');
-
 			if (!Array.isArray(allProducts) || allProducts.length === 0) {
 				$tbody.html('<tr><td colspan="5" class="text-muted text-center">No products found.</td></tr>');
 				return;
 			}
 
 			const rows = allProducts.map(p => {
-				const stock = p.QoH ?? 0; // quantity on hand
+				const stock = p.QoH ?? 0;
 				const price = p.CurrentPrice ?? p.PromotionPrice ?? p.SalesPrice ?? p.RetailPrice ?? 0;
-				const priceText = Number(price).toLocaleString(undefined, {
-					minimumFractionDigits: 2,
-					maximumFractionDigits: 2
-				});
+				const priceText = Number(price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-				// Stock level color
 				let stockClass = 'text-success';
 				if (stock === 0) stockClass = 'text-danger';
 				else if (stock < 20) stockClass = 'text-warning';
 
-				// Button now has all product data
 				const buttonHtml = stock > 0
 					? `<button class="btn btn-primary btn-sm product-add-btn"
 								data-barcode="${p.BarCode || ''}"
@@ -763,21 +669,22 @@
 								data-sizename="${p.SizeName || ''}"
 								data-product-name="${escapeHtml(p.ProductName ?? 'Unnamed')}"
 								data-price="${price}"
-								data-taxrate="${p.TaxRate}"
-								>
-							Add
+								data-taxrate="${p.TaxRate || 0}"
+								data-uomid="${p.Uomid || ''}"
+								data-subuomid="${p.SubUomid || ''}"
+								data-qty="${p.Qty ?? 0}">
+							<i class="icon-plus3 mr-1"></i>Add
 						</button>`
 					: `<button class="btn btn-light btn-sm" disabled>Out</button>`;
 
 				return `
 					<tr>
 						<td><div class="font-weight-semibold">${escapeHtml(p.ProductName ?? 'Unnamed')}</div></td>
-						<td>${escapeHtml(p.BarCode ?? '')}</td>
+						<td><span class="text-muted">${escapeHtml(p.BarCode ?? '')}</span></td>
 						<td class="text-center ${stockClass} font-weight-bold">${stock}</td>
-						<td class="text-right">$${priceText}</td>
+						<td class="text-right font-weight-semibold">$${priceText}</td>
 						<td class="text-center">${buttonHtml}</td>
-					</tr>
-				`;
+					</tr>`;
 			}).join('');
 
 			$tbody.html(rows);
@@ -785,50 +692,60 @@
 
 		function escapeHtml(str) {
 			return String(str).replace(/[&<>"'`=\/]/g, s =>
-			({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s])
+				({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;' }[s])
 			);
 		}
 
 		$(document).on('click', '#backbtn', async function () {
-				var departments = await Utility.RequestDataAjax({url:'/AttributeManager/GetDepartments'})
-				var html = '';
-					if (departments && departments.length > 0) {
-					departments.forEach(function (cat) {
-						html += ` <div class="col-md-3 col-sm-6 pt-1"><button type="button" class="btn btn-primary w-100 depBtn" data-depid="${cat.DepartmentId}">
-									${cat.DepartmentName}
-						</button></div>`;
-					});
-				} else {
-					html = '<p>No Departments found.</p>';
-				}
-				// Replace department buttons with category buttons
-				$('#dcs').html(html);
-			});
+			var departments = await Utility.RequestDataAjax({ url: '/AttributeManager/GetDepartments' });
+			var html = '';
+			if (departments && departments.length > 0) {
+				departments.forEach(function (cat) {
+					html += `
+						<div class="col-md-3 col-sm-6 mb-2">
+							<button type="button" class="btn btn-primary w-100 depBtn text-truncate" data-depid="${cat.DepartmentId}">
+								${cat.DepartmentName}
+							</button>
+						</div>`;
+				});
+			} else {
+				html = '<div class="col-12 text-muted">No Departments found.</div>';
+			}
+			$('#dcs').html(html);
+		});
 
-	
+		// ==========================================
+		// HOLD & UNHOLD WORKFLOW
+		// ==========================================
 		let holdMode = true;
 		$(document).on('click', '#btn-submit-hold', function () {
 			if (holdMode) {
 				holdInvoice();
 				holdMode = false;
-				$(this).text('Show Held');
+				$(this).html('<i class="icon-folder-open mr-1"></i> Show Held');
 			} else {
 				showHeldInvoices();
 				holdMode = true;
-				$(this).text('Hold/UnHold');
+				$(this).html('<i class="icon-pause2 mr-1"></i> Hold/UnHold');
 			}
 		});
-			function showHeldInvoices() {
+
+		function showHeldInvoices() {
 			let heldInvoices = JSON.parse(localStorage.getItem('heldInvoices') || '[]');
 			let html = '';
 			if (heldInvoices.length === 0) {
-				html = '<p>No held invoices.</p>';
+				html = '<p class="text-muted text-center my-3">No held invoices found.</p>';
 			} else {
 				html = '<ul class="list-group">';
 				heldInvoices.forEach((inv, idx) => {
-					html += `<li class="list-group-item">
-						<strong>Invoice #${idx + 1}</strong> - ${inv.Date}
-						<button class="btn btn-sm btn-primary float-right" onclick="restoreHeldInvoice(${idx})">Restore</button>
+					html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+						<div>
+							<strong>Invoice #${idx + 1}</strong> (${inv.Items.length} items)<br/>
+							<small class="text-muted">${inv.Date}</small>
+						</div>
+						<button class="btn btn-sm btn-primary font-weight-semibold" onclick="restoreHeldInvoice(${idx})">
+							<i class="icon-undo mr-1"></i> Restore
+						</button>
 					</li>`;
 				});
 				html += '</ul>';
@@ -838,9 +755,11 @@
 		}
 
 		function holdInvoice() {
-			// Gather invoice data (similar to submitInvoice)
 			const $rows = $('#invoiceTable tbody tr');
 			if ($rows.length === 0) {
+				alert('No items in cart to hold.');
+				holdMode = true;
+				$('#btn-submit-hold').html('<i class="icon-pause2 mr-1"></i> Hold/UnHold');
 				return;
 			}
 
@@ -854,7 +773,8 @@
 					BarCode: $firstTd.data('barcode'),
 					ProductName: $firstTd.text().trim(),
 					SizeName: $tr.find('td').eq(1).text().trim(),
-					Quantity: parseFloat($tr.find('.lineqty').val()) || 0,
+					SubUomId: $tr.find('.subUomSelect').val() || '',
+					Qty: parseFloat($tr.find('.lineqty').val()) || 1,
 					CurrentPrice: parseFloat($tr.find('.currentPrice').val()) || 0,
 					TaxRate: parseFloat($tr.find('.taxPercent').text()) || 0,
 					TaxAmount: parseFloat($tr.find('.taxAmount').text()) || 0,
@@ -862,9 +782,8 @@
 				});
 			});
 
-			// Other invoice fields
 			const invoiceData = {
-				Date: new Date().toISOString(),
+				Date: new Date().toLocaleString(),
 				CustomerId: $('#customer').val(),
 				SalesPersonId: $('#salesPerson').val(),
 				ServingTableId: $('#servingTable').val(),
@@ -876,60 +795,48 @@
 				Items: invoiceItems
 			};
 
-			// Save to localStorage (array of held invoices)
 			let heldInvoices = JSON.parse(localStorage.getItem('heldInvoices') || '[]');
 			heldInvoices.push(invoiceData);
 			localStorage.setItem('heldInvoices', JSON.stringify(heldInvoices));
 
-
-			// Optionally clear the table after holding
 			$('#invoiceTable tbody').empty();
+			$('#cashReceived').val('');
+			$('#discount').val('');
+			$('#balance').val('0.00');
 			setTotalPrice();
+			$('#barCode').focus();
 		}
 
-		function restoreHeldInvoice(index) {
+		async function restoreHeldInvoice(index) {
 			let heldInvoices = JSON.parse(localStorage.getItem('heldInvoices') || '[]');
 			if (!heldInvoices[index]) return;
 
 			const invoice = heldInvoices[index];
-			// Clear current invoice table
 			$('#invoiceTable tbody').empty();
-			debugger
-			// Restore items
-			invoice.Items.forEach(item => {
-				debugger
-				appendRow(item, item.BarCode);
-				setTotalPrice();
-			
-			});
+
+			for (const item of invoice.Items) {
+				await appendRow(item, item.BarCode);
+			}
 			scrollInvoiceTableToBottom();
-			// Restore other fields
+
 			$('#customer').val(invoice.CustomerId);
 			$('#salesPerson').val(invoice.SalesPersonId);
 			$('#servingTable').val(invoice.ServingTableId);
 			$('#discount').val(invoice.Discount);
 			setTotalPrice();
 
-			// Remove from held invoices
 			heldInvoices.splice(index, 1);
 			localStorage.setItem('heldInvoices', JSON.stringify(heldInvoices));
 			$('#heldInvoicesModal').modal('hide');
+			
+			holdMode = true;
+			$('#btn-submit-hold').html('<i class="icon-pause2 mr-1"></i> Hold/UnHold');
+			$('#barCode').focus();
 		}
-	
+		window.restoreHeldInvoice = restoreHeldInvoice;
 
-		 window.restoreHeldInvoice = restoreHeldInvoice;
-
-
-
-
-
-
-
-
-
-		$(document).on('click', '.product-add-btn', function () {
+		$(document).on('click', '.product-add-btn', async function () {
 			const $btn = $(this);
-
 			const productData = {
 				BarCode: $btn.data('barcode'),
 				ProductId: $btn.data('product-id'),
@@ -937,17 +844,16 @@
 				SizeName: $btn.data('sizename'),
 				ProductName: $btn.data('product-name'),
 				TaxRate: $btn.data('taxrate'),
-
-				CurrentPrice: parseFloat($btn.data('price'))
+				CurrentPrice: parseFloat($btn.data('price')),
+				Uomid: $btn.data('uomid'),
+				SubUomid: $btn.data('subuomid'),
+				Qty: $btn.data('qty')
 			};
-
-			appendProductToTable(productData);
+			await appendProductToTable(productData);
 		});
-	
-		$(document).on('click', '.product-tile', function () {
-			const $tile = $(this);
 
-			// Gather all product data from data attributes
+		$(document).on('click', '.product-tile', async function () {
+			const $tile = $(this);
 			const productData = {
 				BarCode: $tile.data('barcode'),
 				ProductId: $tile.data('product-id'),
@@ -955,102 +861,70 @@
 				SizeName: $tile.data('sizename'),
 				ProductName: $tile.find('h6').text().trim(),
 				CurrentPrice: parseFloat($tile.find('span').text().replace(/[^0-9.]/g, '')),
-				TaxRate: $tile.data('taxrate')
-
-
+				TaxRate: $tile.data('taxrate'),
+				Uomid: $tile.data('uomid'),
+				SubUomid: $tile.data('subuomid'),
+				Qty: $tile.data('qty')
 			};
-
-			// Use your existing function to add to invoice table
-			appendProductToTable(productData);
+			await appendProductToTable(productData);
 		});
-		
+
 		$('#barCode').focus();
-		  $(document).on('keydown', '#barCode', async function (e) {
+		$(document).on('keydown', '#barCode', async function (e) {
+			if (e.key === 'Enter') {
+				var barCode = $(this).val();
+				const data = await Utility.RequestDataAjax({
+					data: { BarCode: barCode },
+					url: '/Products/GetVariantbyBarCode'
+				});
 
-			  if (e.key === 'Enter') {
-					var barCode= $(this).val();
-
-					 const data = await Utility.RequestDataAjax( {
-					  data: { BarCode: barCode },
-					  url: '/Products/GetVariantbyBarCode'
-				  });
-
-				  if(data){
-					appendProductToTable(data);
-
-						$(this).focus();
+				if (data) {
+					await appendProductToTable(data);
+					$(this).focus();
 					$('#barCode').val('');
-
-				  } else
-				  {
+				} else {
 					alert('Product not found!');
 					$(this).val('');
-
-				  }
-
 				}
-		  });
-
-		function appendProductToTable(result) {
-    if (!result) return;
-
-    let isDuplicate = false;
-    let incomingBarcode = String(result.BarCode);
-    let incomingSubUomId = result.SubUomId || '';
-
-    $('#invoiceTable tbody tr').each(function () {
-        const barcode = String($(this).find('td').eq(0).data('barcode'));
-        const rowSubUomId = $(this).find('.subUomSelect').val() || '';
-
-        if (barcode === incomingBarcode && rowSubUomId === incomingSubUomId) {
-            isDuplicate = true;
-
-            let qtyInput = $(this).find('.lineqty');
-            let currentQty = parseFloat(qtyInput.val()) || 0;
-            let newQty = currentQty + 1;
-            qtyInput.val(newQty);
-
-            updateRowTotal($(this));
-            return false; 
-        }
-    });
-
-    if (isDuplicate) {
-        return; 
-    }
-
-    appendRow(result, incomingBarcode);
-    setTotalPrice();
-    scrollInvoiceTableToBottom();
-}
-
-			$(document).on('input', '.lineqty, .currentPrice', function () {
-		let row = $(this).closest('tr');
-
-		let qty = parseFloat(row.find('.lineqty').val()) || 0;
-		let unitPrice = parseFloat(row.find('.currentPrice').val()) || 0;
-
-		// Calculate the new line total
-		let lineTotal = unitPrice * qty;
-
-		// Update the line total cell
-		row.find('.lineTotal').text(lineTotal.toFixed(2));
-
-		// Update overall invoice total
-		setTotalPrice();
-	});
-
-		
-		$(document).on('input','#discount',function(){
-			setTotalPrice();
-		})
-	
-		function scrollInvoiceTableToBottom() {
-				let container = $('#invoiceRowSection');
-			 container.scrollTop(container[0].scrollHeight);
 			}
+		});
 
+		async function appendProductToTable(result) {
+			if (!result) return;
 
+			let isDuplicate = false;
+			let incomingBarcode = String(result.BarCode);
+			let incomingSubUomId = String(result.SubUomId || result.SubUomid || result.subUomId || result.subuomid || '');
+
+			$('#invoiceTable tbody tr').each(function () {
+				const barcode = String($(this).find('td').eq(0).data('barcode'));
+				const rowSubUomId = String($(this).find('.subUomSelect').val() || '');
+
+				if (barcode === incomingBarcode && rowSubUomId.toLowerCase() === incomingSubUomId.toLowerCase()) {
+					isDuplicate = true;
+					let qtyInput = $(this).find('.lineqty');
+					let currentQty = parseFloat(qtyInput.val()) || 0;
+					qtyInput.val(currentQty + 1);
+					updateRowTotal($(this));
+					return false;
+				}
+			});
+
+			if (isDuplicate) return;
+
+			await appendRow(result, incomingBarcode);
+			setTotalPrice();
+			scrollInvoiceTableToBottom();
+		}
+
+		$(document).on('input', '#discount', function () {
+			setTotalPrice();
+		});
+
+		function scrollInvoiceTableToBottom() {
+			let container = $('#invoiceRowSection');
+			container.scrollTop(container[0].scrollHeight);
+		}
 
 		$('#productSearch').select2({
 			placeholder: 'Search product by name, size, color, material...',
@@ -1061,16 +935,13 @@
 				dataType: 'json',
 				delay: 300,
 				data: function (params) {
-					return {
-						SearchParams: params.term
-					};
+					return { SearchParams: params.term };
 				},
 				processResults: function (data) {
-					// Expected: [{id, text, fullProductObject}]
 					return {
 						results: data.map(function (item) {
 							return {
-								id: item.BarCode, // or item.id
+								id: item.BarCode,
 								text: `${item.ProductName} - ${item.SizeName || ''} ${item.ColorName || ''} ${item.MaterialName || ''}`,
 								fullData: item
 							};
@@ -1083,42 +954,34 @@
 			templateSelection: formatProductSelection
 		});
 
-		// On select, append to table
-		$('#productSearch').on('select2:select', function (e) {
+		$('#productSearch').on('select2:select', async function (e) {
 			const data = e.params.data;
-			appendProductToTable(data.fullData);
-			// Optionally clear
+			await appendProductToTable(data.fullData);
 			$(this).val(null).trigger('change');
 		});
 
 		function formatProductResult(data) {
 			if (data.loading) return data.text;
-
 			let qty = data.fullData?.Qty ?? 0;
 			let qtyClass = (qty <= 0) ? 'text-danger font-weight-bold' : 'text-muted';
 
 			return $(`<div>
-					<strong>${data.text}</strong><br/>
-					<small>Price: ${data.fullData?.RetailPrice || 'N/A'}</small> |
-					<small class="${qtyClass}">Quantity: ${qty}</small>
-				</div>`);
+				<strong>${data.text}</strong><br/>
+				<small>Price: ${data.fullData?.RetailPrice || 'N/A'}</small> |
+				<small class="${qtyClass}">Quantity: ${qty}</small>
+			</div>`);
 		}
 
-
-		$(document).on('click','.removeRow',function(e){
+		$(document).on('click', '.removeRow', function (e) {
 			e.preventDefault();
-				$(this).closest('tr').remove();
-				setTotalPrice();
-		})
-
-
+			$(this).closest('tr').remove();
+			setTotalPrice();
+		});
 
 		function formatProductSelection(data) {
 			return data.text;
 		}
 
-	
-		
 		async function appendRow(result, incomingBarcode) {
 			let unitPrice = parseFloat(result.CurrentPrice || result.RetailPrice) || 0;
 			let taxRate = parseFloat(result.TaxRate) || 0;
@@ -1127,39 +990,11 @@
 			let qty = 1;
 			let isOutOfStock = false;
 
-			// Check if quantity is null, undefined, or 0 (Out of stock check)
-			if (rawQty === undefined || rawQty === null || parseFloat(rawQty) === 0) {
-				let confirmProceed = await new Promise((resolve) => {
-					let dialog = Utility.confirmBootBox("This item is currently out of stock (Qty: 0). Do you want to proceed and add it anyway with 1 quantity?");
-
-					// Listen for Enter keypress while the bootbox modal is active
-					setTimeout(() => {
-						$('.bootbox.modal').off('keydown.shortcut').on('keydown.shortcut', function(e) {
-							if (e.key === 'Enter') {
-								e.preventDefault();
-								// Find and trigger the confirm (Yes/Success) button
-								$('.bootbox .btn-success').trigger('click');
-							}
-						});
-					}, 100);
-
-					// Resolve through the existing callback wrapper
-					Utility.confirmBootBox("This item is currently out of stock (Qty: 0). Do you want to proceed and add it anyway with 1 quantity?").then(resolve);
-				});
-
-				// Note: To cleanly tie it into your existing Utility function without rewriting it:
-				// Let's use the direct call below:
-			}
-
-			// Let's write the clean version using your exact Utility method with Enter key listener:
-			if (rawQty === undefined || rawQty === null || parseFloat(rawQty) === 0) {
-
-				// Open bootbox and bind Enter key to 'Yes'
+			if (rawQty === undefined || rawQty === null || parseFloat(rawQty) <= 0) {
 				let confirmPromise = Utility.confirmBootBox("This item is currently out of stock (Qty: 0). Do you want to proceed and add it anyway with 1 quantity?");
 
-				// Auto-bind Enter key to confirm button immediately after render
 				setTimeout(() => {
-					$('.bootbox.modal').off('keydown.shortcut').on('keydown.shortcut', function(e) {
+					$('.bootbox.modal').off('keydown.shortcut').on('keydown.shortcut', function (e) {
 						if (e.key === 'Enter') {
 							e.preventDefault();
 							$('.bootbox .btn-success').click();
@@ -1168,14 +1003,12 @@
 				}, 100);
 
 				let confirmProceed = await confirmPromise;
+				if (!confirmProceed) return;
 
-				if (!confirmProceed) {
-					return;
-				}
 				qty = 1;
 				isOutOfStock = true;
 			} else {
-				qty = parseFloat(rawQty);
+				qty = parseFloat(rawQty) || 1;
 			}
 
 			let assignedSubUomId = result.SubUomId || result.SubUomid || result.subUomId || result.subuomid || '';
@@ -1199,57 +1032,53 @@
 			if (enableTax) {
 				row = `
 				<tr class="${rowClass}" data-base-unit-price="${baseUnitPrice}" data-current-factor="${initialFactor}">
-					<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+					<td class="pl-2 font-weight-semibold" data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
 						${result.ProductName}
 					</td>
 					<td class="text-center">${result.SizeName || ''}</td>
 					<td class="text-center">
-						<select class="form-control form-control-sm subUomSelect" style="max-width:110px;">
+						<select class="form-control form-control-sm subUomSelect" style="max-width:105px;">
 							${subUomOptions}
 						</select>
 					</td>
 					<td class="text-center">
-						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+						<input class='lineqty form-control form-control-sm text-center mx-auto' type='number' min='1' step='1' value='${qty}' style='width:52px;'/>
 					</td>
 					<td class='text-right'>
-						<input class='currentPrice text-center' type='number' min='0.01' step='any' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
+						<input class='currentPrice form-control form-control-sm text-center mx-auto' type='number' min='0.01' step='any' value='${unitPrice.toFixed(2)}' style='width:68px;'/>
 					</td>
 					<td class='taxPercent text-right'>${taxRate.toFixed(2)}</td>
-					<td class='taxAmount text-right'> ${taxAmount.toFixed(2)}</td>
-					<td class='lineTotal text-right'>${total.toFixed(2)}</td>
+					<td class='taxAmount text-right'>${taxAmount.toFixed(2)}</td>
+					<td class='lineTotal text-right font-weight-bold'>${total.toFixed(2)}</td>
 					<td class="text-center">
-						<div class="list-icons">
-							<a href="#" class="list-icons-item text-danger-600 removeRow text-center">
-							   <i class="icon-trash"></i>
-							</a>
-						</div>
+						<a href="#" class="text-danger removeRow" title="Remove Item">
+							<i class="icon-trash"></i>
+						</a>
 					</td>
 				</tr>`;
 			} else {
 				row = `
 				<tr class="${rowClass}" data-base-unit-price="${baseUnitPrice}" data-current-factor="${initialFactor}">
-					<td data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
+					<td class="pl-2 font-weight-semibold" data-productId="${result.ProductId}" data-barcode="${incomingBarcode}" data-variantId="${result.VariantId}">
 						${result.ProductName}
 					</td>
 					<td class="text-center">${result.SizeName || ''}</td>
 					<td class="text-center">
-						<select class="form-control form-control-sm subUomSelect" style="max-width:110px;">
+						<select class="form-control form-control-sm subUomSelect" style="max-width:105px;">
 							${subUomOptions}
 						</select>
 					</td>
 					<td class="text-center">
-						<input class='lineqty text-center' type='number' min='1' step='1' value='${qty}' style='max-width:50px;'/>
+						<input class='lineqty form-control form-control-sm text-center mx-auto' type='number' min='1' step='1' value='${qty}' style='width:52px;'/>
 					</td>
 					<td class='text-right'>
-						<input class='currentPrice text-center' type='text' value='${unitPrice.toFixed(2)}' style='max-width:70px;'/>
+						<input class='currentPrice form-control form-control-sm text-center mx-auto' type='text' value='${unitPrice.toFixed(2)}' style='width:68px;'/>
 					</td>
-					<td class='lineTotal text-right'>${lineAmount.toFixed(2)}</td>
+					<td class='lineTotal text-right font-weight-bold'>${lineAmount.toFixed(2)}</td>
 					<td class="text-center">
-						<div class="list-icons">
-							<a href="#" class="list-icons-item text-danger-600 removeRow text-center">
-							   <i class="icon-trash"></i>
-							</a>
-						</div>
+						<a href="#" class="text-danger removeRow" title="Remove Item">
+							<i class="icon-trash"></i>
+						</a>
 					</td>
 				</tr>`;
 			}
@@ -1257,212 +1086,172 @@
 			$('#invoiceTable tbody').append(row);
 		}
 
-			function updateGrandTotal(invoiceTotal) {
-					const discountAmount = parseFloat($('#discount').val()) || 0;
-					let totalAmount = invoiceTotal - discountAmount;
-
-					// Set Grand Total before tax
-					$('#grandTotal').val(totalAmount.toFixed(2));
-
-					let taxPercent = 0;
-					let taxAmount = 0;
-
-					// Check if tax field exists and has a value
-					if ($('#tax').length > 0) {
-						taxPercent = parseFloat($('#tax').val()) || 0;
-						if (taxPercent > 0) {
-							taxAmount = (totalAmount * taxPercent) / 100;
-						}
-					}
-
-					// Set Tax Amount
-					$('#totalTax').val(taxAmount.toFixed(2));
-
-					// Calculate Final Total Payable (TotalAmount + Tax)
-					const totalPayable = totalAmount + taxAmount;
-					$('#totalPayable').val(totalPayable.toFixed(2));
-			}
-
 		$(document).on('input', '#cashReceived', function () {
 			let payable = parseFloat($('#totalPayable').val()) || 0;
-			let cashRecived = parseFloat($(this).val());
-			// Get the unit price from the currentPrice td
-			let balance =cashRecived - payable || 0;
-			balance = Math.floor(balance);
-			$('#balance').val(balance);
+			let cashReceived = parseFloat($(this).val()) || 0;
+			let balance = cashReceived - payable;
+			$('#balance').val(balance.toFixed(2));
 		});
+	});
 
-	})
-		
 	$(document).ready(async function () {
-    await initializeSubUomsCache();
-});
-	async function initializeSubUomsCache() {
-		// 1. Check if sub-UOMs already exist in localStorage
-		let cachedData = localStorage.getItem('cached_sub_uoms');
+		await initializeSubUomsCache();
+	});
 
+	async function initializeSubUomsCache() {
+		let cachedData = localStorage.getItem('cached_sub_uoms');
 		if (cachedData) {
-			console.log("Sub-UOMs loaded from localStorage cache.");
 			return JSON.parse(cachedData);
 		}
-
 		try {
-			// 2. If not cached, fetch from the server
 			var res = await Utility.RequestAjax('/AttributeManager/GetAllSubUom');
-
 			if (res) {
-				// 3. Save to localStorage as a JSON string
 				localStorage.setItem('cached_sub_uoms', JSON.stringify(res));
-				console.log("Sub-UOMs fetched from server and cached.", res);
 				return res;
 			}
 		} catch (error) {
 			console.error("Failed to fetch sub-UOMs for cache:", error);
 		}
-
 		return [];
-	}
-	function getSubUomsForProduct(uomId) {
-		let allSubUoms = JSON.parse(localStorage.getItem('cached_sub_uoms')) || [];
-		debugger
-		// Filter matching UOMId
-		return allSubUoms.filter(sub => sub.UOMId === uomId);
 	}
 
 	$(document).on('change', '.subUomSelect', function () {
-    let row = $(this).closest('tr');
-    let selectedOption = $(this).find(':selected');
-    let newFactor = parseFloat(selectedOption.data('factor')) || 1;
+		let row = $(this).closest('tr');
+		let selectedOption = $(this).find(':selected');
+		let newFactor = parseFloat(selectedOption.data('factor')) || 1;
 
-    let baseUnitPrice = parseFloat(row.attr('data-base-unit-price')) || 0;
-    if (!baseUnitPrice) {
-        let currentPrice = parseFloat(row.find('.currentPrice').val()) || 0;
-        let oldFactor = parseFloat(row.attr('data-current-factor')) || 1;
-        baseUnitPrice = oldFactor > 0 ? currentPrice / oldFactor : currentPrice;
-        row.attr('data-base-unit-price', baseUnitPrice);
-    }
+		let baseUnitPrice = parseFloat(row.attr('data-base-unit-price')) || 0;
+		if (!baseUnitPrice) {
+			let currentPrice = parseFloat(row.find('.currentPrice').val()) || 0;
+			let oldFactor = parseFloat(row.attr('data-current-factor')) || 1;
+			baseUnitPrice = oldFactor > 0 ? currentPrice / oldFactor : currentPrice;
+			row.attr('data-base-unit-price', baseUnitPrice);
+		}
 
-    // Scale unit price according to new package conversion factor
-    let newUnitPrice = baseUnitPrice * newFactor;
-    row.find('.currentPrice').val(newUnitPrice.toFixed(2));
-    row.attr('data-current-factor', newFactor);
+		let newUnitPrice = baseUnitPrice * newFactor;
+		row.find('.currentPrice').val(newUnitPrice.toFixed(2));
+		row.attr('data-current-factor', newFactor);
 
-    updateRowTotal(row);
-});
-$(document).on('input', '.lineqty, .currentPrice', function () {
-    let row = $(this).closest('tr');
+		updateRowTotal(row);
+	});
 
-    // If cashier manually overrides unit price, re-evaluate base unit price
-    if ($(this).hasClass('currentPrice')) {
-        let currentPrice = parseFloat(row.find('.currentPrice').val()) || 0;
-        let currentFactor = parseFloat(row.attr('data-current-factor')) || 1;
-        let baseUnitPrice = currentFactor > 0 ? currentPrice / currentFactor : currentPrice;
-        row.attr('data-base-unit-price', baseUnitPrice);
-    }
+	$(document).on('input', '.lineqty, .currentPrice', function () {
+		let row = $(this).closest('tr');
+		if ($(this).hasClass('currentPrice')) {
+			let currentPrice = parseFloat(row.find('.currentPrice').val()) || 0;
+			let currentFactor = parseFloat(row.attr('data-current-factor')) || 1;
+			let baseUnitPrice = currentFactor > 0 ? currentPrice / currentFactor : currentPrice;
+			row.attr('data-base-unit-price', baseUnitPrice);
+		}
+		updateRowTotal(row);
+	});
 
-    updateRowTotal(row);
-});
+	function updateRowTotal(row) {
+		let qty = parseFloat(row.find('.lineqty').val()) || 0;
+		let unitPrice = parseFloat(row.find('.currentPrice').val()) || 0;
 
-function updateRowTotal(row) {
-    let qty = parseFloat(row.find('.lineqty').val()) || 0;
-    let unitPrice = parseFloat(row.find('.currentPrice').val()) || 0;
-    
-    let taxRate = 0;
-    let $taxPercent = row.find('.taxPercent');
-    if ($taxPercent.length > 0) {
-        taxRate = parseFloat($taxPercent.text()) || 0;
-    }
+		let taxRate = 0;
+		let $taxPercent = row.find('.taxPercent');
+		if ($taxPercent.length > 0) {
+			taxRate = parseFloat($taxPercent.text()) || 0;
+		}
 
-    let lineAmount = unitPrice * qty;
-    let taxAmount = (lineAmount * taxRate) / 100;
-    let total = lineAmount + taxAmount;
+		let lineAmount = unitPrice * qty;
+		let taxAmount = (lineAmount * taxRate) / 100;
+		let total = lineAmount + taxAmount;
 
-    let $taxAmount = row.find('.taxAmount');
-    if ($taxAmount.length > 0) {
-        $taxAmount.text(taxAmount.toFixed(2));
-    }
-    row.find('.lineTotal').text(total.toFixed(2));
+		let $taxAmount = row.find('.taxAmount');
+		if ($taxAmount.length > 0) {
+			$taxAmount.text(taxAmount.toFixed(2));
+		}
+		row.find('.lineTotal').text(total.toFixed(2));
 
-    setTotalPrice();
-}
+		setTotalPrice();
+	}
 
-function setTotalPrice() {
-    let totalAmount = 0;
-    let totalTax = 0;
+	function setTotalPrice() {
+		let totalAmount = 0;
+		let totalTax = 0;
 
-    $('#invoiceTable tbody tr').each(function () {
-        let qty = parseFloat($(this).find('.lineqty').val()) || 0;
-        let unitPrice = parseFloat($(this).find('.currentPrice').val()) || 0;
-        
-        let taxRate = 0;
-        let $taxPercent = $(this).find('.taxPercent');
-        if ($taxPercent.length > 0) {
-            taxRate = parseFloat($taxPercent.text()) || 0;
-        }
+		$('#invoiceTable tbody tr').each(function () {
+			let qty = parseFloat($(this).find('.lineqty').val()) || 0;
+			let unitPrice = parseFloat($(this).find('.currentPrice').val()) || 0;
 
-        let lineTotal = unitPrice * qty;
-        let taxAmount = (lineTotal * taxRate) / 100;
+			let taxRate = 0;
+			let $taxPercent = $(this).find('.taxPercent');
+			if ($taxPercent.length > 0) {
+				taxRate = parseFloat($taxPercent.text()) || 0;
+			}
 
-        totalAmount += lineTotal;
-        totalTax += taxAmount;
-    });
+			let lineTotal = unitPrice * qty;
+			let taxAmount = (lineTotal * taxRate) / 100;
 
-    let grandTotal = totalAmount + totalTax;
+			totalAmount += lineTotal;
+			totalTax += taxAmount;
+		});
 
-    let discount = parseFloat($('#discount').val()) || 0;
-    if (discount > grandTotal) discount = grandTotal; 
+		let grandTotal = totalAmount + totalTax;
 
-    let payable = grandTotal - discount;
+		let discount = parseFloat($('#discount').val()) || 0;
+		if (discount > grandTotal) discount = grandTotal;
 
-    $('#totalAmount').val(totalAmount.toFixed(2));
-    $('#totalTax').val(totalTax.toFixed(2));
-    $('#grandTotal').val(grandTotal.toFixed(2));
-    $('#totalPayable').val(payable.toFixed(2));
-}
+		let payable = grandTotal - discount;
 
-// 1. Get filtered sub-UOMs for a given product UOM ID from cache
-function getSubUomsForProduct(uomId) {
-    let allSubUoms = JSON.parse(localStorage.getItem('cached_sub_uoms')) || [];
-    if (!uomId) return [];
-    return allSubUoms.filter(sub => String(sub.UOMId) === String(uomId));
-}
+		$('#totalAmount').val(totalAmount.toFixed(2));
+		$('#totalTax').val(totalTax.toFixed(2));
+		$('#grandTotal').val(grandTotal.toFixed(2));
+		$('#totalPayable').val(payable.toFixed(2));
 
-// 2. Build HTML options string for the dropdown, ensuring the variant's specific SubUomId is selected
-function buildSubUomDropdownHtml(subUoms, selectedSubUomId) {
-    let optionsHtml = '';
-    let initialFactor = 1;
-    let foundSelected = false;
+		let cashReceived = parseFloat($('#cashReceived').val()) || 0;
+		if (cashReceived > 0) {
+			$('#balance').val((cashReceived - payable).toFixed(2));
+		} else {
+			$('#balance').val('0.00');
+		}
+	}
 
-    if (subUoms && subUoms.length > 0) {
-        subUoms.forEach(sub => {
-            let isSelected = (selectedSubUomId && String(sub.SubUomId) === String(selectedSubUomId));
-            if (isSelected) {
-                initialFactor = parseFloat(sub.ConversionFactor) || 1;
-                foundSelected = true;
-            }
-            optionsHtml += `<option value="${sub.SubUomId}" data-factor="${sub.ConversionFactor}" ${isSelected ? 'selected' : ''}>${sub.SubUOMName}</option>`;
-        });
+	function getSubUomsForProduct(uomId) {
+		let allSubUoms = JSON.parse(localStorage.getItem('cached_sub_uoms')) || [];
+		if (!uomId) return [];
+		let target = String(uomId).toLowerCase();
+		return allSubUoms.filter(sub => String(sub.UOMId || sub.Uomid || sub.uomId || '').toLowerCase() === target);
+	}
 
-        // Fallback: If no matching SubUomId was found, default to the first option
-        if (!foundSelected && subUoms.length > 0) {
-            initialFactor = parseFloat(subUoms[0].ConversionFactor) || 1;
-            // Force the 'selected' attribute onto the first option if it wasn't marked
-            optionsHtml = optionsHtml.replace('value="' + subUoms[0].SubUomId + '"', 'value="' + subUoms[0].SubUomId + '" selected');
-        }
-    } else {
-        optionsHtml = `<option value="" data-factor="1" selected>Default Unit</option>`;
-        initialFactor = 1;
-    }
+	function buildSubUomDropdownHtml(subUoms, selectedSubUomId) {
+		let optionsHtml = '';
+		let initialFactor = 1;
+		let foundSelected = false;
+		let targetSub = selectedSubUomId ? String(selectedSubUomId).toLowerCase() : '';
 
-    return {
-        optionsHtml: optionsHtml,
-        initialFactor: initialFactor
-    };
-}
+		if (subUoms && subUoms.length > 0) {
+			subUoms.forEach(sub => {
+				let subId = String(sub.SubUomId || sub.SubUomid || sub.subUomId || '');
+				let isSelected = (targetSub && subId.toLowerCase() === targetSub);
+				if (isSelected) {
+					initialFactor = parseFloat(sub.ConversionFactor) || 1;
+					foundSelected = true;
+				}
+				optionsHtml += `<option value="${subId}" data-factor="${sub.ConversionFactor}" ${isSelected ? 'selected' : ''}>${sub.SubUOMName}</option>`;
+			});
 
-// 3. Calculate base unit price safely
-function calculateBaseUnitPrice(unitPrice, conversionFactor) {
-    let factor = conversionFactor > 0 ? conversionFactor : 1;
-    return unitPrice / factor;
-}
+			if (!foundSelected && subUoms.length > 0) {
+				let firstId = String(subUoms[0].SubUomId || subUoms[0].SubUomid || subUoms[0].subUomId || '');
+				initialFactor = parseFloat(subUoms[0].ConversionFactor) || 1;
+				optionsHtml = optionsHtml.replace('value="' + firstId + '"', 'value="' + firstId + '" selected');
+			}
+		} else {
+			optionsHtml = `<option value="" data-factor="1" selected>Default Unit</option>`;
+			initialFactor = 1;
+		}
+
+		return {
+			optionsHtml: optionsHtml,
+			initialFactor: initialFactor
+		};
+	}
+
+	function calculateBaseUnitPrice(unitPrice, conversionFactor) {
+		let factor = conversionFactor > 0 ? conversionFactor : 1;
+		return unitPrice / factor;
+	}
 </script>

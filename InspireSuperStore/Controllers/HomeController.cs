@@ -59,7 +59,12 @@ namespace InspireSuperStore.Controllers
 
 		public async Task<IActionResult> Index()
 		{
-			await _notificationServices.NotifyOnlineUsersUpdated();
+            var activeTill = HttpContext.Session.GetString("ActiveTill");
+            if (string.IsNullOrEmpty(activeTill))
+            {
+                return RedirectToAction("SelectTill", "Home");
+            }
+            await _notificationServices.NotifyOnlineUsersUpdated();
 			await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Welcome! You are logged in.");
 
 			var res =await new ProjectRepository(_config, _onedb,_sessionService).GetProjectWiseReportAsync();
@@ -73,8 +78,25 @@ namespace InspireSuperStore.Controllers
 
             return View(vm);
 		}
+        [HttpGet]
+        public IActionResult SelectTill()
+        {
+            return View();
+        }
+        [HttpPost]
+        public IActionResult SelectTill(string tillName)
+        {
+            if (string.IsNullOrEmpty(tillName))
+            {
+                ModelState.AddModelError("", "Please select a valid counter.");
+                return View();
+            }
 
-		public IActionResult ToggleSideMenu()
+            HttpContext.Session.SetString("ActiveTill", tillName);
+            
+            return RedirectToAction("Index", "Home");
+        }
+        public IActionResult ToggleSideMenu()
 		{
 			if (PagesViewModel.ThemeSettings.ToggleSideBar == "sidebar-xs")
 			{

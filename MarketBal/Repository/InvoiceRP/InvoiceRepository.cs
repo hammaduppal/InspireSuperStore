@@ -40,15 +40,27 @@ namespace MarketBal.Repository.InvoiceRP
             _accountsReceivableRepository = new AccountsReceivableRepository(_config, _onedb, _sessionService);
         }
 
-        public async Task<List<InvoiceMasterVM>> GetInvoices()
+        public async Task<List<InvoiceMasterVM>> GetInvoices(short tillId)
         {
             try
             {
-                var model = await _onedb.InvoiceMasters.Select(x => new InvoiceMasterVM
+                // Check if the current user has the Admin role
+                bool isAdmin = _sessionService.SessionUser?.Roles?.Any(x => x.Name == "Admin") ?? false;
+
+                var query = _onedb.InvoiceMasters.AsQueryable();
+
+                // Apply till filter only if the user is NOT an admin
+                if (!isAdmin)
+                {
+                    query = query.Where(x => x.TillNo == tillId);
+                }
+
+                var model = await query.Select(x => new InvoiceMasterVM
                 {
                     InvoiceMasterId = x.InvoiceMasterId,
                     InvoiceNo = x.InvoiceNo,
                     GrandTotal = x.GrandTotal.Value,
+                    ParentInvoiceId = x.ParentInvoiceId,
                     CustomerId = x.CustomerId,
                     DiscountAmount = x.DiscountAmount,
                     TaxAmount = x.TaxAmount,
@@ -97,13 +109,9 @@ namespace MarketBal.Repository.InvoiceRP
             }
             catch (Exception)
             {
-
                 throw;
             }
-
         }
-
-
         public async Task<InvoiceMaster> SaveInvoice(InvoiceMasterVM model)
         {
             using (var transaction = await _onedb.Database.BeginTransactionAsync())
@@ -113,17 +121,35 @@ namespace MarketBal.Repository.InvoiceRP
                     var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
 
                     // Generate Invoice Number
+                    //var lastInvoice = await _onedb.InvoiceMasters
+                    //    .OrderByDescending(i => i.CreatedDate)
+                    //    .FirstOrDefaultAsync();
+
+                    //var invoicePrefix = _sessionService.SystemPreferences.InvoicePrefix;
+                    //string newInvoiceNo = $"{invoicePrefix}-001";
+
+                    //if (lastInvoice != null && !string.IsNullOrEmpty(lastInvoice.InvoiceNo))
+                    //{
+                    //    var lastNo = lastInvoice.InvoiceNo.Split('-')[1];
+                    //    if (int.TryParse(lastNo, out int number))
+                    //    {
+                    //        newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
+                    //    }
+                    //}
+                    var invoicePrefix = _sessionService.SystemPreferences.InvoicePrefix;
+
+                    // Fetch only the last standard (non-return) invoice
                     var lastInvoice = await _onedb.InvoiceMasters
+                        .Where(i => i.PaymentStatusId == 1 && i.InvoiceNo.StartsWith(invoicePrefix + "-"))
                         .OrderByDescending(i => i.CreatedDate)
                         .FirstOrDefaultAsync();
 
-                    var invoicePrefix = _sessionService.SystemPreferences.InvoicePrefix;
                     string newInvoiceNo = $"{invoicePrefix}-001";
 
                     if (lastInvoice != null && !string.IsNullOrEmpty(lastInvoice.InvoiceNo))
                     {
-                        var lastNo = lastInvoice.InvoiceNo.Split('-')[1];
-                        if (int.TryParse(lastNo, out int number))
+                        var parts = lastInvoice.InvoiceNo.Split('-');
+                        if (parts.Length > 0 && int.TryParse(parts.Last(), out int number))
                         {
                             newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
                         }
@@ -145,7 +171,7 @@ namespace MarketBal.Repository.InvoiceRP
                         CustomerId = (model.CustomerId.HasValue && model.CustomerId.Value != Guid.Empty)
                                         ? model.CustomerId
                                         : null,
-
+                        TillNo = model.TillNo,
                         TotalAmount = totalAmount,
                         DiscountAmount = discount,
                         TaxAmount = totalTax,
@@ -189,8 +215,12 @@ namespace MarketBal.Repository.InvoiceRP
                         decimal lineTotal = detail.UnitPrice * detail.Quantity;
                         decimal taxAmount = (detail.TaxRate) * lineTotal / 100;
                         decimal lineTotalWithTax = lineTotal + taxAmount;
+                        var itemcost = await _onedb.BranchStocks.Where(p => p.ProductVariantId == detail.VariantId).Select(p => p.Cost).FirstOrDefaultAsync();
                         var factorization = await _onedb.Uomsubs.Where(x => x.SubUomid == detail.SubUomId).FirstOrDefaultAsync();
-                        
+                        if (factorization == null)
+                        {
+                            factorization = await _onedb.Uomsubs.Where(x => x.ConversionFactor == 1).FirstOrDefaultAsync();
+                        }
                         var invoiceDetail = new InvoiceDetail
                         {
                             InvoiceDetailId = Guid.NewGuid(),
@@ -199,7 +229,7 @@ namespace MarketBal.Repository.InvoiceRP
                             VariantId = (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
                                             ? detail.VariantId
                                             : null,
-                            SubUomid=detail.SubUomId,
+                            SubUomid = detail.SubUomId,
                             Quantity = factorization.ConversionFactor.Value * detail.Quantity,
                             UnitPrice = detail.UnitPrice,
                             Discount = detail.Discount ?? 0,
@@ -207,11 +237,13 @@ namespace MarketBal.Repository.InvoiceRP
                             TaxAmount = taxAmount,
                             LineTotal = lineTotal,
                             LineTotalWithTax = lineTotalWithTax,
-                            Remarks = detail.Remarks ?? string.Empty
+                            Remarks = detail.Remarks ?? string.Empty,
+                            Cost = itemcost,
+
                         };
                         invoiceMaster.InvoiceDetails.Add(invoiceDetail);
                         _onedb.InvoiceDetails.Add(invoiceDetail);
-                      
+
                         // ---------- Update Inventory ----------
                         if (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
                         {
@@ -273,7 +305,7 @@ namespace MarketBal.Repository.InvoiceRP
                     await transaction.CommitAsync();
                     return invoiceMaster;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
                     throw;
@@ -429,7 +461,188 @@ namespace MarketBal.Repository.InvoiceRP
         }
 
 
-        public async Task<byte[]> GenerateInvoiceHTML(InvoiceMaster model,IWebHostEnvironment _env)
+
+
+        public async Task<InvoiceMaster> SaveReturnInvoice(InvoiceMasterVM model)
+        {
+            using (var transaction = await _onedb.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    if (model == null || model.ParentInvoiceId == null || model.ParentInvoiceId == Guid.Empty)
+                    {
+                        throw new ArgumentException("Invalid or missing parent invoice reference for return.");
+                    }
+
+                    var commonParams = CommonParamHelper.GetCommonParams(_sessionService);
+
+                    // Generate Return Invoice Number (e.g., INV-RET-001)
+                    var lastInvoice = await _onedb.InvoiceMasters
+                        .OrderByDescending(i => i.CreatedDate)
+                        .FirstOrDefaultAsync();
+
+                    var invoicePrefix = _sessionService.SystemPreferences.InvoicePrefix + "-RET";
+                    string newInvoiceNo = $"{invoicePrefix}-001";
+
+                    if (lastInvoice != null && !string.IsNullOrEmpty(lastInvoice.InvoiceNo))
+                    {
+                        var parts = lastInvoice.InvoiceNo.Split('-');
+                        if (parts.Length > 1 && int.TryParse(parts.Last(), out int number))
+                        {
+                            newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
+                        }
+                    }
+
+                    // ---------- Return Calculations ----------
+                    decimal totalAmount = model.InvoiceDetails.Sum(d => d.UnitPrice * d.Quantity);
+                    decimal totalTax = model.InvoiceDetails.Sum(d => (d.TaxRate) * (d.UnitPrice * d.Quantity) / 100);
+                    decimal discount = model.DiscountAmount ?? 0;
+                    decimal grandTotal = totalAmount + totalTax - discount;
+                    lastInvoice.PaymentMethodId = (int)AppConstants.PaymentStatus.Refunded;
+                    // ---------- Return Invoice Master ----------
+                    var returnMaster = new InvoiceMaster
+                    {
+                        InvoiceMasterId = Guid.NewGuid(),
+                        InvoiceNo = newInvoiceNo,
+                        InvoiceDate = commonParams.CreatedOn ?? DateTime.Now,
+                        ParentInvoiceId = model.ParentInvoiceId,
+                        TillNo = model.TillNo,
+                        IsCancelled = true,
+
+                        CustomerId = (model.CustomerId.HasValue && model.CustomerId.Value != Guid.Empty)
+                                        ? model.CustomerId
+                                        : null,
+
+                        TotalAmount = totalAmount,
+                        DiscountAmount = discount,
+                        TaxAmount = totalTax,
+                        GrandTotal = grandTotal,
+
+                        PaymentMethodId = model.PaymentMethodId,
+                        PaymentStatusId = (int)AppConstants.PaymentStatus.Refunded, // Paid/Processed refund
+                        ShippingTypeId = 1,
+                        InvoiceSourceId = model.InvoiceSourceId ?? (int)AppConstants.InvoiceSource.POS,
+
+                        CustomerRemarks = model.CustomerRemarks,
+                        OfficeRemarks = "Return / Refund against Invoice ID: " + model.ParentInvoiceId,
+
+                        CreatedBy = _sessionService.SessionUser?.Id ?? 1,
+                        CreatedDate = commonParams.CreatedOn ?? DateTime.Now,
+                        UpdatedDate = commonParams.CreatedOn ?? DateTime.Now,
+                        DueDate = commonParams.CreatedOn?.Date
+                    };
+
+                    _onedb.InvoiceMasters.Add(returnMaster);
+                    await _onedb.SaveChangesAsync();
+
+                    // Track list of return details for cost accounting calculation
+                    var processedReturnDetails = new List<InvoiceDetail>();
+
+                    // ---------- Return Details & Inventory Restock ----------
+                    foreach (var detail in model.InvoiceDetails)
+                    {
+                        if (detail.Quantity <= 0) continue;
+
+                        decimal lineTotal = detail.UnitPrice * detail.Quantity;
+                        decimal taxAmount = (detail.TaxRate) * lineTotal / 100;
+                        decimal lineTotalWithTax = lineTotal + taxAmount;
+
+                        var factorization = await _onedb.Uomsubs.Where(x => x.SubUomid == detail.SubUomId).FirstOrDefaultAsync();
+                        if (factorization == null)
+                        {
+                            factorization = await _onedb.Uomsubs.Where(x => x.ConversionFactor == 1).FirstOrDefaultAsync();
+                        }
+
+                        decimal convertedQty = factorization.ConversionFactor.Value * detail.Quantity;
+
+                        var returnDetail = new InvoiceDetail
+                        {
+                            InvoiceDetailId = Guid.NewGuid(),
+                            InvoiceMasterId = returnMaster.InvoiceMasterId,
+                            ProductId = detail.ProductId,
+                            VariantId = (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
+                                            ? detail.VariantId
+                                            : null,
+                            SubUomid = detail.SubUomId,
+                            Quantity = convertedQty,
+                            UnitPrice = detail.UnitPrice,
+                            Discount = detail.Discount ?? 0,
+                            TaxRate = detail.TaxRate,
+                            TaxAmount = taxAmount,
+                            LineTotal = lineTotal,
+                            LineTotalWithTax = lineTotalWithTax,
+                            Remarks = detail.Remarks ?? string.Empty,
+                            Cost = detail.Cost // Preserved historical cost snapshot
+                        };
+
+                        returnMaster.InvoiceDetails.Add(returnDetail);
+                        _onedb.InvoiceDetails.Add(returnDetail);
+                        processedReturnDetails.Add(returnDetail);
+
+                        // ---------- RESTOCK INVENTORY (ADD BACK) ----------
+                        if (detail.VariantId.HasValue && detail.VariantId.Value != Guid.Empty)
+                        {
+                            var branchstock = await _onedb.BranchStocks
+                                .FirstOrDefaultAsync(v =>
+                                    v.ProductVariantId == detail.VariantId &&
+                                    v.BranchId == _sessionService.SessionUser.Person.Branch.BranchId);
+
+                            if (branchstock != null)
+                            {
+                                branchstock.Qty += convertedQty;
+                                _onedb.BranchStocks.Update(branchstock);
+                            }
+                        }
+
+                        var product = await _onedb.Products
+                         .FirstOrDefaultAsync(p => p.ProductId == detail.ProductId);
+                        if (product != null)
+                        {
+                            product.Qoh = (product.Qoh ?? 0m) + convertedQty;
+                            _onedb.Products.Update(product);
+                        }
+                    }
+
+                    // ---------- ACCOUNTING JOURNALS & COGS CALCULATION ----------
+                    bool isCashReturn = (returnMaster.PaymentStatusId == 1);
+
+                    Customer customer = null;
+                    if (returnMaster.CustomerId.HasValue)
+                    {
+                        customer = await _hrmRepository.GetCustomer(returnMaster.CustomerId.Value);
+                    }
+
+                    // Calculate total cost of returned goods using stored cost snapshots
+                    decimal returnCost = processedReturnDetails.Sum(d => (d.Cost ?? 0m) * d.Quantity);
+
+                    if (customer != null)
+                    {
+                        await _journalRepo.AddReturnJournals(returnMaster, isCashReturn, customer, returnCost);
+                    }
+
+                    await _onedb.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return returnMaster;
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+        public async Task<byte[]> GenerateInvoiceHTML(InvoiceMaster model, IWebHostEnvironment _env)
         {
             try
             {
@@ -720,6 +933,24 @@ namespace MarketBal.Repository.InvoiceRP
                 throw new ApplicationException("Error calculating cost of goods", ex);
             }
         }
+        public async Task<decimal> GetCostofGoodsFromInvoice(List<InvoiceDetail> invoiceDetails)
+        {
+            try
+            {
+                if (invoiceDetails == null || !invoiceDetails.Any())
+                    return 0m;
 
+                // Calculate total cost directly from the saved Cost snapshot on each detail row
+                decimal totalCost = invoiceDetails
+                    .Where(i => i.Quantity > 0)
+                    .Sum(i => (i.Cost ?? 0m) * i.Quantity);
+
+                return totalCost;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("Error calculating cost of goods from invoice details", ex);
+            }
+        }
     }
 }
