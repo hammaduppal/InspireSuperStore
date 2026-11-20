@@ -828,8 +828,8 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                 //Guid branchId = Guid.NewGuid();
 
                 // Only proceed if tables are empty
-                if (!_onedb.Organizations.Any() && !_onedb.LoginUsers.Any())
-                {
+                //if (!_onedb.Organizations.Any() && !_onedb.LoginUsers.Any())
+                //{
                     var organization = new Organization
                     {
                         OrganizationName = model.BusinessName,
@@ -845,18 +845,20 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                     var businessType = _onedb.BusinessEntityTypes.Where(x => x.BusinessEntityTypeId == model.BusinessEntity).FirstOrDefault();
                     var getOrganization = _onedb.Organizations.ToList();
                     var singleOrganization = getOrganization.FirstOrDefault();
-                    //var branch = new Branch
-                    //{
-                    //    BranchId = branchId,
-                    //    BranchName = model.BranchName,
-                    //    OrganizationId = singleOrganization.OrganizationId,
+                //var branch = new Branch
+                //{
+                //    BranchId = branchId,
+                //    BranchName = model.BranchName,
+                //    OrganizationId = singleOrganization.OrganizationId,
 
-                    //};
-                    //await _onedb.Branches.AddAsync(branch);
-
-                    var loginUser = new LoginUser
+                //};
+                //await _onedb.Branches.AddAsync(branch);
+                int maxId = _onedb.LoginUsers.Any()
+                ? _onedb.LoginUsers.Max(x => x.Id)
+                : 0;
+                var loginUser = new LoginUser
                     {
-                        Id = 1,
+                        Id = maxId + 1,
                         UserName = model.Email,
                         Password = EncryptionPasses.Encrypt(model.Password, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE),
                         IsActive = true,
@@ -865,17 +867,19 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                     };
                     await _onedb.LoginUsers.AddAsync(loginUser);
 
-                    //var role = new Role
-                    //{
-                    //    Id = 1,
-                    //    Name = "SuperAdmin",
-                    //    IsActive = true
-                    //};
-                    //await _onedb.Roles.AddAsync(role);
-
-                    var assignedRole = new AssignedRole
+                //var role = new Role
+                //{
+                //    Id = 1,
+                //    Name = "SuperAdmin",
+                //    IsActive = true
+                //};
+                //await _onedb.Roles.AddAsync(role);
+                int maxRoleId = _onedb.AssignedRoles.Any()
+                ? _onedb.AssignedRoles.Max(x => x.Id)
+                : 0;
+                var assignedRole = new AssignedRole
                     {
-                        Id = 1,
+                        Id = maxRoleId +1,
                         LoginId = loginUser.Id,
                         RoleId = 1,
                         CreatedOn = currentTime,
@@ -901,9 +905,9 @@ NewId(),@BranchName,@OrganizationId,@BranchCode,@BusinessEntityTypeId,@BusinessC
                     await transaction.CommitAsync();
                    // await InsertSeedData();
                     return true;
-                }
+                //}
 
-                return false; // Already seeded
+                //return false; // Already seeded
             }
             catch (Exception ex)
             {
