@@ -136,25 +136,30 @@ namespace MarketBal.Repository.InvoiceRP
                     //        newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
                     //    }
                     //}
-                    var invoicePrefix = _sessionService.SystemPreferences.InvoicePrefix;
+                    var basePrefix = _sessionService.SystemPreferences.InvoicePrefix; // e.g., "INV"
+                    var standardPrefix = $"{basePrefix}-";
+                    var returnPrefix = $"{basePrefix}-RET-";
 
-                    // Fetch only the last standard (non-return) invoice
-                    var lastInvoice = await _onedb.InvoiceMasters
-                        .Where(i => i.PaymentStatusId == 1 && i.InvoiceNo.StartsWith(invoicePrefix + "-"))
+                    // Fetch the most recent standard invoice (exclude return invoices)
+                    var lastStandardInvoice = await _onedb.InvoiceMasters
+                        .Where(i => i.InvoiceNo != null
+                                 && i.InvoiceNo.StartsWith(standardPrefix)
+                                 && !i.InvoiceNo.StartsWith(returnPrefix))
                         .OrderByDescending(i => i.CreatedDate)
                         .FirstOrDefaultAsync();
 
-                    string newInvoiceNo = $"{invoicePrefix}-001";
+                    int nextNumber = 1;
 
-                    if (lastInvoice != null && !string.IsNullOrEmpty(lastInvoice.InvoiceNo))
+                    if (lastStandardInvoice != null)
                     {
-                        var parts = lastInvoice.InvoiceNo.Split('-');
-                        if (parts.Length > 0 && int.TryParse(parts.Last(), out int number))
+                        var parts = lastStandardInvoice.InvoiceNo.Split('-');
+                        if (parts.Length >= 2 && int.TryParse(parts.Last(), out int lastNumber))
                         {
-                            newInvoiceNo = $"{invoicePrefix}-{(number + 1).ToString("D3")}";
+                            nextNumber = lastNumber + 1;
                         }
                     }
 
+                    string newInvoiceNo = $"{standardPrefix}{nextNumber:D3}";
                     // ---------- Calculations ----------
                     decimal totalAmount = model.InvoiceDetails.Sum(d => d.UnitPrice * d.Quantity);
                     decimal totalTax = model.InvoiceDetails.Sum(d => (d.TaxRate) * (d.UnitPrice * d.Quantity) / 100);
