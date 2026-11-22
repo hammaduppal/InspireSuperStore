@@ -5,6 +5,7 @@ using MainModels.Util;
 using MarketBal.Repository;
 using MarketBal.Repository.Account;
 using MarketBal.Repository.HRM;
+using MarketBal.Repository.InvoiceRP;
 using MarketBal.Repository.SystemRP;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -116,15 +117,35 @@ namespace InspireSuperStore.Areas.Account.Controllers
                 int allowedDevices = 200;
                 string url = (string)TempData["ReturnURL"];
                 var res = await _login.ValidateLogin(formData);
-
+              
                 if (res != null)
                 {
+
+
+                  
                     if (res.Person != null)
                     {
+                        #region licenseCheckingSection
                         var serverInfo = _license.GetServerFingerprint();
+
+                        var licenseStatus = await _login.GetActiveBranchLicense(res.Person.BranchId.Value);
+                        var licenseCheck = LicenseService.ValidateLicenseRecord(licenseStatus, serverInfo);
+                        if (!licenseCheck.IsValid)
+                        {
+                            TempData["LicenseError"] = licenseCheck.Message;
+                            TempData["LicenseBranchId"] = res.Person.BranchId.Value;
+                            return Json(new
+                            {
+                                statusCode = "402",
+                                URL = "/License/LicenseActivation",
+                                Message = licenseCheck.Message
+                            });
+                        }
+                        #endregion
+
                         var deviceInfo = new DeviceRequestModelVM
                         {
-                            DeviceUniqueId = formData.Device.DeviceUniqueId, // from localStorage
+                            DeviceUniqueId = formData.Device.DeviceUniqueId, 
                             DeviceName = formData.Device.DeviceName,
                             BrowserName = formData.Device.BrowserName,
                             OperatingSystem = formData.Device.OperatingSystem,
@@ -173,10 +194,17 @@ namespace InspireSuperStore.Areas.Account.Controllers
                 return BadRequest(new { message = "Invalid JWT", error = ex.Message });
             }
         }
-
+        
         public async Task<IActionResult> Logout()
         {
             await _login.LogoutAsync(HttpContext);
+            var activeTill = HttpContext.Session.GetString("ActiveTill");
+
+            if (!string.IsNullOrWhiteSpace(activeTill))
+            {
+                ActiveTillTracker.ReleaseTill(activeTill);
+                HttpContext.Session.Remove("ActiveTill");
+            }
             return RedirectToAction("Login", "Account");
         }
         public IActionResult Failure()

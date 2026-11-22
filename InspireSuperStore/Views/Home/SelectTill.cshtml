@@ -1,7 +1,9 @@
 ﻿@using MainModels.DTOModels
 @{
     ViewData["Title"] = "Select Counter / Till";
-    int maxTills = PagesViewModel.SystemSettings.AllowedTills; // Reads 3 from your SystemSettings config
+    int maxTills = PagesViewModel.SystemSettings.AllowedTills;
+    var bookedTills = ViewBag.BookedTills as Dictionary<string, string> ?? new Dictionary<string, string>();
+    string currentUser = ViewBag.CurrentUser as string ?? "";
 }
 
 <div class="card col-md-6 offset-md-3 mt-5 shadow-sm">
@@ -10,6 +12,13 @@
         <span class="text-muted font-size-sm">Please choose your register terminal before continuing.</span>
     </div>
     <div class="card-body">
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+            </div>
+        }
+
         <form asp-action="SelectTill" method="post">
             <div class="form-group mb-4">
                 <label class="font-weight-semibold">Active Register</label>
@@ -17,7 +26,18 @@
                     <option value="">-- Choose Till --</option>
                     @for (int i = 1; i <= maxTills; i++)
                     {
-                        <option value="Till-@i">Till-@i (Counter @i)</option>
+                        string tillKey = $"Till-{i}";
+                        bool isBookedByOther = bookedTills.TryGetValue(tillKey, out var owner) && owner != currentUser;
+
+                        if (isBookedByOther)
+                        {
+                            // To hide it instead of disabling, replace the line below with: continue;
+                            <option value="@tillKey" disabled>@tillKey (Counter @i) - Already Booked</option>
+                        }
+                        else
+                        {
+                            <option value="@tillKey">@tillKey (Counter @i)</option>
+                        }
                     }
                 </select>
             </div>

@@ -59,9 +59,40 @@ namespace MarketBal.Repository.Account
                 var organzation = await _db.ExecuteQuery<OrganizationVM>(query);
                 result.Person.Branch.Organization = organzation;
             }
+            await UpdateLoginHistory(result.Id);
             return result;
         }
+        public async Task<BranchLicenseVM?> GetActiveBranchLicense(Guid branchId)
+        {
+            if (branchId == Guid.Empty)
+                return null;
 
+            const string query = @"
+        SELECT TOP 1 *
+        FROM Business.BranchLicenses
+        WHERE IsActive = 1
+          AND BranchId = @BranchId
+        ORDER BY ExpiryDate DESC, Id DESC;";
+
+            var rows = await _db.GetDataListWithQueryAndParam<BranchLicenseVM>(query, new { BranchId = branchId });
+            return rows?.FirstOrDefault();
+        }
+
+
+        public async Task<bool> UpdateLoginHistory(int LoginUserId)
+        {
+            string query = @"INSERT INTO Hrm.LoginHistory (LastLogin, LoginUserId) VALUES (@LastLogin, @LoginUserId)";
+
+            var param = new
+            {
+                LastLogin = DateTime.UtcNow,
+                LoginUserId = LoginUserId
+            };
+            var result = await _db.ExecuteInsertQueryandParam(query, param);
+
+
+            return true;
+        }
         public async Task<LoginUserVM> SSOValidateLogin(LoginUserVM model)
         {
             //string encodedPass = EncryptionPasses.Encrypt(model.Passwords, PassesCore.INIT_VECTOR, PassesCore.PASS_PHRASE, PassesCore.KEY_SIZE);

@@ -30,7 +30,6 @@ namespace MarketBal.Repository.SystemRP
         }
         public async Task<bool> IsAlreadyRegistered(DeviceRequestModelVM device)
         {
-            // 1️⃣ Find device by unique ID
             var existingDevice = await _onedb.Devices
                 .FirstOrDefaultAsync(x => x.DeviceUniqueId == device.DeviceUniqueId);
 
@@ -40,11 +39,9 @@ namespace MarketBal.Repository.SystemRP
                 {
 
 
-                    // 3️⃣ Deserialize JSON into model
 
                     var bindedData = JsonConvert.DeserializeObject<DeviceRequestModelVM>(existingDevice.DevicePayload);
 
-                    // 4️⃣ Compare all fields
                     bool isSameDevice =
                         string.Equals(bindedData.DeviceUniqueId, device.DeviceUniqueId, StringComparison.OrdinalIgnoreCase) &&
                         string.Equals(bindedData.DeviceName, device.DeviceName, StringComparison.OrdinalIgnoreCase) &&
@@ -60,7 +57,6 @@ namespace MarketBal.Repository.SystemRP
 
                     throw;
                 }
-                // 2️⃣ Decrypt stored payload
 
             }
 

@@ -6,6 +6,7 @@ using MainModels.Models;
 using MainModels.Util;
 using MarketBal.Repository;
 using MarketBal.Repository.DashBoard;
+using MarketBal.Repository.InvoiceRP;
 using MarketBal.Repository.IPM;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -81,19 +82,34 @@ namespace InspireSuperStore.Controllers
         [HttpGet]
         public IActionResult SelectTill()
         {
+            ViewBag.BookedTills = ActiveTillTracker.GetBookedTills();
+            ViewBag.CurrentUser = User.Identity?.Name ?? HttpContext.Session.Id;
             return View();
         }
+
         [HttpPost]
         public IActionResult SelectTill(string tillName)
         {
+            string currentUser = User.Identity?.Name ?? HttpContext.Session.Id;
+
             if (string.IsNullOrEmpty(tillName))
             {
                 ModelState.AddModelError("", "Please select a valid counter.");
+                ViewBag.BookedTills = ActiveTillTracker.GetBookedTills();
+                ViewBag.CurrentUser = currentUser;
+                return View();
+            }
+
+            // Prevent race condition if another cashier just booked it
+            if (!ActiveTillTracker.TryBookTill(tillName, currentUser))
+            {
+                ModelState.AddModelError("", $"{tillName} was just booked by another user. Please choose another counter.");
+                ViewBag.BookedTills = ActiveTillTracker.GetBookedTills();
+                ViewBag.CurrentUser = currentUser;
                 return View();
             }
 
             HttpContext.Session.SetString("ActiveTill", tillName);
-            
             return RedirectToAction("Index", "Home");
         }
         public IActionResult ToggleSideMenu()

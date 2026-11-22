@@ -1,0 +1,200 @@
+﻿@using MainModels.DTOModels
+@{
+    Layout = null;
+    ViewData["Title"] = "Branch License Activation";
+    string? licenseError = TempData["LicenseError"] as string;
+    Guid? branchId = ViewBag.BranchId as Guid? ?? TempData.Peek("LicenseBranchId") as Guid?;
+    string requestCode = ViewBag.RequestCode as string ?? "";
+    string serverFingerprint = ViewBag.ServerFingerprint as string ?? "";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- Core Stylesheets -->
+    <link href="~/global_assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/bootstrap.css" rel="stylesheet" />
+    <link href="~/assets/css/bootstrap_limitless.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/layout.css" rel="stylesheet" />
+    <link href="~/assets/css/components.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/colors.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/global_assets/js/plugins/notifications/jgrowl.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/customstyles.css" rel="stylesheet" />
+</head>
+<body class="bg-slate-800">
+
+    <div class="page-content">
+        <div class="content-wrapper">
+            <div class="content d-flex justify-content-center align-items-center min-vh-100">
+                <div class="col-md-8 col-lg-5">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-transparent header-elements-inline">
+                            <h5 class="card-title font-weight-semibold">
+                                <i class="icon-key mr-2 text-primary"></i>Branch License Activation
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+                            <div id="licenseAjaxAlert" class="alert alert-danger @(string.IsNullOrWhiteSpace(licenseError) ? "d-none" : "")" role="alert">
+                                <i class="icon-warning22 mr-2"></i>
+                                <strong>License Issue:</strong> <span id="licenseAjaxAlertText">@licenseError</span>
+                            </div>
+
+                            @if (!ViewData.ModelState.IsValid)
+                            {
+                                <div class="alert alert-danger">
+                                    @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+                                </div>
+                            }
+
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Request Code</label>
+                                <div class="input-group">
+                                    <input type="text" id="requestCodeInput" class="form-control bg-light" value="@requestCode" readonly />
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="copyRequestCode()" title="Copy Request Code">
+                                            <i class="icon-copy3"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Share this Request Code to receive your signed Branch License Key.</small>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(serverFingerprint))
+                            {
+                                <div class="form-group">
+                                    <label class="font-weight-semibold text-muted font-size-sm">Server Fingerprint</label>
+                                    <input type="text" class="form-control form-control-sm bg-light text-muted" value="@serverFingerprint" readonly />
+                                </div>
+                            }
+
+                            <form id="form-activate-license" asp-action="ActivateLicense" asp-controller="License" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="BranchId" value="@branchId" />
+                                <input type="hidden" name="RequestCode" value="@requestCode" />
+                                <input type="hidden" name="ServerFingerprint" value="@serverFingerprint" />
+
+                                <div class="form-group mb-4">
+                                    <label class="font-weight-semibold" for="licenseKeyInput">License Key</label>
+                                    <textarea id="licenseKeyInput"
+                                              name="LicenseKey"
+                                              rows="3"
+                                              class="form-control"
+                                              placeholder="Paste your license key here..."
+                                              required></textarea>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a asp-action="Logout" asp-controller="Account" class="btn btn-light">
+                                        <i class="icon-exit3 mr-1"></i> Back to Login
+                                    </a>
+                                    <button type="submit" id="activateLicenseBtn" class="btn btn-primary">
+                                        <i class="icon-checkmark3 mr-1"></i> Activate License
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="~/global_assets/js/main/jquery.min.js"></script>
+    <script src="~/global_assets/js/main/bootstrap.bundle.min.js"></script>
+    <script src="~/global_assets/js/plugins/notifications/jgrowl.min.js"></script>
+    <script src="~/global_assets/js/plugins/notifications/noty.min.js"></script>
+    <script src="~/assets/Utility.js"></script>
+    <script src="~/assets/js/app.js"></script>
+
+    <script>
+        function showLicenseError(message) {
+            $("#licenseAjaxAlertText").text(message || "Unable to activate license.");
+            $("#licenseAjaxAlert").removeClass("d-none");
+            if (typeof $.jGrowl === "function") {
+                $.jGrowl(message || "Unable to activate license.", { theme: "bg-danger", life: 3000 });
+            }
+        }
+
+        function copyRequestCode() {
+            var input = document.getElementById("requestCodeInput");
+            if (!input || !input.value) return;
+
+            navigator.clipboard.writeText(input.value).then(function () {
+                if (typeof $.jGrowl === "function") {
+                    $.jGrowl("Request Code copied to clipboard.", { theme: "bg-success", life: 1500 });
+                }
+            }).catch(function () {
+                input.select();
+                document.execCommand("copy");
+            });
+        }
+
+        $("#form-activate-license").on("submit", function (e) {
+            e.preventDefault();
+
+            var $form = $(this);
+            var $btn = $("#activateLicenseBtn");
+            var keyVal = $.trim($("#licenseKeyInput").val());
+
+            $("#licenseAjaxAlert").addClass("d-none");
+
+            if (!keyVal) {
+                showLicenseError("Please enter a valid license key.");
+                return;
+            }
+            
+            $btn.prop("disabled", true);
+
+            $.ajax({
+                    url: "/License/ActivateLicense",
+                method: "POST",
+                data: $form.serialize(),
+                success: function (res) {
+                    
+                    // Supports JSON responses (e.g. { success: true, redirectUrl: "/Account/Login", message: "..." })
+                    if (res.statusCode=== "200") {
+                        if (res.success === true || res.statusCode === "200" || res.statusCode === 200) {
+                            if (typeof $.jGrowl === "function") {
+                                $.jGrowl(res.message || "License activated successfully!", { theme: "bg-success", life: 2000 });
+                            }
+                            setTimeout(function () {
+                                window.location.href = res.redirectUrl || res.url || "/Account/Login";
+                            }, 600);
+                        } else {
+                            showLicenseError(res.message || res.Message || "License validation failed.");
+                            $btn.prop("disabled", false);
+                        }
+                        return;
+                    }
+
+                    // Fallback if controller returns HTML view instead of JSON
+                    var $parsed = $("<div>").append($.parseHTML(res));
+                    var serverError = $.trim($parsed.find(".alert-danger").first().text());
+                    if (serverError) {
+                        showLicenseError(serverError);
+                        $btn.prop("disabled", false);
+                    } else {
+                        window.location.href = "/Account/Login";
+                    }
+                },
+                error: function (xhr) {
+                    var errMsg = "Request failed (Status " + xhr.status + ").";
+                    if (xhr.status === 400) {
+                        errMsg = "Invalid request or anti-forgery token mismatch (400).";
+                    } else if (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.Message)) {
+                        errMsg = xhr.responseJSON.message || xhr.responseJSON.Message;
+                    }
+                    showLicenseError(errMsg);
+                    $btn.prop("disabled", false);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

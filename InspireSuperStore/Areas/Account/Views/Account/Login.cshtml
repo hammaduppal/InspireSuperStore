@@ -325,64 +325,62 @@
 
 
 
-			$('#form-login').submit(function (e) {
-
-				e.preventDefault();
-				const validate = Utility.validateFormAndInputs('#form-login');
-				const isFormValid = validate();
-				var dataSomething = buildDeviceModel();
-				console.log('Device Info:', dataSomething);
-					let isChecked = $('#login-Remember').is(':checked');
-				if (isFormValid) {
-					Utility.SpinnerMessageParent('signinBtn','Loading..');
+				$('#form-login').submit(function(e) {
 					e.preventDefault();
-					var formData = {
-						UserName: $('#login-Email').val(),
-						Password: $('#login-Password').val(),
-						Remember:isChecked,
-						Device:dataSomething
-					}
+					const validate = Utility.validateFormAndInputs('#form-login');
+					const isFormValid = validate();
+					var dataSomething = buildDeviceModel();
+					console.log('Device Info:', dataSomething);
+					let isChecked = $('#login-Remember').is(':checked');
 
+					if (isFormValid) {
+						Utility.SpinnerMessageParent('signinBtn', 'Loading..');
+						var formData = {
+							UserName: $('#login-Email').val(),
+							Password: $('#login-Password').val(),
+							Remember: isChecked,
+							Device: dataSomething
+						};
 
-					$.ajax({
-						url: "/Account/ValidateLogin/",
-						method: "POST",
-						data: formData,
-						success: function (result) {
-							// Decrypt server response
+						$.ajax({
+							url: "/Account/ValidateLogin/",
+							method: "POST",
+							data: formData,
+							success: function(result) {
+								// Decrypt server response if applicable
 								Utility.StopSpinnerMessageParent('signinBtn');
-							if(result.statusCode==='200'){
 
-
-							window.location.href = result.returnUrl ? result.returnUrl : "/";
+								if (result.statusCode === '200') {
+									window.location.href = result.returnUrl ? result.returnUrl : "/";
+								}
+								else if (result.statusCode === '402') {
+									
+									var msg = result.Message || 'Branch license is missing or expired.';
+									$('#passwordMessage').html(`<span style="color:red">${msg}</span>`);
+									if (typeof Utility.failMessage === 'function') {
+										Utility.failMessage(msg);
+									}
+									window.location.href =  '/License/LicenseActivation';
+								}
+								else if (result.statusCode === '900') {
+									Utility.stopSpinner(this, 'Stopping');
+									$('#passwordMessage').html(
+										`<span style="color:red">${result.Message}</span>`
+									);
+									Utility.failMessage(result.Message);
+								}
+								else {
+									Utility.stopSpinner(this, 'Stopping');
+									$('#passwordMessage').html('<span style="color:red">Username / Password Error, or you are not Authorized;</span>');
+								}
+							},
+							error: function(error) {
+								Utility.StopSpinnerMessageParent('signinBtn');
+								console.error("Error:", error);
 							}
-									else if (result.statusCode === '900') {
-								Utility.stopSpinner(this, 'Stopping');
-
-								$('#passwordMessage').html(
-									`<span style="color:red">${result.Message}</span>`
-								);
-								Utility.failMessage(result.Message);
-							}
-
-							else{
-							Utility.stopSpinner(this, 'Stopping');
-
-						$('#passwordMessage').html('<span style="color:red">Username / Password Error, or you are not Authorized;</span>');
-
-							}
-						},
-						error: function (error) {
-							console.error("Error:", error);
-						}
-					});
-
-
-				}
-
-
-			})
-
+						});
+					}
+				});
 			function getBrowserInfo() {
 				const ua = navigator.userAgent;
 				if (ua.includes("Chrome") && !ua.includes("Edg")) return "Chrome";
