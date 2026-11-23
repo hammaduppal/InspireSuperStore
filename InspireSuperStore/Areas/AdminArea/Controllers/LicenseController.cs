@@ -51,12 +51,34 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
 
             return View();
         }
-        [HttpGet]
-        public string GenerateKey(string requestCode, string serverFingerprint, DateTime expiryDate)
+        public async Task<IActionResult> GenerateKeyView()
+        {
+            return View();
+        }
+        //[HttpGet]
+        //public string GenerateKey(string requestCode, string serverFingerprint, DateTime expiryDate)
+        //{
+        //    if (string.IsNullOrWhiteSpace(requestCode) || string.IsNullOrWhiteSpace(serverFingerprint))
+        //    {
+        //        return "RequestCode and ServerFingerprint are required.";
+        //    }
+
+        //    string licenseKey = SimpleLicenseHelper.GenerateLicenseKey(
+        //        requestCode: requestCode,
+        //        serverFingerprint: serverFingerprint,
+        //        expiryDateUtc: expiryDate.ToUniversalTime());
+
+
+        //    return licenseKey;
+
+        //}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult GenerateKey(string requestCode, string serverFingerprint, DateTime expiryDate)
         {
             if (string.IsNullOrWhiteSpace(requestCode) || string.IsNullOrWhiteSpace(serverFingerprint))
             {
-                return "RequestCode and ServerFingerprint are required.";
+                return BadRequest(new { message = "RequestCode and ServerFingerprint are required." });
             }
 
             string licenseKey = SimpleLicenseHelper.GenerateLicenseKey(
@@ -64,9 +86,12 @@ namespace InspireSuperStore.Areas.AdminArea.Controllers
                 serverFingerprint: serverFingerprint,
                 expiryDateUtc: expiryDate.ToUniversalTime());
 
-
-            return licenseKey;
-            
+            return Json(new
+            {
+                requestCode = requestCode.Trim().ToUpperInvariant(),
+                expiryDate = expiryDate.ToUniversalTime().ToString("yyyy-MM-dd"),
+                licenseKey = licenseKey
+            });
         }
 
         [HttpPost]

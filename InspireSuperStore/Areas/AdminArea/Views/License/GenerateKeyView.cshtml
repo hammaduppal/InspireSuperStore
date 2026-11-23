@@ -1,0 +1,191 @@
+﻿@{
+    Layout = null;
+    ViewData["Title"] = "Generate Branch License Key";
+    string defaultExpiry = DateTime.UtcNow.AddYears(1).ToString("yyyy-MM-dd");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- Core Stylesheets -->
+    <link href="~/global_assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/bootstrap.css" rel="stylesheet" />
+    <link href="~/assets/css/bootstrap_limitless.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/layout.css" rel="stylesheet" />
+    <link href="~/assets/css/components.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/colors.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/global_assets/js/plugins/notifications/jgrowl.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/customstyles.css" rel="stylesheet" />
+</head>
+<body class="bg-slate-800">
+
+    <div class="page-content">
+        <div class="content-wrapper">
+            <div class="content d-flex justify-content-center align-items-center min-vh-100">
+                <div class="col-md-8 col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-transparent header-elements-inline">
+                            <h5 class="card-title font-weight-semibold">
+                                <i class="icon-key mr-2 text-primary"></i>Generate Branch License Key
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+                            <div id="genAlert" class="alert alert-danger d-none" role="alert">
+                                <i class="icon-warning22 mr-2"></i>
+                                <span id="genAlertText"></span>
+                            </div>
+
+                            <form id="form-generate-key" action="/License/GenerateKey" method="post">
+                                @Html.AntiForgeryToken()
+
+                                <div class="form-group">
+                                    <label class="font-weight-semibold" for="requestCode">Request Code / ID</label>
+                                    <input type="text"
+                                           id="requestCode"
+                                           name="requestCode"
+                                           class="form-control"
+                                           placeholder="e.g. REQ-E391465D"
+                                           required />
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="font-weight-semibold" for="serverFingerprint">Server Fingerprint</label>
+                                    <input type="text"
+                                           id="serverFingerprint"
+                                           name="serverFingerprint"
+                                           class="form-control"
+                                           placeholder="e.g. BFEBFBFF000806EA|PHPNV078JCJ0EJ|56387AD4|A0510BDA97E7"
+                                           required />
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <label class="font-weight-semibold" for="expiryDate">Expiry Date</label>
+                                    <input type="date"
+                                           id="expiryDate"
+                                           name="expiryDate"
+                                           class="form-control"
+                                           value="@defaultExpiry"
+                                           required />
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a href="/License/LicenseActivation" class="btn btn-light">
+                                        <i class="icon-arrow-left13 mr-1"></i> Activation Page
+                                    </a>
+                                    <button type="submit" id="generateKeyBtn" class="btn btn-primary">
+                                        <i class="icon-cog3 mr-1"></i> Generate Key
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div id="generatedResultBox" class="mt-4 pt-3 border-top d-none">
+                                <label class="font-weight-semibold text-success">
+                                    <i class="icon-checkmark-circle mr-1"></i>Generated License Key
+                                </label>
+                                <div class="input-group mb-2">
+                                    <textarea id="generatedKeyOutput" rows="3" class="form-control bg-light font-weight-semibold" readonly></textarea>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-primary" onclick="copyGeneratedKey()" title="Copy License Key">
+                                            <i class="icon-copy3"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="text-muted" id="generatedMetaText"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="~/global_assets/js/main/jquery.min.js"></script>
+    <script src="~/global_assets/js/main/bootstrap.bundle.min.js"></script>
+    <script src="~/global_assets/js/plugins/notifications/jgrowl.min.js"></script>
+    <script src="~/assets/Utility.js"></script>
+    <script src="~/assets/js/app.js"></script>
+
+    <script>
+            function showGenError(msg) {
+                $("#genAlertText").text(msg || "Could not generate license key.");
+                $("#genAlert").removeClass("d-none");
+                if (typeof $.jGrowl === "function") {
+                    $.jGrowl(msg || "Could not generate license key.", { theme: "bg-danger", life: 3000 });
+                }
+            }
+
+            function copyGeneratedKey() {
+                var el = document.getElementById("generatedKeyOutput");
+                if (!el || !el.value) return;
+
+                navigator.clipboard.writeText(el.value).then(function () {
+                    if (typeof $.jGrowl === "function") {
+                        $.jGrowl("License key copied to clipboard.", { theme: "bg-success", life: 1500 });
+                    }
+                }).catch(function () {
+                    el.select();
+                    document.execCommand("copy");
+                });
+            }
+
+            $("#form-generate-key").on("submit", function (e) {
+                e.preventDefault();
+
+                var $form = $(this);
+                var $btn = $("#generateKeyBtn");
+                $("#genAlert").addClass("d-none");
+
+                var payload = {
+                    requestCode: $.trim($("#requestCode").val()),
+                    serverFingerprint: $.trim($("#serverFingerprint").val()),
+                    expiryDate: $("#expiryDate").val(),
+                    __RequestVerificationToken: $form.find('input[name="__RequestVerificationToken"]').val()
+                };
+
+                if (!payload.requestCode || !payload.serverFingerprint || !payload.expiryDate) {
+                    showGenError("Please fill in Request Code, Server Fingerprint, and Expiry Date.");
+                    return;
+                }
+
+                $btn.prop("disabled", true);
+
+                $.ajax({
+                    url: "/License/GenerateKey",
+                    method: "POST",
+                    data: payload,
+                    success: function (res) {
+                        $btn.prop("disabled", false);
+                        var key = res && (res.licenseKey || res.LicenseKey);
+                        if (!key) {
+                            showGenError((res && (res.message || res.Message)) || "No key returned by server.");
+                            return;
+                        }
+
+                        var exp = (res.expiryDate || res.ExpiryDate || payload.expiryDate);
+                        var req = (res.requestCode || res.RequestCode || payload.requestCode);
+                        $("#generatedKeyOutput").val(key);
+                        $("#generatedMetaText").text("Request: " + req + " | Valid until: " + exp);
+                        $("#generatedResultBox").removeClass("d-none");
+
+                        if (typeof $.jGrowl === "function") {
+                            $.jGrowl("License key generated.", { theme: "bg-success", life: 2000 });
+                        }
+                    },
+                    error: function (xhr) {
+                        $btn.prop("disabled", false);
+                        var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.Message))
+                            || xhr.responseText
+                            || "Failed to generate license key (Status " + xhr.status + ").";
+                        showGenError(msg);
+                    }
+                });
+            });
+    </script>
+</body>
+</html>
